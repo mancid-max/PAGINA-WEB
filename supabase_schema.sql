@@ -7,9 +7,14 @@ create table if not exists public.quotes (
   store_name text not null,
   total_items integer not null default 0 check (total_items >= 0),
   source text not null default 'web',
+  is_ready boolean not null default false,
+  ready_at timestamptz,
   created_at_client timestamptz,
   created_at timestamptz not null default now()
 );
+
+alter table public.quotes add column if not exists is_ready boolean not null default false;
+alter table public.quotes add column if not exists ready_at timestamptz;
 
 create table if not exists public.quote_items (
   id bigint generated always as identity primary key,
@@ -55,3 +60,12 @@ on public.quote_items
 for select
 to authenticated
 using (true);
+
+-- Permite marcar estado de cotizacion desde panel admin (usuarios autenticados)
+drop policy if exists "authenticated_update_quotes" on public.quotes;
+create policy "authenticated_update_quotes"
+on public.quotes
+for update
+to authenticated
+using (true)
+with check (true);
