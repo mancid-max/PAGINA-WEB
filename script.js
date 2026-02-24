@@ -122,6 +122,21 @@ function verProducto(familyId) {
 
   // reinicia drafts para este modal (si quieres conservar entre aperturas, quita esta línea)
   document.getElementById("modalTitle").innerText = "Modelo " + p.family;
+  
+  // Mostrar descripción y características
+  document.getElementById("description").innerText = p.description || "";
+  
+  const charList = document.getElementById("characteristics");
+  charList.innerHTML = "";
+  if (Array.isArray(p.characteristics) && p.characteristics.length) {
+    const ul = document.createElement("ul");
+    p.characteristics.forEach((char) => {
+      const li = document.createElement("li");
+      li.innerText = char;
+      ul.appendChild(li);
+    });
+    charList.appendChild(ul);
+  }
 
   const variantContainer = document.getElementById("variantContainer");
   variantContainer.innerHTML = "";
