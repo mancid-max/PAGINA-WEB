@@ -33,8 +33,8 @@ function buildImageList(obj) {
   let imgs = [];
   if (obj?.main_image) imgs.push(obj.main_image);
   if (Array.isArray(obj?.gallery)) imgs = imgs.concat(obj.gallery);
-  // quitar duplicados
-  return [...new Set(imgs)];
+  // quitar duplicados y filtrar imágenes de catálogo
+  return [...new Set(imgs)].filter(img => !img.toLowerCase().includes("catalogo"));
 }
 
 function renderImages(imageList) {
