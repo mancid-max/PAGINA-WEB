@@ -6,6 +6,13 @@ let pedido = [];
 let skuActivo = "";
 let draftTallasPorSku = {}; // { "4204": {38:2,40:1}, "4204-02": {...} }
 
+const ASSET_VERSION = Date.now();
+
+function withCacheBust(path) {
+  if (!path) return path;
+  return path.includes("?") ? `${path}&v=${ASSET_VERSION}` : `${path}?v=${ASSET_VERSION}`;
+}
+
 const EMAIL_DESTINO = "man.cid@mohicanojeans.cl"; // <-- cambia si quieres
 
 /***********************
@@ -41,15 +48,15 @@ function renderImages(imageList) {
     return;
   }
 
-  viewer.src = imageList[0];
+  viewer.src = withCacheBust(imageList[0]);
 
   imageList.forEach((imgSrc, index) => {
     const thumb = document.createElement("img");
-    thumb.src = imgSrc;
+    thumb.src = withCacheBust(imgSrc);
     if (index === 0) thumb.classList.add("active-thumb");
 
     thumb.onclick = () => {
-      viewer.src = imgSrc;
+      viewer.src = withCacheBust(imgSrc);
       // limpia active
       thumbContainer.querySelectorAll("img").forEach((t) => t.classList.remove("active-thumb"));
       thumb.classList.add("active-thumb");
@@ -98,7 +105,7 @@ function renderGrid(lista) {
     .map(
       (p) => `
       <div class="card" onclick="verProducto('${p.family}')">
-        <img src="${p.main_image}" alt="Modelo ${p.family}">
+        <img src="${withCacheBust(p.main_image)}" alt="Modelo ${p.family}">
         <div>Modelo ${p.family}</div>
       </div>
     `
