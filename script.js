@@ -14,6 +14,17 @@ function withCacheBust(path) {
 }
 
 const EMAIL_DESTINO = "man.cid@mohicanojeans.cl"; // <-- cambia si quieres
+const SUPABASE_URL = "https://kdtydxihrflhziclgiof.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_37ce4uK_RG8o9pP-Jdf2Xw_3eWgqJQy";
+
+function supabaseConfigurado() {
+  return (
+    typeof SUPABASE_URL === "string" &&
+    SUPABASE_URL.startsWith("https://") &&
+    typeof SUPABASE_ANON_KEY === "string" &&
+    SUPABASE_ANON_KEY.trim().length > 20
+  );
+}
 
 /***********************
  * CARGAR PRODUCTOS
@@ -124,11 +135,16 @@ function verProducto(familyId) {
   document.getElementById("modalTitle").innerText = "Modelo " + p.family;
   
   // Mostrar descripción y características
-  document.getElementById("description").innerText = p.description || "";
-  
+  const descriptionEl = document.getElementById("description");
   const charList = document.getElementById("characteristics");
+  const hasCharacteristics = Array.isArray(p.characteristics) && p.characteristics.length;
+
+  descriptionEl.innerText = hasCharacteristics ? "" : (p.description || "");
+  descriptionEl.style.display = hasCharacteristics || !p.description ? "none" : "block";
+
   charList.innerHTML = "";
-  if (Array.isArray(p.characteristics) && p.characteristics.length) {
+  charList.style.display = hasCharacteristics ? "block" : "none";
+  if (hasCharacteristics) {
     const ul = document.createElement("ul");
     p.characteristics.forEach((char) => {
       const li = document.createElement("li");
@@ -147,10 +163,14 @@ function verProducto(familyId) {
     btn.classList.add("active");
   }
 
+
+  const familyImages = buildImageList(p);
+
   // 1) Botón Familia
   const btnFamily = document.createElement("button");
   btnFamily.className = "variant-btn";
   btnFamily.innerText = "Familia " + p.family;
+  const botonesPorSku = {};
 
   btnFamily.onclick = () => {
     guardarDraftDelSkuActual();
@@ -160,7 +180,9 @@ function verProducto(familyId) {
     setActive(btnFamily);
   };
 
-  variantContainer.appendChild(btnFamily);
+  if (familyImages.length) {
+    variantContainer.appendChild(btnFamily);
+  }
 
   // 2) Botones variantes
   if (Array.isArray(p.variants) && p.variants.length) {
@@ -177,15 +199,26 @@ function verProducto(familyId) {
         setActive(btn);
       };
 
+      botonesPorSku[v.sku] = btn;
       variantContainer.appendChild(btn);
     });
   }
 
-  // Estado inicial: familia activa
-  skuActivo = p.family;
-  renderImages(buildImageList(p));
+  // Estado inicial: si la familia no tiene imágenes visibles, abrir primera variante con imágenes
+  const firstVariantWithImages = Array.isArray(p.variants)
+    ? p.variants.find((v) => buildImageList(v).length)
+    : null;
+
+  const initialSku = familyImages.length ? p.family : (firstVariantWithImages?.sku || p.family);
+  const initialImages = familyImages.length
+    ? familyImages
+    : (firstVariantWithImages ? buildImageList(firstVariantWithImages) : []);
+  const initialBtn = initialSku === p.family ? btnFamily : botonesPorSku[initialSku];
+
+  skuActivo = initialSku;
+  renderImages(initialImages);
   cargarDraftDelSku(skuActivo);
-  setActive(btnFamily);
+  setActive(initialBtn || btnFamily);
 
   document.getElementById("modal").classList.add("active");
 }
@@ -335,38 +368,79 @@ function descargarArchivo(nombre, contenido, mime) {
   URL.revokeObjectURL(url);
 }
 
-function enviarCotizacionMailto() {
-  const nombreTienda = document.getElementById("userName").value.trim();
-  if (!nombreTienda) {
-    alert("Ingresa el nombre de tu tienda");
-    return false;
-  }
-  if (!pedido.length) {
-    alert("Tu pedido está vacío");
-    return false;
-  }
+function construirPayloadCotizacion(nombreTienda) {
+  const createdAtIso = new Date().toISOString();
+  let totalItems = 0;
+  const lineas = [];
 
-  const fecha = new Date().toLocaleString();
-
-  let lineas = [];
-  lineas.push(`COTIZACIÓN MOHICANO`);
-  lineas.push(`Tienda: ${nombreTienda}`);
-  lineas.push(`Fecha: ${fecha}`);
-  lineas.push(`-------------------------`);
-
-  pedido.forEach((item, idx) => {
-    lineas.push(`${idx + 1}) SKU: ${item.sku}`);
-    Object.entries(item.tallas).forEach(([t, c]) => {
-      lineas.push(`   - Talla ${t}: ${c}`);
+  pedido.forEach((item) => {
+    Object.entries(item.tallas).forEach(([talla, cantidad]) => {
+      const qty = Number(cantidad) || 0;
+      if (qty <= 0) return;
+      totalItems += qty;
+      lineas.push({ sku: item.sku, talla, cantidad: qty });
     });
-    lineas.push(``);
   });
 
-  const subject = encodeURIComponent(`Cotización Mohicano - ${nombreTienda}`);
-  const body = encodeURIComponent(lineas.join("\n"));
+  return {
+    quote: {
+      store_name: nombreTienda,
+      total_items: totalItems,
+      created_at_client: createdAtIso,
+      source: "web",
+    },
+    items: lineas,
+  };
+}
 
-  window.location.href = `mailto:${EMAIL_DESTINO}?subject=${subject}&body=${body}`;
-  return true;
+async function guardarCotizacionSupabase(nombreTienda) {
+  if (!supabaseConfigurado()) {
+    throw new Error("Configura SUPABASE_URL y SUPABASE_ANON_KEY en script.js");
+  }
+
+  const payload = construirPayloadCotizacion(nombreTienda);
+  if (!payload.items.length) throw new Error("No hay items para guardar");
+
+  const headers = {
+    apikey: SUPABASE_ANON_KEY,
+    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    "Content-Type": "application/json",
+  };
+
+  const quoteRes = await fetch(`${SUPABASE_URL}/rest/v1/quotes`, {
+    method: "POST",
+    headers: { ...headers, Prefer: "return=representation" },
+    body: JSON.stringify([payload.quote]),
+  });
+
+  if (!quoteRes.ok) {
+    const errText = await quoteRes.text();
+    throw new Error(`Error guardando cotizacion: ${errText || quoteRes.status}`);
+  }
+
+  const rows = await quoteRes.json();
+  const quoteRow = rows?.[0];
+  if (!quoteRow?.id) throw new Error("Supabase no devolvio el ID de la cotizacion");
+
+  const detailRows = payload.items.map((it) => ({
+    quote_id: quoteRow.id,
+    sku: it.sku,
+    size: String(it.talla),
+    quantity: Number(it.cantidad),
+  }));
+
+  const itemsRes = await fetch(`${SUPABASE_URL}/rest/v1/quote_items`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(detailRows),
+  });
+
+  if (!itemsRes.ok) {
+    const errText = await itemsRes.text();
+    throw new Error(`Error guardando detalle: ${errText || itemsRes.status}`);
+  }
+
+  return quoteRow.id;
 }
 
 function limpiarCarrito() {
@@ -376,21 +450,34 @@ function limpiarCarrito() {
   document.getElementById("cartSidebar").classList.remove("open");
 }
 
-document.getElementById("sendRequest").onclick = () => {
+document.getElementById("sendRequest").onclick = async () => {
   const nombreTienda = document.getElementById("userName").value.trim();
   if (!nombreTienda) return alert("Ingresa el nombre de tu tienda");
-  if (!pedido.length) return alert("Tu pedido está vacío");
+  if (!pedido.length) return alert("Tu pedido esta vacio");
 
-  // 1) CSV
-  const csv = generarCSV();
-  if (csv) {
-    const safe = nombreTienda.replace(/\s+/g, "_");
-    descargarArchivo(`cotizacion_${safe}_${Date.now()}.csv`, csv, "text/csv;charset=utf-8;");
+  const btn = document.getElementById("sendRequest");
+  const textoOriginal = btn.innerText;
+  btn.disabled = true;
+  btn.innerText = "Guardando...";
+
+  try {
+    const quoteId = await guardarCotizacionSupabase(nombreTienda);
+
+    const csv = generarCSV();
+    if (csv) {
+      const safe = nombreTienda.replace(/\s+/g, "_");
+      descargarArchivo(`cotizacion_${safe}_${Date.now()}.csv`, csv, "text/csv;charset=utf-8;");
+    }
+
+    alert(`Cotizacion guardada correctamente (ID: ${quoteId})`);
+    limpiarCarrito();
+  } catch (error) {
+    console.error(error);
+    alert(`No se pudo guardar la cotizacion. ${error.message || ""}`.trim());
+  } finally {
+    btn.disabled = false;
+    btn.innerText = textoOriginal;
   }
-
-  // 2) Mailto
-  const ok = enviarCotizacionMailto();
-  if (ok) limpiarCarrito();
 };
   document.getElementById("closeCart").onclick = () => {
   document.getElementById("cartSidebar").classList.remove("open");
