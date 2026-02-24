@@ -75,11 +75,11 @@ color:#666;
 /* GRID */
 
 .product-grid{
-  padding: 80px 100px;   /* más aire lateral */
+  padding: 90px 120px;   /* más aire lateral */
   display:grid;
   grid-template-columns: repeat(3, 1fr);
-  gap:60px;              /* más separación */
-  max-width:1400px;
+  gap:70px;              /* más separación */
+  max-width:1600px;
   margin:0 auto;
 }
 
@@ -122,11 +122,22 @@ color:#666;
 
 .card img{
   width:100%;
-  height:100%;
-  object-fit: contain;       /* ✅ completa, sin recortar */
+  height:620px;
   display:block;
   object-fit: cover;
   object-position: center top;
+}
+
+@media (max-width: 1100px){
+  .card img{
+    height:520px;
+  }
+}
+
+@media (max-width: 650px){
+  .card img{
+    height:480px;
+  }
 }
 
 .card div{
