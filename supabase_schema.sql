@@ -78,6 +78,13 @@ for select
 to authenticated
 using (true);
 
+drop policy if exists "authenticated_delete_quote_items" on public.quote_items;
+create policy "authenticated_delete_quote_items"
+on public.quote_items
+for delete
+to authenticated
+using (true);
+
 -- Permite marcar estado de cotizacion desde panel admin (usuarios autenticados)
 drop policy if exists "authenticated_update_quotes" on public.quotes;
 create policy "authenticated_update_quotes"
@@ -86,6 +93,13 @@ for update
 to authenticated
 using (true)
 with check (true);
+
+drop policy if exists "authenticated_delete_quotes" on public.quotes;
+create policy "authenticated_delete_quotes"
+on public.quotes
+for delete
+to authenticated
+using (true);
 
 -- Lectura de clientes solo autenticado (panel)
 drop policy if exists "authenticated_read_clients" on public.clients;
