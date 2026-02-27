@@ -693,7 +693,7 @@ function actualizarCarrito() {
       <div class="cart-item">
         <div class="cart-item-top">
           <div class="cart-item-title">Modelo ${item.sku}</div>
-          <button class="cart-trash" type="button" aria-label="Eliminar modelo ${item.sku}" onclick="eliminarItem(${index})">
+          <button class="cart-trash" type="button" aria-label="Eliminar modelo ${item.sku}" onclick="confirmarEliminarItem(${index})">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h2v9H7V9Zm4 0h2v9h-2V9Zm4 0h2v9h-2V9ZM6 7h12l-1 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Z"/>
             </svg>
@@ -715,6 +715,31 @@ function eliminarItem(index) {
   actualizarCarrito();
 }
 
+async function confirmarEliminarItem(index) {
+  const item = pedido[index];
+  if (!item) return;
+  const sidebar = document.getElementById("cartSidebar");
+
+  const confirmar = await mostrarConfirmacionAccion({
+    titulo: "Confirmar eliminacion de modelo",
+    mensaje: `Se eliminara el modelo ${item.sku} de tu cotizacion. Esta accion no se puede deshacer.`,
+    confirmarTexto: "Si, eliminar",
+  });
+  if (!confirmar) {
+    sidebar?.classList.add("open");
+    return;
+  }
+
+  eliminarItem(index);
+  mostrarToastExito("Modelo eliminado", `El modelo ${item.sku} fue eliminado de tu cotizacion.`);
+  if (!pedido.length) {
+    sidebar?.classList.remove("open");
+    document.querySelector(".cart-overlay")?.classList.remove("active");
+    return;
+  }
+  sidebar?.classList.add("open");
+}
+
 /***********************
  * ABRIR / CERRAR CARRITO
  ***********************/
@@ -725,6 +750,12 @@ document.getElementById("cartToggle").onclick = () => {
 document.addEventListener("click", (e) => {
   const sidebar = document.getElementById("cartSidebar");
   const toggle = document.getElementById("cartToggle");
+  const confirmModal = document.getElementById("confirmActionModal");
+  const clickEnConfirmModal = e.target && typeof e.target.closest === "function"
+    ? e.target.closest("#confirmActionModal")
+    : null;
+
+  if (clickEnConfirmModal || (confirmModal && !confirmModal.hidden)) return;
 
   if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
     sidebar.classList.remove("open");
