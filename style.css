@@ -2290,7 +2290,7 @@ box-shadow: 0 -10px 18px rgba(255,255,255,0.95), 0 10px 24px rgba(0,0,0,0.16);
   .sizes input{
     width: 40px;
     padding: 4px 2px;
-    font-size: 12px;
+    font-size: 16px;
   }
 
   #addBtn{
