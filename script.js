@@ -943,7 +943,7 @@ function mostrarToastExito(titulo, mensaje) {
   mostrarToastExito._timer = window.setTimeout(() => {
     toast.classList.remove("show");
     toast.hidden = true;
-  }, 3300);
+  }, 10000);
 }
 
 function mostrarToastError(titulo, mensaje) {
@@ -1593,7 +1593,7 @@ document.getElementById("sendRequest").onclick = async () => {
   try {
     await guardarCotizacionSupabase(cliente);
 
-    mostrarToastExito("Cotizacion enviada con exito", "");
+    mostrarToastExito("Cotizacion enviada con exito", "Pronto nos comunicaremos con usted.");
     limpiarCarrito();
   } catch (error) {
     console.error(error);
