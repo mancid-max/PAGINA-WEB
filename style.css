@@ -397,6 +397,12 @@ display:none !important;
 overflow:hidden;
 }
 
+body.modal-open{
+position:fixed;
+width:100%;
+overflow:hidden;
+}
+
 .image-zoom-modal{
 position:fixed;
 inset:0;

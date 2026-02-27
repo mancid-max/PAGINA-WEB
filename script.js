@@ -19,6 +19,24 @@ let zoomTouchStartX = null;
 let zoomTouchStartY = null;
 
 const ASSET_VERSION = Date.now();
+let lockedScrollY = 0;
+let bodyScrollLocked = false;
+
+function bloquearScrollFondo() {
+  if (bodyScrollLocked) return;
+  lockedScrollY = window.scrollY || window.pageYOffset || 0;
+  document.body.classList.add("modal-open");
+  document.body.style.top = `-${lockedScrollY}px`;
+  bodyScrollLocked = true;
+}
+
+function desbloquearScrollFondo() {
+  if (!bodyScrollLocked) return;
+  document.body.classList.remove("modal-open");
+  document.body.style.top = "";
+  window.scrollTo(0, lockedScrollY);
+  bodyScrollLocked = false;
+}
 
 function withCacheBust(path) {
   if (!path) return path;
@@ -613,6 +631,7 @@ function verProducto(familyId) {
   if (modalRight) modalRight.scrollTop = 0;
 
   document.getElementById("modal").classList.add("active");
+  bloquearScrollFondo();
 }
 
 /***********************
@@ -622,6 +641,7 @@ document.getElementById("closeModal").onclick = () => {
   document.getElementById("modal").classList.remove("active");
   cerrarVisorImagenes();
   cerrarPanelCotizacionModal();
+  desbloquearScrollFondo();
 };
 
 document.getElementById("modal").onclick = (e) => {
@@ -629,6 +649,7 @@ document.getElementById("modal").onclick = (e) => {
     document.getElementById("modal").classList.remove("active");
     cerrarVisorImagenes();
     cerrarPanelCotizacionModal();
+    desbloquearScrollFondo();
   }
 };
 
@@ -678,6 +699,7 @@ document.getElementById("addBtn").onclick = () => {
   mostrarToastExito("Cotización agregada", "Puedes verla en Tu cotización.");
   cerrarPanelCotizacionModal();
   document.getElementById("modal").classList.remove("active");
+  desbloquearScrollFondo();
 };
 
 /***********************
