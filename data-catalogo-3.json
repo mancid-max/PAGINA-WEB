@@ -36,8 +36,9 @@
   },
   {
     "family": "4204-00",
-    "main_image": "Imagenes3/4204-00/Mohicano0691.jpg",
+    "main_image": "Imagenes3/4204-00/catalogo 42 _page-0022.jpg",
     "gallery": [
+      "Imagenes3/4204-00/Mohicano0691.jpg",
       "Imagenes3/4204-00/Mohicano0693.jpg",
       "Imagenes3/4204-00/Mohicano0698.jpg",
       "Imagenes3/4204-00/Mohicano0701.jpg",
@@ -257,6 +258,7 @@
     "family": "4230-00",
     "main_image": "Imagenes3/4230-00/catalogo 4230.jpg",
     "gallery": [
+      "Imagenes3/4230-00/4230.jpg",
       "Imagenes3/4230-00/IMG_8550.JPG.jpeg",
       "Imagenes3/4230-00/IMG_8551.JPG.jpeg",
       "Imagenes3/4230-00/IMG_8552.JPG.jpeg",
@@ -291,9 +293,18 @@
     "variants": []
   },
   {
+    "family": "4233-04",
+    "main_image": "Imagenes3/4233-04/catalogo 42 _page-0149.jpg",
+    "gallery": [],
+    "description": "Modelo 4233-04",
+    "characteristics": [],
+    "variants": []
+  },
+  {
     "family": "4233-08",
-    "main_image": "Imagenes3/4233-08/Copia de CRI_8456.jpg",
+    "main_image": "Imagenes3/4233-08/catalogo 42 _page-0139.jpg",
     "gallery": [
+      "Imagenes3/4233-08/Copia de CRI_8456.jpg",
       "Imagenes3/4233-08/Copia de CRI_8458.jpg",
       "Imagenes3/4233-08/Copia de CRI_8461.jpg",
       "Imagenes3/4233-08/Copia de CRI_8465.jpg",
@@ -305,8 +316,9 @@
   },
   {
     "family": "4233-16",
-    "main_image": "Imagenes3/4233-16/Copia de CRI_8398.jpg",
+    "main_image": "Imagenes3/4233-16/catalogo 42 _page-0143.jpg",
     "gallery": [
+      "Imagenes3/4233-16/Copia de CRI_8398.jpg",
       "Imagenes3/4233-16/Copia de CRI_8402.jpg",
       "Imagenes3/4233-16/Copia de CRI_8406.jpg",
       "Imagenes3/4233-16/Copia de CRI_8411.jpg"
@@ -317,8 +329,9 @@
   },
   {
     "family": "4233-48",
-    "main_image": "Imagenes3/4233-48/Copia de CRI_8426.jpg",
+    "main_image": "Imagenes3/4233-48/catalogo 42 _page-0146.jpg",
     "gallery": [
+      "Imagenes3/4233-48/Copia de CRI_8426.jpg",
       "Imagenes3/4233-48/Copia de CRI_8430.jpg",
       "Imagenes3/4233-48/Copia de CRI_8438.jpg",
       "Imagenes3/4233-48/Copia de CRI_8440.jpg"
@@ -339,8 +352,9 @@
   },
   {
     "family": "4234-08",
-    "main_image": "Imagenes3/4234-08/Copia de CRI_8274.jpg",
+    "main_image": "Imagenes3/4234-08/catalogo 42 _page-0152.jpg",
     "gallery": [
+      "Imagenes3/4234-08/Copia de CRI_8274.jpg",
       "Imagenes3/4234-08/Copia de CRI_8276.jpg",
       "Imagenes3/4234-08/Copia de CRI_8281.jpg",
       "Imagenes3/4234-08/Copia de CRI_8290.jpg"
@@ -351,8 +365,9 @@
   },
   {
     "family": "4234-09",
-    "main_image": "Imagenes3/4234-09/Copia de CRI_8366.jpg",
+    "main_image": "Imagenes3/4234-09/catalogo 42 _page-0155.jpg",
     "gallery": [
+      "Imagenes3/4234-09/Copia de CRI_8366.jpg",
       "Imagenes3/4234-09/Copia de CRI_8372.jpg",
       "Imagenes3/4234-09/Copia de CRI_8375.jpg",
       "Imagenes3/4234-09/CRI_8365.jpg"
@@ -363,8 +378,9 @@
   },
   {
     "family": "4234-16",
-    "main_image": "Imagenes3/4234-16/Copia de CRI_8332.jpg",
+    "main_image": "Imagenes3/4234-16/catalogo 42 _page-0159.jpg",
     "gallery": [
+      "Imagenes3/4234-16/Copia de CRI_8332.jpg",
       "Imagenes3/4234-16/Copia de CRI_8335.jpg",
       "Imagenes3/4234-16/Copia de CRI_8342.jpg",
       "Imagenes3/4234-16/Copia de CRI_8350.jpg"
@@ -375,8 +391,9 @@
   },
   {
     "family": "4234-48",
-    "main_image": "Imagenes3/4234-48/Copia de CRI_8303.jpg",
+    "main_image": "Imagenes3/4234-48/catalogo 42 _page-0162.jpg",
     "gallery": [
+      "Imagenes3/4234-48/Copia de CRI_8303.jpg",
       "Imagenes3/4234-48/Copia de CRI_8305.jpg",
       "Imagenes3/4234-48/Copia de CRI_8309.jpg",
       "Imagenes3/4234-48/Copia de CRI_8314.jpg",
@@ -402,8 +419,9 @@
   },
   {
     "family": "4236-00",
-    "main_image": "Imagenes3/4236-00/Copia de CRI_8579.jpg",
+    "main_image": "Imagenes3/4236-00/catalogo 42 _page-0172.jpg",
     "gallery": [
+      "Imagenes3/4236-00/Copia de CRI_8579.jpg",
       "Imagenes3/4236-00/Copia de CRI_8585.jpg",
       "Imagenes3/4236-00/Copia de CRI_8586.jpg",
       "Imagenes3/4236-00/Copia de CRI_8592.jpg",
@@ -417,6 +435,7 @@
     "family": "4240-00",
     "main_image": "Imagenes3/4240-00/Catalogo 4240.PNG",
     "gallery": [
+      "Imagenes3/4240-00/4240.jpg",
       "Imagenes3/4240-00/IMG_8558.PNG",
       "Imagenes3/4240-00/IMG_8559.PNG",
       "Imagenes3/4240-00/IMG_8978.PNG"
@@ -432,6 +451,7 @@
     "family": "4244-00",
     "main_image": "Imagenes3/4244-00/catalogo 4244.jpg",
     "gallery": [
+      "Imagenes3/4244-00/4244.jpg",
       "Imagenes3/4244-00/IMG_8546.JPG.jpeg",
       "Imagenes3/4244-00/IMG_8547.JPG.jpeg",
       "Imagenes3/4244-00/IMG_8549.HEIC"
@@ -445,8 +465,9 @@
   },
   {
     "family": "4245-00",
-    "main_image": "Imagenes3/4245-00/Copia de CRI_7864.jpg",
+    "main_image": "Imagenes3/4245-00/catalogo 42 _page-0196.jpg",
     "gallery": [
+      "Imagenes3/4245-00/Copia de CRI_7864.jpg",
       "Imagenes3/4245-00/Copia de CRI_7888.jpg",
       "Imagenes3/4245-00/CRI_7845.jpg",
       "Imagenes3/4245-00/CRI_7853.jpg"
@@ -459,6 +480,7 @@
     "family": "4246-00",
     "main_image": "Imagenes3/4246-00/catalogo 4246.jpg",
     "gallery": [
+      "Imagenes3/4246-00/4246.jpg",
       "Imagenes3/4246-00/IMG_8569.JPG.jpeg",
       "Imagenes3/4246-00/IMG_8570.JPG.jpeg",
       "Imagenes3/4246-00/IMG_8571.JPG.jpeg",
@@ -476,7 +498,8 @@
     "main_image": "Imagenes3/4247-00/catalogo 4247 3.36.03.jpg.jpeg",
     "gallery": [
       "Imagenes3/4247-00/1.jpg-2.jpeg",
-      "Imagenes3/4247-00/2.jpg-2.jpeg"
+      "Imagenes3/4247-00/2.jpg-2.jpeg",
+      "Imagenes3/4247-00/4247.jpg"
     ],
     "description": "Jeans 4247 - Oxford Power Stretch. El Jeans 4247 es la combinacion perfecta entre estructura, comodidad y estilizacion. Disenado en silueta Oxford, estiliza visualmente las piernas y alarga la figura gracias a su caida equilibrada desde la cadera hacia abajo. Cuenta con 3 pinzas estrategicas que moldean la zona posterior, realzando naturalmente el gluteo y definiendo la silueta sin perder comodidad. Su tela Power Stretch entrega compresion inteligente, adaptabilidad al cuerpo, maximo confort durante todo el dia y recuperacion perfecta (no se deforma). El lavado en tono biomedio aporta versatilidad y sofisticacion, ideal para transitar del dia a la noche sin esfuerzo. El resultado: un calce increible que abraza el cuerpo, define la cintura y estiliza sin marcar.",
     "characteristics": [
