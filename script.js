@@ -58,21 +58,11 @@ function formatearRutVisual(rut) {
   return `${parts.reverse().join(".")}-${dvRaw}`;
 }
 
-function configurarBotonCatalogo() {
-  const btn = document.getElementById("catalogSwitchBtn");
-  if (!btn) return;
-  const label = document.body?.dataset?.catalogSwitchLabel;
-  const href = document.body?.dataset?.catalogSwitchHref;
-  if (label) btn.innerText = label;
-  if (href) btn.setAttribute("href", href);
-}
-
-configurarBotonCatalogo();
-
 /***********************
  * CARGAR PRODUCTOS
  ***********************/
 const CATALOG_DATA_FILE = (document.body?.dataset?.catalogFile || "data.json").trim() || "data.json";
+const CATALOG_SOURCE = (document.body?.dataset?.catalogSource || "catalogo-1").trim() || "catalogo-1";
 fetch(withCacheBust(CATALOG_DATA_FILE))
   .then((res) => res.json())
   .then((data) => {
@@ -1093,7 +1083,7 @@ function construirPayloadCotizacion(cliente) {
       client_rut_normalized: cliente?.rut_normalized || normalizarRut(cliente?.rut || ""),
       total_items: totalItems,
       created_at_client: createdAtIso,
-      source: "web",
+      source: CATALOG_SOURCE,
     },
     items: lineas,
   };
