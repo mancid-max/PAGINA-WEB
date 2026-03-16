@@ -14,29 +14,8 @@ let clientLookupDebounce = null;
 let imagenesModalActual = [];
 let imagenModalIndex = 0;
 let quotePanelReady = false;
-let imageZoomHintTimer = null;
-let zoomTouchStartX = null;
-let zoomTouchStartY = null;
 
 const ASSET_VERSION = Date.now();
-let lockedScrollY = 0;
-let bodyScrollLocked = false;
-
-function bloquearScrollFondo() {
-  if (bodyScrollLocked) return;
-  lockedScrollY = window.scrollY || window.pageYOffset || 0;
-  document.body.classList.add("modal-open");
-  document.body.style.top = `-${lockedScrollY}px`;
-  bodyScrollLocked = true;
-}
-
-function desbloquearScrollFondo() {
-  if (!bodyScrollLocked) return;
-  document.body.classList.remove("modal-open");
-  document.body.style.top = "";
-  window.scrollTo(0, lockedScrollY);
-  bodyScrollLocked = false;
-}
 
 function withCacheBust(path) {
   if (!path) return path;
@@ -79,17 +58,29 @@ function formatearRutVisual(rut) {
   return `${parts.reverse().join(".")}-${dvRaw}`;
 }
 
+function configurarBotonCatalogo() {
+  const btn = document.getElementById("catalogSwitchBtn");
+  if (!btn) return;
+  const label = document.body?.dataset?.catalogSwitchLabel;
+  const href = document.body?.dataset?.catalogSwitchHref;
+  if (label) btn.innerText = label;
+  if (href) btn.setAttribute("href", href);
+}
+
+configurarBotonCatalogo();
+
 /***********************
  * CARGAR PRODUCTOS
  ***********************/
-fetch("data.json?v=" + Date.now())
+const CATALOG_DATA_FILE = (document.body?.dataset?.catalogFile || "data.json").trim() || "data.json";
+fetch(withCacheBust(CATALOG_DATA_FILE))
   .then((res) => res.json())
   .then((data) => {
     productos = data;
     renderGrid(productos);
     inicializarBuscadorModelos();
   })
-  .catch((err) => console.error("Error cargando data.json:", err));
+  .catch((err) => console.error(`Error cargando ${CATALOG_DATA_FILE}:`, err));
 
 /***********************
  * UTILIDADES IMÁGENES
@@ -114,14 +105,10 @@ function renderImages(imageList) {
 
   if (!imageList || !imageList.length) {
     viewer.src = "";
-    viewer.style.cursor = "default";
-    viewer.onclick = null;
     return;
   }
 
   viewer.src = withCacheBust(imageList[0]);
-  viewer.style.cursor = "zoom-in";
-  viewer.onclick = abrirVisorImagenes;
 
   imageList.forEach((imgSrc, index) => {
     const thumb = document.createElement("img");
@@ -195,20 +182,6 @@ function renderZoomGallery() {
     };
     zoomThumbs.appendChild(thumb);
   });
-
-  asegurarMiniaturaActivaVisible(zoomThumbs);
-}
-
-function asegurarMiniaturaActivaVisible(zoomThumbs) {
-  const activeThumb = zoomThumbs.querySelector(".active-thumb");
-  if (!activeThumb) return;
-  requestAnimationFrame(() => {
-    activeThumb.scrollIntoView({
-      behavior: "smooth",
-      block: "nearest",
-      inline: "center"
-    });
-  });
 }
 
 function abrirVisorImagenes() {
@@ -217,70 +190,13 @@ function abrirVisorImagenes() {
   renderZoomGallery();
   zoomModal.hidden = false;
   document.body.classList.add("image-zoom-open");
-  mostrarHintZoom();
 }
 
 function cerrarVisorImagenes() {
   const zoomModal = document.getElementById("imageZoomModal");
   if (!zoomModal) return;
-  const hint = document.getElementById("imageZoomHint");
-  if (imageZoomHintTimer) {
-    clearTimeout(imageZoomHintTimer);
-    imageZoomHintTimer = null;
-  }
-  hint?.classList.remove("show");
   zoomModal.hidden = true;
   document.body.classList.remove("image-zoom-open");
-}
-
-function mostrarHintZoom() {
-  const hint = document.getElementById("imageZoomHint");
-  if (!hint) return;
-  const isMobileViewport = window.matchMedia("(max-width: 820px)").matches;
-  const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-  if (imagenesModalActual.length < 2 || !isMobileViewport || !isTouchDevice) {
-    hint.classList.remove("show");
-    return;
-  }
-  hint.classList.add("show");
-  if (imageZoomHintTimer) clearTimeout(imageZoomHintTimer);
-  imageZoomHintTimer = setTimeout(() => {
-    hint.classList.remove("show");
-    imageZoomHintTimer = null;
-  }, 2400);
-}
-
-function moverImagenZoom(delta) {
-  const total = imagenesModalActual.length;
-  if (total < 2) return;
-  imagenModalIndex = (imagenModalIndex + delta + total) % total;
-  renderZoomGallery();
-}
-
-function inicializarSwipeZoom() {
-  const stage = document.querySelector("#imageZoomModal .image-zoom-stage");
-  if (!stage) return;
-
-  stage.addEventListener("touchstart", (e) => {
-    const t = e.changedTouches?.[0];
-    if (!t) return;
-    zoomTouchStartX = t.clientX;
-    zoomTouchStartY = t.clientY;
-  }, { passive: true });
-
-  stage.addEventListener("touchend", (e) => {
-    const t = e.changedTouches?.[0];
-    if (!t || zoomTouchStartX === null || zoomTouchStartY === null) return;
-
-    const dx = t.clientX - zoomTouchStartX;
-    const dy = t.clientY - zoomTouchStartY;
-    zoomTouchStartX = null;
-    zoomTouchStartY = null;
-
-    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
-    if (dx < 0) moverImagenZoom(1);
-    else moverImagenZoom(-1);
-  }, { passive: true });
 }
 
 function inicializarPanelCotizacionModal() {
@@ -631,7 +547,6 @@ function verProducto(familyId) {
   if (modalRight) modalRight.scrollTop = 0;
 
   document.getElementById("modal").classList.add("active");
-  bloquearScrollFondo();
 }
 
 /***********************
@@ -641,7 +556,6 @@ document.getElementById("closeModal").onclick = () => {
   document.getElementById("modal").classList.remove("active");
   cerrarVisorImagenes();
   cerrarPanelCotizacionModal();
-  desbloquearScrollFondo();
 };
 
 document.getElementById("modal").onclick = (e) => {
@@ -649,7 +563,6 @@ document.getElementById("modal").onclick = (e) => {
     document.getElementById("modal").classList.remove("active");
     cerrarVisorImagenes();
     cerrarPanelCotizacionModal();
-    desbloquearScrollFondo();
   }
 };
 
@@ -658,7 +571,6 @@ document.getElementById("closeImageZoomBtn")?.addEventListener("click", cerrarVi
 document.getElementById("imageZoomModal")?.addEventListener("click", (e) => {
   if (e.target.dataset.closeImageZoom !== undefined) cerrarVisorImagenes();
 });
-inicializarSwipeZoom();
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") cerrarVisorImagenes();
   if (e.key === "Escape") cerrarPanelCotizacionModal();
@@ -699,7 +611,6 @@ document.getElementById("addBtn").onclick = () => {
   mostrarToastExito("Cotización agregada", "Puedes verla en Tu cotización.");
   cerrarPanelCotizacionModal();
   document.getElementById("modal").classList.remove("active");
-  desbloquearScrollFondo();
 };
 
 /***********************
@@ -715,7 +626,7 @@ function actualizarCarrito() {
       <div class="cart-item">
         <div class="cart-item-top">
           <div class="cart-item-title">Modelo ${item.sku}</div>
-          <button class="cart-trash" type="button" aria-label="Eliminar modelo ${item.sku}" onclick="confirmarEliminarItem(${index})">
+          <button class="cart-trash" type="button" aria-label="Eliminar modelo ${item.sku}" onclick="eliminarItem(${index})">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h2v9H7V9Zm4 0h2v9h-2V9Zm4 0h2v9h-2V9ZM6 7h12l-1 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Z"/>
             </svg>
@@ -737,31 +648,6 @@ function eliminarItem(index) {
   actualizarCarrito();
 }
 
-async function confirmarEliminarItem(index) {
-  const item = pedido[index];
-  if (!item) return;
-  const sidebar = document.getElementById("cartSidebar");
-
-  const confirmar = await mostrarConfirmacionAccion({
-    titulo: "Confirmar eliminacion de modelo",
-    mensaje: `Se eliminara el modelo ${item.sku} de tu cotizacion. Esta accion no se puede deshacer.`,
-    confirmarTexto: "Si, eliminar",
-  });
-  if (!confirmar) {
-    sidebar?.classList.add("open");
-    return;
-  }
-
-  eliminarItem(index);
-  mostrarToastExito("Modelo eliminado", `El modelo ${item.sku} fue eliminado de tu cotizacion.`);
-  if (!pedido.length) {
-    sidebar?.classList.remove("open");
-    document.querySelector(".cart-overlay")?.classList.remove("active");
-    return;
-  }
-  sidebar?.classList.add("open");
-}
-
 /***********************
  * ABRIR / CERRAR CARRITO
  ***********************/
@@ -772,12 +658,6 @@ document.getElementById("cartToggle").onclick = () => {
 document.addEventListener("click", (e) => {
   const sidebar = document.getElementById("cartSidebar");
   const toggle = document.getElementById("cartToggle");
-  const confirmModal = document.getElementById("confirmActionModal");
-  const clickEnConfirmModal = e.target && typeof e.target.closest === "function"
-    ? e.target.closest("#confirmActionModal")
-    : null;
-
-  if (clickEnConfirmModal || (confirmModal && !confirmModal.hidden)) return;
 
   if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
     sidebar.classList.remove("open");
@@ -985,8 +865,8 @@ function mostrarToastExito(titulo, mensaje) {
   if (!toast) return;
   const titleEl = toast.querySelector("strong");
   const msgEl = toast.querySelector("span");
-  if (titleEl) titleEl.innerText = titulo || "Cotizacion enviada con exito";
-  if (msgEl) msgEl.innerText = typeof mensaje === "string" ? mensaje : "";
+  if (titleEl && titulo) titleEl.innerText = titulo;
+  if (msgEl && mensaje) msgEl.innerText = mensaje;
   toast.hidden = false;
   toast.classList.remove("show");
   // Reinicia animacion
@@ -996,7 +876,7 @@ function mostrarToastExito(titulo, mensaje) {
   mostrarToastExito._timer = window.setTimeout(() => {
     toast.classList.remove("show");
     toast.hidden = true;
-  }, 10000);
+  }, 3300);
 }
 
 function mostrarToastError(titulo, mensaje) {
@@ -1646,7 +1526,7 @@ document.getElementById("sendRequest").onclick = async () => {
   try {
     await guardarCotizacionSupabase(cliente);
 
-    mostrarToastExito("Cotizacion enviada con exito", "Pronto nos comunicaremos con usted.");
+    mostrarToastExito();
     limpiarCarrito();
   } catch (error) {
     console.error(error);

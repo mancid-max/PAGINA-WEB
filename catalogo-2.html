@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mohicano</title>
+<link rel="icon" type="image/png" href="Imagenes/Logo/Logo.png">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-catalog-file="data-catalogo-2.json" data-catalog-switch-href="index.html" data-catalog-switch-label="Catalogo 1">
+
+<header class="header">
+    <div class="logo">
+        <img src="Imagenes/Logo/Logo.png" alt="Mohicano Logo">
+    </div>
+    <div class="header-actions">
+        <a id="catalogSwitchBtn" class="ghost-btn catalog-switch-btn" href="index.html">Catalogo 1</a>
+        <a class="ghost-btn catalog-switch-btn" href="catalogo-3.html">Catalogo 3</a>
+        <button id="quotesAdminBtn" class="ghost-btn admin-btn" type="button">ADMIN</button>
+        <div id="cartToggle" class="cart-btn" aria-label="Abrir tu cotizaci�n">
+            <span class="cart-btn-caption">Tu cotizaci&oacute;n</span>
+            <span class="cart-btn-main">
+              <span class="cart-btn-icon" aria-hidden="true">&#128722;</span>
+              <span id="cartCount">0</span>
+            </span>
+        </div>
+    </div>
+</header>
+
+<section class="hero">
+  <h1 class="hero-title">Nuevo Catalogo</h1>
+  <p class="hero-sub">Diseño moderno. Calidad premium.</p>
+  <div class="model-search">
+    <div class="model-search-box">
+      <input id="modelSearchInput" type="text" inputmode="numeric" autocomplete="off" placeholder="Buscar modelo (ej: 4206)">
+      <div id="modelSuggestionsPanel" class="model-suggestions-panel" hidden></div>
+    </div>
+    <button id="modelSearchBtn" type="button">Buscar</button>
+    <button id="modelSearchClear" type="button" class="ghost-btn">Limpiar</button>
+  </div>
+</section>
+
+<section id="grid" class="product-grid"></section>
+
+<!-- SIDEBAR CARRITO -->
+<div id="cartSidebar" class="cart-sidebar">
+    <button id="closeCart" class="cart-close">✕</button>
+    <h2>Tu Cotización</h2>
+    <div id="cartItems"></div>
+
+    <label for="clientRut" class="cart-field-label">RUT cliente</label>
+    <input type="text" id="clientRut" placeholder="Ej: 76.454.354-8" autocomplete="off">
+    <div id="clientLookupBadge" class="client-lookup-badge" hidden></div>
+    <div id="clientLookupMsg" class="client-lookup-msg" aria-live="polite"></div>
+    <button id="sendRequest">Enviar Cotización</button>
+</div>
+
+<!-- MODAL PRODUCTO -->
+<div id="modal" class="modal">
+  <div class="modal-content">
+
+    <span id="closeModal" class="close-modal">×</span>
+
+    <div class="modal-left">
+        <div class="image-viewer">
+            <button id="openImageGalleryBtn" class="image-gallery-btn" type="button">Ver imágenes</button>
+            <img id="viewerImg">
+        </div>
+        <div id="thumbContainer" class="thumbnails"></div>
+    </div>
+
+    <div class="modal-right">
+        <h2 id="modalTitle"></h2>
+        <p id="description" class="product-description"></p>
+        <div id="characteristics" class="product-characteristics"></div>
+        <div id="variantContainer" class="variants"></div>
+        <div class="sizes-panel">
+        <div class="sizes-divider">Cantidad por talla</div>
+        <div class="sizes">
+            <label>36 <input type="number" id="t36" min="0" step="1"></label>
+            <label>38 <input type="number" id="t38" min="0" step="1"></label>
+            <label>40 <input type="number" id="t40" min="0" step="1"></label>
+            <label>42 <input type="number" id="t42" min="0" step="1"></label>
+            <label>44 <input type="number" id="t44" min="0" step="1"></label>
+            <label>46 <input type="number" id="t46" min="0" step="1"></label>
+        </div>
+        </div>
+
+        <button id="addBtn">Agregar cotización</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- VISOR AMPLIADO DE IMAGENES -->
+<div id="imageZoomModal" class="image-zoom-modal" hidden>
+  <div class="image-zoom-backdrop" data-close-image-zoom></div>
+  <div class="image-zoom-content" role="dialog" aria-modal="true" aria-label="Visor de imágenes">
+    <button id="closeImageZoomBtn" class="image-zoom-close" type="button" aria-label="Cerrar visor">×</button>
+    <div class="image-zoom-stage">
+      <img id="imageZoomMain" alt="Vista ampliada de producto">
+    </div>
+    <div id="imageZoomThumbs" class="image-zoom-thumbs"></div>
+  </div>
+</div>
+
+<!-- MODAL COTIZACIONES (ADMIN) -->
+<div id="quotesModal" class="modal">
+  <div class="modal-content quotes-modal-content">
+    <span id="closeQuotesModal" class="close-modal">×</span>
+
+    <div class="quotes-admin">
+      <div class="quotes-admin-head">
+        <h2>Cotizaciones</h2>
+        <div class="quotes-admin-actions">
+          <button id="refreshQuotesBtn" type="button" class="ghost-btn">Actualizar</button>
+          <button id="logoutQuotesBtn" type="button" class="ghost-btn">Cerrar sesión</button>
+        </div>
+      </div>
+
+      <div id="quotesLoginSection" class="quotes-login">
+        <p>Ingresa Usuario</p>
+        <input id="quotesEmail" type="email" placeholder="Correo administrador">
+        <input id="quotesPassword" type="password" placeholder="Contraseña">
+        <button id="quotesLoginBtn" type="button">Ingresar</button>
+        <div id="quotesLoginMsg" class="quotes-msg"></div>
+      </div>
+
+      <div id="quotesPanel" class="quotes-panel" style="display:none;">
+        <div id="quotesUserBadge" class="quotes-user-badge"></div>
+        <div id="quotesList" class="quotes-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="successToast" class="success-toast" aria-live="polite" hidden>
+  <div class="success-toast-icon">✓</div>
+  <div class="success-toast-text">
+    <strong>Cotización enviada con éxito</strong>
+    <span>Recibimos tu solicitud correctamente.</span>
+  </div>
+</div>
+
+<div id="errorToast" class="success-toast error-toast" aria-live="polite" hidden>
+  <div class="success-toast-icon">!</div>
+  <div class="success-toast-text">
+    <strong id="errorToastTitle">Revisa los datos</strong>
+    <span id="errorToastMsg">Hay un problema con la informacion ingresada.</span>
+  </div>
+</div>
+
+<script src="script.js?v=20260224z"></script>
+</body>
+</html>
+
+
+
+
+

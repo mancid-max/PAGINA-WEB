@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -9,15 +9,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-catalog-file="data.json" data-catalog-switch-href="catalogo-2.html" data-catalog-switch-label="Catalogo 2">
 
 <header class="header">
     <div class="logo">
         <img src="Imagenes/Logo/Logo.png" alt="Mohicano Logo">
     </div>
     <div class="header-actions">
+        <a id="catalogSwitchBtn" class="ghost-btn catalog-switch-btn" href="catalogo-2.html">Catalogo 2</a>
+        <a class="ghost-btn catalog-switch-btn" href="catalogo-3.html">Catalogo 3</a>
         <button id="quotesAdminBtn" class="ghost-btn admin-btn" type="button">ADMIN</button>
-        <div id="cartToggle" class="cart-btn" aria-label="Abrir tu cotización">
+        <div id="cartToggle" class="cart-btn" aria-label="Abrir tu cotizaci�n">
             <span class="cart-btn-caption">Tu cotizaci&oacute;n</span>
             <span class="cart-btn-main">
               <span class="cart-btn-icon" aria-hidden="true">&#128722;</span>
@@ -28,8 +30,8 @@
 </header>
 
 <section class="hero">
-  <h1 class="hero-title">Nueva colección otoño invierno 2026</h1>
-  <p class="hero-sub">Conoce nuestra nueva plataforma y genera tu cotización en minutos.</p>
+  <h1 class="hero-title">Nueva Colección</h1>
+  <p class="hero-sub">Diseño moderno. Calidad premium.</p>
   <div class="model-search">
     <div class="model-search-box">
       <input id="modelSearchInput" type="text" inputmode="numeric" autocomplete="off" placeholder="Buscar modelo (ej: 4206)">
@@ -44,7 +46,7 @@
 
 <!-- SIDEBAR CARRITO -->
 <div id="cartSidebar" class="cart-sidebar">
-    <button id="closeCart" class="cart-close">×</button>
+    <button id="closeCart" class="cart-close">✕</button>
     <h2>Tu Cotización</h2>
     <div id="cartItems"></div>
 
@@ -63,10 +65,7 @@
 
     <div class="modal-left">
         <div class="image-viewer">
-            <button id="openImageGalleryBtn" class="image-gallery-btn" type="button" aria-label="Abrir imagen en pantalla completa">
-              <span class="image-gallery-icon" aria-hidden="true"></span>
-              <span class="image-gallery-label">Ver imagenes</span>
-            </button>
+            <button id="openImageGalleryBtn" class="image-gallery-btn" type="button">Ver imágenes</button>
             <img id="viewerImg">
         </div>
         <div id="thumbContainer" class="thumbnails"></div>
@@ -102,7 +101,6 @@
     <button id="closeImageZoomBtn" class="image-zoom-close" type="button" aria-label="Cerrar visor">×</button>
     <div class="image-zoom-stage">
       <img id="imageZoomMain" alt="Vista ampliada de producto">
-      <div id="imageZoomHint" class="image-zoom-hint" aria-hidden="true">Desliza para ver imágenes</div>
     </div>
     <div id="imageZoomThumbs" class="image-zoom-thumbs"></div>
   </div>
@@ -141,8 +139,8 @@
 <div id="successToast" class="success-toast" aria-live="polite" hidden>
   <div class="success-toast-icon">✓</div>
   <div class="success-toast-text">
-    <strong>Cotizacion enviada con exito</strong>
-    <span></span>
+    <strong>Cotización enviada con éxito</strong>
+    <span>Recibimos tu solicitud correctamente.</span>
   </div>
 </div>
 
