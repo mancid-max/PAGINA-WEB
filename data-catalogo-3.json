@@ -30,8 +30,14 @@
       "Imagenes3/4202/Copia de CRI_7821.jpg",
       "Imagenes3/4202/Copia de CRI_7828.jpg"
     ],
-    "description": "Modelo 4202",
-    "characteristics": [],
+    "description": "El jeans Modelo 4202 est? dise?ado para ajustarse al cuerpo y realzar la silueta con un calce c?modo y favorecedor. Confeccionado en tela Power Stretch, entrega elasticidad, libertad de movimiento y excelente recuperaci?n, manteniendo su forma con el uso. Su cintura pitillo estiliza la figura y logra un ajuste firme, mientras que el lavado suavizado le aporta un tacto m?s suave y un look delicado, ideal para el uso diario. Un jeans c?modo, vers?til y f?cil de combinar, perfecto para looks casuales o m?s armados.",
+    "characteristics": [
+      "Cristal en pasador",
+      "Tela Power Stretch con elasticidad y recuperaci?n",
+      "Lavado suavizado",
+      "Calce ajustado y favorecedor",
+      "Estilo c?modo y vers?til"
+    ],
     "variants": []
   },
   {
@@ -189,8 +195,15 @@
       "Imagenes3/4221-00/Mohicano0017 copie.jpg",
       "Imagenes3/4221-00/Mohicano0019 copie.jpg"
     ],
-    "description": "Modelo 4221-00",
-    "characteristics": [],
+    "description": "El jeans Skinny 4221-00 est? confeccionado en tela Power Stretch, que entrega elasticidad, comodidad y excelente recuperaci?n, adapt?ndose al cuerpo sin perder el calce con el uso. Su efecto glitter en color azul industrial aporta un brillo sutil y moderno, ideal para darle un toque especial a cualquier look sin dejar de ser un jeans vers?til. Cuenta con pinzas estrat?gicas en el calce, que ayudan a realzar la figura y potenciar el efecto push up. Incorpora una pretina cruzada, dise?ada para favorecer visualmente la silueta y lograr que la cintura se vea m?s peque?a, estilizando la zona media. Un skinny c?modo, favorecedor y con personalidad, perfecto para usar tanto de d?a como de noche.",
+    "characteristics": [
+      "Calce con 3 pinzas",
+      "Tela Power Stretch con excelente elasticidad y recuperaci?n",
+      "Efecto glitter sutil en color azul industrial",
+      "Pretina cruzada que estiliza la cintura",
+      "Pinzas en el calce para mayor realce",
+      "Ajuste c?modo y favorecedor"
+    ],
     "variants": []
   },
   {
@@ -296,8 +309,14 @@
     "family": "4233-04",
     "main_image": "Imagenes3/4233-04/catalogo 42 _page-0149.jpg",
     "gallery": [],
-    "description": "Modelo 4233-04",
-    "characteristics": [],
+    "description": "El jeans Modelo 4233 est? confeccionado en tela Perfect Fit, parte de nuestra l?nea premium, dise?ada para entregar comodidad, elasticidad y excelente recuperaci?n, adapt?ndose al cuerpo sin perder su forma. Su cintura favorecedora estiliza la silueta y logra un calce firme y c?modo, ideal para el uso diario. Gracias a su estructura y tecnolog?a en el tejido, ofrece libertad de movimiento, suavidad al tacto y un ajuste que se mantiene con el tiempo. Disponible en variedad de colores seg?n referencia visual, este modelo es vers?til, moderno y f?cil de combinar, perfecto para distintos estilos y ocasiones. Un jeans c?modo, favorecedor y funcional, pensado para acompa?ar distintos looks y temporadas.",
+    "characteristics": [
+      "Tela Perfect Fit con alta elasticidad y recuperaci?n",
+      "Cintura favorecedora seg?n modelo",
+      "Ajuste c?modo y firme",
+      "Suavidad al tacto y alta adaptabilidad",
+      "Color seg?n referencia visual"
+    ],
     "variants": []
   },
   {
@@ -310,8 +329,14 @@
       "Imagenes3/4233-08/Copia de CRI_8465.jpg",
       "Imagenes3/4233-08/Copia de CRI_8474.jpg"
     ],
-    "description": "Modelo 4233-08",
-    "characteristics": [],
+    "description": "El jeans Modelo 4233 est? confeccionado en tela Perfect Fit, parte de nuestra l?nea premium, dise?ada para entregar comodidad, elasticidad y excelente recuperaci?n, adapt?ndose al cuerpo sin perder su forma. Su cintura favorecedora estiliza la silueta y logra un calce firme y c?modo, ideal para el uso diario. Gracias a su estructura y tecnolog?a en el tejido, ofrece libertad de movimiento, suavidad al tacto y un ajuste que se mantiene con el tiempo. Disponible en variedad de colores seg?n referencia visual, este modelo es vers?til, moderno y f?cil de combinar, perfecto para distintos estilos y ocasiones. Un jeans c?modo, favorecedor y funcional, pensado para acompa?ar distintos looks y temporadas.",
+    "characteristics": [
+      "Tela Perfect Fit con alta elasticidad y recuperaci?n",
+      "Cintura favorecedora seg?n modelo",
+      "Ajuste c?modo y firme",
+      "Suavidad al tacto y alta adaptabilidad",
+      "Color seg?n referencia visual"
+    ],
     "variants": []
   },
   {
@@ -323,8 +348,14 @@
       "Imagenes3/4233-16/Copia de CRI_8406.jpg",
       "Imagenes3/4233-16/Copia de CRI_8411.jpg"
     ],
-    "description": "Modelo 4233-16",
-    "characteristics": [],
+    "description": "El jeans Modelo 4233 est? confeccionado en tela Perfect Fit, parte de nuestra l?nea premium, dise?ada para entregar comodidad, elasticidad y excelente recuperaci?n, adapt?ndose al cuerpo sin perder su forma. Su cintura favorecedora estiliza la silueta y logra un calce firme y c?modo, ideal para el uso diario. Gracias a su estructura y tecnolog?a en el tejido, ofrece libertad de movimiento, suavidad al tacto y un ajuste que se mantiene con el tiempo. Disponible en variedad de colores seg?n referencia visual, este modelo es vers?til, moderno y f?cil de combinar, perfecto para distintos estilos y ocasiones. Un jeans c?modo, favorecedor y funcional, pensado para acompa?ar distintos looks y temporadas.",
+    "characteristics": [
+      "Tela Perfect Fit con alta elasticidad y recuperaci?n",
+      "Cintura favorecedora seg?n modelo",
+      "Ajuste c?modo y firme",
+      "Suavidad al tacto y alta adaptabilidad",
+      "Color seg?n referencia visual"
+    ],
     "variants": []
   },
   {
@@ -336,8 +367,14 @@
       "Imagenes3/4233-48/Copia de CRI_8438.jpg",
       "Imagenes3/4233-48/Copia de CRI_8440.jpg"
     ],
-    "description": "Modelo 4233-48",
-    "characteristics": [],
+    "description": "El jeans Modelo 4233 est? confeccionado en tela Perfect Fit, parte de nuestra l?nea premium, dise?ada para entregar comodidad, elasticidad y excelente recuperaci?n, adapt?ndose al cuerpo sin perder su forma. Su cintura favorecedora estiliza la silueta y logra un calce firme y c?modo, ideal para el uso diario. Gracias a su estructura y tecnolog?a en el tejido, ofrece libertad de movimiento, suavidad al tacto y un ajuste que se mantiene con el tiempo. Disponible en variedad de colores seg?n referencia visual, este modelo es vers?til, moderno y f?cil de combinar, perfecto para distintos estilos y ocasiones. Un jeans c?modo, favorecedor y funcional, pensado para acompa?ar distintos looks y temporadas.",
+    "characteristics": [
+      "Tela Perfect Fit con alta elasticidad y recuperaci?n",
+      "Cintura favorecedora seg?n modelo",
+      "Ajuste c?modo y firme",
+      "Suavidad al tacto y alta adaptabilidad",
+      "Color seg?n referencia visual"
+    ],
     "variants": []
   },
   {
@@ -359,8 +396,14 @@
       "Imagenes3/4234-08/Copia de CRI_8281.jpg",
       "Imagenes3/4234-08/Copia de CRI_8290.jpg"
     ],
-    "description": "Modelo 4234-08",
-    "characteristics": [],
+    "description": "El jeans Flare 4234-08 destaca por su calce favorecedor y su dise?o elegante. Su silueta flare estiliza la figura y alarga visualmente las piernas, logrando un look sofisticado y moderno. Confeccionado en tela Perfect Fit, ofrece un ajuste c?modo, flexible y de excelente recuperaci?n, manteniendo su forma con el uso. El color chocolate aporta un tono c?lido, vers?til y sofisticado, ideal para elevar looks tanto de d?a como de noche. Un modelo c?modo, elegante y con un calce que realza la silueta.",
+    "characteristics": [
+      "Cristal en pasador",
+      "Tela Perfect Fit con alta elasticidad y recuperaci?n",
+      "Color chocolate elegante y f?cil de combinar",
+      "Ajuste c?modo y favorecedor",
+      "Dise?o vers?til para distintas ocasiones"
+    ],
     "variants": []
   },
   {
@@ -372,8 +415,13 @@
       "Imagenes3/4234-09/Copia de CRI_8375.jpg",
       "Imagenes3/4234-09/CRI_8365.jpg"
     ],
-    "description": "Modelo 4234-09",
-    "characteristics": [],
+    "description": "El jeans Flare 4234-09 destaca por su calce favorecedor y su silueta flare, que estiliza y alarga visualmente las piernas. Confeccionado en tela Perfect Fit, ofrece un ajuste c?modo, flexible y de excelente recuperaci?n. El color verde musgo es un tono profundo, natural y sofisticado, ideal para looks modernos, sobrios y f?ciles de combinar. Un modelo elegante, vers?til y con un calce que realza la silueta.",
+    "characteristics": [
+      "Cristal en pasador",
+      "Tela Perfect Fit",
+      "Color verde musgo profundo y sofisticado",
+      "Ajuste c?modo y favorecedor"
+    ],
     "variants": []
   },
   {
@@ -385,8 +433,13 @@
       "Imagenes3/4234-16/Copia de CRI_8342.jpg",
       "Imagenes3/4234-16/Copia de CRI_8350.jpg"
     ],
-    "description": "Modelo 4234-16",
-    "characteristics": [],
+    "description": "El jeans Flare 4234-16 destaca por su calce favorecedor y su silueta flare, que estiliza la figura y alarga visualmente las piernas. Confeccionado en tela Perfect Fit, ofrece un ajuste c?modo, flexible y de excelente recuperaci?n, manteniendo su forma con el uso. El color militar oscuro es un tono profundo, sobrio y moderno, ideal para looks urbanos, elegantes y f?ciles de combinar con neutros y tonos tierra. Un modelo vers?til, sofisticado y con un calce que realza la silueta.",
+    "characteristics": [
+      "Cristal en pasador",
+      "Tela Perfect Fit",
+      "Color militar oscuro profundo y moderno",
+      "Ajuste c?modo y favorecedor"
+    ],
     "variants": []
   },
   {
@@ -399,8 +452,14 @@
       "Imagenes3/4234-48/Copia de CRI_8314.jpg",
       "Imagenes3/4234-48/Copia de CRI_8320.jpg"
     ],
-    "description": "Modelo 4234-48",
-    "characteristics": [],
+    "description": "El jeans Flare 4234-48 destaca por su calce favorecedor y su dise?o elegante. Su silueta flare estiliza la figura y alarga visualmente las piernas, logrando un look sofisticado y moderno. Confeccionado en tela Perfect Fit, ofrece un ajuste c?modo, flexible y de excelente recuperaci?n, manteniendo su forma con el uso. El color burdeo aporta un toque distintivo y refinado, ideal para elevar looks tanto de d?a como de noche. Un modelo vers?til, c?modo y con un calce que realza la silueta.",
+    "characteristics": [
+      "Cristal en pasador",
+      "Tela Perfect Fit con alta elasticidad y recuperaci?n",
+      "Color burdeo elegante y moderno",
+      "Ajuste c?modo y favorecedor",
+      "Dise?o vers?til para distintas ocasiones"
+    ],
     "variants": []
   },
   {
@@ -413,8 +472,14 @@
       "Imagenes3/4235-00/Copia de CRI_8498.jpg",
       "Imagenes3/4235-00/Copia de CRI_8502.jpg"
     ],
-    "description": "Modelo 4235-00",
-    "characteristics": [],
+    "description": "El jeans Modelo 4235 est? dise?ado para realzar la silueta con un calce firme y favorecedor. Confeccionado en tela Power Stretch, ofrece excelente elasticidad, comodidad y muy buena recuperaci?n, adapt?ndose al cuerpo sin perder su forma. Su cintura pitillo estiliza la figura y entrega un ajuste c?modo. Cuenta con un lavado bio focalizado, que aporta un color m?s profundo, elegante y sutil, junto a un cierre delantero y un efecto focalizado que realza visualmente el tono y le da un acabado m?s sofisticado. Un jeans moderno, c?modo y con un look refinado, ideal para el uso diario o looks m?s armados.",
+    "characteristics": [
+      "Cristal en pasador",
+      "Tela Power Stretch con alta elasticidad y recuperaci?n",
+      "Lavado bio focalizado para un color profundo y elegante",
+      "Cierre delantero focalizado con acabado sutil",
+      "Calce c?modo y favorecedor"
+    ],
     "variants": []
   },
   {
@@ -427,8 +492,15 @@
       "Imagenes3/4236-00/Copia de CRI_8592.jpg",
       "Imagenes3/4236-00/Copia de CRI_8593.jpg"
     ],
-    "description": "Modelo 4236-00",
-    "characteristics": [],
+    "description": "El jeans Palazzo 4236 destaca por su estilo moderno y un calce que modela incre?ble. Confeccionado en tela Power Stretch, ofrece elasticidad, comodidad y excelente recuperaci?n. Su color biomedio focalizado aporta profundidad y un acabado elegante. Incluye pasadores en la cintura, detalles en los bolsillos y roturas sutiles que suman car?cter. Adem?s, cuenta con 3 pinzas estrat?gicas que elevan el calce y realzan la figura. Un palazzo c?modo, favorecedor y lleno de estilo, sobre todo en las tendencias del 2026.",
+    "characteristics": [
+      "Tela Power Stretch con alta elasticidad y recuperaci?n",
+      "Color biomedio focalizado",
+      "Pasadores en la cintura como detalle de dise?o",
+      "Detalles en bolsillos",
+      "Roturas sutiles",
+      "3 pinzas que elevan el calce y realzan la figura"
+    ],
     "variants": []
   },
   {
@@ -472,8 +544,13 @@
       "Imagenes3/4245-00/CRI_7845.jpg",
       "Imagenes3/4245-00/CRI_7853.jpg"
     ],
-    "description": "Modelo 4245-00",
-    "characteristics": [],
+    "description": "El jeans est? dise?ado para realzar la silueta con un calce firme y muy favorecedor. Confeccionado en tela Power Stretch, ofrece excelente elasticidad, comodidad y recuperaci?n, adapt?ndose al cuerpo sin perder su forma. Cuenta con 3 pinzas en el calce, que ayudan a elevar y modelar la figura, potenciando un ajuste m?s estilizado. Incorpora un pasador con cristales en el calce, un detalle sutil y elegante que aporta un toque distintivo y femenino. Un jeans negro, vers?til y sofisticado, ideal para looks de d?a o de noche.",
+    "characteristics": [
+      "3 pinzas en el calce",
+      "Color negro atemporal",
+      "Tela Power Stretch con alta elasticidad y recuperaci?n",
+      "Pasador con cristales como detalle protagonista"
+    ],
     "variants": []
   },
   {
