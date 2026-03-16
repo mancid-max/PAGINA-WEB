@@ -66,7 +66,9 @@ const CATALOG_SOURCE = (document.body?.dataset?.catalogSource || "catalogo-1").t
 fetch(withCacheBust(CATALOG_DATA_FILE))
   .then((res) => res.json())
   .then((data) => {
-    productos = data;
+    productos = Array.isArray(data)
+      ? data.filter((item) => !(CATALOG_SOURCE === "catalogo-3" && String(item?.family) === "4211-00"))
+      : [];
     renderGrid(productos);
     inicializarBuscadorModelos();
   })
