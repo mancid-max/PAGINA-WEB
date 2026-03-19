@@ -808,6 +808,17 @@ function descargarArchivo(nombre, contenido, mime) {
   URL.revokeObjectURL(url);
 }
 
+function descargarBlob(nombre, blob) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nombre;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 function pad2(n) {
   return String(n).padStart(2, "0");
 }
@@ -866,6 +877,116 @@ function escapeHtmlExcel(value) {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
+}
+
+const ORDER_TEMPLATE_FILE = "plantilla-toma-pedidos.xlsx";
+const ORDER_TEMPLATE_SHEET = "TOMA DE PEDIDOS";
+const ORDER_TEMPLATE_FIRST_ROW = 15;
+const ORDER_TEMPLATE_LAST_ROW = 61;
+const ORDER_TEMPLATE_SIZE_COLUMNS = {
+  "36": "E",
+  "38": "F",
+  "40": "G",
+  "42": "H",
+  "44": "I",
+  "46": "J",
+  "48": "K",
+  "50": "L",
+  "S": "M",
+  "M": "N",
+  "L": "O",
+};
+
+let xlsxPopulateLoaderPromise = null;
+
+function loadXlsxPopulate() {
+  if (window.XlsxPopulate) return Promise.resolve(window.XlsxPopulate);
+  if (xlsxPopulateLoaderPromise) return xlsxPopulateLoaderPromise;
+
+  xlsxPopulateLoaderPromise = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "https://unpkg.com/xlsx-populate/browser/xlsx-populate.min.js";
+    script.async = true;
+    script.onload = () => {
+      if (window.XlsxPopulate) resolve(window.XlsxPopulate);
+      else reject(new Error("No se pudo inicializar la libreria de Excel"));
+    };
+    script.onerror = () => reject(new Error("No se pudo cargar la libreria de Excel"));
+    document.head.appendChild(script);
+  });
+
+  return xlsxPopulateLoaderPromise;
+}
+
+function normalizarSkuParaPlantilla(sku, source) {
+  const raw = String(sku || "").trim().toUpperCase();
+  if (/^\d{4}$/.test(raw) && (source === "catalogo-1" || source === "catalogo-3")) {
+    return `${raw}-00`;
+  }
+  return raw;
+}
+
+function agruparItemsParaPlantilla(quote, items = []) {
+  const grouped = new Map();
+  const ordered = [...items].sort((a, b) => {
+    if (String(a.sku) !== String(b.sku)) return String(a.sku).localeCompare(String(b.sku));
+    return String(a.size).localeCompare(String(b.size), undefined, { numeric: true });
+  });
+
+  ordered.forEach((it) => {
+    const sku = normalizarSkuParaPlantilla(it.sku, quote?.source);
+    const size = String(it.size || "").trim().toUpperCase();
+    if (!ORDER_TEMPLATE_SIZE_COLUMNS[size]) return;
+    const qty = Number(it.quantity) || 0;
+    if (qty <= 0) return;
+
+    if (!grouped.has(sku)) {
+      grouped.set(sku, { sku, sizes: {} });
+    }
+
+    const entry = grouped.get(sku);
+    entry.sizes[size] = (entry.sizes[size] || 0) + qty;
+  });
+
+  return [...grouped.values()];
+}
+
+async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
+  const XlsxPopulate = await loadXlsxPopulate();
+  const response = await fetch(`${ORDER_TEMPLATE_FILE}?v=20260319a`, { cache: "no-store" });
+  if (!response.ok) throw new Error("No se pudo cargar la plantilla de TOMA DE PEDIDOS");
+
+  const workbook = await XlsxPopulate.fromDataAsync(await response.arrayBuffer());
+  const sheet = workbook.sheet(ORDER_TEMPLATE_SHEET);
+  if (!sheet) throw new Error("No se encontro la hoja TOMA DE PEDIDOS en la plantilla");
+
+  const grouped = agruparItemsParaPlantilla(quote, items);
+  const capacity = ORDER_TEMPLATE_LAST_ROW - ORDER_TEMPLATE_FIRST_ROW + 1;
+  if (grouped.length > capacity) {
+    throw new Error(`La cotizacion tiene ${grouped.length} modelos y la plantilla soporta ${capacity}`);
+  }
+
+  for (let row = ORDER_TEMPLATE_FIRST_ROW; row <= ORDER_TEMPLATE_LAST_ROW; row++) {
+    sheet.cell(`A${row}`).value("");
+    Object.values(ORDER_TEMPLATE_SIZE_COLUMNS).forEach((col) => {
+      sheet.cell(`${col}${row}`).value("");
+    });
+  }
+
+  sheet.cell("K5").value(quote?.client_rut || "");
+  sheet.cell("K8").value(new Date());
+
+  grouped.forEach((entry, index) => {
+    const row = ORDER_TEMPLATE_FIRST_ROW + index;
+    sheet.cell(`A${row}`).value(entry.sku);
+    Object.entries(entry.sizes).forEach(([size, qty]) => {
+      const col = ORDER_TEMPLATE_SIZE_COLUMNS[size];
+      if (!col) return;
+      sheet.cell(`${col}${row}`).value(qty);
+    });
+  });
+
+  return workbook.outputAsync();
 }
 
 function generarExcelHtmlQuoteAdmin(quote, items = []) {
@@ -934,7 +1055,7 @@ function generarExcelHtmlQuoteAdmin(quote, items = []) {
 </html>`;
 }
 
-function descargarCotizacionAdmin(quoteId) {
+async function descargarCotizacionAdmin(quoteId) {
   const quote = quotesAdminCache.quotes.find((q) => q.id === quoteId);
   const items = quotesAdminCache.itemsByQuote.get(quoteId) || [];
   if (!quote) {
@@ -943,8 +1064,15 @@ function descargarCotizacionAdmin(quoteId) {
   }
   const codigo = generarCodigoCotizacionVisual(quote).replace(/[^\w-]/g, "_");
   const tienda = String(quote.store_name || "tienda").replace(/\s+/g, "_");
-  const excelHtml = generarExcelHtmlQuoteAdmin(quote, items);
-  descargarArchivo(`${codigo}_${tienda}.xls`, excelHtml, "application/vnd.ms-excel;charset=utf-8;");
+  try {
+    const excelBlob = await generarExcelPlantillaQuoteAdmin(quote, items);
+    descargarBlob(`${codigo}_${tienda}.xlsx`, excelBlob);
+  } catch (err) {
+    console.error("Fallo exportacion xlsx, usando respaldo xls", err);
+    const excelHtml = generarExcelHtmlQuoteAdmin(quote, items);
+    descargarArchivo(`${codigo}_${tienda}.xls`, excelHtml, "application/vnd.ms-excel;charset=utf-8;");
+    actualizarEstadoQuotesUI("Se descargo el respaldo simple porque la plantilla no estuvo disponible");
+  }
 }
 
 function mostrarToastExito(titulo, mensaje) {
@@ -1344,7 +1472,7 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
             </div>
             <div class="quote-code-row">
               <span class="quote-code-pill">${codigo}</span>
-              <button type="button" class="ghost-btn quote-export-btn" data-quote-export="${q.id}">Descargar Excel</button>
+              <button type="button" class="ghost-btn quote-export-btn" data-quote-export="${q.id}">Descargar pedido</button>
               <button type="button" class="ghost-btn quote-delete-btn" data-quote-delete="${q.id}">Eliminar cotización</button>
             </div>
           </div>
