@@ -895,10 +895,11 @@ margin-top: 4px;
 }
 
 .sizes label{
-display:flex;
-justify-content:space-between;
+display:grid;
+grid-template-columns:minmax(0,1fr) auto;
 align-items:center;
-gap:8px;
+column-gap:8px;
+row-gap:6px;
 min-width:0;
 background: linear-gradient(180deg, #f6f7fa 0%, #eef1f5 100%);
 padding:9px 10px 9px 12px;
@@ -915,6 +916,7 @@ transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
 display:inline-flex;
 align-items:center;
 gap:4px;
+min-width:0;
 }
 
 .size-stock-badge{
@@ -929,8 +931,9 @@ font-size:10px;
 font-weight:800;
 letter-spacing:.01em;
 white-space:nowrap;
-margin-left:auto;
-margin-right:4px;
+grid-column:1 / -1;
+justify-self:start;
+margin-right:0;
 }
 
 .sizes label.size-out-of-stock{
