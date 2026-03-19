@@ -370,6 +370,11 @@ function configurarInputsTallas() {
         return;
       }
       if (n < 0) n = 0;
+      const max = parseInt(el.max || "", 10);
+      if (!isNaN(max) && max >= 0 && n > max) {
+        n = max;
+        mostrarToastError("Stock insuficiente", `Solo quedan ${max} unidades disponibles en talla ${t}.`);
+      }
       el.value = String(n);
     });
   });
