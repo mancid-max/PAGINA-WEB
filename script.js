@@ -224,7 +224,7 @@ function aplicarStockATallas(sku) {
     if (qty <= 0) input.value = "";
     if (qty > 0 && qty <= 5) {
       badgeEl.hidden = false;
-      badgeEl.innerText = qty === 1 ? "Ultima unidad" : `Ultimas ${qty}`;
+      badgeEl.innerText = qty === 1 ? "Ultima unidad" : `Ultimas ${qty} unidades`;
     } else {
       badgeEl.hidden = true;
       badgeEl.innerText = "";
