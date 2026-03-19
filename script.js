@@ -14,6 +14,7 @@ let clientLookupDebounce = null;
 let imagenesModalActual = [];
 let imagenModalIndex = 0;
 let quotePanelReady = false;
+let stockBySku = {};
 
 const ASSET_VERSION = Date.now();
 
@@ -73,6 +74,14 @@ fetch(withCacheBust(CATALOG_DATA_FILE))
     inicializarBuscadorModelos();
   })
   .catch((err) => console.error(`Error cargando ${CATALOG_DATA_FILE}:`, err));
+
+fetch(withCacheBust("stock-data.json"))
+  .then((res) => res.json())
+  .then((data) => {
+    stockBySku = data?.items || {};
+    if (skuActivo) aplicarStockATallas(skuActivo);
+  })
+  .catch((err) => console.warn("No se pudo cargar stock-data.json:", err));
 
 /***********************
  * UTILIDADES IMÁGENES
@@ -142,6 +151,84 @@ function escribirTallasUI(tallas = {}) {
     const el = document.getElementById("t" + t);
     if (!el) return;
     el.value = tallas[t] ? String(tallas[t]) : "";
+  });
+}
+
+function obtenerStockParaSku(sku) {
+  const key = String(sku || "").trim();
+  if (!key) return null;
+  if (stockBySku[key]) return stockBySku[key];
+  if (/-00$/i.test(key)) {
+    const familyKey = key.slice(0, 4);
+    if (stockBySku[familyKey]) return stockBySku[familyKey];
+  }
+  return null;
+}
+
+function asegurarTextoTalla(label, talla) {
+  let textEl = label.querySelector(".size-label-text");
+  if (!textEl) {
+    Array.from(label.childNodes).forEach((node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const trimmed = (node.textContent || "").trim();
+        if (!trimmed || trimmed === talla) {
+          label.removeChild(node);
+        }
+      }
+    });
+    textEl = document.createElement("span");
+    textEl.className = "size-label-text";
+    label.insertBefore(textEl, label.querySelector("input"));
+  }
+  textEl.innerText = talla;
+  return textEl;
+}
+
+function asegurarBadgeStock(label) {
+  let badgeEl = label.querySelector(".size-stock-badge");
+  if (!badgeEl) {
+    badgeEl = document.createElement("span");
+    badgeEl.className = "size-stock-badge";
+    label.appendChild(badgeEl);
+  }
+  return badgeEl;
+}
+
+function aplicarStockATallas(sku) {
+  const stock = obtenerStockParaSku(sku);
+  TALLAS_DISPONIBLES.forEach((talla) => {
+    const input = document.getElementById("t" + talla);
+    const label = input?.closest("label");
+    if (!input || !label) return;
+
+    const textEl = asegurarTextoTalla(label, talla);
+    const badgeEl = asegurarBadgeStock(label);
+    const qty = stock ? Math.max(0, Number(stock?.sizes?.[talla]) || 0) : null;
+
+    if (qty === null) {
+      label.classList.remove("size-out-of-stock");
+      label.classList.remove("size-low-stock");
+      input.disabled = false;
+      input.removeAttribute("max");
+      textEl.innerText = talla;
+      badgeEl.hidden = true;
+      badgeEl.innerText = "";
+      return;
+    }
+
+    textEl.innerText = talla;
+    label.classList.toggle("size-out-of-stock", qty <= 0);
+    label.classList.toggle("size-low-stock", qty > 0 && qty <= 5);
+    input.disabled = qty <= 0;
+    input.max = String(qty);
+    if (qty <= 0) input.value = "";
+    if (qty > 0 && qty <= 5) {
+      badgeEl.hidden = false;
+      badgeEl.innerText = qty === 1 ? "Ultima unidad" : `Ultimas ${qty}`;
+    } else {
+      badgeEl.hidden = true;
+      badgeEl.innerText = "";
+    }
   });
 }
 
@@ -492,6 +579,7 @@ function verProducto(familyId) {
     skuActivo = p.family;
     renderImages(buildImageList(p));
     cargarDraftDelSku(skuActivo);
+    aplicarStockATallas(skuActivo);
     setActive(btnFamily);
   };
 
@@ -511,6 +599,7 @@ function verProducto(familyId) {
         skuActivo = v.sku;
         renderImages(buildImageList(v));
         cargarDraftDelSku(skuActivo);
+        aplicarStockATallas(skuActivo);
         setActive(btn);
       };
 
@@ -533,6 +622,7 @@ function verProducto(familyId) {
   skuActivo = initialSku;
   renderImages(initialImages);
   cargarDraftDelSku(skuActivo);
+  aplicarStockATallas(skuActivo);
   setActive(initialBtn || btnFamily);
 
   const modalRight = document.querySelector("#modal .modal-right");
@@ -1508,7 +1598,7 @@ function limpiarCarrito() {
 document.getElementById("sendRequest").onclick = async () => {
   const cliente = clienteSeleccionado || await validarRutClienteEnUI();
   if (!cliente) return mostrarToastError("RUT no valido", "Ingresa un RUT registrado para enviar la cotizacion.");
-  if (!pedido.length) return alert("Tu pedido esta vacio");
+  if (!pedido.length) return mostrarToastError("Hubo un error", "Intentelo nuevamente.");
 
   const btn = document.getElementById("sendRequest");
   const textoOriginal = btn.innerText;
@@ -1518,11 +1608,11 @@ document.getElementById("sendRequest").onclick = async () => {
   try {
     await guardarCotizacionSupabase(cliente);
 
-    mostrarToastExito();
+    mostrarToastExito("Cotizacion enviada con exito", "Recibimos tu solicitud correctamente.");
     limpiarCarrito();
   } catch (error) {
     console.error(error);
-    alert(`No se pudo guardar la cotizacion. ${error.message || ""}`.trim());
+    mostrarToastError("Hubo un error", "Intentelo nuevamente.");
   } finally {
     btn.disabled = false;
     btn.innerText = textoOriginal;
