@@ -14,6 +14,7 @@ let clientLookupDebounce = null;
 let imagenesModalActual = [];
 let imagenModalIndex = 0;
 let quotePanelReady = false;
+let stockBySku = {};
 
 const ASSET_VERSION = Date.now();
 
@@ -73,6 +74,14 @@ fetch(withCacheBust(CATALOG_DATA_FILE))
     inicializarBuscadorModelos();
   })
   .catch((err) => console.error(`Error cargando ${CATALOG_DATA_FILE}:`, err));
+
+fetch(withCacheBust("stock-data.json"))
+  .then((res) => res.json())
+  .then((data) => {
+    stockBySku = data?.items || {};
+    if (skuActivo) aplicarStockATallas(skuActivo);
+  })
+  .catch((err) => console.warn("No se pudo cargar stock-data.json:", err));
 
 /***********************
  * UTILIDADES IMÁGENES
@@ -142,6 +151,54 @@ function escribirTallasUI(tallas = {}) {
     const el = document.getElementById("t" + t);
     if (!el) return;
     el.value = tallas[t] ? String(tallas[t]) : "";
+  });
+}
+
+function obtenerStockParaSku(sku) {
+  const key = String(sku || "").trim();
+  if (!key) return null;
+  if (stockBySku[key]) return stockBySku[key];
+  if (/-00$/i.test(key)) {
+    const familyKey = key.slice(0, 4);
+    if (stockBySku[familyKey]) return stockBySku[familyKey];
+  }
+  return null;
+}
+
+function asegurarTextoTalla(label, talla) {
+  let textEl = label.querySelector(".size-label-text");
+  if (!textEl) {
+    textEl = document.createElement("span");
+    textEl.className = "size-label-text";
+    label.insertBefore(textEl, label.querySelector("input"));
+  }
+  textEl.innerText = talla;
+  return textEl;
+}
+
+function aplicarStockATallas(sku) {
+  const stock = obtenerStockParaSku(sku);
+  TALLAS_DISPONIBLES.forEach((talla) => {
+    const input = document.getElementById("t" + talla);
+    const label = input?.closest("label");
+    if (!input || !label) return;
+
+    const textEl = asegurarTextoTalla(label, talla);
+    const qty = stock ? Math.max(0, Number(stock?.sizes?.[talla]) || 0) : null;
+
+    if (qty === null) {
+      label.classList.remove("size-out-of-stock");
+      input.disabled = false;
+      input.removeAttribute("max");
+      textEl.innerText = talla;
+      return;
+    }
+
+    textEl.innerText = `${talla} (${qty})`;
+    label.classList.toggle("size-out-of-stock", qty <= 0);
+    input.disabled = qty <= 0;
+    input.max = String(qty);
+    if (qty <= 0) input.value = "";
   });
 }
 
@@ -492,6 +549,7 @@ function verProducto(familyId) {
     skuActivo = p.family;
     renderImages(buildImageList(p));
     cargarDraftDelSku(skuActivo);
+    aplicarStockATallas(skuActivo);
     setActive(btnFamily);
   };
 
@@ -511,6 +569,7 @@ function verProducto(familyId) {
         skuActivo = v.sku;
         renderImages(buildImageList(v));
         cargarDraftDelSku(skuActivo);
+        aplicarStockATallas(skuActivo);
         setActive(btn);
       };
 
@@ -533,6 +592,7 @@ function verProducto(familyId) {
   skuActivo = initialSku;
   renderImages(initialImages);
   cargarDraftDelSku(skuActivo);
+  aplicarStockATallas(skuActivo);
   setActive(initialBtn || btnFamily);
 
   const modalRight = document.querySelector("#modal .modal-right");

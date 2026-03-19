@@ -911,6 +911,23 @@ color:#5b6270;
 transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
 }
 
+.size-label-text{
+display:inline-flex;
+align-items:center;
+gap:4px;
+}
+
+.sizes label.size-out-of-stock{
+opacity:.58;
+text-decoration: line-through;
+}
+
+.sizes label.size-out-of-stock input{
+background:#f3f4f6;
+color:#9ca3af;
+cursor:not-allowed;
+}
+
 .sizes label:focus-within{
 border-color:#111;
 box-shadow: 0 0 0 3px rgba(17,17,17,0.08);
