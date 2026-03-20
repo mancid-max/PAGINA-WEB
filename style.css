@@ -206,14 +206,14 @@ text-shadow:none;
 .card-title-row{
   display:flex;
   align-items:center;
-  justify-content:space-between;
+  justify-content:center;
   gap:10px;
   padding:14px 14px 10px;
 }
 
 .card-title-row .card-title{
   padding:0;
-  text-align:left;
+  text-align:center;
 }
 
 .card-price-badge{
