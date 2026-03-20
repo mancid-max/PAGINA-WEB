@@ -987,10 +987,10 @@ async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
     });
   }
 
-  // La plantilla trae una franja de color en A34:D34; igualamos el relleno
-  // al de la fila superior para que quede como el resto de la tabla.
-  const fillFilaReferencia = sheet.range("A33:D33").style("fill");
-  sheet.range("A34:D34").style("fill", fillFilaReferencia);
+  // La plantilla trae una franja de color en A34:D34; usamos como referencia
+  // la fila 35 (blanca en la plantilla) para igualar el relleno.
+  const fillFilaBlanca = sheet.range("A35:D35").style("fill");
+  sheet.range("A34:D34").style("fill", fillFilaBlanca);
 
   sheet.cell("K5").value(quote?.client_rut || "");
   sheet.cell("K8").value(new Date());
