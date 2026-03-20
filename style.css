@@ -203,8 +203,35 @@ color:#0f172a;
 text-shadow:none;
 }
 
-.card-title.missing-price{
-  color:#b45309;
+.card-title-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:14px 14px 10px;
+}
+
+.card-title-row .card-title{
+  padding:0;
+  text-align:left;
+}
+
+.card-price-badge{
+  flex:0 0 auto;
+  font-size:12px;
+  font-weight:800;
+  color:#fff;
+  background: linear-gradient(135deg, #111827, #1f2937);
+  border:1px solid rgba(0,0,0,0.18);
+  border-radius:999px;
+  padding:5px 10px;
+  line-height:1;
+}
+
+.card-price-badge.missing-price{
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  color:#92400e;
+  border-color: rgba(146,64,14,0.25);
 }
 
 .card-price{
@@ -257,9 +284,15 @@ color:#b45309;
 }
 
 @media (max-width: 650px){
-  .card-title{
-    padding:14px 14px 8px;
+  .card-title-row{
+    padding:12px 12px 8px;
+  }
+  .card-title-row .card-title{
     font-size:15px;
+  }
+  .card-price-badge{
+    font-size:11px;
+    padding:4px 9px;
   }
   .card img{
     width: calc(100% - 24px);

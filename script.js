@@ -136,18 +136,14 @@ function textoPrecioSku(sku) {
   return price ? formatMoneyCLP(price) : "Precio no disponible";
 }
 
-function tituloModeloConPrecio(sku) {
-  return `Modelo ${sku} | ${textoPrecioSku(sku)}`;
-}
-
 function actualizarPreciosGrid() {
   document.querySelectorAll(".card[data-family]").forEach((card) => {
     const sku = card.dataset.family || "";
-    const titleEl = card.querySelector(".card-title");
-    if (!titleEl) return;
+    const priceEl = card.querySelector(".card-price-badge");
+    if (!priceEl) return;
     const hasPrice = !!obtenerPrecioUnitario(sku);
-    titleEl.innerText = tituloModeloConPrecio(sku);
-    titleEl.classList.toggle("missing-price", !hasPrice);
+    priceEl.innerText = hasPrice ? textoPrecioSku(sku) : "No disponible";
+    priceEl.classList.toggle("missing-price", !hasPrice);
   });
 }
 
@@ -605,7 +601,10 @@ function renderGrid(lista) {
         const hasPrice = !!obtenerPrecioUnitario(p.family);
         return `
       <div class="card" data-family="${p.family}" onclick="verProducto('${p.family}')">
-        <div class="card-title ${hasPrice ? "" : "missing-price"}">${tituloModeloConPrecio(p.family)}</div>
+        <div class="card-title-row">
+          <div class="card-title">Modelo ${p.family}</div>
+          <div class="card-price-badge ${hasPrice ? "" : "missing-price"}">${hasPrice ? textoPrecioSku(p.family) : "No disponible"}</div>
+        </div>
         <img src="${withCacheBust(p.main_image)}" alt="Modelo ${p.family}" loading="${index < 4 ? "eager" : "lazy"}" decoding="async">
       </div>
     `
