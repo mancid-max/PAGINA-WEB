@@ -160,7 +160,10 @@ function actualizarPrecioModal(sku) {
   }
 
   const hasPrice = !!obtenerPrecioUnitario(sku);
-  priceEl.innerText = hasPrice ? `Precio referencia: ${textoPrecioSku(sku)}` : "Precio referencia: No disponible";
+  priceEl.innerHTML = `
+    <span class="modal-price-label">Precio referencia</span>
+    <span class="modal-price-badge ${hasPrice ? "" : "missing-price"}">${hasPrice ? textoPrecioSku(sku) : "No disponible"}</span>
+  `;
   priceEl.classList.toggle("missing-price", !hasPrice);
 }
 

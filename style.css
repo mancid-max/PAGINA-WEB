@@ -824,14 +824,35 @@ line-height:1.05;
 }
 
 .modal-price{
-  margin-bottom:8px;
-  font-size:14px;
-  font-weight:700;
-  color:#111827;
+  margin-bottom:10px;
+  display:flex;
+  align-items:center;
+  gap:10px;
 }
 
-.modal-price.missing-price{
-  color:#b45309;
+.modal-price-label{
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:#6b7280;
+}
+
+.modal-price-badge{
+  font-size:13px;
+  font-weight:800;
+  color:#fff;
+  background: linear-gradient(135deg, #111827, #1f2937);
+  border:1px solid rgba(0,0,0,0.18);
+  border-radius:999px;
+  padding:6px 11px;
+  line-height:1;
+}
+
+.modal-price-badge.missing-price{
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  color:#92400e;
+  border-color: rgba(146,64,14,0.25);
 }
 
 .product-description{
