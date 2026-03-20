@@ -823,6 +823,14 @@ function pad2(n) {
   return String(n).padStart(2, "0");
 }
 
+function sanitizeFileNamePart(value, fallback = "archivo") {
+  const cleaned = String(value ?? "")
+    .trim()
+    .replace(/[\\/:*?"<>|]/g, "")
+    .replace(/\s+/g, " ");
+  return cleaned || fallback;
+}
+
 function generarCodigoCotizacionVisual(q) {
   if (!q) return "COT-";
   const raw = String(q.id || "").replace(/-/g, "");
@@ -1062,15 +1070,15 @@ async function descargarCotizacionAdmin(quoteId) {
     actualizarEstadoQuotesUI("No se encontro la cotizacion para descargar");
     return;
   }
-  const codigo = generarCodigoCotizacionVisual(quote).replace(/[^\w-]/g, "_");
-  const tienda = String(quote.store_name || "tienda").replace(/\s+/g, "_");
+  const clienteNombre = sanitizeFileNamePart(quote.store_name, "cliente");
+  const nombreBase = `Cotizacion ${clienteNombre}`;
   try {
     const excelBlob = await generarExcelPlantillaQuoteAdmin(quote, items);
-    descargarBlob(`${codigo}_${tienda}.xlsx`, excelBlob);
+    descargarBlob(`${nombreBase}.xlsx`, excelBlob);
   } catch (err) {
     console.error("Fallo exportacion xlsx, usando respaldo xls", err);
     const excelHtml = generarExcelHtmlQuoteAdmin(quote, items);
-    descargarArchivo(`${codigo}_${tienda}.xls`, excelHtml, "application/vnd.ms-excel;charset=utf-8;");
+    descargarArchivo(`${nombreBase}.xls`, excelHtml, "application/vnd.ms-excel;charset=utf-8;");
     actualizarEstadoQuotesUI("Se descargo el respaldo simple porque la plantilla no estuvo disponible");
   }
 }
