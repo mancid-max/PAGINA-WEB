@@ -1,2 +1,9 @@
 [build]
-	publish = "."
+  publish = "."
+
+# Si alguna URL no existe como archivo físico, cargar index.html.
+# Esto evita errores de ruta en accesos directos.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

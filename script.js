@@ -987,6 +987,14 @@ async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
     });
   }
 
+  // La plantilla trae una franja amarilla en A34:D34; la quitamos en la exportacion.
+  sheet.range("A34:D34").style("fill", {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: "FFFFFF",
+    bgColor: "FFFFFF",
+  });
+
   sheet.cell("K5").value(quote?.client_rut || "");
   sheet.cell("K8").value(new Date());
 
