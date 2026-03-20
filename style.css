@@ -203,6 +203,10 @@ color:#0f172a;
 text-shadow:none;
 }
 
+.card-title.missing-price{
+  color:#b45309;
+}
+
 .card-price{
 padding:0 18px 10px;
 text-align:center;
