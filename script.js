@@ -9,6 +9,9 @@ const TALLAS_DISPONIBLES = ["36", "38", "40", "42", "44", "46"];
 let quotesAccessToken = sessionStorage.getItem("quotes_access_token") || "";
 let quotesUserEmail = sessionStorage.getItem("quotes_user_email") || "";
 let quotesAdminCache = { quotes: [], itemsByQuote: new Map() };
+let trazabilidadCache = [];
+let trazabilidadMeta = null;
+let adminActiveTab = "cotizaciones";
 let clienteSeleccionado = null; // { rut, rut_normalized, razon_social }
 let clientLookupDebounce = null;
 let imagenesModalActual = [];
@@ -955,6 +958,10 @@ function sanitizeFileNamePart(value, fallback = "archivo") {
   return cleaned || fallback;
 }
 
+function formatNumberCL(value) {
+  return Number(value || 0).toLocaleString("es-CL");
+}
+
 function generarCodigoCotizacionVisual(q) {
   if (!q) return "COT-";
   const raw = String(q.id || "").replace(/-/g, "");
@@ -1532,15 +1539,116 @@ function logoutCotizaciones() {
   quotesUserEmail = "";
   sessionStorage.removeItem("quotes_access_token");
   sessionStorage.removeItem("quotes_user_email");
+  adminActiveTab = "cotizaciones";
   actualizarEstadoQuotesUI();
   const list = document.getElementById("quotesList");
   if (list) list.innerHTML = "";
+  const trazaList = document.getElementById("trazabilidadList");
+  if (trazaList) trazaList.innerHTML = "";
+}
+
+function obtenerDescripcionPorSkuArticle(sku, article) {
+  const skuKey = String(sku || "").trim();
+  if (skuKey) {
+    if (stockBySku?.[skuKey]?.description) return stockBySku[skuKey].description;
+    const familyMatch = skuKey.match(/^(\d{4})-/);
+    if (familyMatch && stockBySku?.[familyMatch[1]]?.description) return stockBySku[familyMatch[1]].description;
+    if (/^\d{4}$/.test(skuKey) && stockBySku?.[`${skuKey}-00`]?.description) return stockBySku[`${skuKey}-00`].description;
+  }
+
+  const articleDigits = String(article || "").replace(/\D/g, "");
+  if (articleDigits.length >= 8) {
+    const model = articleDigits.slice(2, 6);
+    const variant = articleDigits.slice(6, 8);
+    const skuFromArticle = variant === "00" ? model : `${model}-${variant}`;
+    if (stockBySku?.[skuFromArticle]?.description) return stockBySku[skuFromArticle].description;
+    if (stockBySku?.[model]?.description) return stockBySku[model].description;
+  }
+  return "";
+}
+
+function renderTrazabilidadAdmin(items = []) {
+  const list = document.getElementById("trazabilidadList");
+  if (!list) return;
+
+  if (!items.length) {
+    list.innerHTML = `<div class="quote-card"><div class="quote-meta">No hay articulos en bodega para mostrar.</div></div>`;
+    return;
+  }
+
+  list.innerHTML = items.map((it) => {
+    const sku = String(it.sku || "");
+    const article = String(it.article || "");
+    const bodega = Number(it.bodega_total) || 0;
+    const saldo = Number(it.saldo_total) || 0;
+    const desc = obtenerDescripcionPorSkuArticle(sku, article);
+
+    return `
+      <div class="trace-card">
+        <div class="trace-card-head">
+          <div class="trace-card-title">Modelo ${sku || "-"}</div>
+          <div class="trace-card-qty">Bodega: ${formatNumberCL(bodega)}</div>
+        </div>
+        <div class="trace-card-meta">
+          Articulo: ${article || "-"}${saldo ? ` · Saldo: ${formatNumberCL(saldo)}` : ""}${desc ? ` · ${desc}` : ""}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+async function cargarTrazabilidadAdmin() {
+  const summaryEl = document.getElementById("trazabilidadSummary");
+  if (summaryEl) summaryEl.innerText = "Cargando trazabilidad...";
+
+  const res = await fetch(withCacheBust("trazabilidad-data.json"), { cache: "no-store" });
+  if (!res.ok) throw new Error(`No se pudo cargar trazabilidad (${res.status})`);
+  const data = await res.json();
+
+  trazabilidadMeta = data || null;
+  trazabilidadCache = Array.isArray(data?.items) ? data.items : [];
+  const enBodega = trazabilidadCache
+    .filter((it) => (Number(it.bodega_total) || 0) > 0)
+    .sort((a, b) => (Number(b.bodega_total) || 0) - (Number(a.bodega_total) || 0));
+
+  const totalBodega = enBodega.reduce((acc, it) => acc + (Number(it.bodega_total) || 0), 0);
+  if (summaryEl) {
+    summaryEl.innerText = `Articulos en bodega: ${formatNumberCL(enBodega.length)} · Unidades: ${formatNumberCL(totalBodega)}`;
+  }
+  renderTrazabilidadAdmin(enBodega);
+}
+
+function activarTabAdmin(tab = "cotizaciones", { cargar = true } = {}) {
+  adminActiveTab = tab === "trazabilidad" ? "trazabilidad" : "cotizaciones";
+
+  const btnCot = document.getElementById("quotesTabCotizaciones");
+  const btnTra = document.getElementById("quotesTabTrazabilidad");
+  const panelCot = document.getElementById("quotesCotizacionesPanel");
+  const panelTra = document.getElementById("quotesTrazabilidadPanel");
+
+  const isCot = adminActiveTab === "cotizaciones";
+  btnCot?.classList.toggle("active", isCot);
+  btnTra?.classList.toggle("active", !isCot);
+  if (panelCot) panelCot.style.display = isCot ? "flex" : "none";
+  if (panelTra) panelTra.style.display = isCot ? "none" : "flex";
+
+  if (!quotesAccessToken || !cargar) return;
+  if (isCot) {
+    cargarCotizacionesAdmin().catch((err) => actualizarEstadoQuotesUI(err.message || "Error cargando"));
+    return;
+  }
+  cargarTrazabilidadAdmin().catch((err) => {
+    const summaryEl = document.getElementById("trazabilidadSummary");
+    if (summaryEl) summaryEl.innerText = err.message || "No se pudo cargar trazabilidad";
+    renderTrazabilidadAdmin([]);
+  });
 }
 
 function actualizarEstadoQuotesUI(msg = "") {
   const loginSection = document.getElementById("quotesLoginSection");
   const panel = document.getElementById("quotesPanel");
   const badge = document.getElementById("quotesUserBadge");
+  const tabs = document.getElementById("quotesAdminTabs");
   const msgEl = document.getElementById("quotesLoginMsg");
   const refreshBtn = document.getElementById("refreshQuotesBtn");
   const logoutBtn = document.getElementById("logoutQuotesBtn");
@@ -1551,11 +1659,13 @@ function actualizarEstadoQuotesUI(msg = "") {
   if (msgEl) msgEl.innerText = msg;
   if (loginSection) loginSection.style.display = autenticado ? "none" : "flex";
   if (panel) panel.style.display = autenticado ? "flex" : "none";
+  if (tabs) tabs.style.display = autenticado ? "flex" : "none";
   if (badge) badge.innerText = autenticado ? `Sesion: ${quotesUserEmail}` : "";
   if (refreshBtn) refreshBtn.style.display = autenticado ? "inline-flex" : "none";
   if (logoutBtn) logoutBtn.style.display = autenticado ? "inline-flex" : "none";
   quotesModalContent?.classList.toggle("login-only", !autenticado);
   quotesAdminWrap?.classList.toggle("login-only", !autenticado);
+  if (autenticado) activarTabAdmin(adminActiveTab, { cargar: false });
 }
 
 function agruparItemsPorQuote(items = []) {
@@ -1728,7 +1838,7 @@ function abrirQuotesModal() {
   document.getElementById("quotesModal")?.classList.add("active");
   actualizarEstadoQuotesUI("");
   if (quotesAccessToken) {
-    cargarCotizacionesAdmin().catch((err) => actualizarEstadoQuotesUI(err.message || "Error cargando"));
+    activarTabAdmin(adminActiveTab || "cotizaciones", { cargar: true });
   }
 }
 
@@ -1743,6 +1853,8 @@ function configurarPanelCotizaciones() {
   const btnLogin = document.getElementById("quotesLoginBtn");
   const btnRefresh = document.getElementById("refreshQuotesBtn");
   const btnLogout = document.getElementById("logoutQuotesBtn");
+  const btnTabCotizaciones = document.getElementById("quotesTabCotizaciones");
+  const btnTabTrazabilidad = document.getElementById("quotesTabTrazabilidad");
   const emailEl = document.getElementById("quotesEmail");
   const passEl = document.getElementById("quotesPassword");
   const quotesListEl = document.getElementById("quotesList");
@@ -1761,7 +1873,7 @@ function configurarPanelCotizaciones() {
     try {
       await loginCotizacionesSupabase(email, password);
       actualizarEstadoQuotesUI("");
-      await cargarCotizacionesAdmin();
+      activarTabAdmin("cotizaciones", { cargar: true });
       if (passEl) passEl.value = "";
     } catch (err) {
       actualizarEstadoQuotesUI(err.message || "No se pudo iniciar sesion");
@@ -1792,11 +1904,15 @@ function configurarPanelCotizaciones() {
 
   btnRefresh?.addEventListener("click", async () => {
     try {
-      await cargarCotizacionesAdmin();
+      if (adminActiveTab === "trazabilidad") await cargarTrazabilidadAdmin();
+      else await cargarCotizacionesAdmin();
     } catch (err) {
       actualizarEstadoQuotesUI(err.message || "No se pudo actualizar");
     }
   });
+
+  btnTabCotizaciones?.addEventListener("click", () => activarTabAdmin("cotizaciones", { cargar: true }));
+  btnTabTrazabilidad?.addEventListener("click", () => activarTabAdmin("trazabilidad", { cargar: true }));
 
   btnLogout?.addEventListener("click", logoutCotizaciones);
 

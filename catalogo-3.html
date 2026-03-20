@@ -17,7 +17,7 @@
     </div>
     <div class="header-actions">
         <button id="quotesAdminBtn" class="ghost-btn admin-btn" type="button">ADMIN</button>
-        <div id="cartToggle" class="cart-btn" aria-label="Abrir tu cotización">
+        <div id="cartToggle" class="cart-btn" aria-label="Abrir tu cotizacin">
             <span class="cart-btn-caption">Tu cotizaci&oacute;n</span>
             <span class="cart-btn-main">
               <span class="cart-btn-icon" aria-hidden="true">&#128722;</span>
@@ -123,8 +123,20 @@
       </div>
 
       <div id="quotesPanel" class="quotes-panel" style="display:none;">
-        <div id="quotesUserBadge" class="quotes-user-badge"></div>
-        <div id="quotesList" class="quotes-list"></div>
+        <div id="quotesAdminTabs" class="quotes-admin-tabs" style="display:none;">
+          <button id="quotesTabCotizaciones" type="button" class="ghost-btn quotes-tab-btn active">Cotizaciones</button>
+          <button id="quotesTabTrazabilidad" type="button" class="ghost-btn quotes-tab-btn">Trazabilidad</button>
+        </div>
+
+        <div id="quotesCotizacionesPanel" class="quotes-tab-panel">
+          <div id="quotesUserBadge" class="quotes-user-badge"></div>
+          <div id="quotesList" class="quotes-list"></div>
+        </div>
+
+        <div id="quotesTrazabilidadPanel" class="quotes-tab-panel" style="display:none;">
+          <div id="trazabilidadSummary" class="quotes-user-badge">Trazabilidad de bodega</div>
+          <div id="trazabilidadList" class="quotes-list trazabilidad-list"></div>
+        </div>
       </div>
     </div>
   </div>

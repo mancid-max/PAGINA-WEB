@@ -1406,6 +1406,30 @@ box-shadow: 0 -10px 18px rgba(255,255,255,0.95), 0 10px 24px rgba(0,0,0,0.16);
   padding:10px;
 }
 
+.quotes-admin-tabs{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.quotes-tab-btn{
+  border-radius:999px;
+}
+
+.quotes-tab-btn.active{
+  background:#111;
+  color:#fff;
+  border-color:#111;
+}
+
+.quotes-tab-panel{
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+  flex:1;
+  gap:10px;
+}
+
 .quotes-user-badge{
   font-size:13px;
   color:#4b5563;
@@ -1431,6 +1455,42 @@ box-shadow: 0 -10px 18px rgba(255,255,255,0.95), 0 10px 24px rgba(0,0,0,0.16);
   border-radius:18px;
   padding:16px;
   box-shadow: 0 12px 26px rgba(15,23,42,0.08);
+}
+
+.trace-card{
+  border:1px solid rgba(0,0,0,0.12);
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius:14px;
+  padding:12px 14px;
+}
+
+.trace-card-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+}
+
+.trace-card-title{
+  font-weight:800;
+  color:#111827;
+}
+
+.trace-card-qty{
+  font-weight:800;
+  color:#065f46;
+  background: rgba(16,185,129,0.12);
+  border:1px solid rgba(5,150,105,0.24);
+  border-radius:999px;
+  padding:4px 10px;
+  font-size:12px;
+}
+
+.trace-card-meta{
+  margin-top:7px;
+  color:#4b5563;
+  font-size:13px;
+  line-height:1.35;
 }
 
 .quote-card-head{
