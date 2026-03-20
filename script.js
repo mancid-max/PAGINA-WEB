@@ -968,6 +968,12 @@ async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
   const sheet = workbook.sheet(ORDER_TEMPLATE_SHEET);
   if (!sheet) throw new Error("No se encontro la hoja TOMA DE PEDIDOS en la plantilla");
 
+  // Mantener todas las hojas de la plantilla, pero dejar visible solo "TOMA DE PEDIDOS".
+  workbook.sheets().forEach((ws) => {
+    ws.hidden(ws.name() !== ORDER_TEMPLATE_SHEET);
+  });
+  workbook.activeSheet(sheet);
+
   const grouped = agruparItemsParaPlantilla(quote, items);
   const capacity = ORDER_TEMPLATE_LAST_ROW - ORDER_TEMPLATE_FIRST_ROW + 1;
   if (grouped.length > capacity) {
