@@ -987,13 +987,10 @@ async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
     });
   }
 
-  // La plantilla trae una franja amarilla en A34:D34; la quitamos en la exportacion.
-  sheet.range("A34:D34").style("fill", {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: "FFFFFF",
-    bgColor: "FFFFFF",
-  });
+  // La plantilla trae una franja de color en A34:D34; igualamos el relleno
+  // al de la fila superior para que quede como el resto de la tabla.
+  const fillFilaReferencia = sheet.range("A33:D33").style("fill");
+  sheet.range("A34:D34").style("fill", fillFilaReferencia);
 
   sheet.cell("K5").value(quote?.client_rut || "");
   sheet.cell("K8").value(new Date());
