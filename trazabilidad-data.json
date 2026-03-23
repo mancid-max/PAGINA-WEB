@@ -1,665 +1,478 @@
 {
-  "source_file": "Cortes 4200 .xlsx",
-  "sheet": "Ranking 42",
-  "rule": "Valores negativos en Ranking 42 se consideran disponibles",
-  "items_total": 41,
-  "units_total": 4436,
+  "source_file": "1_PROGRAMAS DE PRODUCCION MHC .xlsx",
+  "sheet": "Informe Gantt",
+  "rule": "Disponibles segun BDG; no disponibles = Pendiente - BDG",
+  "items_total": 36,
+  "available_units_total": 1395,
+  "unavailable_units_total": 22062,
   "items": [
     {
-      "sku": "4219-00",
-      "color": "Ayla",
-      "available_total": 583,
-      "sizes_available": {
-        "34": 73,
-        "36": 97,
-        "38": 107,
-        "40": 105,
-        "42": 93,
-        "44": 72,
-        "46": 36,
-        "48": 0
-      },
-      "source_row": 3
-    },
-    {
-      "sku": "4201-00",
-      "color": "Ibiza Blue",
-      "available_total": 298,
-      "sizes_available": {
-        "34": 0,
-        "36": 44,
-        "38": 62,
-        "40": 85,
-        "42": 59,
-        "44": 38,
-        "46": 10,
-        "48": 0
-      },
-      "source_row": 4
-    },
-    {
-      "sku": "4225-00",
-      "color": "B2868-V3",
-      "available_total": 287,
-      "sizes_available": {
-        "34": 0,
-        "36": 40,
-        "38": 46,
-        "40": 77,
-        "42": 66,
-        "44": 51,
-        "46": 7,
-        "48": 0
-      },
+      "sku": "1949",
+      "article": "1949",
+      "fabric": "Missy Blue",
+      "workshop": "J.Figueroa",
+      "program_units": 510,
+      "pending_units": 510,
+      "available_units": 510,
+      "unavailable_units": 0,
+      "location": "Bodega",
+      "status": "",
       "source_row": 7
     },
     {
-      "sku": "4247-00",
-      "color": "Ibiza Blue",
-      "available_total": 285,
-      "sizes_available": {
-        "34": 0,
-        "36": 46,
-        "38": 53,
-        "40": 73,
-        "42": 39,
-        "44": 62,
-        "46": 12,
-        "48": 0
-      },
+      "sku": "1922",
+      "article": "1922",
+      "fabric": "Colbie Blue/Colbie Dark",
+      "workshop": "J.Figueroa",
+      "program_units": 510,
+      "pending_units": 510,
+      "available_units": 324,
+      "unavailable_units": 186,
+      "location": "Bodega",
+      "status": "",
       "source_row": 8
     },
     {
-      "sku": "4235-00",
-      "color": "Ibiza Blue",
-      "available_total": 250,
-      "sizes_available": {
-        "34": 0,
-        "36": 25,
-        "38": 52,
-        "40": 55,
-        "42": 53,
-        "44": 42,
-        "46": 23,
-        "48": 0
-      },
-      "source_row": 9
-    },
-    {
-      "sku": "4230-00",
-      "color": "Imperio Max",
-      "available_total": 226,
-      "sizes_available": {
-        "34": 0,
-        "36": 35,
-        "38": 37,
-        "40": 37,
-        "42": 44,
-        "44": 44,
-        "46": 29,
-        "48": 0
-      },
-      "source_row": 11
-    },
-    {
-      "sku": "4206-00",
-      "color": "B2868-V3",
-      "available_total": 206,
-      "sizes_available": {
-        "34": 0,
-        "36": 43,
-        "38": 31,
-        "40": 32,
-        "42": 38,
-        "44": 38,
-        "46": 24,
-        "48": 0
-      },
-      "source_row": 12
-    },
-    {
-      "sku": "4223-00",
-      "color": "B2868-V3",
-      "available_total": 169,
-      "sizes_available": {
-        "34": 0,
-        "36": 32,
-        "38": 36,
-        "40": 28,
-        "42": 37,
-        "44": 28,
-        "46": 8,
-        "48": 0
-      },
-      "source_row": 13
-    },
-    {
-      "sku": "4205-00",
-      "color": "Ayla",
-      "available_total": 156,
-      "sizes_available": {
-        "34": 0,
-        "36": 20,
-        "38": 32,
-        "40": 32,
-        "42": 32,
-        "44": 25,
-        "46": 15,
-        "48": 0
-      },
-      "source_row": 14
-    },
-    {
-      "sku": "4203-01",
-      "color": "B2868-V3",
-      "available_total": 148,
-      "sizes_available": {
-        "34": 0,
-        "36": 15,
-        "38": 29,
-        "40": 32,
-        "42": 35,
-        "44": 23,
-        "46": 14,
-        "48": 0
-      },
-      "source_row": 15
-    },
-    {
-      "sku": "4222-00",
-      "color": "Ayla",
-      "available_total": 145,
-      "sizes_available": {
-        "34": 0,
-        "36": 14,
-        "38": 33,
-        "40": 35,
-        "42": 33,
-        "44": 28,
-        "46": 2,
-        "48": 0
-      },
-      "source_row": 16
-    },
-    {
-      "sku": "4232-00",
-      "color": "Ayla",
-      "available_total": 140,
-      "sizes_available": {
-        "34": 0,
-        "36": 21,
-        "38": 26,
-        "40": 30,
-        "42": 27,
-        "44": 17,
-        "46": 19,
-        "48": 0
-      },
-      "source_row": 17
-    },
-    {
-      "sku": "4244-00",
-      "color": "Ibiza Blue",
-      "available_total": 140,
-      "sizes_available": {
-        "34": 0,
-        "36": 32,
-        "38": 33,
-        "40": 30,
-        "42": 37,
-        "44": 8,
-        "46": 0,
-        "48": 0
-      },
-      "source_row": 18
-    },
-    {
-      "sku": "4236-00",
-      "color": "Missy Plus",
-      "available_total": 119,
-      "sizes_available": {
-        "34": 0,
-        "36": 12,
-        "38": 25,
-        "40": 27,
-        "42": 23,
-        "44": 18,
-        "46": 14,
-        "48": 0
-      },
-      "source_row": 19
-    },
-    {
-      "sku": "4211-00",
-      "color": "Ayla",
-      "available_total": 110,
-      "sizes_available": {
-        "34": 0,
-        "36": 14,
-        "38": 17,
-        "40": 21,
-        "42": 23,
-        "44": 24,
-        "46": 11,
-        "48": 0
-      },
-      "source_row": 20
-    },
-    {
-      "sku": "4234-08",
-      "color": "Lavinia",
-      "available_total": 100,
-      "sizes_available": {
-        "34": 0,
-        "36": 14,
-        "38": 23,
-        "40": 24,
-        "42": 23,
-        "44": 16,
-        "46": 0,
-        "48": 0
-      },
-      "source_row": 22
-    },
-    {
-      "sku": "4246-00",
-      "color": "Ayla",
-      "available_total": 94,
-      "sizes_available": {
-        "34": 0,
-        "36": 9,
-        "38": 11,
-        "40": 29,
-        "42": 22,
-        "44": 17,
-        "46": 6,
-        "48": 0
-      },
-      "source_row": 21
-    },
-    {
-      "sku": "4228-00",
-      "color": "B2868-V3",
-      "available_total": 94,
-      "sizes_available": {
-        "34": 0,
-        "36": 0,
-        "38": 1,
-        "40": 49,
-        "42": 6,
-        "44": 32,
-        "46": 6,
-        "48": 0
-      },
-      "source_row": 28
-    },
-    {
-      "sku": "4239-00",
-      "color": "B2868-V3",
-      "available_total": 89,
-      "sizes_available": {
-        "34": 0,
-        "36": 6,
-        "38": 15,
-        "40": 21,
-        "42": 19,
-        "44": 19,
-        "46": 9,
-        "48": 0
-      },
-      "source_row": 27
-    },
-    {
-      "sku": "4218-00",
-      "color": "New  Glue",
-      "available_total": 76,
-      "sizes_available": {
-        "34": 0,
-        "36": 7,
-        "38": 13,
-        "40": 18,
-        "42": 14,
-        "44": 14,
-        "46": 10,
-        "48": 0
-      },
-      "source_row": 31
-    },
-    {
-      "sku": "4221-00",
-      "color": "New Glue",
-      "available_total": 74,
-      "sizes_available": {
-        "34": 0,
-        "36": 3,
-        "38": 12,
-        "40": 17,
-        "42": 12,
-        "44": 17,
-        "46": 13,
-        "48": 0
-      },
-      "source_row": 29
-    },
-    {
-      "sku": "4234-04",
-      "color": "Lavinia",
-      "available_total": 67,
-      "sizes_available": {
-        "34": 0,
-        "36": 9,
-        "38": 10,
-        "40": 19,
-        "42": 10,
-        "44": 10,
-        "46": 9,
-        "48": 0
-      },
-      "source_row": 23
-    },
-    {
-      "sku": "4233-04",
-      "color": "Lavinia",
-      "available_total": 64,
-      "sizes_available": {
-        "34": 0,
-        "36": 8,
-        "38": 13,
-        "40": 13,
-        "42": 11,
-        "44": 12,
-        "46": 7,
-        "48": 0
-      },
-      "source_row": 33
-    },
-    {
-      "sku": "4240-00",
-      "color": "B2868-V3",
-      "available_total": 58,
-      "sizes_available": {
-        "34": 0,
-        "36": 29,
-        "38": 0,
-        "40": 12,
-        "42": 1,
-        "44": 16,
-        "46": 0,
-        "48": 0
-      },
-      "source_row": 42
-    },
-    {
-      "sku": "4201-01",
-      "color": "Ibiza Blue",
-      "available_total": 57,
-      "sizes_available": {
-        "34": 0,
-        "36": 7,
-        "38": 14,
-        "40": 14,
-        "42": 12,
-        "44": 5,
-        "46": 5,
-        "48": 0
-      },
-      "source_row": 5
-    },
-    {
-      "sku": "4233-08",
-      "color": "Lavinia",
-      "available_total": 57,
-      "sizes_available": {
-        "34": 0,
-        "36": 5,
-        "38": 13,
-        "40": 13,
-        "42": 11,
-        "44": 12,
-        "46": 3,
-        "48": 0
-      },
-      "source_row": 34
-    },
-    {
-      "sku": "4221-01",
-      "color": "New Glue",
-      "available_total": 51,
-      "sizes_available": {
-        "34": 0,
-        "36": 11,
-        "38": 6,
-        "40": 13,
-        "42": 9,
-        "44": 12,
-        "46": 0,
-        "48": 0
-      },
-      "source_row": 30
-    },
-    {
-      "sku": "4234-48",
-      "color": "Lavinia",
-      "available_total": 49,
-      "sizes_available": {
-        "34": 0,
-        "36": 8,
-        "38": 11,
-        "40": 9,
-        "42": 9,
-        "44": 9,
-        "46": 3,
-        "48": 0
-      },
-      "source_row": 24
-    },
-    {
-      "sku": "4245-00",
-      "color": "B2868-V3",
-      "available_total": 36,
-      "sizes_available": {
-        "34": 0,
-        "36": 8,
-        "38": 5,
-        "40": 6,
-        "42": 8,
-        "44": 9,
-        "46": 0,
-        "48": 0
-      },
-      "source_row": 45
-    },
-    {
-      "sku": "4218-01",
-      "color": "New  Glue",
-      "available_total": 34,
-      "sizes_available": {
-        "34": 0,
-        "36": 4,
-        "38": 3,
-        "40": 10,
-        "42": 9,
-        "44": 4,
-        "46": 4,
-        "48": 0
-      },
-      "source_row": 32
-    },
-    {
-      "sku": "4204-00",
-      "color": "B2868-V3",
-      "available_total": 30,
-      "sizes_available": {
-        "34": 0,
-        "36": 15,
-        "38": 3,
-        "40": 4,
-        "42": 1,
-        "44": 6,
-        "46": 1,
-        "48": 0
-      },
-      "source_row": 44
-    },
-    {
-      "sku": "4235-01",
-      "color": "Ibiza Blue",
-      "available_total": 29,
-      "sizes_available": {
-        "34": 0,
-        "36": 3,
-        "38": 6,
-        "40": 6,
-        "42": 6,
-        "44": 5,
-        "46": 3,
-        "48": 0
-      },
+      "sku": "2162",
+      "article": "2162",
+      "fabric": "Belize Black Ex 1106",
+      "workshop": "Urrutia",
+      "program_units": 306,
+      "pending_units": 306,
+      "available_units": 305,
+      "unavailable_units": 1,
+      "location": "Bodega",
+      "status": "",
       "source_row": 10
     },
     {
-      "sku": "4213-01",
-      "color": "B2868-V3",
-      "available_total": 22,
-      "sizes_available": {
-        "34": 0,
-        "36": 3,
-        "38": 3,
-        "40": 7,
-        "42": 3,
-        "44": 6,
-        "46": 0,
-        "48": 0
-      },
-      "source_row": 46
+      "sku": "1780",
+      "article": "1780",
+      "fabric": "B-2868V-3",
+      "workshop": "Urrutia",
+      "program_units": 256,
+      "pending_units": 256,
+      "available_units": 256,
+      "unavailable_units": 0,
+      "location": "Bodega",
+      "status": "",
+      "source_row": 9
     },
     {
-      "sku": "4201-60",
-      "color": "Ibiza Blue",
-      "available_total": 18,
-      "sizes_available": {
-        "34": 0,
-        "36": 3,
-        "38": 4,
-        "40": 4,
-        "42": 4,
-        "44": 2,
-        "46": 1,
-        "48": 0
-      },
-      "source_row": 6
+      "sku": "2164",
+      "article": "2164",
+      "fabric": "Giselle Ex 1735 C.Cierres",
+      "workshop": "SUR",
+      "program_units": 918,
+      "pending_units": 918,
+      "available_units": 0,
+      "unavailable_units": 918,
+      "location": "En Producción",
+      "status": "En Producción",
+      "source_row": 32
     },
     {
-      "sku": "4234-09",
-      "color": "Lavinia",
-      "available_total": 18,
-      "sizes_available": {
-        "34": 0,
-        "36": 3,
-        "38": 4,
-        "40": 4,
-        "42": 3,
-        "44": 3,
-        "46": 1,
-        "48": 0
-      },
+      "sku": "2163",
+      "article": "2163",
+      "fabric": "M0235-E Ex 1528",
+      "workshop": "SUR",
+      "program_units": 884,
+      "pending_units": 884,
+      "available_units": 0,
+      "unavailable_units": 884,
+      "location": "Corte",
+      "status": "",
+      "source_row": 41
+    },
+    {
+      "sku": "2157",
+      "article": "2157",
+      "fabric": "Missy Blue",
+      "workshop": "SUR",
+      "program_units": 816,
+      "pending_units": 816,
+      "available_units": 0,
+      "unavailable_units": 816,
+      "location": "Juncal",
+      "status": "Juncal",
+      "source_row": 33
+    },
+    {
+      "sku": "2121",
+      "article": "2121",
+      "fabric": "Colbie Blue/Colbie Dark",
+      "workshop": "Urrutia",
+      "program_units": 714,
+      "pending_units": 714,
+      "available_units": 0,
+      "unavailable_units": 714,
+      "location": "Term",
+      "status": "",
+      "source_row": 13
+    },
+    {
+      "sku": "2117",
+      "article": "2117",
+      "fabric": "Giselle",
+      "workshop": "Urrutia",
+      "program_units": 714,
+      "pending_units": 714,
+      "available_units": 0,
+      "unavailable_units": 714,
+      "location": "Lavanderia",
+      "status": "",
+      "source_row": 14
+    },
+    {
+      "sku": "2123",
+      "article": "2123",
+      "fabric": "Giselle",
+      "workshop": "Urrutia",
+      "program_units": 714,
+      "pending_units": 714,
+      "available_units": 0,
+      "unavailable_units": 714,
+      "location": "Lavanderia",
+      "status": "",
+      "source_row": 15
+    },
+    {
+      "sku": "2125",
+      "article": "2125",
+      "fabric": "Giselle",
+      "workshop": "Urrutia",
+      "program_units": 714,
+      "pending_units": 714,
+      "available_units": 0,
+      "unavailable_units": 714,
+      "location": "Lavanderia",
+      "status": "",
+      "source_row": 18
+    },
+    {
+      "sku": "2102",
+      "article": "2102",
+      "fabric": "Colbie Blue",
+      "workshop": "Urrutia",
+      "program_units": 714,
+      "pending_units": 714,
+      "available_units": 0,
+      "unavailable_units": 714,
+      "location": "Lavanderia",
+      "status": "",
+      "source_row": 19
+    },
+    {
+      "sku": "2106",
+      "article": "2106",
+      "fabric": "Giselle",
+      "workshop": "Urrutia",
+      "program_units": 714,
+      "pending_units": 714,
+      "available_units": 0,
+      "unavailable_units": 714,
+      "location": "Lavanderia",
+      "status": "",
+      "source_row": 20
+    },
+    {
+      "sku": "2161",
+      "article": "2161",
+      "fabric": "Missy Blue",
+      "workshop": "SUR",
+      "program_units": 714,
+      "pending_units": 714,
+      "available_units": 0,
+      "unavailable_units": 714,
+      "location": "En Producción",
+      "status": "En Producción",
+      "source_row": 21
+    },
+    {
+      "sku": "2136",
+      "article": "2136",
+      "fabric": "Missy Blue",
+      "workshop": "Urrutia",
+      "program_units": 714,
+      "pending_units": 714,
+      "available_units": 0,
+      "unavailable_units": 714,
+      "location": "Lavanderia",
+      "status": "",
+      "source_row": 22
+    },
+    {
+      "sku": "2132",
+      "article": "2132",
+      "fabric": "Missy Blue",
+      "workshop": "Urrutia",
+      "program_units": 714,
+      "pending_units": 714,
+      "available_units": 0,
+      "unavailable_units": 714,
+      "location": "Lavanderia",
+      "status": "",
+      "source_row": 23
+    },
+    {
+      "sku": "2135",
+      "article": "2135",
+      "fabric": "Missy Blue",
+      "workshop": "Urrutia",
+      "program_units": 714,
+      "pending_units": 714,
+      "available_units": 0,
+      "unavailable_units": 714,
+      "location": "Lavanderia",
+      "status": "",
+      "source_row": 24
+    },
+    {
+      "sku": "2149",
+      "article": "2149",
+      "fabric": "Colbie Blue",
+      "workshop": "SUR",
+      "program_units": 714,
+      "pending_units": 714,
+      "available_units": 0,
+      "unavailable_units": 714,
+      "location": "En Producción",
+      "status": "En Producción",
       "source_row": 25
     },
     {
-      "sku": "4233-48",
-      "color": "Lavinia",
-      "available_total": 17,
-      "sizes_available": {
-        "34": 0,
-        "36": 2,
-        "38": 4,
-        "40": 4,
-        "42": 3,
-        "44": 3,
-        "46": 1,
-        "48": 0
-      },
-      "source_row": 35
-    },
-    {
-      "sku": "4234-16",
-      "color": "Lavinia",
-      "available_total": 16,
-      "sizes_available": {
-        "34": 0,
-        "36": 5,
-        "38": 2,
-        "40": 4,
-        "42": 1,
-        "44": 3,
-        "46": 1,
-        "48": 0
-      },
+      "sku": "2111",
+      "article": "2111",
+      "fabric": "Colbie Blue/ Colbie Dark",
+      "workshop": "Sur",
+      "program_units": 714,
+      "pending_units": 714,
+      "available_units": 0,
+      "unavailable_units": 714,
+      "location": "En Producción",
+      "status": "En Producción",
       "source_row": 26
     },
     {
-      "sku": "4233-16",
-      "color": "Lavinia",
-      "available_total": 16,
-      "sizes_available": {
-        "34": 0,
-        "36": 2,
-        "38": 4,
-        "40": 4,
-        "42": 3,
-        "44": 2,
-        "46": 1,
-        "48": 0
-      },
+      "sku": "2134",
+      "article": "2134",
+      "fabric": "Missy Blue",
+      "workshop": "SUR",
+      "program_units": 714,
+      "pending_units": 714,
+      "available_units": 0,
+      "unavailable_units": 714,
+      "location": "En Producción",
+      "status": "En Producción",
+      "source_row": 27
+    },
+    {
+      "sku": "2150",
+      "article": "2150",
+      "fabric": "Giselle",
+      "workshop": "SUR",
+      "program_units": 714,
+      "pending_units": 714,
+      "available_units": 0,
+      "unavailable_units": 714,
+      "location": "En Producción",
+      "status": "En Producción",
+      "source_row": 28
+    },
+    {
+      "sku": "2130",
+      "article": "2130",
+      "fabric": "Trentino",
+      "workshop": "SUR",
+      "program_units": 714,
+      "pending_units": 714,
+      "available_units": 0,
+      "unavailable_units": 714,
+      "location": "En Producción",
+      "status": "En Producción",
+      "source_row": 30
+    },
+    {
+      "sku": "2150",
+      "article": "2150",
+      "fabric": "Giselle",
+      "workshop": "SUR",
+      "program_units": 714,
+      "pending_units": 714,
+      "available_units": 0,
+      "unavailable_units": 714,
+      "location": "En Producción",
+      "status": "En Producción",
+      "source_row": 31
+    },
+    {
+      "sku": "2175",
+      "article": "2175",
+      "fabric": "Missy Blue",
+      "workshop": "SUR",
+      "program_units": 714,
+      "pending_units": 714,
+      "available_units": 0,
+      "unavailable_units": 714,
+      "location": "Swisslog",
+      "status": "Swisslog",
+      "source_row": 34
+    },
+    {
+      "sku": "2103",
+      "article": "2103",
+      "fabric": "M335-A",
+      "workshop": "Urrutia",
+      "program_units": 714,
+      "pending_units": 714,
+      "available_units": 0,
+      "unavailable_units": 714,
+      "location": "Urrutia",
+      "status": "",
       "source_row": 36
     },
     {
-      "sku": "4233-09",
-      "color": "Lavinia",
-      "available_total": 4,
-      "sizes_available": {
-        "34": 0,
-        "36": 0,
-        "38": 1,
-        "40": 1,
-        "42": 1,
-        "44": 1,
-        "46": 0,
-        "48": 0
-      },
-      "source_row": 47
+      "sku": "2117",
+      "article": "2117",
+      "fabric": "Giselle",
+      "workshop": "Urrutia",
+      "program_units": 714,
+      "pending_units": 714,
+      "available_units": 0,
+      "unavailable_units": 714,
+      "location": "Urrutia",
+      "status": "",
+      "source_row": 37
     },
     {
-      "sku": "4226-00",
-      "color": "Ibiza Blue",
-      "available_total": 3,
-      "sizes_available": {
-        "34": 0,
-        "36": 3,
-        "38": 0,
-        "40": 0,
-        "42": 0,
-        "44": 0,
-        "46": 0,
-        "48": 0
-      },
-      "source_row": 48
+      "sku": "2106",
+      "article": "2106",
+      "fabric": "Giselle",
+      "workshop": "Urrutia",
+      "program_units": 714,
+      "pending_units": 714,
+      "available_units": 0,
+      "unavailable_units": 714,
+      "location": "Urrutia",
+      "status": "",
+      "source_row": 38
     },
     {
-      "sku": "4204-02",
-      "color": "B2868-V3",
-      "available_total": 1,
-      "sizes_available": {
-        "34": 0,
-        "36": 1,
-        "38": 0,
-        "40": 0,
-        "42": 0,
-        "44": 0,
-        "46": 0,
-        "48": 0
-      },
-      "source_row": 101
+      "sku": "2125",
+      "article": "2125",
+      "fabric": "Giselle",
+      "workshop": "Urrutia",
+      "program_units": 714,
+      "pending_units": 714,
+      "available_units": 0,
+      "unavailable_units": 714,
+      "location": "Urrutia",
+      "status": "",
+      "source_row": 39
+    },
+    {
+      "sku": "2123",
+      "article": "2123",
+      "fabric": "Giselle",
+      "workshop": "Urrutia",
+      "program_units": 714,
+      "pending_units": 714,
+      "available_units": 0,
+      "unavailable_units": 714,
+      "location": "Urrutia",
+      "status": "",
+      "source_row": 40
+    },
+    {
+      "sku": "2130",
+      "article": "2130",
+      "fabric": "Trentino",
+      "workshop": "SUR",
+      "program_units": 714,
+      "pending_units": 714,
+      "available_units": 0,
+      "unavailable_units": 714,
+      "location": "Corte",
+      "status": "",
+      "source_row": 42
+    },
+    {
+      "sku": "2148",
+      "article": "2148",
+      "fabric": "Colbie Blue /Burgundi",
+      "workshop": "Urrutia",
+      "program_units": 615,
+      "pending_units": 615,
+      "available_units": 0,
+      "unavailable_units": 615,
+      "location": "Urrutia",
+      "status": "",
+      "source_row": 35
+    },
+    {
+      "sku": "2157",
+      "article": "2157",
+      "fabric": "Missy Blue",
+      "workshop": "Urrutia",
+      "program_units": 600,
+      "pending_units": 600,
+      "available_units": 0,
+      "unavailable_units": 600,
+      "location": "Term",
+      "status": "",
+      "source_row": 12
+    },
+    {
+      "sku": "2163",
+      "article": "2163",
+      "fabric": "M0235-E Ex 1528",
+      "workshop": "Urrutia",
+      "program_units": 510,
+      "pending_units": 510,
+      "available_units": 0,
+      "unavailable_units": 510,
+      "location": "Lavanderia",
+      "status": "",
+      "source_row": 16
+    },
+    {
+      "sku": "2156",
+      "article": "2156",
+      "fabric": "Missy Blue",
+      "workshop": "Urrutia",
+      "program_units": 510,
+      "pending_units": 510,
+      "available_units": 0,
+      "unavailable_units": 510,
+      "location": "Lavanderia",
+      "status": "",
+      "source_row": 17
+    },
+    {
+      "sku": "2164",
+      "article": "2164",
+      "fabric": "Giselle Ex 1735 C.Cierres",
+      "workshop": "SUR",
+      "program_units": 510,
+      "pending_units": 510,
+      "available_units": 0,
+      "unavailable_units": 510,
+      "location": "En Producción",
+      "status": "En Producción",
+      "source_row": 29
+    },
+    {
+      "sku": "2155",
+      "article": "2155",
+      "fabric": "Igor Blue",
+      "workshop": "Zepita",
+      "program_units": 90,
+      "pending_units": 90,
+      "available_units": 0,
+      "unavailable_units": 90,
+      "location": "Term",
+      "status": "",
+      "source_row": 11
     }
   ]
 }

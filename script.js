@@ -12,6 +12,7 @@ let quotesAdminCache = { quotes: [], itemsByQuote: new Map() };
 let trazabilidadCache = [];
 let trazabilidadMeta = null;
 let adminActiveTab = "cotizaciones";
+let trazabilidadDisponibles = [];
 let clienteSeleccionado = null; // { rut, rut_normalized, razon_social }
 let clientLookupDebounce = null;
 let imagenesModalActual = [];
@@ -1540,6 +1541,7 @@ function logoutCotizaciones() {
   sessionStorage.removeItem("quotes_access_token");
   sessionStorage.removeItem("quotes_user_email");
   adminActiveTab = "cotizaciones";
+  trazabilidadDisponibles = [];
   actualizarEstadoQuotesUI();
   const list = document.getElementById("quotesList");
   if (list) list.innerHTML = "";
@@ -1572,42 +1574,65 @@ function renderTrazabilidadAdmin(items = []) {
   if (!list) return;
 
   if (!items.length) {
-    list.innerHTML = `<div class="quote-card"><div class="quote-meta">No hay articulos disponibles para mostrar.</div></div>`;
+    list.innerHTML = `<div class="quote-card"><div class="quote-meta">No hay articulos para mostrar.</div></div>`;
     return;
   }
 
   list.innerHTML = items.map((it) => {
-    const sku = String(it.sku || "");
-    const article = String(it.article || "");
-    const totalDisponible = Number(it.available_total ?? it.bodega_total) || 0;
-    const saldo = Number(it.saldo_total) || 0;
-    const desc = obtenerDescripcionPorSkuArticle(sku, article);
-    const color = String(it.color || "").trim();
-    const sizes = it?.sizes_available && typeof it.sizes_available === "object"
-      ? it.sizes_available
-      : {};
-    const sizesText = Object.entries(sizes)
-      .map(([size, qty]) => [String(size), Number(qty) || 0])
-      .filter(([, qty]) => qty > 0)
-      .sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true }))
-      .map(([size, qty]) => `T${size}: <strong>${formatNumberCL(qty)}</strong>`)
-      .join(" · ");
+    const sku = String(it.sku || it.article || "");
+    const available = Number(it.available_units ?? it.available_total ?? it.bodega_total) || 0;
+    const unavailable = Number(it.unavailable_units) || 0;
+    const pending = Number(it.pending_units) || 0;
+    const location = String(it.location || "").trim() || "Sin ubicacion";
+    const fabric = String(it.fabric || it.color || "").trim();
+    const workshop = String(it.workshop || "").trim();
+    const desc = obtenerDescripcionPorSkuArticle(sku, String(it.article || ""));
 
     return `
       <div class="trace-card">
         <div class="trace-card-head">
           <div class="trace-card-title">Modelo ${sku || "-"}</div>
-          <div class="trace-card-qty">Total: ${formatNumberCL(totalDisponible)}</div>
+          <div class="trace-card-qty">Disponible: ${formatNumberCL(available)}</div>
         </div>
         <div class="trace-card-meta">
-          ${sizesText || "Sin detalle por talla"}
+          No disponible: <strong>${formatNumberCL(unavailable)}</strong>${pending ? ` · Pendiente: ${formatNumberCL(pending)}` : ""}
         </div>
         <div class="trace-card-meta">
-          ${color ? `Color: ${color}` : ""}${article ? `${color ? " · " : ""}Articulo: ${article}` : ""}${saldo ? ` · Saldo: ${formatNumberCL(saldo)}` : ""}${desc ? ` · ${desc}` : ""}
+          Donde esta: <strong>${location}</strong>${fabric ? ` · Tela: ${fabric}` : ""}${workshop ? ` · Taller: ${workshop}` : ""}${desc ? ` · ${desc}` : ""}
         </div>
       </div>
     `;
   }).join("");
+}
+
+function aplicarFiltroTrazabilidad() {
+  const input = document.getElementById("trazabilidadSearchInput");
+  const query = String(input?.value || "").trim().toUpperCase();
+  const base = Array.isArray(trazabilidadDisponibles) ? trazabilidadDisponibles : [];
+  const filtered = query
+    ? base.filter((it) => String(it?.sku || it?.article || "").toUpperCase().includes(query))
+    : base;
+
+  const disponiblesFiltrados = filtered.reduce(
+    (acc, it) => acc + (Number(it.available_units ?? it.available_total ?? it.bodega_total) || 0),
+    0
+  );
+  const noDisponiblesFiltrados = filtered.reduce(
+    (acc, it) => acc + (Number(it.unavailable_units) || 0),
+    0
+  );
+  const summaryEl = document.getElementById("trazabilidadSummary");
+  if (summaryEl) {
+    if (query) {
+      summaryEl.innerText = `Resultados: ${formatNumberCL(filtered.length)} de ${formatNumberCL(base.length)} modelos · Disponibles: ${formatNumberCL(disponiblesFiltrados)} · No disponibles: ${formatNumberCL(noDisponiblesFiltrados)}`;
+    } else {
+      const disponibles = base.reduce((acc, it) => acc + (Number(it.available_units ?? it.available_total ?? it.bodega_total) || 0), 0);
+      const noDisponibles = base.reduce((acc, it) => acc + (Number(it.unavailable_units) || 0), 0);
+      summaryEl.innerText = `Articulos: ${formatNumberCL(base.length)} · Disponibles: ${formatNumberCL(disponibles)} · No disponibles: ${formatNumberCL(noDisponibles)}`;
+    }
+  }
+
+  renderTrazabilidadAdmin(filtered);
 }
 
 async function cargarTrazabilidadAdmin() {
@@ -1620,15 +1645,18 @@ async function cargarTrazabilidadAdmin() {
 
   trazabilidadMeta = data || null;
   trazabilidadCache = Array.isArray(data?.items) ? data.items : [];
-  const disponibles = trazabilidadCache
-    .filter((it) => (Number(it.available_total ?? it.bodega_total) || 0) > 0)
-    .sort((a, b) => (Number(b.available_total ?? b.bodega_total) || 0) - (Number(a.available_total ?? a.bodega_total) || 0));
+  trazabilidadDisponibles = trazabilidadCache
+    .filter((it) => (Number(it.available_units ?? it.available_total ?? it.bodega_total) || 0) > 0 || (Number(it.unavailable_units) || 0) > 0)
+    .sort((a, b) => (Number(b.available_units ?? b.available_total ?? b.bodega_total) || 0) - (Number(a.available_units ?? a.available_total ?? a.bodega_total) || 0));
 
-  const totalUnidades = disponibles.reduce((acc, it) => acc + (Number(it.available_total ?? it.bodega_total) || 0), 0);
+  const totalDisponibles = trazabilidadDisponibles.reduce((acc, it) => acc + (Number(it.available_units ?? it.available_total ?? it.bodega_total) || 0), 0);
+  const totalNoDisponibles = trazabilidadDisponibles.reduce((acc, it) => acc + (Number(it.unavailable_units) || 0), 0);
   if (summaryEl) {
-    summaryEl.innerText = `Articulos disponibles: ${formatNumberCL(disponibles.length)} · Unidades totales: ${formatNumberCL(totalUnidades)}`;
+    summaryEl.innerText = `Articulos: ${formatNumberCL(trazabilidadDisponibles.length)} · Disponibles: ${formatNumberCL(totalDisponibles)} · No disponibles: ${formatNumberCL(totalNoDisponibles)}`;
   }
-  renderTrazabilidadAdmin(disponibles);
+  const input = document.getElementById("trazabilidadSearchInput");
+  if (input) input.value = "";
+  renderTrazabilidadAdmin(trazabilidadDisponibles);
 }
 
 function activarTabAdmin(tab = "cotizaciones", { cargar = true } = {}) {
@@ -1878,6 +1906,8 @@ function configurarPanelCotizaciones() {
   const btnLogout = document.getElementById("logoutQuotesBtn");
   const btnTabCotizaciones = document.getElementById("quotesTabCotizaciones");
   const btnTabTrazabilidad = document.getElementById("quotesTabTrazabilidad");
+  const trazaSearchInput = document.getElementById("trazabilidadSearchInput");
+  const trazaSearchClear = document.getElementById("trazabilidadSearchClear");
   const emailEl = document.getElementById("quotesEmail");
   const passEl = document.getElementById("quotesPassword");
   const quotesListEl = document.getElementById("quotesList");
@@ -1942,6 +1972,12 @@ function configurarPanelCotizaciones() {
 
   btnTabCotizaciones?.addEventListener("click", () => activarTabAdmin("cotizaciones", { cargar: true }));
   btnTabTrazabilidad?.addEventListener("click", () => activarTabAdmin("trazabilidad", { cargar: true }));
+  trazaSearchInput?.addEventListener("input", aplicarFiltroTrazabilidad);
+  trazaSearchClear?.addEventListener("click", () => {
+    if (trazaSearchInput) trazaSearchInput.value = "";
+    aplicarFiltroTrazabilidad();
+    trazaSearchInput?.focus();
+  });
 
   btnLogout?.addEventListener("click", logoutCotizaciones);
 
