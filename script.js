@@ -172,13 +172,13 @@ function actualizarPrecioModal(sku) {
 }
 
 /***********************
- * UTILIDADES IMÃGENES
+ * UTILIDADES IMÁGENES
  ***********************/
 function buildImageList(obj) {
   let imgs = [];
   if (obj?.main_image) imgs.push(obj.main_image);
   if (Array.isArray(obj?.gallery)) imgs = imgs.concat(obj.gallery);
-  // quitar duplicados y filtrar imÃ¡genes de catÃ¡logo
+  // quitar duplicados y filtrar imágenes de catálogo
   return [...new Set(imgs)].filter(img => !img.toLowerCase().includes("catalogo"));
 }
 
@@ -393,7 +393,7 @@ function inicializarPanelCotizacionModal() {
           <div class="quote-panel-kicker">Cotizacion</div>
           <div id="quotePanelModelTitle" class="quote-panel-title">Modelo</div>
         </div>
-        <button id="closeQuotePanelBtn" type="button" class="quote-panel-close" aria-label="Cerrar panel de cotizacion">Ã—</button>
+        <button id="closeQuotePanelBtn" type="button" class="quote-panel-close" aria-label="Cerrar panel de cotizacion">×</button>
       </div>
     </div>
   `;
@@ -636,7 +636,7 @@ function verProducto(familyId) {
   if (quotePanelModelTitle) quotePanelModelTitle.innerText = "Modelo " + p.family;
   cerrarPanelCotizacionModal();
   
-  // Mostrar descripciÃ³n y caracterÃ­sticas
+  // Mostrar descripción y características
   const descriptionEl = document.getElementById("description");
   const charList = document.getElementById("characteristics");
   const hasCharacteristics = Array.isArray(p.characteristics) && p.characteristics.length;
@@ -659,7 +659,7 @@ function verProducto(familyId) {
   const variantContainer = document.getElementById("variantContainer");
   variantContainer.innerHTML = "";
 
-  // helper: activar botÃ³n
+  // helper: activar botón
   function setActive(btn) {
     variantContainer.querySelectorAll(".variant-btn").forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
@@ -668,7 +668,7 @@ function verProducto(familyId) {
 
   const familyImages = buildImageList(p);
 
-  // 1) BotÃ³n Familia
+  // 1) Botón Familia
   const btnFamily = document.createElement("button");
   btnFamily.className = "variant-btn";
   btnFamily.innerText = "Modelo " + p.family;
@@ -710,7 +710,7 @@ function verProducto(familyId) {
     });
   }
 
-  // Estado inicial: si la familia no tiene imÃ¡genes visibles, abrir primera variante con imÃ¡genes
+  // Estado inicial: si la familia no tiene imágenes visibles, abrir primera variante con imágenes
   const firstVariantWithImages = Array.isArray(p.variants)
     ? p.variants.find((v) => buildImageList(v).length)
     : null;
@@ -793,7 +793,7 @@ document.getElementById("addBtn").onclick = () => {
   resetDraftsModal();
 
   actualizarCarrito();
-  mostrarToastExito("CotizaciÃ³n agregada", "Puedes verla en Tu cotizaciÃ³n.");
+  mostrarToastExito("Cotización agregada", "Puedes verla en Tu cotización.");
   cerrarPanelCotizacionModal();
   document.getElementById("modal").classList.remove("active");
 };
@@ -880,7 +880,7 @@ document.addEventListener("click", (e) => {
 });
 
 /***********************
- * COTIZACIÃ“N: CSV + MAILTO + LIMPIEZA
+ * COTIZACIÓN: CSV + MAILTO + LIMPIEZA
  ***********************/
 function generarCSV() {
   const nombreTienda = clienteSeleccionado?.razon_social || "";
@@ -906,7 +906,7 @@ function generarCSV() {
       totalGeneral += c;
     });
 
-    // LÃ­nea de total por SKU
+    // Línea de total por SKU
     rows.push(["", "Total " + item.sku, totalPorSku]);
     rows.push([]);
   });
@@ -1138,7 +1138,7 @@ async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
 function generarExcelHtmlQuoteAdmin(quote, items = []) {
   const fecha = quote?.created_at ? new Date(quote.created_at).toLocaleString() : "-";
   const codigo = generarCodigoCotizacionVisual(quote);
-  const estado = quote?.is_ready ? "CotizaciÃ³n lista" : "En proceso";
+  const estado = quote?.is_ready ? "Cotización lista" : "En proceso";
   const rut = quote?.client_rut || "";
 
   const ordered = [...items].sort((a, b) => {
@@ -1272,7 +1272,7 @@ function asegurarConfirmModal() {
       <div class="confirm-action-icon">!</div>
       <div class="confirm-action-copy">
         <div id="confirmActionTitle" class="confirm-action-title">Confirmar accion</div>
-        <div id="confirmActionMsg" class="confirm-action-msg">Â¿Estas seguro?</div>
+        <div id="confirmActionMsg" class="confirm-action-msg">¿Estás seguro?</div>
       </div>
       <div class="confirm-action-buttons">
         <button type="button" id="confirmActionCancel" class="ghost-btn">Cancelar</button>
@@ -1284,7 +1284,7 @@ function asegurarConfirmModal() {
   return modal;
 }
 
-function mostrarConfirmacionAccion({ titulo = "Confirmar", mensaje = "Â¿Estas seguro?", confirmarTexto = "Aceptar" } = {}) {
+function mostrarConfirmacionAccion({ titulo = "Confirmar", mensaje = "¿Estás seguro?", confirmarTexto = "Aceptar" } = {}) {
   const modal = asegurarConfirmModal();
   const titleEl = modal.querySelector("#confirmActionTitle");
   const msgEl = modal.querySelector("#confirmActionMsg");
@@ -1387,7 +1387,7 @@ async function validarRutClienteEnUI({ silencioso = false } = {}) {
   }
 
   if (!/^[0-9]+-[0-9K]$/i.test(rutNormalizado)) {
-    if (!silencioso) setClientLookupUI({ tipo: "error", texto: "Formato de RUT invÃ¡lido" });
+    if (!silencioso) setClientLookupUI({ tipo: "error", texto: "Formato de RUT inválido" });
     return null;
   }
 
@@ -1787,18 +1787,18 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
             <div class="quote-code-row">
               <span class="quote-code-pill">${codigo}</span>
               <button type="button" class="ghost-btn quote-export-btn" data-quote-export="${q.id}">Descargar pedido</button>
-              <button type="button" class="ghost-btn quote-delete-btn" data-quote-delete="${q.id}">Eliminar cotizaciÃ³n</button>
+              <button type="button" class="ghost-btn quote-delete-btn" data-quote-delete="${q.id}">Eliminar cotización</button>
             </div>
           </div>
           <div class="quote-meta">Total items: ${q.total_items || 0}<br>${fecha}</div>
         </div>
         <div class="quote-status">
           <div class="quote-status-text ${isReady ? "ready" : ""}">
-            ${isReady ? "CotizaciÃ³n lista" : "En proceso"}
+            ${isReady ? "Cotización lista" : "En proceso"}
           </div>
           <label class="quote-status-toggle">
             <input type="checkbox" class="quote-ready-checkbox" data-quote-id="${q.id}" ${isReady ? "checked" : ""}>
-            CotizaciÃ³n lista
+            Cotización lista
           </label>
         </div>
         <div class="quote-items-grid">
@@ -2032,9 +2032,9 @@ function configurarPanelCotizaciones() {
 
     (async () => {
       const confirmar = await mostrarConfirmacionAccion({
-        titulo: "Eliminar cotizaciÃ³n",
-        mensaje: `Se eliminarÃ¡ ${codigo}${quote?.store_name ? ` (${quote.store_name})` : ""}. Esta acciÃ³n no se puede deshacer.`,
-        confirmarTexto: "SÃ­, eliminar",
+        titulo: "Eliminar cotización",
+        mensaje: `Se eliminará ${codigo}${quote?.store_name ? ` (${quote.store_name})` : ""}. Esta acción no se puede deshacer.`,
+        confirmarTexto: "Sí, eliminar",
       });
       if (!confirmar) return;
 
@@ -2043,10 +2043,10 @@ function configurarPanelCotizaciones() {
       deleteBtn.innerText = "Eliminando...";
       try {
         await eliminarCotizacionAdmin(quoteId);
-        mostrarToastExito("CotizaciÃ³n eliminada", "La cotizaciÃ³n se eliminÃ³ correctamente.");
+        mostrarToastExito("Cotización eliminada", "La cotización se eliminó correctamente.");
         await cargarCotizacionesAdmin();
       } catch (err) {
-        mostrarToastError("No se pudo eliminar", err.message || "Error eliminando cotizaciÃ³n");
+        mostrarToastError("No se pudo eliminar", err.message || "Error eliminando cotización");
       } finally {
         deleteBtn.disabled = false;
         deleteBtn.innerText = textoOriginal;
@@ -2096,4 +2096,5 @@ document.getElementById("closeCart").onclick = () => {
   document.getElementById("cartSidebar").classList.remove("open");
   document.querySelector(".cart-overlay")?.classList.remove("active");
 };
+
 
