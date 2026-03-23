@@ -1583,6 +1583,7 @@ function renderTrazabilidadAdmin(items = []) {
     const skuNew = String(it.sku_new || sku.split("/")[0] || "");
     const skuEx = String(it.sku_ex || (sku.includes("/") ? sku.split("/")[1] : "") || "");
     const available = Number(it.available_units ?? it.available_total ?? it.bodega_total) || 0;
+    const fabric = String(it.fabric || it.color || "").trim();
 
     const sizes = it?.sizes_available && typeof it.sizes_available === "object"
       ? it.sizes_available
@@ -1603,6 +1604,7 @@ function renderTrazabilidadAdmin(items = []) {
           <div class="trace-card-qty">Disponible: ${formatNumberCL(available)}</div>
         </div>
         ${sizesText ? `<div class="trace-card-meta">${sizesText}</div>` : ""}
+        ${fabric ? `<div class="trace-card-meta">Tela: ${fabric}</div>` : ""}
       </div>
     `;
   }).join("");
