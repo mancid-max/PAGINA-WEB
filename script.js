@@ -1524,7 +1524,7 @@ async function loginCotizacionesSupabase(email, password) {
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data?.error_description || data?.msg || "Login invalido");
+    throw new Error("No se pudo iniciar sesion");
   }
 
   if (!data?.access_token) throw new Error("No se recibio access_token");
@@ -1634,7 +1634,14 @@ function activarTabAdmin(tab = "cotizaciones", { cargar = true } = {}) {
 
   if (!quotesAccessToken || !cargar) return;
   if (isCot) {
-    cargarCotizacionesAdmin().catch((err) => actualizarEstadoQuotesUI(err.message || "Error cargando"));
+    cargarCotizacionesAdmin().catch((err) => {
+      actualizarEstadoQuotesUI("");
+      if ((err?.message || "").toLowerCase().includes("iniciar sesion")) {
+        mostrarToastError("No se pudo iniciar sesion", "Vuelve a ingresar tus credenciales.");
+      } else {
+        mostrarToastError("No se pudo cargar", err?.message || "Error cargando cotizaciones.");
+      }
+    });
     return;
   }
   cargarTrazabilidadAdmin().catch((err) => {
@@ -1805,7 +1812,10 @@ async function cargarCotizacionesAdmin() {
   );
 
   if (!quotesRes.ok) {
-    if (quotesRes.status === 401 || quotesRes.status === 403) logoutCotizaciones();
+    if (quotesRes.status === 401 || quotesRes.status === 403) {
+      logoutCotizaciones();
+      throw new Error("No se pudo iniciar sesion");
+    }
     const errText = await quotesRes.text();
     throw new Error(`No se pudieron cargar cotizaciones: ${errText || quotesRes.status}`);
   }
@@ -1863,20 +1873,21 @@ function configurarPanelCotizaciones() {
     const email = emailEl?.value.trim();
     const password = passEl?.value || "";
     if (!email || !password) {
-      actualizarEstadoQuotesUI("Ingresa correo y contrasena");
+      mostrarToastError("Datos incompletos", "Ingresa correo y contrasena.");
       return;
     }
 
     btnLogin.disabled = true;
     btnLogin.innerText = "Ingresando...";
-    actualizarEstadoQuotesUI("Validando acceso...");
+    actualizarEstadoQuotesUI("");
     try {
       await loginCotizacionesSupabase(email, password);
       actualizarEstadoQuotesUI("");
       activarTabAdmin("cotizaciones", { cargar: true });
       if (passEl) passEl.value = "";
     } catch (err) {
-      actualizarEstadoQuotesUI(err.message || "No se pudo iniciar sesion");
+      actualizarEstadoQuotesUI("");
+      mostrarToastError("No se pudo iniciar sesion", "Revisa tus credenciales e intenta nuevamente.");
     } finally {
       btnLogin.disabled = false;
       btnLogin.innerText = "Ingresar";
@@ -1907,7 +1918,12 @@ function configurarPanelCotizaciones() {
       if (adminActiveTab === "trazabilidad") await cargarTrazabilidadAdmin();
       else await cargarCotizacionesAdmin();
     } catch (err) {
-      actualizarEstadoQuotesUI(err.message || "No se pudo actualizar");
+      actualizarEstadoQuotesUI("");
+      if ((err?.message || "").toLowerCase().includes("iniciar sesion")) {
+        mostrarToastError("No se pudo iniciar sesion", "Vuelve a ingresar tus credenciales.");
+      } else {
+        mostrarToastError("No se pudo actualizar", err?.message || "Intentalo nuevamente.");
+      }
     }
   });
 
