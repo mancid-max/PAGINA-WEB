@@ -1593,7 +1593,7 @@ function renderTrazabilidadAdmin(items = []) {
       .filter(([, qty]) => qty > 0)
       .sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true }))
       .map(([size, qty]) => `T${size}: <strong>${formatNumberCL(qty)}</strong>`)
-      .join(" Â· ");
+      .join(" · ");
 
     return `
       <div class="trace-card">
@@ -1644,10 +1644,10 @@ function aplicarFiltroTrazabilidad() {
   const summaryEl = document.getElementById("trazabilidadSummary");
   if (summaryEl) {
     if (query) {
-      summaryEl.innerText = `Resultados: ${formatNumberCL(filtered.length)} de ${formatNumberCL(base.length)} modelos Â· Unidades disponibles: ${formatNumberCL(disponiblesFiltrados)}`;
+      summaryEl.innerText = `Resultados: ${formatNumberCL(filtered.length)} de ${formatNumberCL(base.length)} modelos · Unidades disponibles: ${formatNumberCL(disponiblesFiltrados)}`;
     } else {
       const disponibles = base.reduce((acc, it) => acc + (Number(it.available_units ?? it.available_total ?? it.bodega_total) || 0), 0);
-      summaryEl.innerText = `Articulos disponibles: ${formatNumberCL(base.length)} Â· Unidades totales: ${formatNumberCL(disponibles)}`;
+      summaryEl.innerText = `Articulos disponibles: ${formatNumberCL(base.length)} · Unidades totales: ${formatNumberCL(disponibles)}`;
     }
   }
 
@@ -1670,7 +1670,7 @@ async function cargarTrazabilidadAdmin() {
 
   const totalDisponibles = trazabilidadDisponibles.reduce((acc, it) => acc + (Number(it.available_units ?? it.available_total ?? it.bodega_total) || 0), 0);
   if (summaryEl) {
-    summaryEl.innerText = `Articulos disponibles: ${formatNumberCL(trazabilidadDisponibles.length)} Â· Unidades totales: ${formatNumberCL(totalDisponibles)}`;
+    summaryEl.innerText = `Articulos disponibles: ${formatNumberCL(trazabilidadDisponibles.length)} · Unidades totales: ${formatNumberCL(totalDisponibles)}`;
   }
   const input = document.getElementById("trazabilidadSearchInput");
   if (input) input.value = "";
@@ -1807,7 +1807,7 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
               const tallasTxt = Object.entries(g.tallas)
                 .sort((a, b) => String(a[0]).localeCompare(String(b[0]), undefined, { numeric: true }))
                 .map(([t, q]) => `T${t}: <strong>${q}</strong>`)
-                .join(" Â· ");
+                .join(" · ");
               return `<div class="quote-item-line"><span class="quote-item-model">Modelo ${g.sku}</span><span class="quote-item-sizes">${tallasTxt}</span></div>`;
             }).join("")
             : `<div class="quote-item-line">Sin detalle</div>`
@@ -2096,3 +2096,4 @@ document.getElementById("closeCart").onclick = () => {
   document.getElementById("cartSidebar").classList.remove("open");
   document.querySelector(".cart-overlay")?.classList.remove("active");
 };
+
