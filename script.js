@@ -1,4 +1,4 @@
-/***********************
+﻿/***********************
  * ESTADO GLOBAL
  ***********************/
 let productos = [];
@@ -172,13 +172,13 @@ function actualizarPrecioModal(sku) {
 }
 
 /***********************
- * UTILIDADES IMÁGENES
+ * UTILIDADES IMÃGENES
  ***********************/
 function buildImageList(obj) {
   let imgs = [];
   if (obj?.main_image) imgs.push(obj.main_image);
   if (Array.isArray(obj?.gallery)) imgs = imgs.concat(obj.gallery);
-  // quitar duplicados y filtrar imágenes de catálogo
+  // quitar duplicados y filtrar imÃ¡genes de catÃ¡logo
   return [...new Set(imgs)].filter(img => !img.toLowerCase().includes("catalogo"));
 }
 
@@ -393,7 +393,7 @@ function inicializarPanelCotizacionModal() {
           <div class="quote-panel-kicker">Cotizacion</div>
           <div id="quotePanelModelTitle" class="quote-panel-title">Modelo</div>
         </div>
-        <button id="closeQuotePanelBtn" type="button" class="quote-panel-close" aria-label="Cerrar panel de cotizacion">×</button>
+        <button id="closeQuotePanelBtn" type="button" class="quote-panel-close" aria-label="Cerrar panel de cotizacion">Ã—</button>
       </div>
     </div>
   `;
@@ -636,7 +636,7 @@ function verProducto(familyId) {
   if (quotePanelModelTitle) quotePanelModelTitle.innerText = "Modelo " + p.family;
   cerrarPanelCotizacionModal();
   
-  // Mostrar descripción y características
+  // Mostrar descripciÃ³n y caracterÃ­sticas
   const descriptionEl = document.getElementById("description");
   const charList = document.getElementById("characteristics");
   const hasCharacteristics = Array.isArray(p.characteristics) && p.characteristics.length;
@@ -659,7 +659,7 @@ function verProducto(familyId) {
   const variantContainer = document.getElementById("variantContainer");
   variantContainer.innerHTML = "";
 
-  // helper: activar botón
+  // helper: activar botÃ³n
   function setActive(btn) {
     variantContainer.querySelectorAll(".variant-btn").forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
@@ -668,7 +668,7 @@ function verProducto(familyId) {
 
   const familyImages = buildImageList(p);
 
-  // 1) Botón Familia
+  // 1) BotÃ³n Familia
   const btnFamily = document.createElement("button");
   btnFamily.className = "variant-btn";
   btnFamily.innerText = "Modelo " + p.family;
@@ -710,7 +710,7 @@ function verProducto(familyId) {
     });
   }
 
-  // Estado inicial: si la familia no tiene imágenes visibles, abrir primera variante con imágenes
+  // Estado inicial: si la familia no tiene imÃ¡genes visibles, abrir primera variante con imÃ¡genes
   const firstVariantWithImages = Array.isArray(p.variants)
     ? p.variants.find((v) => buildImageList(v).length)
     : null;
@@ -793,7 +793,7 @@ document.getElementById("addBtn").onclick = () => {
   resetDraftsModal();
 
   actualizarCarrito();
-  mostrarToastExito("Cotización agregada", "Puedes verla en Tu cotización.");
+  mostrarToastExito("CotizaciÃ³n agregada", "Puedes verla en Tu cotizaciÃ³n.");
   cerrarPanelCotizacionModal();
   document.getElementById("modal").classList.remove("active");
 };
@@ -880,7 +880,7 @@ document.addEventListener("click", (e) => {
 });
 
 /***********************
- * COTIZACIÓN: CSV + MAILTO + LIMPIEZA
+ * COTIZACIÃ“N: CSV + MAILTO + LIMPIEZA
  ***********************/
 function generarCSV() {
   const nombreTienda = clienteSeleccionado?.razon_social || "";
@@ -906,7 +906,7 @@ function generarCSV() {
       totalGeneral += c;
     });
 
-    // Línea de total por SKU
+    // LÃ­nea de total por SKU
     rows.push(["", "Total " + item.sku, totalPorSku]);
     rows.push([]);
   });
@@ -1138,7 +1138,7 @@ async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
 function generarExcelHtmlQuoteAdmin(quote, items = []) {
   const fecha = quote?.created_at ? new Date(quote.created_at).toLocaleString() : "-";
   const codigo = generarCodigoCotizacionVisual(quote);
-  const estado = quote?.is_ready ? "Cotización lista" : "En proceso";
+  const estado = quote?.is_ready ? "CotizaciÃ³n lista" : "En proceso";
   const rut = quote?.client_rut || "";
 
   const ordered = [...items].sort((a, b) => {
@@ -1272,7 +1272,7 @@ function asegurarConfirmModal() {
       <div class="confirm-action-icon">!</div>
       <div class="confirm-action-copy">
         <div id="confirmActionTitle" class="confirm-action-title">Confirmar accion</div>
-        <div id="confirmActionMsg" class="confirm-action-msg">¿Estas seguro?</div>
+        <div id="confirmActionMsg" class="confirm-action-msg">Â¿Estas seguro?</div>
       </div>
       <div class="confirm-action-buttons">
         <button type="button" id="confirmActionCancel" class="ghost-btn">Cancelar</button>
@@ -1284,7 +1284,7 @@ function asegurarConfirmModal() {
   return modal;
 }
 
-function mostrarConfirmacionAccion({ titulo = "Confirmar", mensaje = "¿Estas seguro?", confirmarTexto = "Aceptar" } = {}) {
+function mostrarConfirmacionAccion({ titulo = "Confirmar", mensaje = "Â¿Estas seguro?", confirmarTexto = "Aceptar" } = {}) {
   const modal = asegurarConfirmModal();
   const titleEl = modal.querySelector("#confirmActionTitle");
   const msgEl = modal.querySelector("#confirmActionMsg");
@@ -1387,7 +1387,7 @@ async function validarRutClienteEnUI({ silencioso = false } = {}) {
   }
 
   if (!/^[0-9]+-[0-9K]$/i.test(rutNormalizado)) {
-    if (!silencioso) setClientLookupUI({ tipo: "error", texto: "Formato de RUT inválido" });
+    if (!silencioso) setClientLookupUI({ tipo: "error", texto: "Formato de RUT invÃ¡lido" });
     return null;
   }
 
@@ -1580,10 +1580,9 @@ function renderTrazabilidadAdmin(items = []) {
 
   list.innerHTML = items.map((it) => {
     const sku = String(it.sku || it.article || "");
+    const skuNew = String(it.sku_new || sku.split("/")[0] || "");
+    const skuEx = String(it.sku_ex || (sku.includes("/") ? sku.split("/")[1] : "") || "");
     const available = Number(it.available_units ?? it.available_total ?? it.bodega_total) || 0;
-    const fabric = String(it.fabric || it.color || "").trim();
-    const workshop = String(it.workshop || "").trim();
-    const desc = obtenerDescripcionPorSkuArticle(sku, String(it.article || ""));
 
     const sizes = it?.sizes_available && typeof it.sizes_available === "object"
       ? it.sizes_available
@@ -1593,18 +1592,17 @@ function renderTrazabilidadAdmin(items = []) {
       .filter(([, qty]) => qty > 0)
       .sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true }))
       .map(([size, qty]) => `T${size}: <strong>${formatNumberCL(qty)}</strong>`)
-      .join(" · ");
+      .join(" Â· ");
 
     return `
       <div class="trace-card">
         <div class="trace-card-head">
-          <div class="trace-card-title">Modelo ${sku || "-"}</div>
+          <div class="trace-card-title">
+            Modelo ${skuNew || sku || "-"}${skuEx ? ` <span class="trace-ex-pill">Ex ${skuEx}</span>` : ""}
+          </div>
           <div class="trace-card-qty">Disponible: ${formatNumberCL(available)}</div>
         </div>
         ${sizesText ? `<div class="trace-card-meta">${sizesText}</div>` : ""}
-        <div class="trace-card-meta">
-          ${fabric ? `Tela: ${fabric}` : ""}${workshop ? `${fabric ? " · " : ""}Taller: ${workshop}` : ""}${desc ? `${fabric || workshop ? " · " : ""}${desc}` : ""}
-        </div>
       </div>
     `;
   }).join("");
@@ -1644,10 +1642,10 @@ function aplicarFiltroTrazabilidad() {
   const summaryEl = document.getElementById("trazabilidadSummary");
   if (summaryEl) {
     if (query) {
-      summaryEl.innerText = `Resultados: ${formatNumberCL(filtered.length)} de ${formatNumberCL(base.length)} modelos · Unidades disponibles: ${formatNumberCL(disponiblesFiltrados)}`;
+      summaryEl.innerText = `Resultados: ${formatNumberCL(filtered.length)} de ${formatNumberCL(base.length)} modelos Â· Unidades disponibles: ${formatNumberCL(disponiblesFiltrados)}`;
     } else {
       const disponibles = base.reduce((acc, it) => acc + (Number(it.available_units ?? it.available_total ?? it.bodega_total) || 0), 0);
-      summaryEl.innerText = `Articulos disponibles: ${formatNumberCL(base.length)} · Unidades totales: ${formatNumberCL(disponibles)}`;
+      summaryEl.innerText = `Articulos disponibles: ${formatNumberCL(base.length)} Â· Unidades totales: ${formatNumberCL(disponibles)}`;
     }
   }
 
@@ -1670,7 +1668,7 @@ async function cargarTrazabilidadAdmin() {
 
   const totalDisponibles = trazabilidadDisponibles.reduce((acc, it) => acc + (Number(it.available_units ?? it.available_total ?? it.bodega_total) || 0), 0);
   if (summaryEl) {
-    summaryEl.innerText = `Articulos disponibles: ${formatNumberCL(trazabilidadDisponibles.length)} · Unidades totales: ${formatNumberCL(totalDisponibles)}`;
+    summaryEl.innerText = `Articulos disponibles: ${formatNumberCL(trazabilidadDisponibles.length)} Â· Unidades totales: ${formatNumberCL(totalDisponibles)}`;
   }
   const input = document.getElementById("trazabilidadSearchInput");
   if (input) input.value = "";
@@ -1787,18 +1785,18 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
             <div class="quote-code-row">
               <span class="quote-code-pill">${codigo}</span>
               <button type="button" class="ghost-btn quote-export-btn" data-quote-export="${q.id}">Descargar pedido</button>
-              <button type="button" class="ghost-btn quote-delete-btn" data-quote-delete="${q.id}">Eliminar cotización</button>
+              <button type="button" class="ghost-btn quote-delete-btn" data-quote-delete="${q.id}">Eliminar cotizaciÃ³n</button>
             </div>
           </div>
           <div class="quote-meta">Total items: ${q.total_items || 0}<br>${fecha}</div>
         </div>
         <div class="quote-status">
           <div class="quote-status-text ${isReady ? "ready" : ""}">
-            ${isReady ? "Cotización lista" : "En proceso"}
+            ${isReady ? "CotizaciÃ³n lista" : "En proceso"}
           </div>
           <label class="quote-status-toggle">
             <input type="checkbox" class="quote-ready-checkbox" data-quote-id="${q.id}" ${isReady ? "checked" : ""}>
-            Cotización lista
+            CotizaciÃ³n lista
           </label>
         </div>
         <div class="quote-items-grid">
@@ -1807,7 +1805,7 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
               const tallasTxt = Object.entries(g.tallas)
                 .sort((a, b) => String(a[0]).localeCompare(String(b[0]), undefined, { numeric: true }))
                 .map(([t, q]) => `T${t}: <strong>${q}</strong>`)
-                .join(" · ");
+                .join(" Â· ");
               return `<div class="quote-item-line"><span class="quote-item-model">Modelo ${g.sku}</span><span class="quote-item-sizes">${tallasTxt}</span></div>`;
             }).join("")
             : `<div class="quote-item-line">Sin detalle</div>`
@@ -2032,9 +2030,9 @@ function configurarPanelCotizaciones() {
 
     (async () => {
       const confirmar = await mostrarConfirmacionAccion({
-        titulo: "Eliminar cotización",
-        mensaje: `Se eliminará ${codigo}${quote?.store_name ? ` (${quote.store_name})` : ""}. Esta acción no se puede deshacer.`,
-        confirmarTexto: "Sí, eliminar",
+        titulo: "Eliminar cotizaciÃ³n",
+        mensaje: `Se eliminarÃ¡ ${codigo}${quote?.store_name ? ` (${quote.store_name})` : ""}. Esta acciÃ³n no se puede deshacer.`,
+        confirmarTexto: "SÃ­, eliminar",
       });
       if (!confirmar) return;
 
@@ -2043,10 +2041,10 @@ function configurarPanelCotizaciones() {
       deleteBtn.innerText = "Eliminando...";
       try {
         await eliminarCotizacionAdmin(quoteId);
-        mostrarToastExito("Cotización eliminada", "La cotización se eliminó correctamente.");
+        mostrarToastExito("CotizaciÃ³n eliminada", "La cotizaciÃ³n se eliminÃ³ correctamente.");
         await cargarCotizacionesAdmin();
       } catch (err) {
-        mostrarToastError("No se pudo eliminar", err.message || "Error eliminando cotización");
+        mostrarToastError("No se pudo eliminar", err.message || "Error eliminando cotizaciÃ³n");
       } finally {
         deleteBtn.disabled = false;
         deleteBtn.innerText = textoOriginal;
