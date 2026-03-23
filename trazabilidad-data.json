@@ -1,351 +1,665 @@
 {
-  "source_file": "DATA Trazabilidad\\SALDOS-SECCI.TXT",
-  "items_total": 43,
-  "items_with_bodega": 12,
+  "source_file": "Cortes 4200 .xlsx",
+  "sheet": "Ranking 42",
+  "rule": "Valores negativos en Ranking 42 se consideran disponibles",
+  "items_total": 41,
+  "units_total": 4436,
   "items": [
     {
-      "article": "01420100",
-      "sku": "4201",
-      "bodega_total": 1072,
-      "saldo_total": 507,
-      "rows": 3,
-      "last_date": "21/01/2026"
+      "sku": "4219-00",
+      "color": "Ayla",
+      "available_total": 583,
+      "sizes_available": {
+        "34": 73,
+        "36": 97,
+        "38": 107,
+        "40": 105,
+        "42": 93,
+        "44": 72,
+        "46": 36,
+        "48": 0
+      },
+      "source_row": 3
     },
     {
-      "article": "01421800",
-      "sku": "4218",
-      "bodega_total": 848,
-      "saldo_total": 5,
-      "rows": 2,
-      "last_date": "16/01/2026"
+      "sku": "4201-00",
+      "color": "Ibiza Blue",
+      "available_total": 298,
+      "sizes_available": {
+        "34": 0,
+        "36": 44,
+        "38": 62,
+        "40": 85,
+        "42": 59,
+        "44": 38,
+        "46": 10,
+        "48": 0
+      },
+      "source_row": 4
     },
     {
-      "article": "01422300",
-      "sku": "4223",
-      "bodega_total": 565,
-      "saldo_total": 6,
-      "rows": 3,
-      "last_date": "13/12/2025"
+      "sku": "4225-00",
+      "color": "B2868-V3",
+      "available_total": 287,
+      "sizes_available": {
+        "34": 0,
+        "36": 40,
+        "38": 46,
+        "40": 77,
+        "42": 66,
+        "44": 51,
+        "46": 7,
+        "48": 0
+      },
+      "source_row": 7
     },
     {
-      "article": "01421400",
-      "sku": "4214",
-      "bodega_total": 555,
-      "saldo_total": 18,
-      "rows": 3,
-      "last_date": "15/12/2025"
+      "sku": "4247-00",
+      "color": "Ibiza Blue",
+      "available_total": 285,
+      "sizes_available": {
+        "34": 0,
+        "36": 46,
+        "38": 53,
+        "40": 73,
+        "42": 39,
+        "44": 62,
+        "46": 12,
+        "48": 0
+      },
+      "source_row": 8
     },
     {
-      "article": "01423000",
-      "sku": "4230",
-      "bodega_total": 503,
-      "saldo_total": 3,
-      "rows": 1,
-      "last_date": "12/12/2025"
+      "sku": "4235-00",
+      "color": "Ibiza Blue",
+      "available_total": 250,
+      "sizes_available": {
+        "34": 0,
+        "36": 25,
+        "38": 52,
+        "40": 55,
+        "42": 53,
+        "44": 42,
+        "46": 23,
+        "48": 0
+      },
+      "source_row": 9
     },
     {
-      "article": "01422600",
-      "sku": "4226",
-      "bodega_total": 502,
-      "saldo_total": 257,
-      "rows": 3,
-      "last_date": "15/12/2025"
+      "sku": "4230-00",
+      "color": "Imperio Max",
+      "available_total": 226,
+      "sizes_available": {
+        "34": 0,
+        "36": 35,
+        "38": 37,
+        "40": 37,
+        "42": 44,
+        "44": 44,
+        "46": 29,
+        "48": 0
+      },
+      "source_row": 11
     },
     {
-      "article": "01420200",
-      "sku": "4202",
-      "bodega_total": 501,
-      "saldo_total": 410,
-      "rows": 2,
-      "last_date": "25/11/2025"
+      "sku": "4206-00",
+      "color": "B2868-V3",
+      "available_total": 206,
+      "sizes_available": {
+        "34": 0,
+        "36": 43,
+        "38": 31,
+        "40": 32,
+        "42": 38,
+        "44": 38,
+        "46": 24,
+        "48": 0
+      },
+      "source_row": 12
     },
     {
-      "article": "01420400",
-      "sku": "4204",
-      "bodega_total": 492,
-      "saldo_total": 419,
-      "rows": 4,
-      "last_date": "13/12/2025"
+      "sku": "4223-00",
+      "color": "B2868-V3",
+      "available_total": 169,
+      "sizes_available": {
+        "34": 0,
+        "36": 32,
+        "38": 36,
+        "40": 28,
+        "42": 37,
+        "44": 28,
+        "46": 8,
+        "48": 0
+      },
+      "source_row": 13
     },
     {
-      "article": "01422900",
-      "sku": "4229",
-      "bodega_total": 491,
-      "saldo_total": 4,
-      "rows": 1,
-      "last_date": "11/12/2025"
+      "sku": "4205-00",
+      "color": "Ayla",
+      "available_total": 156,
+      "sizes_available": {
+        "34": 0,
+        "36": 20,
+        "38": 32,
+        "40": 32,
+        "42": 32,
+        "44": 25,
+        "46": 15,
+        "48": 0
+      },
+      "source_row": 14
     },
     {
-      "article": "01421100",
-      "sku": "4211",
-      "bodega_total": 355,
-      "saldo_total": 96,
-      "rows": 3,
-      "last_date": "13/12/2025"
+      "sku": "4203-01",
+      "color": "B2868-V3",
+      "available_total": 148,
+      "sizes_available": {
+        "34": 0,
+        "36": 15,
+        "38": 29,
+        "40": 32,
+        "42": 35,
+        "44": 23,
+        "46": 14,
+        "48": 0
+      },
+      "source_row": 15
     },
     {
-      "article": "01424700",
-      "sku": "4247",
-      "bodega_total": 265,
-      "saldo_total": 255,
-      "rows": 1,
-      "last_date": "21/01/2026"
+      "sku": "4222-00",
+      "color": "Ayla",
+      "available_total": 145,
+      "sizes_available": {
+        "34": 0,
+        "36": 14,
+        "38": 33,
+        "40": 35,
+        "42": 33,
+        "44": 28,
+        "46": 2,
+        "48": 0
+      },
+      "source_row": 16
     },
     {
-      "article": "01422800",
-      "sku": "4228",
-      "bodega_total": 100,
-      "saldo_total": 456,
-      "rows": 5,
-      "last_date": "16/01/2026"
+      "sku": "4232-00",
+      "color": "Ayla",
+      "available_total": 140,
+      "sizes_available": {
+        "34": 0,
+        "36": 21,
+        "38": 26,
+        "40": 30,
+        "42": 27,
+        "44": 17,
+        "46": 19,
+        "48": 0
+      },
+      "source_row": 17
     },
     {
-      "article": "01423400",
-      "sku": "4234",
-      "bodega_total": 0,
-      "saldo_total": 1192,
-      "rows": 2,
-      "last_date": "27/02/2026"
+      "sku": "4244-00",
+      "color": "Ibiza Blue",
+      "available_total": 140,
+      "sizes_available": {
+        "34": 0,
+        "36": 32,
+        "38": 33,
+        "40": 30,
+        "42": 37,
+        "44": 8,
+        "46": 0,
+        "48": 0
+      },
+      "source_row": 18
     },
     {
-      "article": "01423600",
-      "sku": "4236",
-      "bodega_total": 0,
-      "saldo_total": 503,
-      "rows": 3,
-      "last_date": "20/01/2026"
+      "sku": "4236-00",
+      "color": "Missy Plus",
+      "available_total": 119,
+      "sizes_available": {
+        "34": 0,
+        "36": 12,
+        "38": 25,
+        "40": 27,
+        "42": 23,
+        "44": 18,
+        "46": 14,
+        "48": 0
+      },
+      "source_row": 19
     },
     {
-      "article": "01422700",
-      "sku": "4227",
-      "bodega_total": 0,
-      "saldo_total": 502,
-      "rows": 1,
-      "last_date": "17/02/2026"
+      "sku": "4211-00",
+      "color": "Ayla",
+      "available_total": 110,
+      "sizes_available": {
+        "34": 0,
+        "36": 14,
+        "38": 17,
+        "40": 21,
+        "42": 23,
+        "44": 24,
+        "46": 11,
+        "48": 0
+      },
+      "source_row": 20
     },
     {
-      "article": "01423900",
-      "sku": "4239",
-      "bodega_total": 0,
-      "saldo_total": 498,
-      "rows": 1,
-      "last_date": "19/02/2026"
+      "sku": "4234-08",
+      "color": "Lavinia",
+      "available_total": 100,
+      "sizes_available": {
+        "34": 0,
+        "36": 14,
+        "38": 23,
+        "40": 24,
+        "42": 23,
+        "44": 16,
+        "46": 0,
+        "48": 0
+      },
+      "source_row": 22
     },
     {
-      "article": "01423300",
-      "sku": "4233",
-      "bodega_total": 0,
-      "saldo_total": 497,
-      "rows": 2,
-      "last_date": "15/12/2025"
+      "sku": "4246-00",
+      "color": "Ayla",
+      "available_total": 94,
+      "sizes_available": {
+        "34": 0,
+        "36": 9,
+        "38": 11,
+        "40": 29,
+        "42": 22,
+        "44": 17,
+        "46": 6,
+        "48": 0
+      },
+      "source_row": 21
     },
     {
-      "article": "01424900",
-      "sku": "4249",
-      "bodega_total": 0,
-      "saldo_total": 468,
-      "rows": 1,
-      "last_date": "19/02/2026"
+      "sku": "4228-00",
+      "color": "B2868-V3",
+      "available_total": 94,
+      "sizes_available": {
+        "34": 0,
+        "36": 0,
+        "38": 1,
+        "40": 49,
+        "42": 6,
+        "44": 32,
+        "46": 6,
+        "48": 0
+      },
+      "source_row": 28
     },
     {
-      "article": "01420500",
-      "sku": "4205",
-      "bodega_total": 0,
-      "saldo_total": 406,
-      "rows": 2,
-      "last_date": "13/03/2026"
+      "sku": "4239-00",
+      "color": "B2868-V3",
+      "available_total": 89,
+      "sizes_available": {
+        "34": 0,
+        "36": 6,
+        "38": 15,
+        "40": 21,
+        "42": 19,
+        "44": 19,
+        "46": 9,
+        "48": 0
+      },
+      "source_row": 27
     },
     {
-      "article": "01423500",
-      "sku": "4235",
-      "bodega_total": 0,
-      "saldo_total": 406,
-      "rows": 2,
-      "last_date": "15/12/2025"
+      "sku": "4218-00",
+      "color": "New  Glue",
+      "available_total": 76,
+      "sizes_available": {
+        "34": 0,
+        "36": 7,
+        "38": 13,
+        "40": 18,
+        "42": 14,
+        "44": 14,
+        "46": 10,
+        "48": 0
+      },
+      "source_row": 31
     },
     {
-      "article": "01422100",
-      "sku": "4221",
-      "bodega_total": 0,
-      "saldo_total": 396,
-      "rows": 1,
-      "last_date": "04/03/2026"
+      "sku": "4221-00",
+      "color": "New Glue",
+      "available_total": 74,
+      "sizes_available": {
+        "34": 0,
+        "36": 3,
+        "38": 12,
+        "40": 17,
+        "42": 12,
+        "44": 17,
+        "46": 13,
+        "48": 0
+      },
+      "source_row": 29
     },
     {
-      "article": "01422200",
-      "sku": "4222",
-      "bodega_total": 0,
-      "saldo_total": 314,
-      "rows": 1,
-      "last_date": "17/03/2026"
+      "sku": "4234-04",
+      "color": "Lavinia",
+      "available_total": 67,
+      "sizes_available": {
+        "34": 0,
+        "36": 9,
+        "38": 10,
+        "40": 19,
+        "42": 10,
+        "44": 10,
+        "46": 9,
+        "48": 0
+      },
+      "source_row": 23
     },
     {
-      "article": "01421900",
-      "sku": "4219",
-      "bodega_total": 0,
-      "saldo_total": 100,
-      "rows": 1,
-      "last_date": "07/01/2026"
+      "sku": "4233-04",
+      "color": "Lavinia",
+      "available_total": 64,
+      "sizes_available": {
+        "34": 0,
+        "36": 8,
+        "38": 13,
+        "40": 13,
+        "42": 11,
+        "44": 12,
+        "46": 7,
+        "48": 0
+      },
+      "source_row": 33
     },
     {
-      "article": "01420900",
-      "sku": "4209",
-      "bodega_total": 0,
-      "saldo_total": 12,
-      "rows": 3,
-      "last_date": "13/12/2025"
+      "sku": "4240-00",
+      "color": "B2868-V3",
+      "available_total": 58,
+      "sizes_available": {
+        "34": 0,
+        "36": 29,
+        "38": 0,
+        "40": 12,
+        "42": 1,
+        "44": 16,
+        "46": 0,
+        "48": 0
+      },
+      "source_row": 42
     },
     {
-      "article": "01421200",
-      "sku": "4212",
-      "bodega_total": 0,
-      "saldo_total": 7,
-      "rows": 4,
-      "last_date": "16/01/2026"
+      "sku": "4201-01",
+      "color": "Ibiza Blue",
+      "available_total": 57,
+      "sizes_available": {
+        "34": 0,
+        "36": 7,
+        "38": 14,
+        "40": 14,
+        "42": 12,
+        "44": 5,
+        "46": 5,
+        "48": 0
+      },
+      "source_row": 5
     },
     {
-      "article": "01421600",
-      "sku": "4216",
-      "bodega_total": 0,
-      "saldo_total": 6,
-      "rows": 3,
-      "last_date": "13/12/2025"
+      "sku": "4233-08",
+      "color": "Lavinia",
+      "available_total": 57,
+      "sizes_available": {
+        "34": 0,
+        "36": 5,
+        "38": 13,
+        "40": 13,
+        "42": 11,
+        "44": 12,
+        "46": 3,
+        "48": 0
+      },
+      "source_row": 34
     },
     {
-      "article": "01420600",
-      "sku": "4206",
-      "bodega_total": 0,
-      "saldo_total": 5,
-      "rows": 2,
-      "last_date": "13/12/2025"
+      "sku": "4221-01",
+      "color": "New Glue",
+      "available_total": 51,
+      "sizes_available": {
+        "34": 0,
+        "36": 11,
+        "38": 6,
+        "40": 13,
+        "42": 9,
+        "44": 12,
+        "46": 0,
+        "48": 0
+      },
+      "source_row": 30
     },
     {
-      "article": "01421700",
-      "sku": "4217",
-      "bodega_total": 0,
-      "saldo_total": 5,
-      "rows": 2,
-      "last_date": "13/12/2025"
+      "sku": "4234-48",
+      "color": "Lavinia",
+      "available_total": 49,
+      "sizes_available": {
+        "34": 0,
+        "36": 8,
+        "38": 11,
+        "40": 9,
+        "42": 9,
+        "44": 9,
+        "46": 3,
+        "48": 0
+      },
+      "source_row": 24
     },
     {
-      "article": "01420700",
-      "sku": "4207",
-      "bodega_total": 0,
-      "saldo_total": 4,
-      "rows": 1,
-      "last_date": "03/12/2025"
+      "sku": "4245-00",
+      "color": "B2868-V3",
+      "available_total": 36,
+      "sizes_available": {
+        "34": 0,
+        "36": 8,
+        "38": 5,
+        "40": 6,
+        "42": 8,
+        "44": 9,
+        "46": 0,
+        "48": 0
+      },
+      "source_row": 45
     },
     {
-      "article": "01420800",
-      "sku": "4208",
-      "bodega_total": 0,
-      "saldo_total": 4,
-      "rows": 1,
-      "last_date": "04/12/2025"
+      "sku": "4218-01",
+      "color": "New  Glue",
+      "available_total": 34,
+      "sizes_available": {
+        "34": 0,
+        "36": 4,
+        "38": 3,
+        "40": 10,
+        "42": 9,
+        "44": 4,
+        "46": 4,
+        "48": 0
+      },
+      "source_row": 32
     },
     {
-      "article": "01421000",
-      "sku": "4210",
-      "bodega_total": 0,
-      "saldo_total": 4,
-      "rows": 1,
-      "last_date": "03/12/2025"
+      "sku": "4204-00",
+      "color": "B2868-V3",
+      "available_total": 30,
+      "sizes_available": {
+        "34": 0,
+        "36": 15,
+        "38": 3,
+        "40": 4,
+        "42": 1,
+        "44": 6,
+        "46": 1,
+        "48": 0
+      },
+      "source_row": 44
     },
     {
-      "article": "01421500",
-      "sku": "4215",
-      "bodega_total": 0,
-      "saldo_total": 4,
-      "rows": 1,
-      "last_date": "04/12/2025"
+      "sku": "4235-01",
+      "color": "Ibiza Blue",
+      "available_total": 29,
+      "sizes_available": {
+        "34": 0,
+        "36": 3,
+        "38": 6,
+        "40": 6,
+        "42": 6,
+        "44": 5,
+        "46": 3,
+        "48": 0
+      },
+      "source_row": 10
     },
     {
-      "article": "01422400",
-      "sku": "4224",
-      "bodega_total": 0,
-      "saldo_total": 4,
-      "rows": 1,
-      "last_date": "04/12/2025"
+      "sku": "4213-01",
+      "color": "B2868-V3",
+      "available_total": 22,
+      "sizes_available": {
+        "34": 0,
+        "36": 3,
+        "38": 3,
+        "40": 7,
+        "42": 3,
+        "44": 6,
+        "46": 0,
+        "48": 0
+      },
+      "source_row": 46
     },
     {
-      "article": "01423800",
-      "sku": "4238",
-      "bodega_total": 0,
-      "saldo_total": 4,
-      "rows": 1,
-      "last_date": "15/12/2025"
+      "sku": "4201-60",
+      "color": "Ibiza Blue",
+      "available_total": 18,
+      "sizes_available": {
+        "34": 0,
+        "36": 3,
+        "38": 4,
+        "40": 4,
+        "42": 4,
+        "44": 2,
+        "46": 1,
+        "48": 0
+      },
+      "source_row": 6
     },
     {
-      "article": "01424200",
-      "sku": "4242",
-      "bodega_total": 0,
-      "saldo_total": 4,
-      "rows": 1,
-      "last_date": "15/12/2025"
+      "sku": "4234-09",
+      "color": "Lavinia",
+      "available_total": 18,
+      "sizes_available": {
+        "34": 0,
+        "36": 3,
+        "38": 4,
+        "40": 4,
+        "42": 3,
+        "44": 3,
+        "46": 1,
+        "48": 0
+      },
+      "source_row": 25
     },
     {
-      "article": "01424300",
-      "sku": "4243",
-      "bodega_total": 0,
-      "saldo_total": 4,
-      "rows": 1,
-      "last_date": "15/12/2025"
+      "sku": "4233-48",
+      "color": "Lavinia",
+      "available_total": 17,
+      "sizes_available": {
+        "34": 0,
+        "36": 2,
+        "38": 4,
+        "40": 4,
+        "42": 3,
+        "44": 3,
+        "46": 1,
+        "48": 0
+      },
+      "source_row": 35
     },
     {
-      "article": "01423100",
-      "sku": "4231",
-      "bodega_total": 0,
-      "saldo_total": 1,
-      "rows": 1,
-      "last_date": "05/01/2026"
+      "sku": "4234-16",
+      "color": "Lavinia",
+      "available_total": 16,
+      "sizes_available": {
+        "34": 0,
+        "36": 5,
+        "38": 2,
+        "40": 4,
+        "42": 1,
+        "44": 3,
+        "46": 1,
+        "48": 0
+      },
+      "source_row": 26
     },
     {
-      "article": "01424800",
-      "sku": "4248",
-      "bodega_total": 0,
-      "saldo_total": 1,
-      "rows": 1,
-      "last_date": "09/01/2026"
+      "sku": "4233-16",
+      "color": "Lavinia",
+      "available_total": 16,
+      "sizes_available": {
+        "34": 0,
+        "36": 2,
+        "38": 4,
+        "40": 4,
+        "42": 3,
+        "44": 2,
+        "46": 1,
+        "48": 0
+      },
+      "source_row": 36
     },
     {
-      "article": "01425200",
-      "sku": "4252",
-      "bodega_total": 0,
-      "saldo_total": 1,
-      "rows": 1,
-      "last_date": "14/01/2026"
+      "sku": "4233-09",
+      "color": "Lavinia",
+      "available_total": 4,
+      "sizes_available": {
+        "34": 0,
+        "36": 0,
+        "38": 1,
+        "40": 1,
+        "42": 1,
+        "44": 1,
+        "46": 0,
+        "48": 0
+      },
+      "source_row": 47
     },
     {
-      "article": "01425300",
-      "sku": "4253",
-      "bodega_total": 0,
-      "saldo_total": 1,
-      "rows": 2,
-      "last_date": "14/01/2026"
+      "sku": "4226-00",
+      "color": "Ibiza Blue",
+      "available_total": 3,
+      "sizes_available": {
+        "34": 0,
+        "36": 3,
+        "38": 0,
+        "40": 0,
+        "42": 0,
+        "44": 0,
+        "46": 0,
+        "48": 0
+      },
+      "source_row": 48
     },
     {
-      "article": "01425400",
-      "sku": "4254",
-      "bodega_total": 0,
-      "saldo_total": 1,
-      "rows": 1,
-      "last_date": "14/01/2026"
-    },
-    {
-      "article": "01425500",
-      "sku": "4255",
-      "bodega_total": 0,
-      "saldo_total": 1,
-      "rows": 1,
-      "last_date": "14/01/2026"
-    },
-    {
-      "article": "01420300",
-      "sku": "4203",
-      "bodega_total": 0,
-      "saldo_total": 0,
-      "rows": 1,
-      "last_date": "13/03/2026"
+      "sku": "4204-02",
+      "color": "B2868-V3",
+      "available_total": 1,
+      "sizes_available": {
+        "34": 0,
+        "36": 1,
+        "38": 0,
+        "40": 0,
+        "42": 0,
+        "44": 0,
+        "46": 0,
+        "48": 0
+      },
+      "source_row": 101
     }
   ]
 }

@@ -1572,25 +1572,38 @@ function renderTrazabilidadAdmin(items = []) {
   if (!list) return;
 
   if (!items.length) {
-    list.innerHTML = `<div class="quote-card"><div class="quote-meta">No hay articulos en bodega para mostrar.</div></div>`;
+    list.innerHTML = `<div class="quote-card"><div class="quote-meta">No hay articulos disponibles para mostrar.</div></div>`;
     return;
   }
 
   list.innerHTML = items.map((it) => {
     const sku = String(it.sku || "");
     const article = String(it.article || "");
-    const bodega = Number(it.bodega_total) || 0;
+    const totalDisponible = Number(it.available_total ?? it.bodega_total) || 0;
     const saldo = Number(it.saldo_total) || 0;
     const desc = obtenerDescripcionPorSkuArticle(sku, article);
+    const color = String(it.color || "").trim();
+    const sizes = it?.sizes_available && typeof it.sizes_available === "object"
+      ? it.sizes_available
+      : {};
+    const sizesText = Object.entries(sizes)
+      .map(([size, qty]) => [String(size), Number(qty) || 0])
+      .filter(([, qty]) => qty > 0)
+      .sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true }))
+      .map(([size, qty]) => `T${size}: <strong>${formatNumberCL(qty)}</strong>`)
+      .join(" · ");
 
     return `
       <div class="trace-card">
         <div class="trace-card-head">
           <div class="trace-card-title">Modelo ${sku || "-"}</div>
-          <div class="trace-card-qty">Bodega: ${formatNumberCL(bodega)}</div>
+          <div class="trace-card-qty">Total: ${formatNumberCL(totalDisponible)}</div>
         </div>
         <div class="trace-card-meta">
-          Articulo: ${article || "-"}${saldo ? ` · Saldo: ${formatNumberCL(saldo)}` : ""}${desc ? ` · ${desc}` : ""}
+          ${sizesText || "Sin detalle por talla"}
+        </div>
+        <div class="trace-card-meta">
+          ${color ? `Color: ${color}` : ""}${article ? `${color ? " · " : ""}Articulo: ${article}` : ""}${saldo ? ` · Saldo: ${formatNumberCL(saldo)}` : ""}${desc ? ` · ${desc}` : ""}
         </div>
       </div>
     `;
@@ -1607,15 +1620,15 @@ async function cargarTrazabilidadAdmin() {
 
   trazabilidadMeta = data || null;
   trazabilidadCache = Array.isArray(data?.items) ? data.items : [];
-  const enBodega = trazabilidadCache
-    .filter((it) => (Number(it.bodega_total) || 0) > 0)
-    .sort((a, b) => (Number(b.bodega_total) || 0) - (Number(a.bodega_total) || 0));
+  const disponibles = trazabilidadCache
+    .filter((it) => (Number(it.available_total ?? it.bodega_total) || 0) > 0)
+    .sort((a, b) => (Number(b.available_total ?? b.bodega_total) || 0) - (Number(a.available_total ?? a.bodega_total) || 0));
 
-  const totalBodega = enBodega.reduce((acc, it) => acc + (Number(it.bodega_total) || 0), 0);
+  const totalUnidades = disponibles.reduce((acc, it) => acc + (Number(it.available_total ?? it.bodega_total) || 0), 0);
   if (summaryEl) {
-    summaryEl.innerText = `Articulos en bodega: ${formatNumberCL(enBodega.length)} · Unidades: ${formatNumberCL(totalBodega)}`;
+    summaryEl.innerText = `Articulos disponibles: ${formatNumberCL(disponibles.length)} · Unidades totales: ${formatNumberCL(totalUnidades)}`;
   }
-  renderTrazabilidadAdmin(enBodega);
+  renderTrazabilidadAdmin(disponibles);
 }
 
 function activarTabAdmin(tab = "cotizaciones", { cargar = true } = {}) {
