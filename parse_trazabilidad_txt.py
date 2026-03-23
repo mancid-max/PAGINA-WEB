@@ -79,8 +79,7 @@ def parse_ranking42(source_path: Path, sheet_name: str) -> dict:
         total = parse_int(total_raw)
         # Regla negocio: negativos = disponibles
         available_total = abs(total) if total < 0 else 0
-        unavailable_total = total if total > 0 else 0
-        if available_total <= 0 and unavailable_total <= 0:
+        if available_total <= 0:
             continue
 
         sizes_available = {}
@@ -100,9 +99,6 @@ def parse_ranking42(source_path: Path, sheet_name: str) -> dict:
             "article": sku,
             "fabric": str(fabric or "").strip(),
             "available_units": available_total,
-            "unavailable_units": unavailable_total,
-            "pending_units": available_total + unavailable_total,
-            "location": "Bodega" if available_total > 0 else "No disponible",
             "sizes_available": sizes_available,
             "source_row": r,
         })
@@ -115,7 +111,6 @@ def parse_ranking42(source_path: Path, sheet_name: str) -> dict:
         "rule": "Negativos en Ranking 42 = disponibles",
         "items_total": len(items),
         "available_units_total": sum(i["available_units"] for i in items),
-        "unavailable_units_total": sum(i["unavailable_units"] for i in items),
         "items": items,
     }
 
@@ -129,7 +124,6 @@ def main() -> None:
     print(f"Trazabilidad exportada a {DEFAULT_OUTPUT.resolve()}")
     print(f"Modelos: {payload['items_total']}")
     print(f"Disponibles: {payload['available_units_total']}")
-    print(f"No disponibles: {payload['unavailable_units_total']}")
 
 
 if __name__ == "__main__":

@@ -1581,9 +1581,6 @@ function renderTrazabilidadAdmin(items = []) {
   list.innerHTML = items.map((it) => {
     const sku = String(it.sku || it.article || "");
     const available = Number(it.available_units ?? it.available_total ?? it.bodega_total) || 0;
-    const unavailable = Number(it.unavailable_units) || 0;
-    const pending = Number(it.pending_units) || 0;
-    const location = String(it.location || "").trim() || "Sin ubicacion";
     const fabric = String(it.fabric || it.color || "").trim();
     const workshop = String(it.workshop || "").trim();
     const desc = obtenerDescripcionPorSkuArticle(sku, String(it.article || ""));
@@ -1606,10 +1603,7 @@ function renderTrazabilidadAdmin(items = []) {
         </div>
         ${sizesText ? `<div class="trace-card-meta">${sizesText}</div>` : ""}
         <div class="trace-card-meta">
-          No disponible: <strong>${formatNumberCL(unavailable)}</strong>${pending ? ` · Pendiente: ${formatNumberCL(pending)}` : ""}
-        </div>
-        <div class="trace-card-meta">
-          Donde esta: <strong>${location}</strong>${fabric ? ` · Tela: ${fabric}` : ""}${workshop ? ` · Taller: ${workshop}` : ""}${desc ? ` · ${desc}` : ""}
+          ${fabric ? `Tela: ${fabric}` : ""}${workshop ? `${fabric ? " · " : ""}Taller: ${workshop}` : ""}${desc ? `${fabric || workshop ? " · " : ""}${desc}` : ""}
         </div>
       </div>
     `;
@@ -1647,18 +1641,13 @@ function aplicarFiltroTrazabilidad() {
     (acc, it) => acc + (Number(it.available_units ?? it.available_total ?? it.bodega_total) || 0),
     0
   );
-  const noDisponiblesFiltrados = filtered.reduce(
-    (acc, it) => acc + (Number(it.unavailable_units) || 0),
-    0
-  );
   const summaryEl = document.getElementById("trazabilidadSummary");
   if (summaryEl) {
     if (query) {
-      summaryEl.innerText = `Resultados: ${formatNumberCL(filtered.length)} de ${formatNumberCL(base.length)} modelos · Disponibles: ${formatNumberCL(disponiblesFiltrados)} · No disponibles: ${formatNumberCL(noDisponiblesFiltrados)}`;
+      summaryEl.innerText = `Resultados: ${formatNumberCL(filtered.length)} de ${formatNumberCL(base.length)} modelos · Unidades disponibles: ${formatNumberCL(disponiblesFiltrados)}`;
     } else {
       const disponibles = base.reduce((acc, it) => acc + (Number(it.available_units ?? it.available_total ?? it.bodega_total) || 0), 0);
-      const noDisponibles = base.reduce((acc, it) => acc + (Number(it.unavailable_units) || 0), 0);
-      summaryEl.innerText = `Articulos: ${formatNumberCL(base.length)} · Disponibles: ${formatNumberCL(disponibles)} · No disponibles: ${formatNumberCL(noDisponibles)}`;
+      summaryEl.innerText = `Articulos disponibles: ${formatNumberCL(base.length)} · Unidades totales: ${formatNumberCL(disponibles)}`;
     }
   }
 
@@ -1676,13 +1665,12 @@ async function cargarTrazabilidadAdmin() {
   trazabilidadMeta = data || null;
   trazabilidadCache = Array.isArray(data?.items) ? data.items : [];
   trazabilidadDisponibles = trazabilidadCache
-    .filter((it) => (Number(it.available_units ?? it.available_total ?? it.bodega_total) || 0) > 0 || (Number(it.unavailable_units) || 0) > 0)
+    .filter((it) => (Number(it.available_units ?? it.available_total ?? it.bodega_total) || 0) > 0)
     .sort((a, b) => (Number(b.available_units ?? b.available_total ?? b.bodega_total) || 0) - (Number(a.available_units ?? a.available_total ?? a.bodega_total) || 0));
 
   const totalDisponibles = trazabilidadDisponibles.reduce((acc, it) => acc + (Number(it.available_units ?? it.available_total ?? it.bodega_total) || 0), 0);
-  const totalNoDisponibles = trazabilidadDisponibles.reduce((acc, it) => acc + (Number(it.unavailable_units) || 0), 0);
   if (summaryEl) {
-    summaryEl.innerText = `Articulos: ${formatNumberCL(trazabilidadDisponibles.length)} · Disponibles: ${formatNumberCL(totalDisponibles)} · No disponibles: ${formatNumberCL(totalNoDisponibles)}`;
+    summaryEl.innerText = `Articulos disponibles: ${formatNumberCL(trazabilidadDisponibles.length)} · Unidades totales: ${formatNumberCL(totalDisponibles)}`;
   }
   const input = document.getElementById("trazabilidadSearchInput");
   if (input) input.value = "";
