@@ -1588,12 +1588,23 @@ function renderTrazabilidadAdmin(items = []) {
     const workshop = String(it.workshop || "").trim();
     const desc = obtenerDescripcionPorSkuArticle(sku, String(it.article || ""));
 
+    const sizes = it?.sizes_available && typeof it.sizes_available === "object"
+      ? it.sizes_available
+      : {};
+    const sizesText = Object.entries(sizes)
+      .map(([size, qty]) => [String(size), Number(qty) || 0])
+      .filter(([, qty]) => qty > 0)
+      .sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true }))
+      .map(([size, qty]) => `T${size}: <strong>${formatNumberCL(qty)}</strong>`)
+      .join(" · ");
+
     return `
       <div class="trace-card">
         <div class="trace-card-head">
           <div class="trace-card-title">Modelo ${sku || "-"}</div>
           <div class="trace-card-qty">Disponible: ${formatNumberCL(available)}</div>
         </div>
+        ${sizesText ? `<div class="trace-card-meta">${sizesText}</div>` : ""}
         <div class="trace-card-meta">
           No disponible: <strong>${formatNumberCL(unavailable)}</strong>${pending ? ` · Pendiente: ${formatNumberCL(pending)}` : ""}
         </div>
@@ -1605,12 +1616,31 @@ function renderTrazabilidadAdmin(items = []) {
   }).join("");
 }
 
+function normalizarBusquedaModelo(value) {
+  return String(value || "")
+    .toUpperCase()
+    .replace(/\s+/g, "")
+    .replace(/-00/g, "");
+}
+
 function aplicarFiltroTrazabilidad() {
   const input = document.getElementById("trazabilidadSearchInput");
-  const query = String(input?.value || "").trim().toUpperCase();
+  const query = normalizarBusquedaModelo(input?.value || "");
   const base = Array.isArray(trazabilidadDisponibles) ? trazabilidadDisponibles : [];
   const filtered = query
-    ? base.filter((it) => String(it?.sku || it?.article || "").toUpperCase().includes(query))
+    ? base.filter((it) => {
+      const tokens = [
+        it?.sku,
+        it?.sku_new,
+        it?.sku_new_00,
+        it?.sku_ex,
+        it?.sku_ex_00,
+        it?.article,
+      ]
+        .map((v) => normalizarBusquedaModelo(v))
+        .filter(Boolean);
+      return tokens.some((token) => token.includes(query));
+    })
     : base;
 
   const disponiblesFiltrados = filtered.reduce(
