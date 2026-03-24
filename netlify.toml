@@ -1,7 +1,17 @@
-[build]
+﻿[build]
   publish = "."
 
-# Si alguna URL no existe como archivo físico, cargar index.html.
+[[redirects]]
+  from = "/catalogo-2"
+  to = "/cole-40-41.html"
+  status = 301
+
+[[redirects]]
+  from = "/catalogo-2.html"
+  to = "/cole-40-41.html"
+  status = 301
+
+# Si alguna URL no existe como archivo fisico, cargar index.html.
 # Esto evita errores de ruta en accesos directos.
 [[redirects]]
   from = "/*"
