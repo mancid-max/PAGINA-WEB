@@ -20,6 +20,7 @@ let imagenModalIndex = 0;
 let quotePanelReady = false;
 let stockBySku = {};
 let priceBySku = {};
+const INVENTORY_ENABLED = false;
 
 const ASSET_VERSION = Date.now();
 const CLP_FORMATTER = new Intl.NumberFormat("es-CL", {
@@ -85,13 +86,15 @@ fetch(withCacheBust(CATALOG_DATA_FILE))
   })
   .catch((err) => console.error(`Error cargando ${CATALOG_DATA_FILE}:`, err));
 
-fetch(withCacheBust("stock-data.json"))
-  .then((res) => res.json())
-  .then((data) => {
-    stockBySku = data?.items || {};
-    if (skuActivo) aplicarStockATallas(skuActivo);
-  })
-  .catch((err) => console.warn("No se pudo cargar stock-data.json:", err));
+if (INVENTORY_ENABLED) {
+  fetch(withCacheBust("stock-data.json"))
+    .then((res) => res.json())
+    .then((data) => {
+      stockBySku = data?.items || {};
+      if (skuActivo) aplicarStockATallas(skuActivo);
+    })
+    .catch((err) => console.warn("No se pudo cargar stock-data.json:", err));
+}
 
 fetch(withCacheBust("price-data.json"))
   .then((res) => {
@@ -115,12 +118,16 @@ function obtenerPrecioUnitario(sku) {
   if (!raw) return null;
 
   const candidates = new Set([raw]);
+  let familyBase = "";
   if (/^\d{4}$/.test(raw)) candidates.add(`${raw}-00`);
   if (/^\d{4}-00$/.test(raw)) candidates.add(raw.slice(0, 4));
   const familyMatch = raw.match(/^(\d{4})-/);
   if (familyMatch) {
-    candidates.add(familyMatch[1]);
-    candidates.add(`${familyMatch[1]}-00`);
+    familyBase = familyMatch[1];
+    candidates.add(familyBase);
+    candidates.add(`${familyBase}-00`);
+  } else if (/^\d{4}$/.test(raw)) {
+    familyBase = raw;
   }
 
   for (const key of candidates) {
@@ -128,6 +135,18 @@ function obtenerPrecioUnitario(sku) {
     const num = Number(val);
     if (Number.isFinite(num) && num > 0) return num;
   }
+
+  if (familyBase) {
+    const familyVariants = Object.keys(priceBySku || {})
+      .filter((key) => key.startsWith(`${familyBase}-`))
+      .sort();
+
+    for (const key of familyVariants) {
+      const num = Number(priceBySku?.[key]);
+      if (Number.isFinite(num) && num > 0) return num;
+    }
+  }
+
   return null;
 }
 
@@ -243,6 +262,7 @@ function escribirTallasUI(tallas = {}) {
 }
 
 function obtenerStockParaSku(sku) {
+  if (!INVENTORY_ENABLED) return null;
   const key = String(sku || "").trim();
   if (!key) return null;
   if (stockBySku[key]) return stockBySku[key];
@@ -283,6 +303,23 @@ function asegurarBadgeStock(label) {
 }
 
 function aplicarStockATallas(sku) {
+  if (!INVENTORY_ENABLED) {
+    TALLAS_DISPONIBLES.forEach((talla) => {
+      const input = document.getElementById("t" + talla);
+      const label = input?.closest("label");
+      if (!input || !label) return;
+      const textEl = asegurarTextoTalla(label, talla);
+      const badgeEl = asegurarBadgeStock(label);
+      textEl.innerText = talla;
+      label.classList.remove("size-out-of-stock", "size-low-stock");
+      input.disabled = false;
+      input.removeAttribute("max");
+      badgeEl.hidden = true;
+      badgeEl.innerText = "";
+    });
+    return;
+  }
+
   const stock = obtenerStockParaSku(sku);
   TALLAS_DISPONIBLES.forEach((talla) => {
     const input = document.getElementById("t" + talla);
@@ -458,8 +495,8 @@ function configurarInputsTallas() {
         return;
       }
       if (n < 0) n = 0;
-      const max = parseInt(el.max || "", 10);
-      if (!isNaN(max) && max >= 0 && n > max) {
+      const max = INVENTORY_ENABLED ? parseInt(el.max || "", 10) : NaN;
+      if (INVENTORY_ENABLED && !isNaN(max) && max >= 0 && n > max) {
         n = max;
         mostrarToastError("Stock insuficiente", `Solo quedan ${max} unidades disponibles en talla ${t}.`);
       }
