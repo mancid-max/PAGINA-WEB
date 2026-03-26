@@ -3,22 +3,22 @@
 
 [[redirects]]
   from = "/catalogo-2"
-  to = "/catalogo-2.html"
+  to = "/cole-40-41"
   status = 301
 
 [[redirects]]
   from = "/catalogo-2.html"
-  to = "/catalogo-2.html"
-  status = 200
+  to = "/cole-40-41"
+  status = 301
 
 [[redirects]]
   from = "/cole-40-41"
   to = "/catalogo-2.html"
-  status = 301
+  status = 200
 
 [[redirects]]
   from = "/cole-40-41.html"
-  to = "/catalogo-2.html"
+  to = "/cole-40-41"
   status = 301
 
 [[redirects]]
