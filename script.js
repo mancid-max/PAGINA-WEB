@@ -84,7 +84,7 @@ function normalizarSkuCatalogo(value) {
 }
 
 function filtrarProductosDisponiblesCole42(items = [], trazabilidadData = null) {
-  if (CATALOG_SOURCE !== "catalogo-3") return items;
+  if (!(CATALOG_SOURCE === "catalogo-1" || CATALOG_SOURCE === "catalogo-3")) return items;
 
   const disponibles = Array.isArray(trazabilidadData?.items) ? trazabilidadData.items : [];
   const availableKeys = new Set();
@@ -124,7 +124,7 @@ function filtrarProductosDisponiblesCole42(items = [], trazabilidadData = null) 
 async function cargarProductosCatalogo() {
   try {
     const catalogPromise = fetch(withCacheBust(CATALOG_DATA_FILE)).then((res) => res.json());
-    const trazabilidadPromise = CATALOG_SOURCE === "catalogo-3"
+    const trazabilidadPromise = (CATALOG_SOURCE === "catalogo-1" || CATALOG_SOURCE === "catalogo-3")
       ? fetch(withCacheBust("trazabilidad-data.json"), { cache: "no-store" }).then((res) => {
         if (!res.ok) throw new Error(`status ${res.status}`);
         return res.json();
