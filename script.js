@@ -98,7 +98,7 @@ function normalizarSkuCatalogo(value) {
 }
 
 function filtrarProductosDisponiblesCole42(items = [], trazabilidadData = null) {
-  if (!(CATALOG_SOURCE === "catalogo-1" || CATALOG_SOURCE === "catalogo-3")) return items;
+  if (CATALOG_SOURCE !== "catalogo-1") return items;
 
   const disponibles = Array.isArray(trazabilidadData?.items) ? trazabilidadData.items : [];
   const availableKeys = new Set();
@@ -138,7 +138,7 @@ function filtrarProductosDisponiblesCole42(items = [], trazabilidadData = null) 
 async function cargarProductosCatalogo() {
   try {
     const catalogPromise = fetch(withCacheBust(CATALOG_DATA_FILE)).then((res) => res.json());
-    const trazabilidadPromise = (CATALOG_SOURCE === "catalogo-1" || CATALOG_SOURCE === "catalogo-3")
+    const trazabilidadPromise = CATALOG_SOURCE === "catalogo-1"
       ? fetch(withCacheBust("trazabilidad-data.json"), { cache: "no-store" }).then((res) => {
         if (!res.ok) throw new Error(`status ${res.status}`);
         return res.json();
@@ -148,7 +148,6 @@ async function cargarProductosCatalogo() {
     const [data, trazabilidadData] = await Promise.all([catalogPromise, trazabilidadPromise]);
 
     let items = Array.isArray(data) ? data : [];
-    items = items.filter((item) => !(CATALOG_SOURCE === "catalogo-3" && String(item?.family) === "4211-00"));
     items = filtrarProductosDisponiblesCole42(items, trazabilidadData);
 
     productos = items;
@@ -1172,7 +1171,7 @@ function loadXlsxPopulate() {
 
 function normalizarSkuParaPlantilla(sku, source) {
   const raw = String(sku || "").trim().toUpperCase();
-  if (/^\d{4}$/.test(raw) && (source === "catalogo-1" || source === "catalogo-3")) {
+  if (/^\d{4}$/.test(raw) && source === "catalogo-1") {
     return `${raw}-00`;
   }
   return raw;
