@@ -21,6 +21,13 @@ let quotePanelReady = false;
 let stockBySku = {};
 let priceBySku = {};
 const INVENTORY_ENABLED = false;
+const LOCAL_CLIENT_OVERRIDES = [
+  {
+    rut: "77.886.495-9",
+    rut_normalized: "77886495-9",
+    razon_social: "IMPORTADORA HIPOLIS CHRISTOPHER MORALES EIRL",
+  },
+];
 
 const ASSET_VERSION = Date.now();
 const CLP_FORMATTER = new Intl.NumberFormat("es-CL", {
@@ -68,6 +75,13 @@ function formatearRutVisual(rut) {
     parts.push(invert.slice(i, i + 3).reverse().join(""));
   }
   return `${parts.reverse().join(".")}-${dvRaw}`;
+}
+
+function buscarClienteLocalPorRut(rutInput) {
+  const rutNormalizado = normalizarRut(rutInput);
+  if (!rutNormalizado) return null;
+  const found = LOCAL_CLIENT_OVERRIDES.find((item) => item.rut_normalized === rutNormalizado);
+  return found ? { ...found } : null;
 }
 
 /***********************
@@ -1446,6 +1460,9 @@ function setClientLookupUI({ tipo = "", texto = "", badge = "" } = {}) {
 }
 
 async function buscarClientePorRutSupabase(rutInput) {
+  const clienteLocal = buscarClienteLocalPorRut(rutInput);
+  if (clienteLocal) return clienteLocal;
+
   const rutNormalizado = normalizarRut(rutInput);
   if (!rutNormalizado) return null;
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/lookup_client_by_rut`, {
