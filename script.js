@@ -1681,10 +1681,10 @@ function aplicarFiltroTrazabilidad() {
   const summaryEl = document.getElementById("trazabilidadSummary");
   if (summaryEl) {
     if (query) {
-      summaryEl.innerText = `Resultados: ${formatNumberCL(filtered.length)} de ${formatNumberCL(base.length)} modelos · Unidades disponibles: ${formatNumberCL(disponiblesFiltrados)}`;
+      summaryEl.innerText = `Cole 42 · Resultados: ${formatNumberCL(filtered.length)} de ${formatNumberCL(base.length)} modelos · Unidades disponibles: ${formatNumberCL(disponiblesFiltrados)}`;
     } else {
       const disponibles = base.reduce((acc, it) => acc + (Number(it.available_units ?? it.available_total ?? it.bodega_total) || 0), 0);
-      summaryEl.innerText = `Articulos disponibles: ${formatNumberCL(base.length)} · Unidades totales: ${formatNumberCL(disponibles)}`;
+      summaryEl.innerText = `Cole 42 · Articulos disponibles: ${formatNumberCL(base.length)} · Unidades totales: ${formatNumberCL(disponibles)}`;
     }
   }
 
@@ -1693,7 +1693,7 @@ function aplicarFiltroTrazabilidad() {
 
 async function cargarTrazabilidadAdmin() {
   const summaryEl = document.getElementById("trazabilidadSummary");
-  if (summaryEl) summaryEl.innerText = "Cargando trazabilidad...";
+  if (summaryEl) summaryEl.innerText = "Cargando disponibles Cole 42...";
 
   const res = await fetch(withCacheBust("trazabilidad-data.json"), { cache: "no-store" });
   if (!res.ok) throw new Error(`No se pudo cargar trazabilidad (${res.status})`);
@@ -1707,7 +1707,7 @@ async function cargarTrazabilidadAdmin() {
 
   const totalDisponibles = trazabilidadDisponibles.reduce((acc, it) => acc + (Number(it.available_units ?? it.available_total ?? it.bodega_total) || 0), 0);
   if (summaryEl) {
-    summaryEl.innerText = `Articulos disponibles: ${formatNumberCL(trazabilidadDisponibles.length)} · Unidades totales: ${formatNumberCL(totalDisponibles)}`;
+    summaryEl.innerText = `Cole 42 · Articulos disponibles: ${formatNumberCL(trazabilidadDisponibles.length)} · Unidades totales: ${formatNumberCL(totalDisponibles)}`;
   }
   const input = document.getElementById("trazabilidadSearchInput");
   if (input) input.value = "";

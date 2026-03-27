@@ -1,9 +1,9 @@
 {
-  "source_file": "Cortes 4200 .xlsx",
+  "source_file": "C:\\Users\\manuh\\Desktop\\Backup\\Cortes 4200.xlsx",
   "sheet": "Ranking 42",
   "rule": "Negativos en Ranking 42 = disponibles",
-  "items_total": 42,
-  "available_units_total": 4375,
+  "items_total": 55,
+  "available_units_total": 4719,
   "items": [
     {
       "sku": "4219/4166",
@@ -24,49 +24,7 @@
         "46": 36,
         "48": 0
       },
-      "source_row": 3
-    },
-    {
-      "sku": "4201",
-      "sku_new": "4201",
-      "sku_new_00": "4201-00",
-      "sku_ex": "",
-      "sku_ex_00": "",
-      "article": "4201-00",
-      "fabric": "Ibiza Blue",
-      "available_units": 298,
-      "sizes_available": {
-        "34": 0,
-        "36": 44,
-        "38": 62,
-        "40": 85,
-        "42": 59,
-        "44": 38,
-        "46": 10,
-        "48": 0
-      },
-      "source_row": 4
-    },
-    {
-      "sku": "4225/4169",
-      "sku_new": "4225",
-      "sku_new_00": "4225-00",
-      "sku_ex": "4169",
-      "sku_ex_00": "4169-00",
-      "article": "4225-00",
-      "fabric": "B2868-V3",
-      "available_units": 287,
-      "sizes_available": {
-        "34": 0,
-        "36": 40,
-        "38": 46,
-        "40": 77,
-        "42": 66,
-        "44": 51,
-        "46": 7,
-        "48": 0
-      },
-      "source_row": 7
+      "source_row": 37
     },
     {
       "sku": "4247/4189",
@@ -76,18 +34,60 @@
       "sku_ex_00": "4189-00",
       "article": "4247-00",
       "fabric": "Ibiza Blue",
-      "available_units": 285,
+      "available_units": 301,
+      "sizes_available": {
+        "34": 0,
+        "36": 48,
+        "38": 58,
+        "40": 78,
+        "42": 41,
+        "44": 63,
+        "46": 13,
+        "48": 0
+      },
+      "source_row": 83
+    },
+    {
+      "sku": "4201",
+      "sku_new": "4201",
+      "sku_new_00": "4201-00",
+      "sku_ex": "",
+      "sku_ex_00": "",
+      "article": "4201-00",
+      "fabric": "Ibiza Blue",
+      "available_units": 291,
       "sizes_available": {
         "34": 0,
         "36": 46,
-        "38": 53,
-        "40": 73,
-        "42": 39,
-        "44": 62,
-        "46": 12,
+        "38": 61,
+        "40": 88,
+        "42": 57,
+        "44": 36,
+        "46": 3,
         "48": 0
       },
-      "source_row": 8
+      "source_row": 2
+    },
+    {
+      "sku": "4225/4169",
+      "sku_new": "4225",
+      "sku_new_00": "4225-00",
+      "sku_ex": "4169",
+      "sku_ex_00": "4169-00",
+      "article": "4225-00",
+      "fabric": "B2868-V3",
+      "available_units": 269,
+      "sizes_available": {
+        "34": 0,
+        "36": 38,
+        "38": 42,
+        "40": 73,
+        "42": 62,
+        "44": 49,
+        "46": 5,
+        "48": 0
+      },
+      "source_row": 48
     },
     {
       "sku": "4235",
@@ -97,18 +97,18 @@
       "sku_ex_00": "",
       "article": "4235-00",
       "fabric": "Ibiza Blue",
-      "available_units": 250,
+      "available_units": 268,
       "sizes_available": {
         "34": 0,
-        "36": 25,
-        "38": 52,
-        "40": 55,
-        "42": 53,
-        "44": 42,
+        "36": 28,
+        "38": 58,
+        "40": 60,
+        "42": 56,
+        "44": 43,
         "46": 23,
         "48": 0
       },
-      "source_row": 9
+      "source_row": 72
     },
     {
       "sku": "4230",
@@ -118,18 +118,18 @@
       "sku_ex_00": "",
       "article": "4230-00",
       "fabric": "Imperio Max",
-      "available_units": 226,
+      "available_units": 241,
       "sizes_available": {
         "34": 0,
-        "36": 35,
-        "38": 37,
-        "40": 37,
-        "42": 44,
-        "44": 44,
+        "36": 37,
+        "38": 42,
+        "40": 42,
+        "42": 46,
+        "44": 45,
         "46": 29,
         "48": 0
       },
-      "source_row": 11
+      "source_row": 57
     },
     {
       "sku": "4206",
@@ -139,18 +139,18 @@
       "sku_ex_00": "",
       "article": "4206-00",
       "fabric": "B2868-V3",
-      "available_units": 206,
+      "available_units": 201,
       "sizes_available": {
         "34": 0,
         "36": 43,
-        "38": 31,
-        "40": 32,
-        "42": 38,
+        "38": 29,
+        "40": 30,
+        "42": 37,
         "44": 38,
         "46": 24,
         "48": 0
       },
-      "source_row": 12
+      "source_row": 14
     },
     {
       "sku": "4223",
@@ -171,49 +171,28 @@
         "46": 8,
         "48": 0
       },
-      "source_row": 13
+      "source_row": 45
     },
     {
-      "sku": "4205",
-      "sku_new": "4205",
-      "sku_new_00": "4205-00",
-      "sku_ex": "",
-      "sku_ex_00": "",
-      "article": "4205-00",
-      "fabric": "Ayla",
-      "available_units": 156,
+      "sku": "4244/4168",
+      "sku_new": "4244",
+      "sku_new_00": "4244-00",
+      "sku_ex": "4168",
+      "sku_ex_00": "4168-00",
+      "article": "4244-00",
+      "fabric": "Ibiza Blue",
+      "available_units": 151,
       "sizes_available": {
         "34": 0,
-        "36": 20,
-        "38": 32,
-        "40": 32,
-        "42": 32,
-        "44": 25,
-        "46": 15,
+        "36": 34,
+        "38": 37,
+        "40": 34,
+        "42": 39,
+        "44": 9,
+        "46": 0,
         "48": 0
       },
-      "source_row": 14
-    },
-    {
-      "sku": "4203",
-      "sku_new": "4203",
-      "sku_new_00": "4203-00",
-      "sku_ex": "",
-      "sku_ex_00": "",
-      "article": "4203-01",
-      "fabric": "B2868-V3",
-      "available_units": 148,
-      "sizes_available": {
-        "34": 0,
-        "36": 15,
-        "38": 29,
-        "40": 32,
-        "42": 35,
-        "44": 23,
-        "46": 14,
-        "48": 0
-      },
-      "source_row": 15
+      "source_row": 80
     },
     {
       "sku": "4222/4165",
@@ -223,18 +202,39 @@
       "sku_ex_00": "4165-00",
       "article": "4222-00",
       "fabric": "Ayla",
-      "available_units": 145,
+      "available_units": 150,
       "sizes_available": {
         "34": 0,
-        "36": 14,
-        "38": 33,
-        "40": 35,
+        "36": 15,
+        "38": 35,
+        "40": 37,
         "42": 33,
         "44": 28,
         "46": 2,
         "48": 0
       },
-      "source_row": 16
+      "source_row": 44
+    },
+    {
+      "sku": "4205",
+      "sku_new": "4205",
+      "sku_new_00": "4205-00",
+      "sku_ex": "",
+      "sku_ex_00": "",
+      "article": "4205-00",
+      "fabric": "Ayla",
+      "available_units": 148,
+      "sizes_available": {
+        "34": 0,
+        "36": 19,
+        "38": 31,
+        "40": 30,
+        "42": 30,
+        "44": 24,
+        "46": 14,
+        "48": 0
+      },
+      "source_row": 11
     },
     {
       "sku": "4232/4124",
@@ -255,28 +255,7 @@
         "46": 19,
         "48": 0
       },
-      "source_row": 17
-    },
-    {
-      "sku": "4244/4168",
-      "sku_new": "4244",
-      "sku_new_00": "4244-00",
-      "sku_ex": "4168",
-      "sku_ex_00": "4168-00",
-      "article": "4244-00",
-      "fabric": "Ibiza Blue",
-      "available_units": 137,
-      "sizes_available": {
-        "34": 0,
-        "36": 32,
-        "38": 33,
-        "40": 30,
-        "42": 37,
-        "44": 8,
-        "46": 0,
-        "48": 0
-      },
-      "source_row": 18
+      "source_row": 59
     },
     {
       "sku": "4236",
@@ -286,18 +265,18 @@
       "sku_ex_00": "",
       "article": "4236-00",
       "fabric": "Missy Plus",
-      "available_units": 119,
+      "available_units": 137,
       "sizes_available": {
         "34": 0,
-        "36": 12,
-        "38": 25,
-        "40": 27,
-        "42": 23,
-        "44": 18,
+        "36": 15,
+        "38": 31,
+        "40": 32,
+        "42": 26,
+        "44": 19,
         "46": 14,
         "48": 0
       },
-      "source_row": 19
+      "source_row": 74
     },
     {
       "sku": "4211",
@@ -318,7 +297,70 @@
         "46": 11,
         "48": 0
       },
-      "source_row": 20
+      "source_row": 22
+    },
+    {
+      "sku": "4239/4169",
+      "sku_new": "4239",
+      "sku_new_00": "4239-00",
+      "sku_ex": "4169",
+      "sku_ex_00": "4169-00",
+      "article": "4239-00",
+      "fabric": "B2868-V3",
+      "available_units": 107,
+      "sizes_available": {
+        "34": 0,
+        "36": 8,
+        "38": 20,
+        "40": 26,
+        "42": 22,
+        "44": 21,
+        "46": 10,
+        "48": 0
+      },
+      "source_row": 76
+    },
+    {
+      "sku": "4234",
+      "sku_new": "4234",
+      "sku_new_00": "4234-00",
+      "sku_ex": "",
+      "sku_ex_00": "",
+      "article": "4234-08",
+      "fabric": "Lavinia",
+      "available_units": 103,
+      "sizes_available": {
+        "34": 0,
+        "36": 16,
+        "38": 27,
+        "40": 28,
+        "42": 25,
+        "44": 17,
+        "46": 0,
+        "48": 0
+      },
+      "source_row": 68
+    },
+    {
+      "sku": "4228",
+      "sku_new": "4228",
+      "sku_new_00": "4228-00",
+      "sku_ex": "",
+      "sku_ex_00": "",
+      "article": "4228-00",
+      "fabric": "B2868-V3",
+      "available_units": 99,
+      "sizes_available": {
+        "34": 0,
+        "36": 0,
+        "38": 5,
+        "40": 53,
+        "42": 8,
+        "44": 33,
+        "46": 6,
+        "48": 0
+      },
+      "source_row": 55
     },
     {
       "sku": "4246/4157",
@@ -339,70 +381,49 @@
         "46": 6,
         "48": 0
       },
-      "source_row": 21
+      "source_row": 82
     },
     {
-      "sku": "4234",
-      "sku_new": "4234",
-      "sku_new_00": "4234-00",
+      "sku": "4203",
+      "sku_new": "4203",
+      "sku_new_00": "4203-00",
       "sku_ex": "",
       "sku_ex_00": "",
-      "article": "4234-08",
-      "fabric": "Lavinia",
-      "available_units": 90,
-      "sizes_available": {
-        "34": 0,
-        "36": 14,
-        "38": 23,
-        "40": 24,
-        "42": 23,
-        "44": 16,
-        "46": 0,
-        "48": 0
-      },
-      "source_row": 22
-    },
-    {
-      "sku": "4239/4169",
-      "sku_new": "4239",
-      "sku_new_00": "4239-00",
-      "sku_ex": "4169",
-      "sku_ex_00": "4169-00",
-      "article": "4239-00",
+      "article": "4203-01",
       "fabric": "B2868-V3",
-      "available_units": 89,
+      "available_units": 88,
       "sizes_available": {
         "34": 0,
         "36": 6,
-        "38": 15,
+        "38": 21,
         "40": 21,
-        "42": 19,
-        "44": 19,
-        "46": 9,
+        "42": 23,
+        "44": 13,
+        "46": 4,
         "48": 0
       },
-      "source_row": 27
+      "source_row": 7
     },
     {
-      "sku": "4228",
-      "sku_new": "4228",
-      "sku_new_00": "4228-00",
+      "sku": "4233",
+      "sku_new": "4233",
+      "sku_new_00": "4233-00",
       "sku_ex": "",
       "sku_ex_00": "",
-      "article": "4228-00",
-      "fabric": "B2868-V3",
-      "available_units": 86,
+      "article": "4233-04",
+      "fabric": "Lavinia",
+      "available_units": 77,
       "sizes_available": {
         "34": 0,
-        "36": 0,
-        "38": 1,
-        "40": 49,
-        "42": 6,
-        "44": 32,
-        "46": 6,
+        "36": 10,
+        "38": 17,
+        "40": 17,
+        "42": 13,
+        "44": 13,
+        "46": 7,
         "48": 0
       },
-      "source_row": 28
+      "source_row": 61
     },
     {
       "sku": "4218/4122",
@@ -423,7 +444,7 @@
         "46": 10,
         "48": 0
       },
-      "source_row": 31
+      "source_row": 34
     },
     {
       "sku": "4221/4015",
@@ -433,7 +454,7 @@
       "sku_ex_00": "4015-00",
       "article": "4221-00",
       "fabric": "New Glue",
-      "available_units": 74,
+      "available_units": 75,
       "sizes_available": {
         "34": 0,
         "36": 3,
@@ -441,10 +462,10 @@
         "40": 17,
         "42": 12,
         "44": 17,
-        "46": 13,
+        "46": 14,
         "48": 0
       },
-      "source_row": 29
+      "source_row": 41
     },
     {
       "sku": "4234",
@@ -454,39 +475,39 @@
       "sku_ex_00": "",
       "article": "4234-04",
       "fabric": "Lavinia",
-      "available_units": 67,
+      "available_units": 64,
       "sizes_available": {
         "34": 0,
         "36": 9,
         "38": 10,
-        "40": 19,
-        "42": 10,
-        "44": 10,
+        "40": 18,
+        "42": 9,
+        "44": 9,
         "46": 9,
         "48": 0
       },
-      "source_row": 23
+      "source_row": 67
     },
     {
-      "sku": "4233",
-      "sku_new": "4233",
-      "sku_new_00": "4233-00",
+      "sku": "4234",
+      "sku_new": "4234",
+      "sku_new_00": "4234-00",
       "sku_ex": "",
       "sku_ex_00": "",
-      "article": "4233-04",
+      "article": "4234-48",
       "fabric": "Lavinia",
-      "available_units": 64,
+      "available_units": 62,
       "sizes_available": {
         "34": 0,
-        "36": 8,
-        "38": 13,
+        "36": 10,
+        "38": 15,
         "40": 13,
         "42": 11,
-        "44": 12,
-        "46": 7,
+        "44": 10,
+        "46": 3,
         "48": 0
       },
-      "source_row": 33
+      "source_row": 71
     },
     {
       "sku": "4201",
@@ -507,7 +528,7 @@
         "46": 5,
         "48": 0
       },
-      "source_row": 5
+      "source_row": 3
     },
     {
       "sku": "4233",
@@ -528,7 +549,7 @@
         "46": 3,
         "48": 0
       },
-      "source_row": 34
+      "source_row": 62
     },
     {
       "sku": "4240/4170",
@@ -549,7 +570,7 @@
         "46": 0,
         "48": 0
       },
-      "source_row": 42
+      "source_row": 77
     },
     {
       "sku": "4221/4015",
@@ -570,28 +591,70 @@
         "46": 0,
         "48": 0
       },
-      "source_row": 30
+      "source_row": 42
     },
     {
-      "sku": "4234",
-      "sku_new": "4234",
-      "sku_new_00": "4234-00",
+      "sku": "4248",
+      "sku_new": "4248",
+      "sku_new_00": "4248-00",
       "sku_ex": "",
       "sku_ex_00": "",
-      "article": "4234-48",
-      "fabric": "Lavinia",
-      "available_units": 49,
+      "article": "4248-01",
+      "fabric": "B2868-V3",
+      "available_units": 50,
       "sizes_available": {
         "34": 0,
-        "36": 8,
-        "38": 11,
+        "36": 5,
+        "38": 10,
         "40": 9,
         "42": 9,
-        "44": 9,
+        "44": 12,
+        "46": 5,
+        "48": 0
+      },
+      "source_row": 85
+    },
+    {
+      "sku": "4208",
+      "sku_new": "4208",
+      "sku_new_00": "4208-00",
+      "sku_ex": "",
+      "sku_ex_00": "",
+      "article": "4208-00",
+      "fabric": "Ayla",
+      "available_units": 44,
+      "sizes_available": {
+        "34": 0,
+        "36": 6,
+        "38": 9,
+        "40": 10,
+        "42": 10,
+        "44": 4,
+        "46": 5,
+        "48": 0
+      },
+      "source_row": 16
+    },
+    {
+      "sku": "4243/4142",
+      "sku_new": "4243",
+      "sku_new_00": "4243-00",
+      "sku_ex": "4142",
+      "sku_ex_00": "4142-00",
+      "article": "4243-00",
+      "fabric": "New Glue",
+      "available_units": 42,
+      "sizes_available": {
+        "34": 0,
+        "36": 5,
+        "38": 10,
+        "40": 12,
+        "42": 9,
+        "44": 3,
         "46": 3,
         "48": 0
       },
-      "source_row": 24
+      "source_row": 79
     },
     {
       "sku": "4202",
@@ -601,18 +664,39 @@
       "sku_ex_00": "",
       "article": "4202-00",
       "fabric": "Ibiza Blue",
-      "available_units": 47,
+      "available_units": 35,
       "sizes_available": {
         "34": 0,
         "36": 0,
-        "38": 12,
+        "38": 9,
         "40": 0,
-        "42": 15,
-        "44": 17,
-        "46": 12,
+        "42": 12,
+        "44": 16,
+        "46": 11,
         "48": 0
       },
-      "source_row": 43
+      "source_row": 5
+    },
+    {
+      "sku": "4224",
+      "sku_new": "4224",
+      "sku_new_00": "4224-00",
+      "sku_ex": "",
+      "sku_ex_00": "",
+      "article": "4224-00",
+      "fabric": "Ayla",
+      "available_units": 35,
+      "sizes_available": {
+        "34": 0,
+        "36": 4,
+        "38": 9,
+        "40": 8,
+        "42": 7,
+        "44": 4,
+        "46": 3,
+        "48": 0
+      },
+      "source_row": 46
     },
     {
       "sku": "4218/4122",
@@ -633,28 +717,49 @@
         "46": 4,
         "48": 0
       },
-      "source_row": 32
+      "source_row": 35
     },
     {
-      "sku": "4245/4128",
-      "sku_new": "4245",
-      "sku_new_00": "4245-00",
-      "sku_ex": "4128",
-      "sku_ex_00": "4128-00",
-      "article": "4245-00",
-      "fabric": "B2868-V3",
-      "available_units": 31,
+      "sku": "4256",
+      "sku_new": "4256",
+      "sku_new_00": "4256-00",
+      "sku_ex": "",
+      "sku_ex_00": "",
+      "article": "4256-00",
+      "fabric": "Missy Plus",
+      "available_units": 34,
       "sizes_available": {
         "34": 0,
-        "36": 8,
-        "38": 5,
-        "40": 6,
+        "36": 5,
+        "38": 9,
+        "40": 7,
         "42": 8,
-        "44": 9,
-        "46": 0,
+        "44": 2,
+        "46": 3,
         "48": 0
       },
-      "source_row": 45
+      "source_row": 90
+    },
+    {
+      "sku": "4242",
+      "sku_new": "4242",
+      "sku_new_00": "4242-00",
+      "sku_ex": "",
+      "sku_ex_00": "",
+      "article": "4242-00",
+      "fabric": "X206-B1",
+      "available_units": 30,
+      "sizes_available": {
+        "34": 0,
+        "36": 5,
+        "38": 11,
+        "40": 4,
+        "42": 9,
+        "44": 0,
+        "46": 2,
+        "48": 0
+      },
+      "source_row": 78
     },
     {
       "sku": "4204",
@@ -664,18 +769,39 @@
       "sku_ex_00": "",
       "article": "4204-00",
       "fabric": "B2868-V3",
-      "available_units": 30,
+      "available_units": 27,
       "sizes_available": {
         "34": 0,
         "36": 15,
-        "38": 3,
-        "40": 4,
+        "38": 1,
+        "40": 3,
         "42": 1,
         "44": 6,
         "46": 1,
         "48": 0
       },
-      "source_row": 44
+      "source_row": 8
+    },
+    {
+      "sku": "4210",
+      "sku_new": "4210",
+      "sku_new_00": "4210-00",
+      "sku_ex": "",
+      "sku_ex_00": "",
+      "article": "4210-01",
+      "fabric": "Ayla",
+      "available_units": 23,
+      "sizes_available": {
+        "34": 0,
+        "36": 3,
+        "38": 7,
+        "40": 7,
+        "42": 3,
+        "44": 2,
+        "46": 1,
+        "48": 0
+      },
+      "source_row": 21
     },
     {
       "sku": "4235",
@@ -685,18 +811,60 @@
       "sku_ex_00": "",
       "article": "4235-01",
       "fabric": "Ibiza Blue",
-      "available_units": 29,
+      "available_units": 22,
       "sizes_available": {
         "34": 0,
         "36": 3,
-        "38": 6,
-        "40": 6,
+        "38": 4,
+        "40": 4,
+        "42": 5,
+        "44": 4,
+        "46": 2,
+        "48": 0
+      },
+      "source_row": 73
+    },
+    {
+      "sku": "4245/4128",
+      "sku_new": "4245",
+      "sku_new_00": "4245-00",
+      "sku_ex": "4128",
+      "sku_ex_00": "4128-00",
+      "article": "4245-00",
+      "fabric": "B2868-V3",
+      "available_units": 22,
+      "sizes_available": {
+        "34": 0,
+        "36": 7,
+        "38": 3,
+        "40": 4,
         "42": 6,
-        "44": 5,
+        "44": 8,
+        "46": 0,
+        "48": 0
+      },
+      "source_row": 81
+    },
+    {
+      "sku": "4210",
+      "sku_new": "4210",
+      "sku_new_00": "4210-00",
+      "sku_ex": "",
+      "sku_ex_00": "",
+      "article": "4210-00",
+      "fabric": "Ayla",
+      "available_units": 20,
+      "sizes_available": {
+        "34": 0,
+        "36": 1,
+        "38": 3,
+        "40": 4,
+        "42": 6,
+        "44": 3,
         "46": 3,
         "48": 0
       },
-      "source_row": 10
+      "source_row": 20
     },
     {
       "sku": "4201",
@@ -717,28 +885,7 @@
         "46": 1,
         "48": 0
       },
-      "source_row": 6
-    },
-    {
-      "sku": "4234",
-      "sku_new": "4234",
-      "sku_new_00": "4234-00",
-      "sku_ex": "",
-      "sku_ex_00": "",
-      "article": "4234-09",
-      "fabric": "Lavinia",
-      "available_units": 18,
-      "sizes_available": {
-        "34": 0,
-        "36": 3,
-        "38": 4,
-        "40": 4,
-        "42": 3,
-        "44": 3,
-        "46": 1,
-        "48": 0
-      },
-      "source_row": 25
+      "source_row": 4
     },
     {
       "sku": "4213/4110",
@@ -759,7 +906,28 @@
         "46": 0,
         "48": 0
       },
-      "source_row": 46
+      "source_row": 26
+    },
+    {
+      "sku": "4234",
+      "sku_new": "4234",
+      "sku_new_00": "4234-00",
+      "sku_ex": "",
+      "sku_ex_00": "",
+      "article": "4234-09",
+      "fabric": "Lavinia",
+      "available_units": 18,
+      "sizes_available": {
+        "34": 0,
+        "36": 3,
+        "38": 4,
+        "40": 4,
+        "42": 3,
+        "44": 3,
+        "46": 1,
+        "48": 0
+      },
+      "source_row": 69
     },
     {
       "sku": "4233",
@@ -780,28 +948,28 @@
         "46": 1,
         "48": 0
       },
-      "source_row": 35
+      "source_row": 65
     },
     {
-      "sku": "4234",
-      "sku_new": "4234",
-      "sku_new_00": "4234-00",
+      "sku": "4204",
+      "sku_new": "4204",
+      "sku_new_00": "4204-00",
       "sku_ex": "",
       "sku_ex_00": "",
-      "article": "4234-16",
-      "fabric": "Lavinia",
+      "article": "4204-02",
+      "fabric": "B2868-V3",
       "available_units": 16,
       "sizes_available": {
         "34": 0,
-        "36": 5,
-        "38": 2,
-        "40": 4,
-        "42": 1,
-        "44": 3,
-        "46": 1,
+        "36": 3,
+        "38": 5,
+        "40": 5,
+        "42": 2,
+        "44": 1,
+        "46": 0,
         "48": 0
       },
-      "source_row": 26
+      "source_row": 10
     },
     {
       "sku": "4233",
@@ -822,7 +990,112 @@
         "46": 1,
         "48": 0
       },
-      "source_row": 36
+      "source_row": 64
+    },
+    {
+      "sku": "4234",
+      "sku_new": "4234",
+      "sku_new_00": "4234-00",
+      "sku_ex": "",
+      "sku_ex_00": "",
+      "article": "4234-16",
+      "fabric": "Lavinia",
+      "available_units": 16,
+      "sizes_available": {
+        "34": 0,
+        "36": 5,
+        "38": 2,
+        "40": 4,
+        "42": 1,
+        "44": 3,
+        "46": 1,
+        "48": 0
+      },
+      "source_row": 70
+    },
+    {
+      "sku": "4238",
+      "sku_new": "4238",
+      "sku_new_00": "4238-00",
+      "sku_ex": "",
+      "sku_ex_00": "",
+      "article": "4238-00",
+      "fabric": "X206-B1",
+      "available_units": 10,
+      "sizes_available": {
+        "34": 0,
+        "36": 1,
+        "38": 4,
+        "40": 4,
+        "42": 2,
+        "44": 0,
+        "46": 0,
+        "48": 0
+      },
+      "source_row": 75
+    },
+    {
+      "sku": "4205",
+      "sku_new": "4205",
+      "sku_new_00": "4205-00",
+      "sku_ex": "",
+      "sku_ex_00": "",
+      "article": "4205-01",
+      "fabric": "Ayla",
+      "available_units": 6,
+      "sizes_available": {
+        "34": 0,
+        "36": 1,
+        "38": 1,
+        "40": 1,
+        "42": 1,
+        "44": 1,
+        "46": 1,
+        "48": 0
+      },
+      "source_row": 12
+    },
+    {
+      "sku": "4224",
+      "sku_new": "4224",
+      "sku_new_00": "4224-00",
+      "sku_ex": "",
+      "sku_ex_00": "",
+      "article": "4224-01",
+      "fabric": "Ayla",
+      "available_units": 6,
+      "sizes_available": {
+        "34": 0,
+        "36": 1,
+        "38": 1,
+        "40": 1,
+        "42": 1,
+        "44": 1,
+        "46": 1,
+        "48": 0
+      },
+      "source_row": 47
+    },
+    {
+      "sku": "4227",
+      "sku_new": "4227",
+      "sku_new_00": "4227-00",
+      "sku_ex": "",
+      "sku_ex_00": "",
+      "article": "4227-01",
+      "fabric": "New Glue",
+      "available_units": 4,
+      "sizes_available": {
+        "34": 0,
+        "36": 1,
+        "38": 1,
+        "40": 2,
+        "42": 0,
+        "44": 0,
+        "46": 0,
+        "48": 0
+      },
+      "source_row": 53
     },
     {
       "sku": "4233",
@@ -843,49 +1116,49 @@
         "46": 0,
         "48": 0
       },
-      "source_row": 47
+      "source_row": 63
     },
     {
-      "sku": "4226",
-      "sku_new": "4226",
-      "sku_new_00": "4226-00",
+      "sku": "4249",
+      "sku_new": "4249",
+      "sku_new_00": "4249-00",
       "sku_ex": "",
       "sku_ex_00": "",
-      "article": "4226-00",
-      "fabric": "Ibiza Blue",
-      "available_units": 3,
+      "article": "4249-00",
+      "fabric": "Outlander Black",
+      "available_units": 2,
       "sizes_available": {
         "34": 0,
-        "36": 3,
-        "38": 0,
-        "40": 0,
+        "36": 4,
+        "38": 4,
+        "40": 10,
         "42": 0,
-        "44": 0,
+        "44": 1,
         "46": 0,
         "48": 0
       },
-      "source_row": 48
+      "source_row": 86
     },
     {
-      "sku": "4204",
-      "sku_new": "4204",
-      "sku_new_00": "4204-00",
+      "sku": "4203",
+      "sku_new": "4203",
+      "sku_new_00": "4203-00",
       "sku_ex": "",
       "sku_ex_00": "",
-      "article": "4204-02",
+      "article": "4203-00",
       "fabric": "B2868-V3",
       "available_units": 1,
       "sizes_available": {
         "34": 0,
-        "36": 1,
+        "36": 0,
         "38": 0,
         "40": 0,
         "42": 0,
-        "44": 0,
+        "44": 1,
         "46": 0,
         "48": 0
       },
-      "source_row": 101
+      "source_row": 6
     }
   ]
 }

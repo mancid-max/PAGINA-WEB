@@ -5,7 +5,7 @@ from pathlib import Path
 from openpyxl import load_workbook
 
 
-DEFAULT_SOURCE = Path("Cortes 4200 .xlsx")
+DEFAULT_SOURCE = Path(__file__).resolve().parent.parent / "Cortes 4200.xlsx"
 DEFAULT_SHEET = "Ranking 42"
 DEFAULT_OUTPUT = Path("trazabilidad-data.json")
 SIZES = ["34", "36", "38", "40", "42", "44", "46", "48"]
