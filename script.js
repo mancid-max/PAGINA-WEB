@@ -75,16 +75,77 @@ function formatearRutVisual(rut) {
  ***********************/
 const CATALOG_DATA_FILE = (document.body?.dataset?.catalogFile || "data.json").trim() || "data.json";
 const CATALOG_SOURCE = (document.body?.dataset?.catalogSource || "catalogo-1").trim() || "catalogo-1";
-fetch(withCacheBust(CATALOG_DATA_FILE))
-  .then((res) => res.json())
-  .then((data) => {
-    productos = Array.isArray(data)
-      ? data.filter((item) => !(CATALOG_SOURCE === "catalogo-3" && String(item?.family) === "4211-00"))
-      : [];
+
+function normalizarSkuCatalogo(value) {
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, "");
+}
+
+function filtrarProductosDisponiblesCole42(items = [], trazabilidadData = null) {
+  if (CATALOG_SOURCE !== "catalogo-3") return items;
+
+  const disponibles = Array.isArray(trazabilidadData?.items) ? trazabilidadData.items : [];
+  const availableKeys = new Set();
+
+  disponibles.forEach((it) => {
+    const available = Number(it?.available_units ?? it?.available_total ?? it?.bodega_total) || 0;
+    if (available <= 0) return;
+
+    [
+      it?.article,
+      it?.sku_new,
+      it?.sku_new_00,
+      it?.sku,
+    ].forEach((value) => {
+      const key = normalizarSkuCatalogo(value);
+      if (key) availableKeys.add(key);
+    });
+  });
+
+  return items.filter((item) => {
+    const family = normalizarSkuCatalogo(item?.family);
+    if (!family) return false;
+
+    const candidates = new Set([family]);
+    const familyMatch = family.match(/^(\d{4})$/);
+    if (familyMatch) candidates.add(`${familyMatch[1]}-00`);
+    const articleMatch = family.match(/^(\d{4})-(\d{2})$/);
+    if (articleMatch) candidates.add(articleMatch[1]);
+
+    for (const key of candidates) {
+      if (availableKeys.has(key)) return true;
+    }
+    return false;
+  });
+}
+
+async function cargarProductosCatalogo() {
+  try {
+    const catalogPromise = fetch(withCacheBust(CATALOG_DATA_FILE)).then((res) => res.json());
+    const trazabilidadPromise = CATALOG_SOURCE === "catalogo-3"
+      ? fetch(withCacheBust("trazabilidad-data.json"), { cache: "no-store" }).then((res) => {
+        if (!res.ok) throw new Error(`status ${res.status}`);
+        return res.json();
+      })
+      : Promise.resolve(null);
+
+    const [data, trazabilidadData] = await Promise.all([catalogPromise, trazabilidadPromise]);
+
+    let items = Array.isArray(data) ? data : [];
+    items = items.filter((item) => !(CATALOG_SOURCE === "catalogo-3" && String(item?.family) === "4211-00"));
+    items = filtrarProductosDisponiblesCole42(items, trazabilidadData);
+
+    productos = items;
     renderGrid(productos);
     inicializarBuscadorModelos();
-  })
-  .catch((err) => console.error(`Error cargando ${CATALOG_DATA_FILE}:`, err));
+  } catch (err) {
+    console.error(`Error cargando ${CATALOG_DATA_FILE}:`, err);
+  }
+}
+
+cargarProductosCatalogo();
 
 if (INVENTORY_ENABLED) {
   fetch(withCacheBust("stock-data.json"))
