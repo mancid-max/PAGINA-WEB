@@ -1231,10 +1231,8 @@ async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
     });
   }
 
-  sheet.cell("K2").value("CODIGO PEDIDO");
-  sheet.cell("L2").value(codigo);
-  sheet.cell("K3").value("ID INTERNO");
-  sheet.cell("L3").value(quote?.id || "");
+  sheet.cell("T1").value("ID");
+  sheet.cell("U1").value(codigo);
   sheet.cell("K5").value(quote?.client_rut || "");
   sheet.cell("K8").value(new Date());
 
