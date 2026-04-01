@@ -1218,6 +1218,7 @@ async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
   workbook.activeSheet(sheet);
 
   const grouped = agruparItemsParaPlantilla(quote, items);
+  const codigo = generarCodigoCotizacionVisual(quote);
   const capacity = ORDER_TEMPLATE_LAST_ROW - ORDER_TEMPLATE_FIRST_ROW + 1;
   if (grouped.length > capacity) {
     throw new Error(`La cotizacion tiene ${grouped.length} modelos y la plantilla soporta ${capacity}`);
@@ -1230,6 +1231,10 @@ async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
     });
   }
 
+  sheet.cell("K2").value("CODIGO PEDIDO");
+  sheet.cell("L2").value(codigo);
+  sheet.cell("K3").value("ID INTERNO");
+  sheet.cell("L3").value(quote?.id || "");
   sheet.cell("K5").value(quote?.client_rut || "");
   sheet.cell("K8").value(new Date());
 
