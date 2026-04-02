@@ -1149,6 +1149,7 @@ const ORDER_TEMPLATE_SIZE_COLUMNS = {
 };
 
 let xlsxPopulateLoaderPromise = null;
+let orderTemplateBufferPromise = null;
 
 function loadXlsxPopulate() {
   if (window.XlsxPopulate) return Promise.resolve(window.XlsxPopulate);
@@ -1167,6 +1168,16 @@ function loadXlsxPopulate() {
   });
 
   return xlsxPopulateLoaderPromise;
+}
+
+function loadOrderTemplateBuffer() {
+  if (orderTemplateBufferPromise) return orderTemplateBufferPromise;
+  orderTemplateBufferPromise = fetch(`${ORDER_TEMPLATE_FILE}?v=20260319a`, { cache: "force-cache" })
+    .then((response) => {
+      if (!response.ok) throw new Error("No se pudo cargar la plantilla de TOMA DE PEDIDOS");
+      return response.arrayBuffer();
+    });
+  return orderTemplateBufferPromise;
 }
 
 function normalizarSkuParaPlantilla(sku, source) {
@@ -1204,10 +1215,7 @@ function agruparItemsParaPlantilla(quote, items = []) {
 
 async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
   const XlsxPopulate = await loadXlsxPopulate();
-  const response = await fetch(`${ORDER_TEMPLATE_FILE}?v=20260319a`, { cache: "no-store" });
-  if (!response.ok) throw new Error("No se pudo cargar la plantilla de TOMA DE PEDIDOS");
-
-  const workbook = await XlsxPopulate.fromDataAsync(await response.arrayBuffer());
+  const workbook = await XlsxPopulate.fromDataAsync(await loadOrderTemplateBuffer());
   const sheet = workbook.sheet(ORDER_TEMPLATE_SHEET);
   if (!sheet) throw new Error("No se encontro la hoja TOMA DE PEDIDOS en la plantilla");
 
@@ -1272,6 +1280,10 @@ function generarExcelHtmlQuoteAdmin(quote, items = []) {
     `;
   }).join("");
 
+  const idRow = new Array(21).fill("<td></td>");
+  idRow[19] = `<td class="label">ID</td>`;
+  idRow[20] = `<td class="value">${escapeHtmlExcel(codigo)}</td>`;
+
   return `\uFEFF<!DOCTYPE html>
 <html>
 <head>
@@ -1296,6 +1308,7 @@ function generarExcelHtmlQuoteAdmin(quote, items = []) {
 </head>
 <body>
   <table class="sheet">
+    <tr>${idRow.join("")}</tr>
     <tr><td class="title" colspan="3">RESUMEN COTIZACION</td></tr>
     <tr><td class="label">Codigo</td><td class="value" colspan="2">${escapeHtmlExcel(codigo)}</td></tr>
     <tr><td class="label">Tienda</td><td class="value" colspan="2">${escapeHtmlExcel(quote?.store_name || "")}</td></tr>
@@ -1325,13 +1338,16 @@ async function descargarCotizacionAdmin(quoteId) {
   const clienteNombre = sanitizeFileNamePart(quote.store_name, "cliente");
   const nombreBase = `Cotizacion ${clienteNombre}`;
   try {
-    const excelBlob = await generarExcelPlantillaQuoteAdmin(quote, items);
+    const excelBlob = await Promise.race([
+      generarExcelPlantillaQuoteAdmin(quote, items),
+      new Promise((_, reject) => window.setTimeout(() => reject(new Error("Tiempo de espera agotado al preparar Excel")), 5000)),
+    ]);
     descargarBlob(`${nombreBase}.xlsx`, excelBlob);
   } catch (err) {
     console.error("Fallo exportacion xlsx, usando respaldo xls", err);
     const excelHtml = generarExcelHtmlQuoteAdmin(quote, items);
     descargarArchivo(`${nombreBase}.xls`, excelHtml, "application/vnd.ms-excel;charset=utf-8;");
-    actualizarEstadoQuotesUI("Se descargo el respaldo simple porque la plantilla no estuvo disponible");
+    actualizarEstadoQuotesUI("Se descargo un respaldo rapido porque la plantilla tardó demasiado o no estuvo disponible");
   }
 }
 
@@ -2023,6 +2039,8 @@ async function cargarCotizacionesAdmin() {
 function abrirQuotesModal() {
   document.getElementById("quotesModal")?.classList.add("active");
   actualizarEstadoQuotesUI("");
+  loadXlsxPopulate().catch(() => {});
+  loadOrderTemplateBuffer().catch(() => {});
   if (quotesAccessToken) {
     activarTabAdmin(adminActiveTab || "cotizaciones", { cargar: true });
   }
