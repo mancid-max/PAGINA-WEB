@@ -19,7 +19,6 @@ let imagenesModalActual = [];
 let imagenModalIndex = 0;
 let quotePanelReady = false;
 let stockBySku = {};
-let priceBySku = {};
 const INVENTORY_ENABLED = false;
 const LOCAL_CLIENT_OVERRIDES = [
   {
@@ -30,11 +29,6 @@ const LOCAL_CLIENT_OVERRIDES = [
 ];
 
 const ASSET_VERSION = Date.now();
-const CLP_FORMATTER = new Intl.NumberFormat("es-CL", {
-  style: "currency",
-  currency: "CLP",
-  maximumFractionDigits: 0,
-});
 
 function withCacheBust(path) {
   if (!path) return path;
@@ -168,100 +162,6 @@ if (INVENTORY_ENABLED) {
       if (skuActivo) aplicarStockATallas(skuActivo);
     })
     .catch((err) => console.warn("No se pudo cargar stock-data.json:", err));
-}
-
-fetch(withCacheBust("price-data.json"))
-  .then((res) => {
-    if (!res.ok) throw new Error(`status ${res.status}`);
-    return res.json();
-  })
-  .then((data) => {
-    priceBySku = data?.items || {};
-    actualizarPreciosGrid();
-    actualizarPrecioModal(skuActivo);
-    actualizarCarrito();
-  })
-  .catch((err) => console.warn("No se pudo cargar price-data.json:", err));
-
-function normalizarSkuPrecio(sku) {
-  return String(sku || "").trim().toUpperCase();
-}
-
-function obtenerPrecioUnitario(sku) {
-  const raw = normalizarSkuPrecio(sku);
-  if (!raw) return null;
-
-  const candidates = new Set([raw]);
-  let familyBase = "";
-  if (/^\d{4}$/.test(raw)) candidates.add(`${raw}-00`);
-  if (/^\d{4}-00$/.test(raw)) candidates.add(raw.slice(0, 4));
-  const familyMatch = raw.match(/^(\d{4})-/);
-  if (familyMatch) {
-    familyBase = familyMatch[1];
-    candidates.add(familyBase);
-    candidates.add(`${familyBase}-00`);
-  } else if (/^\d{4}$/.test(raw)) {
-    familyBase = raw;
-  }
-
-  for (const key of candidates) {
-    const val = priceBySku?.[key];
-    const num = Number(val);
-    if (Number.isFinite(num) && num > 0) return num;
-  }
-
-  if (familyBase) {
-    const familyVariants = Object.keys(priceBySku || {})
-      .filter((key) => key.startsWith(`${familyBase}-`))
-      .sort();
-
-    for (const key of familyVariants) {
-      const num = Number(priceBySku?.[key]);
-      if (Number.isFinite(num) && num > 0) return num;
-    }
-  }
-
-  return null;
-}
-
-function formatMoneyCLP(value) {
-  return CLP_FORMATTER.format(Number(value) || 0);
-}
-
-function textoPrecioSku(sku) {
-  const price = obtenerPrecioUnitario(sku);
-  return price ? formatMoneyCLP(price) : "Precio no disponible";
-}
-
-function actualizarPreciosGrid() {
-  document.querySelectorAll(".card[data-family]").forEach((card) => {
-    const sku = card.dataset.family || "";
-    const priceEl = card.querySelector(".card-price-badge");
-    if (!priceEl) return;
-    const hasPrice = !!obtenerPrecioUnitario(sku);
-    priceEl.innerText = hasPrice ? textoPrecioSku(sku) : "No disponible";
-    priceEl.classList.toggle("missing-price", !hasPrice);
-  });
-}
-
-function actualizarPrecioModal(sku) {
-  const modalTitle = document.getElementById("modalTitle");
-  if (!modalTitle) return;
-
-  let priceEl = document.getElementById("modalPrice");
-  if (!priceEl) {
-    priceEl = document.createElement("div");
-    priceEl.id = "modalPrice";
-    priceEl.className = "modal-price";
-    modalTitle.insertAdjacentElement("afterend", priceEl);
-  }
-
-  const hasPrice = !!obtenerPrecioUnitario(sku);
-  priceEl.innerHTML = `
-    <span class="modal-price-label">Precio referencia</span>
-    <span class="modal-price-badge ${hasPrice ? "" : "missing-price"}">${hasPrice ? textoPrecioSku(sku) : "No disponible"}</span>
-  `;
-  priceEl.classList.toggle("missing-price", !hasPrice);
 }
 
 /***********************
@@ -715,18 +615,14 @@ function renderGrid(lista) {
   const container = document.getElementById("grid");
   container.innerHTML = lista
     .map(
-      (p, index) => {
-        const hasPrice = !!obtenerPrecioUnitario(p.family);
-        return `
+      (p, index) => `
       <div class="card" data-family="${p.family}" onclick="verProducto('${p.family}')">
         <div class="card-title-row">
           <div class="card-title">Modelo ${p.family}</div>
-          <div class="card-price-badge ${hasPrice ? "" : "missing-price"}">${hasPrice ? textoPrecioSku(p.family) : "No disponible"}</div>
         </div>
         <img src="${withCacheBust(p.main_image)}" alt="Modelo ${p.family}" loading="${index < 4 ? "eager" : "lazy"}" decoding="async">
       </div>
     `
-      }
     )
     .join("");
 }
@@ -742,7 +638,6 @@ function verProducto(familyId) {
   // Reinicia drafts para evitar re-agregar items viejos al volver a abrir el modal
   resetDraftsModal();
   document.getElementById("modalTitle").innerText = "Modelo " + p.family;
-  actualizarPrecioModal(p.family);
   const quotePanelModelTitle = document.getElementById("quotePanelModelTitle");
   if (quotePanelModelTitle) quotePanelModelTitle.innerText = "Modelo " + p.family;
   cerrarPanelCotizacionModal();
@@ -788,7 +683,6 @@ function verProducto(familyId) {
   btnFamily.onclick = () => {
     guardarDraftDelSkuActual();
     skuActivo = p.family;
-    actualizarPrecioModal(skuActivo);
     renderImages(buildImageList(p));
     cargarDraftDelSku(skuActivo);
     aplicarStockATallas(skuActivo);
@@ -809,7 +703,6 @@ function verProducto(familyId) {
       btn.onclick = () => {
         guardarDraftDelSkuActual();
         skuActivo = v.sku;
-        actualizarPrecioModal(skuActivo);
         renderImages(buildImageList(v));
         cargarDraftDelSku(skuActivo);
         aplicarStockATallas(skuActivo);
@@ -833,7 +726,6 @@ function verProducto(familyId) {
   const initialBtn = initialSku === p.family ? btnFamily : botonesPorSku[initialSku];
 
   skuActivo = initialSku;
-  actualizarPrecioModal(skuActivo);
   renderImages(initialImages);
   cargarDraftDelSku(skuActivo);
   aplicarStockATallas(skuActivo);
@@ -917,17 +809,11 @@ function actualizarCarrito() {
 
   const container = document.getElementById("cartItems");
   let totalItems = 0;
-  let totalMonto = 0;
-  let modelosSinPrecio = 0;
 
   container.innerHTML = pedido
     .map((item, index) => {
       const cantidadModelo = Object.values(item.tallas).reduce((acc, qty) => acc + (Number(qty) || 0), 0);
-      const precioUnitario = obtenerPrecioUnitario(item.sku);
-      const subtotal = precioUnitario ? cantidadModelo * precioUnitario : null;
       totalItems += cantidadModelo;
-      if (subtotal !== null) totalMonto += subtotal;
-      else modelosSinPrecio += 1;
 
       return `
       <div class="cart-item">
@@ -946,8 +832,6 @@ function actualizarCarrito() {
         </div>
         <div class="cart-item-summary">
           <div>Prendas: <strong>${cantidadModelo}</strong></div>
-          <div>Precio unitario: <strong>${precioUnitario ? formatMoneyCLP(precioUnitario) : "No disponible"}</strong></div>
-          <div>Subtotal: <strong>${subtotal !== null ? formatMoneyCLP(subtotal) : "-"}</strong></div>
         </div>
       </div>
     `
@@ -964,8 +848,6 @@ function actualizarCarrito() {
 
   totalsBox.innerHTML = `
     <div class="cart-totals-row"><span>Total prendas</span><strong>${totalItems}</strong></div>
-    <div class="cart-totals-row"><span>Total estimado</span><strong>${formatMoneyCLP(totalMonto)}</strong></div>
-    ${modelosSinPrecio ? `<div class="cart-totals-note">Hay ${modelosSinPrecio} modelo(s) sin precio cargado.</div>` : ""}
   `;
 }
 
