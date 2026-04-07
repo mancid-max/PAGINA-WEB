@@ -19,6 +19,8 @@ let imagenesModalActual = [];
 let imagenModalIndex = 0;
 let quotePanelReady = false;
 let stockBySku = {};
+let videoBySku = {};
+let videoActivoSrc = "";
 const INVENTORY_ENABLED = false;
 const LOCAL_CLIENT_OVERRIDES = [
   {
@@ -164,6 +166,17 @@ if (INVENTORY_ENABLED) {
     .catch((err) => console.warn("No se pudo cargar stock-data.json:", err));
 }
 
+fetch(withCacheBust("video-data.json"))
+  .then((res) => {
+    if (!res.ok) throw new Error(`status ${res.status}`);
+    return res.json();
+  })
+  .then((data) => {
+    videoBySku = data?.items || {};
+    if (skuActivo) actualizarVideoModal(skuActivo);
+  })
+  .catch((err) => console.warn("No se pudo cargar video-data.json:", err));
+
 /***********************
  * UTILIDADES IMÁGENES
  ***********************/
@@ -207,6 +220,113 @@ function renderImages(imageList) {
 
     thumbContainer.appendChild(thumb);
   });
+}
+
+function normalizarSkuVideo(sku) {
+  return String(sku || "")
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, "");
+}
+
+function obtenerVideoProducto(sku) {
+  const raw = normalizarSkuVideo(sku);
+  if (!raw) return "";
+
+  const candidates = new Set([raw]);
+  let familyBase = "";
+
+  if (/^\d{4}$/.test(raw)) {
+    candidates.add(`${raw}-00`);
+    familyBase = raw;
+  }
+
+  if (/^\d{4}-00$/.test(raw)) {
+    familyBase = raw.slice(0, 4);
+    candidates.add(familyBase);
+  }
+
+  const familyMatch = raw.match(/^(\d{4})-(\d{2})$/);
+  if (familyMatch) {
+    familyBase = familyMatch[1];
+    candidates.add(familyBase);
+    candidates.add(`${familyBase}-00`);
+  }
+
+  for (const key of candidates) {
+    const videoPath = videoBySku?.[key];
+    if (typeof videoPath === "string" && videoPath.trim()) return videoPath;
+  }
+
+  if (familyBase) {
+    const familyVariantKey = Object.keys(videoBySku || {})
+      .filter((key) => key.startsWith(`${familyBase}-`) && typeof videoBySku?.[key] === "string")
+      .sort()[0];
+    if (familyVariantKey) return videoBySku[familyVariantKey];
+  }
+
+  return "";
+}
+
+function pausarVideoModal() {
+  const videoEl = document.getElementById("videoZoomPlayer");
+  if (!videoEl) return;
+  videoEl.pause();
+}
+
+function actualizarVideoModal(sku) {
+  const videoBtn = document.getElementById("openVideoGalleryBtn");
+  const videoEl = document.getElementById("videoZoomPlayer");
+  const videoPath = obtenerVideoProducto(sku);
+  if (!videoPath) {
+    cerrarVisorVideo();
+    videoActivoSrc = "";
+    if (videoEl) {
+      videoEl.removeAttribute("src");
+      videoEl.dataset.src = "";
+      videoEl.load();
+    }
+    if (videoBtn) videoBtn.hidden = true;
+    return;
+  }
+
+  videoActivoSrc = withCacheBust(videoPath);
+  if (videoEl && videoEl.dataset.src && videoEl.dataset.src !== videoActivoSrc) {
+    videoEl.pause();
+    videoEl.removeAttribute("src");
+    videoEl.dataset.src = "";
+    videoEl.load();
+  }
+  if (videoBtn) videoBtn.hidden = false;
+}
+
+function abrirVisorVideo() {
+  const zoomModal = document.getElementById("videoZoomModal");
+  const videoEl = document.getElementById("videoZoomPlayer");
+  if (!zoomModal || !videoEl || !videoActivoSrc) return;
+  cerrarVisorImagenes();
+  if (videoEl.dataset.src !== videoActivoSrc) {
+    videoEl.src = videoActivoSrc;
+    videoEl.dataset.src = videoActivoSrc;
+    videoEl.load();
+  }
+  zoomModal.hidden = false;
+  document.body.classList.add("image-zoom-open");
+  const playPromise = videoEl.play();
+  if (playPromise && typeof playPromise.catch === "function") {
+    playPromise.catch(() => {});
+  }
+}
+
+function cerrarVisorVideo() {
+  const zoomModal = document.getElementById("videoZoomModal");
+  const videoEl = document.getElementById("videoZoomPlayer");
+  if (!zoomModal) return;
+  if (videoEl) {
+    videoEl.pause();
+  }
+  zoomModal.hidden = true;
+  document.body.classList.remove("image-zoom-open");
 }
 
 /***********************
@@ -365,6 +485,7 @@ function renderZoomGallery() {
 function abrirVisorImagenes() {
   const zoomModal = document.getElementById("imageZoomModal");
   if (!zoomModal || !imagenesModalActual.length) return;
+  cerrarVisorVideo();
   renderZoomGallery();
   zoomModal.hidden = false;
   document.body.classList.add("image-zoom-open");
@@ -684,6 +805,7 @@ function verProducto(familyId) {
     guardarDraftDelSkuActual();
     skuActivo = p.family;
     renderImages(buildImageList(p));
+    actualizarVideoModal(skuActivo);
     cargarDraftDelSku(skuActivo);
     aplicarStockATallas(skuActivo);
     setActive(btnFamily);
@@ -704,6 +826,7 @@ function verProducto(familyId) {
         guardarDraftDelSkuActual();
         skuActivo = v.sku;
         renderImages(buildImageList(v));
+        actualizarVideoModal(skuActivo);
         cargarDraftDelSku(skuActivo);
         aplicarStockATallas(skuActivo);
         setActive(btn);
@@ -727,6 +850,7 @@ function verProducto(familyId) {
 
   skuActivo = initialSku;
   renderImages(initialImages);
+  actualizarVideoModal(skuActivo);
   cargarDraftDelSku(skuActivo);
   aplicarStockATallas(skuActivo);
   setActive(initialBtn || btnFamily);
@@ -742,25 +866,35 @@ function verProducto(familyId) {
  ***********************/
 document.getElementById("closeModal").onclick = () => {
   document.getElementById("modal").classList.remove("active");
+  pausarVideoModal();
   cerrarVisorImagenes();
+  cerrarVisorVideo();
   cerrarPanelCotizacionModal();
 };
 
 document.getElementById("modal").onclick = (e) => {
   if (e.target.id === "modal") {
     document.getElementById("modal").classList.remove("active");
+    pausarVideoModal();
     cerrarVisorImagenes();
+    cerrarVisorVideo();
     cerrarPanelCotizacionModal();
   }
 };
 
 document.getElementById("openImageGalleryBtn")?.addEventListener("click", abrirVisorImagenes);
+document.getElementById("openVideoGalleryBtn")?.addEventListener("click", abrirVisorVideo);
 document.getElementById("closeImageZoomBtn")?.addEventListener("click", cerrarVisorImagenes);
 document.getElementById("imageZoomModal")?.addEventListener("click", (e) => {
   if (e.target.dataset.closeImageZoom !== undefined) cerrarVisorImagenes();
 });
+document.getElementById("closeVideoZoomBtn")?.addEventListener("click", cerrarVisorVideo);
+document.getElementById("videoZoomModal")?.addEventListener("click", (e) => {
+  if (e.target.dataset.closeVideoZoom !== undefined) cerrarVisorVideo();
+});
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") cerrarVisorImagenes();
+  if (e.key === "Escape") cerrarVisorVideo();
   if (e.key === "Escape") cerrarPanelCotizacionModal();
 });
 

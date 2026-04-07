@@ -66,6 +66,7 @@
     <div class="modal-left">
         <div class="image-viewer">
             <button id="openImageGalleryBtn" class="image-gallery-btn" type="button">Ver imágenes</button>
+            <button id="openVideoGalleryBtn" class="image-gallery-btn image-video-btn" type="button" hidden>Ver video</button>
             <img id="viewerImg">
         </div>
         <div id="thumbContainer" class="thumbnails"></div>
@@ -103,6 +104,16 @@
       <img id="imageZoomMain" alt="Vista ampliada de producto">
     </div>
     <div id="imageZoomThumbs" class="image-zoom-thumbs"></div>
+  </div>
+</div>
+
+<div id="videoZoomModal" class="image-zoom-modal" hidden>
+  <div class="image-zoom-backdrop" data-close-video-zoom></div>
+  <div class="image-zoom-content video-zoom-content" role="dialog" aria-modal="true" aria-label="Visor de video">
+    <button id="closeVideoZoomBtn" class="image-zoom-close" type="button" aria-label="Cerrar video">×</button>
+    <div class="image-zoom-stage video-zoom-stage">
+      <video id="videoZoomPlayer" class="video-zoom-player" controls preload="metadata" playsinline controlsList="nodownload"></video>
+    </div>
   </div>
 </div>
 
