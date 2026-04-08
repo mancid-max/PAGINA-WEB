@@ -21,7 +21,7 @@ let quotePanelReady = false;
 let stockBySku = {};
 let videoBySku = {};
 let videoActivoSrc = "";
-const INVENTORY_ENABLED = false;
+const INVENTORY_ENABLED = true;
 const LOCAL_CLIENT_OVERRIDES = [
   {
     rut: "77.886.495-9",
@@ -157,13 +157,8 @@ async function cargarProductosCatalogo() {
 cargarProductosCatalogo();
 
 if (INVENTORY_ENABLED) {
-  fetch(withCacheBust("stock-data.json"))
-    .then((res) => res.json())
-    .then((data) => {
-      stockBySku = data?.items || {};
-      if (skuActivo) aplicarStockATallas(skuActivo);
-    })
-    .catch((err) => console.warn("No se pudo cargar stock-data.json:", err));
+  cargarStockData();
+  window.setInterval(cargarStockData, 30000);
 }
 
 fetch(withCacheBust("video-data.json"))
@@ -360,11 +355,30 @@ function obtenerStockParaSku(sku) {
   const key = String(sku || "").trim();
   if (!key) return null;
   if (stockBySku[key]) return stockBySku[key];
+  if (/^\d{4}$/.test(key) && stockBySku[`${key}-00`]) return stockBySku[`${key}-00`];
   if (/-00$/i.test(key)) {
     const familyKey = key.slice(0, 4);
     if (stockBySku[familyKey]) return stockBySku[familyKey];
   }
+  const familyMatch = key.match(/^(\d{4})-(\d{2})$/);
+  if (familyMatch) {
+    const familyKey = familyMatch[1];
+    if (stockBySku[`${familyKey}-00`]) return stockBySku[`${familyKey}-00`];
+  }
   return null;
+}
+
+function cargarStockData() {
+  return fetch(withCacheBust("stock-data.json"), { cache: "no-store" })
+    .then((res) => {
+      if (!res.ok) throw new Error(`status ${res.status}`);
+      return res.json();
+    })
+    .then((data) => {
+      stockBySku = data?.items || {};
+      if (skuActivo) aplicarStockATallas(skuActivo);
+    })
+    .catch((err) => console.warn("No se pudo cargar stock-data.json:", err));
 }
 
 function asegurarTextoTalla(label, talla) {
