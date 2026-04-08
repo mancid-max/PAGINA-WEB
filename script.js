@@ -93,6 +93,106 @@ function normalizarSkuCatalogo(value) {
     .replace(/\s+/g, "");
 }
 
+function crearCandidatosSku(value) {
+  const raw = normalizarSkuCatalogo(value);
+  if (!raw) return [];
+  const candidates = new Set([raw]);
+  if (/^\d{4}$/.test(raw)) candidates.add(`${raw}-00`);
+  if (/^\d{4}-00$/.test(raw)) candidates.add(raw.slice(0, 4));
+  const familyMatch = raw.match(/^(\d{4})-(\d{2})$/);
+  if (familyMatch) {
+    candidates.add(familyMatch[1]);
+    candidates.add(`${familyMatch[1]}-00`);
+  }
+  return [...candidates];
+}
+
+function mergeCatalogItems(...groups) {
+  const items = groups.flat().filter(Boolean);
+  const map = new Map();
+
+  items.forEach((item) => {
+    const family = normalizarSkuCatalogo(item?.family);
+    if (!family) return;
+
+    const existing = map.get(family);
+    const next = existing ? existing : {
+      ...item,
+      family,
+      gallery: Array.isArray(item?.gallery) ? [...item.gallery] : [],
+      characteristics: Array.isArray(item?.characteristics) ? [...item.characteristics] : [],
+      variants: Array.isArray(item?.variants) ? item.variants.map((variant) => ({ ...variant })) : [],
+    };
+
+    if (existing) {
+      if (!next.main_image && item?.main_image) next.main_image = item.main_image;
+      if (!next.description && item?.description) next.description = item.description;
+      if ((!next.characteristics || !next.characteristics.length) && Array.isArray(item?.characteristics)) {
+        next.characteristics = [...item.characteristics];
+      }
+
+      const gallerySet = new Set(Array.isArray(next.gallery) ? next.gallery : []);
+      (item?.gallery || []).forEach((img) => {
+        if (img) gallerySet.add(img);
+      });
+      next.gallery = [...gallerySet];
+
+      const variantsBySku = new Map(
+        (Array.isArray(next.variants) ? next.variants : []).map((variant) => [normalizarSkuCatalogo(variant?.sku), { ...variant }])
+      );
+      (item?.variants || []).forEach((variant) => {
+        const sku = normalizarSkuCatalogo(variant?.sku);
+        if (!sku) return;
+        if (!variantsBySku.has(sku)) {
+          variantsBySku.set(sku, { ...variant, sku });
+          return;
+        }
+        const currentVariant = variantsBySku.get(sku);
+        if (!currentVariant.main_image && variant?.main_image) currentVariant.main_image = variant.main_image;
+        const variantGallery = new Set(Array.isArray(currentVariant.gallery) ? currentVariant.gallery : []);
+        (variant?.gallery || []).forEach((img) => {
+          if (img) variantGallery.add(img);
+        });
+        currentVariant.gallery = [...variantGallery];
+      });
+      next.variants = [...variantsBySku.values()];
+    }
+
+    map.set(family, next);
+  });
+
+  return [...map.values()].sort((a, b) => {
+    const aKey = normalizarSkuCatalogo(a?.family);
+    const bKey = normalizarSkuCatalogo(b?.family);
+    return aKey.localeCompare(bKey, undefined, { numeric: true });
+  });
+}
+
+function filtrarProductosPorStock(items = [], stockItems = {}) {
+  const availableKeys = new Set();
+
+  Object.entries(stockItems || {}).forEach(([sku, payload]) => {
+    const total = Number(payload?.total) || 0;
+    if (total <= 0) return;
+    crearCandidatosSku(sku).forEach((key) => {
+      if (key) availableKeys.add(key);
+    });
+  });
+
+  if (!availableKeys.size) return items;
+
+  return items.filter((item) => {
+    const candidates = new Set(crearCandidatosSku(item?.family));
+    (item?.variants || []).forEach((variant) => {
+      crearCandidatosSku(variant?.sku).forEach((key) => candidates.add(key));
+    });
+    for (const key of candidates) {
+      if (availableKeys.has(key)) return true;
+    }
+    return false;
+  });
+}
+
 function filtrarProductosDisponiblesCole42(items = [], trazabilidadData = null) {
   if (CATALOG_SOURCE !== "catalogo-1") return items;
 
@@ -134,6 +234,18 @@ function filtrarProductosDisponiblesCole42(items = [], trazabilidadData = null) 
 async function cargarProductosCatalogo() {
   try {
     const catalogPromise = fetch(withCacheBust(CATALOG_DATA_FILE)).then((res) => res.json());
+    const stockPromise = INVENTORY_ENABLED
+      ? fetch(withCacheBust("stock-data.json"), { cache: "no-store" }).then((res) => {
+        if (!res.ok) throw new Error(`status ${res.status}`);
+        return res.json();
+      })
+      : Promise.resolve(null);
+    const extraCatalogPromise = CATALOG_SOURCE === "catalogo-1"
+      ? fetch(withCacheBust("data-catalogo-3.json")).then((res) => res.json())
+      : Promise.resolve([]);
+    const stockOverridesPromise = CATALOG_SOURCE === "catalogo-1"
+      ? fetch(withCacheBust("data-stock-overrides.json")).then((res) => res.json())
+      : Promise.resolve([]);
     const trazabilidadPromise = CATALOG_SOURCE === "catalogo-1"
       ? fetch(withCacheBust("trazabilidad-data.json"), { cache: "no-store" }).then((res) => {
         if (!res.ok) throw new Error(`status ${res.status}`);
@@ -141,10 +253,23 @@ async function cargarProductosCatalogo() {
       })
       : Promise.resolve(null);
 
-    const [data, trazabilidadData] = await Promise.all([catalogPromise, trazabilidadPromise]);
+    const [data, stockData, extraCatalogData, stockOverridesData, trazabilidadData] = await Promise.all([
+      catalogPromise,
+      stockPromise,
+      extraCatalogPromise,
+      stockOverridesPromise,
+      trazabilidadPromise,
+    ]);
+
+    if (INVENTORY_ENABLED) {
+      stockBySku = stockData?.items || {};
+    }
 
     let items = Array.isArray(data) ? data : [];
-    items = filtrarProductosDisponiblesCole42(items, trazabilidadData);
+    if (CATALOG_SOURCE === "catalogo-1") {
+      items = mergeCatalogItems(items, Array.isArray(extraCatalogData) ? extraCatalogData : [], Array.isArray(stockOverridesData) ? stockOverridesData : []);
+    }
+    items = INVENTORY_ENABLED ? filtrarProductosPorStock(items, stockBySku) : filtrarProductosDisponiblesCole42(items, trazabilidadData);
 
     productos = items;
     renderGrid(productos);

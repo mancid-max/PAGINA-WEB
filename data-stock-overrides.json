@@ -1,0 +1,240 @@
+[
+  {
+    "family": "4201-00",
+    "variants": [
+      {
+        "sku": "4201-01",
+        "main_image": "Imagenes/4201/Mohicano0034.jpg",
+        "gallery": [
+          "Imagenes/4201/Mohicano0034.jpg",
+          "Imagenes/4201/Mohicano0040.jpg",
+          "Imagenes/4201/Mohicano0043.jpg",
+          "Imagenes/4201/Mohicano0047.jpg",
+          "Imagenes/4201/Mohicano0053 copie.jpg",
+          "Imagenes/4201/Mohicano0055.jpg"
+        ]
+      },
+      {
+        "sku": "4201-60",
+        "main_image": "Imagenes/4201/Mohicano0034.jpg",
+        "gallery": [
+          "Imagenes/4201/Mohicano0034.jpg",
+          "Imagenes/4201/Mohicano0040.jpg",
+          "Imagenes/4201/Mohicano0043.jpg",
+          "Imagenes/4201/Mohicano0047.jpg",
+          "Imagenes/4201/Mohicano0053 copie.jpg",
+          "Imagenes/4201/Mohicano0055.jpg"
+        ]
+      }
+    ]
+  },
+  {
+    "family": "4204-00",
+    "variants": [
+      {
+        "sku": "4204-02",
+        "main_image": "Imagenes/4204/4204-02/Mohicano0691.jpg",
+        "gallery": [
+          "Imagenes/4204/4204-02/Mohicano0691.jpg",
+          "Imagenes/4204/4204-02/Mohicano0693.jpg",
+          "Imagenes/4204/4204-02/Mohicano0698.jpg",
+          "Imagenes/4204/4204-02/Mohicano0701.jpg",
+          "Imagenes/4204/4204-02/Mohicano0707 copie.jpg",
+          "Imagenes/4204/4204-02/Mohicano0713.jpg",
+          "Imagenes/4204/4204-02/Mohicano0719.jpg"
+        ]
+      }
+    ]
+  },
+  {
+    "family": "4205-00",
+    "main_image": "Imagenes/4205/catalogo 42 _page-0029.jpg",
+    "gallery": [
+      "Imagenes/4205/Copia de CRI_7893.jpg",
+      "Imagenes/4205/Copia de CRI_7898.jpg",
+      "Imagenes/4205/Copia de CRI_7901.jpg",
+      "Imagenes/4205/Copia de CRI_7905.jpg",
+      "Imagenes/4205/Copia de CRI_7911.jpg"
+    ],
+    "description": "Modelo 4205-00",
+    "characteristics": [
+      "Cintura",
+      "Oxford"
+    ],
+    "variants": [
+      {
+        "sku": "4205-01",
+        "main_image": "Imagenes/4205/4205-01/Mohicano0559.jpg",
+        "gallery": [
+          "Imagenes/4205/4205-01/Mohicano0559.jpg",
+          "Imagenes/4205/4205-01/Mohicano0566.jpg",
+          "Imagenes/4205/4205-01/Mohicano0569.jpg",
+          "Imagenes/4205/4205-01/Mohicano0572 copie.jpg",
+          "Imagenes/4205/4205-01/Mohicano0573 copie.jpg",
+          "Imagenes/4205/4205-01/Mohicano0581 copie.jpg"
+        ]
+      }
+    ]
+  },
+  {
+    "family": "4214-00",
+    "variants": [
+      {
+        "sku": "4214-02",
+        "main_image": "Imagenes/4214/4214-01/Mohicano0342.jpg",
+        "gallery": [
+          "Imagenes/4214/4214-01/Mohicano0342.jpg",
+          "Imagenes/4214/4214-01/Mohicano0349.jpg",
+          "Imagenes/4214/4214-01/Mohicano0360.jpg",
+          "Imagenes/4214/4214-01/Mohicano0366 copie.jpg"
+        ]
+      }
+    ]
+  },
+  {
+    "family": "4219-00",
+    "variants": [
+      {
+        "sku": "4219-01",
+        "main_image": "Imagenes/4219/Mohicano0400.jpg",
+        "gallery": [
+          "Imagenes/4219/Mohicano0400.jpg",
+          "Imagenes/4219/Mohicano0408.jpg",
+          "Imagenes/4219/Mohicano0411.jpg",
+          "Imagenes/4219/Mohicano0412.jpg",
+          "Imagenes/4219/Mohicano0418.jpg",
+          "Imagenes/4219/Mohicano0423.jpg"
+        ]
+      },
+      {
+        "sku": "4219-02",
+        "main_image": "Imagenes/4219/Mohicano0400.jpg",
+        "gallery": [
+          "Imagenes/4219/Mohicano0400.jpg",
+          "Imagenes/4219/Mohicano0408.jpg",
+          "Imagenes/4219/Mohicano0411.jpg",
+          "Imagenes/4219/Mohicano0412.jpg",
+          "Imagenes/4219/Mohicano0418.jpg",
+          "Imagenes/4219/Mohicano0423.jpg"
+        ]
+      }
+    ]
+  },
+  {
+    "family": "4221-00",
+    "variants": [
+      {
+        "sku": "4221-01",
+        "main_image": "Imagenes3/4221-00/CRI_7242.jpg",
+        "gallery": [
+          "Imagenes3/4221-00/Copia de CRI_7250.jpg",
+          "Imagenes3/4221-00/Copia de CRI_7254.jpg",
+          "Imagenes3/4221-00/Copia de CRI_7256.jpg",
+          "Imagenes3/4221-00/Copia de CRI_7282.jpg",
+          "Imagenes3/4221-00/CRI_7242.jpg",
+          "Imagenes3/4221-00/CRI_7246.jpg",
+          "Imagenes3/4221-00/Mohicano0010 copie.jpg",
+          "Imagenes3/4221-00/Mohicano0015.jpg",
+          "Imagenes3/4221-00/Mohicano0017 copie.jpg",
+          "Imagenes3/4221-00/Mohicano0019 copie.jpg"
+        ]
+      }
+    ]
+  },
+  {
+    "family": "4222-00",
+    "main_image": "Imagenes/4222/catalogo 42 _page-0092.jpg",
+    "gallery": [
+      "Imagenes/4222/1.jpg",
+      "Imagenes/4222/Mohicano0148.jpg",
+      "Imagenes/4222/Mohicano0150.jpg",
+      "Imagenes/4222/Mohicano0153.jpg",
+      "Imagenes/4222/Mohicano0165 copie.jpg"
+    ],
+    "description": "Modelo 4222-00",
+    "characteristics": [
+      "Medio",
+      "Tobillero"
+    ],
+    "variants": []
+  },
+  {
+    "family": "4226-01",
+    "main_image": "Imagenes/4226/4226-01/catalogo 42 _page-0116.jpg",
+    "gallery": [
+      "Imagenes/4226/4226-01/Copia de CRI_7740.jpg",
+      "Imagenes/4226/4226-01/Copia de CRI_7743.jpg",
+      "Imagenes/4226/4226-01/Copia de CRI_7747.jpg",
+      "Imagenes/4226/4226-01/Copia de CRI_7759.jpg",
+      "Imagenes/4226/4226-01/Copia de CRI_7762.jpg"
+    ],
+    "description": "Modelo 4226-01",
+    "characteristics": [
+      "Medio",
+      "Pitillo"
+    ],
+    "variants": []
+  },
+  {
+    "family": "4235-00",
+    "variants": [
+      {
+        "sku": "4235-01",
+        "main_image": "Imagenes/4235/Copia de CRI_8485.jpg",
+        "gallery": [
+          "Imagenes/4235/Copia de CRI_8485.jpg",
+          "Imagenes/4235/Copia de CRI_8490.jpg",
+          "Imagenes/4235/Copia de CRI_8494.jpg",
+          "Imagenes/4235/Copia de CRI_8498.jpg",
+          "Imagenes/4235/Copia de CRI_8502.jpg"
+        ]
+      }
+    ]
+  },
+  {
+    "family": "4243-00",
+    "main_image": "Imagenes/4243/Copia de CRI_8611.jpg",
+    "gallery": [
+      "Imagenes/4243/Copia de CRI_8611.jpg",
+      "Imagenes/4243/Copia de CRI_8613.jpg",
+      "Imagenes/4243/Copia de CRI_8619.jpg",
+      "Imagenes/4243/Copia de CRI_8628.jpg"
+    ],
+    "description": "Modelo 4243-00",
+    "characteristics": [
+      "Cintura",
+      "Pitillo"
+    ],
+    "variants": []
+  },
+  {
+    "family": "4247-00",
+    "variants": [
+      {
+        "sku": "4247-01",
+        "main_image": "Imagenes/4247/1.jpg-2.jpeg",
+        "gallery": [
+          "Imagenes/4247/1.jpg-2.jpeg",
+          "Imagenes/4247/2.jpg-2.jpeg"
+        ]
+      }
+    ]
+  },
+  {
+    "family": "4248-01",
+    "main_image": "Imagenes/4248/4248-01/Copia de CRI_8232.jpg",
+    "gallery": [
+      "Imagenes/4248/4248-01/Copia de CRI_8232.jpg",
+      "Imagenes/4248/4248-01/Copia de CRI_8236.jpg",
+      "Imagenes/4248/4248-01/Copia de CRI_8243.jpg",
+      "Imagenes/4248/4248-01/Copia de CRI_8244.jpg",
+      "Imagenes/4248/4248-01/Copia de CRI_8249.jpg"
+    ],
+    "description": "Modelo 4248-01",
+    "characteristics": [
+      "Cintura",
+      "Recto"
+    ],
+    "variants": []
+  }
+]
