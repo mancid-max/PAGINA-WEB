@@ -6,7 +6,7 @@ from openpyxl import load_workbook
 
 DEFAULT_SOURCE = Path(r"C:\Users\manuh\OneDrive - Mohicano Jeans\INVENTARIO 01-04 COMPLETO.xlsx")
 DEFAULT_OUTPUT = Path("stock-data.json")
-DEFAULT_SHEET = "COLE 42"
+DEFAULT_SHEET = "principal 42"
 SIZE_COLUMNS = {
     "36": 5,
     "38": 6,
@@ -55,6 +55,8 @@ def parse_stock_excel(source_path: Path, sheet_name: str = DEFAULT_SHEET) -> dic
     wb = load_workbook(source_path, read_only=True, data_only=True)
     if sheet_name in wb.sheetnames:
         ws = wb[sheet_name]
+    elif "principal 42" in wb.sheetnames:
+        ws = wb["principal 42"]
     elif "COLE 42" in wb.sheetnames:
         ws = wb["COLE 42"]
     elif "Hoja1" in wb.sheetnames:

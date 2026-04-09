@@ -1,0 +1,445 @@
+[
+  {
+    "family": "4201-00",
+    "variants": [],
+    "main_image": "42/4201/Mohicano0034.jpg",
+    "gallery": [
+      "42/4201/Mohicano0034.jpg",
+      "42/4201/Mohicano0040.jpg",
+      "42/4201/Mohicano0043.jpg",
+      "42/4201/Mohicano0047.jpg",
+      "42/4201/Mohicano0053 copie.jpg",
+      "42/4201/Mohicano0055.jpg"
+    ],
+    "description": "Modelo 4201-00",
+    "characteristics": []
+  },
+  {
+    "family": "4202-00",
+    "variants": [],
+    "main_image": "42/4202/Copia de CRI_7811.jpg",
+    "gallery": [
+      "42/4202/Copia de CRI_7811.jpg",
+      "42/4202/Copia de CRI_7818.jpg",
+      "42/4202/Copia de CRI_7821.jpg",
+      "42/4202/Copia de CRI_7828.jpg"
+    ],
+    "description": "Modelo 4202-00",
+    "characteristics": []
+  },
+  {
+    "family": "4204-00",
+    "variants": [
+      {
+        "sku": "4204-02",
+        "main_image": "42/4204-02/Mohicano0691.jpg",
+        "gallery": [
+          "42/4204-02/Mohicano0691.jpg",
+          "42/4204-02/Mohicano0693.jpg",
+          "42/4204-02/Mohicano0698.jpg",
+          "42/4204-02/Mohicano0701.jpg",
+          "42/4204-02/Mohicano0707 copie.jpg",
+          "42/4204-02/Mohicano0713.jpg",
+          "42/4204-02/Mohicano0719.jpg"
+        ]
+      }
+    ],
+    "gallery": [],
+    "description": "Modelo 4204-00",
+    "characteristics": []
+  },
+  {
+    "family": "4205-00",
+    "variants": [
+      {
+        "sku": "4205-01",
+        "main_image": "42/4205-01/Mohicano0559.jpg",
+        "gallery": [
+          "42/4205-01/Mohicano0559.jpg",
+          "42/4205-01/Mohicano0566.jpg",
+          "42/4205-01/Mohicano0569.jpg",
+          "42/4205-01/Mohicano0572 copie.jpg",
+          "42/4205-01/Mohicano0573 copie.jpg",
+          "42/4205-01/Mohicano0581 copie.jpg"
+        ]
+      }
+    ],
+    "gallery": [],
+    "description": "Modelo 4205-00",
+    "characteristics": []
+  },
+  {
+    "family": "4206-00",
+    "variants": [],
+    "main_image": "42/4206/Mohicano0177.jpg",
+    "gallery": [
+      "42/4206/Mohicano0177.jpg",
+      "42/4206/Mohicano0181.jpg",
+      "42/4206/Mohicano0186.jpg",
+      "42/4206/Mohicano0196 copie.jpg"
+    ],
+    "description": "Modelo 4206-00",
+    "characteristics": []
+  },
+  {
+    "family": "4209-00",
+    "variants": [],
+    "main_image": "42/4209/Copia de CRI_8066.jpg",
+    "gallery": [
+      "42/4209/Copia de CRI_8066.jpg",
+      "42/4209/Copia de CRI_8071.jpg",
+      "42/4209/Copia de CRI_8077.jpg",
+      "42/4209/Copia de CRI_8088.jpg",
+      "42/4209/Copia de CRI_8103.jpg"
+    ],
+    "description": "Modelo 4209-00",
+    "characteristics": []
+  },
+  {
+    "family": "4211-00",
+    "variants": [],
+    "main_image": "42/4211/1-Mohicano0132.jpg",
+    "gallery": [
+      "42/4211/1-Mohicano0132.jpg",
+      "42/4211/Mohicano0107.jpg",
+      "42/4211/Mohicano0117.jpg",
+      "42/4211/Mohicano0120 copie.jpg",
+      "42/4211/Mohicano0121 copie.jpg"
+    ],
+    "description": "Modelo 4211-00",
+    "characteristics": []
+  },
+  {
+    "family": "4214-00",
+    "variants": [
+      {
+        "sku": "4214-01",
+        "main_image": "42/4214-01/Mohicano0342.jpg",
+        "gallery": [
+          "42/4214-01/Mohicano0342.jpg",
+          "42/4214-01/Mohicano0349.jpg",
+          "42/4214-01/Mohicano0360.jpg",
+          "42/4214-01/Mohicano0366 copie.jpg"
+        ]
+      }
+    ],
+    "gallery": [],
+    "description": "Modelo 4214-00",
+    "characteristics": []
+  },
+  {
+    "family": "4218-01",
+    "variants": [],
+    "main_image": "42/4218-01/Mohicano0625.jpg",
+    "gallery": [
+      "42/4218-01/Mohicano0625.jpg",
+      "42/4218-01/Mohicano0633.jpg",
+      "42/4218-01/Mohicano0635.jpg",
+      "42/4218-01/Mohicano0651 copie.jpg",
+      "42/4218-01/Mohicano0654.jpg"
+    ],
+    "description": "Modelo 4218-01",
+    "characteristics": []
+  },
+  {
+    "family": "4219-00",
+    "variants": [],
+    "main_image": "42/4219/Mohicano0400.jpg",
+    "gallery": [
+      "42/4219/Mohicano0400.jpg",
+      "42/4219/Mohicano0408.jpg",
+      "42/4219/Mohicano0411.jpg",
+      "42/4219/Mohicano0412.jpg",
+      "42/4219/Mohicano0418.jpg",
+      "42/4219/Mohicano0423.jpg"
+    ],
+    "description": "Modelo 4219-00",
+    "characteristics": []
+  },
+  {
+    "family": "4220-00",
+    "variants": [],
+    "main_image": "42/4220/Copia de CRI_7470.jpg",
+    "gallery": [
+      "42/4220/Copia de CRI_7470.jpg",
+      "42/4220/Copia de CRI_7473.jpg",
+      "42/4220/Copia de CRI_7477.jpg",
+      "42/4220/Copia de CRI_7488.jpg",
+      "42/4220/Copia de CRI_7489.jpg",
+      "42/4220/Copia de CRI_7490.jpg"
+    ],
+    "description": "Modelo 4220-00",
+    "characteristics": []
+  },
+  {
+    "family": "4222-00",
+    "variants": [],
+    "main_image": "42/4222/1.jpg",
+    "gallery": [
+      "42/4222/1.jpg",
+      "42/4222/Mohicano0148.jpg",
+      "42/4222/Mohicano0150.jpg",
+      "42/4222/Mohicano0153.jpg",
+      "42/4222/Mohicano0165 copie.jpg"
+    ],
+    "description": "Modelo 4222-00",
+    "characteristics": []
+  },
+  {
+    "family": "4223",
+    "variants": [],
+    "main_image": "42/4223/Mohicano0437.jpg",
+    "gallery": [
+      "42/4223/Mohicano0437.jpg",
+      "42/4223/Mohicano0444.jpg",
+      "42/4223/Mohicano0449.jpg",
+      "42/4223/Mohicano0451.jpg",
+      "42/4223/Mohicano0459 copie.jpg"
+    ],
+    "description": "Modelo 4223",
+    "characteristics": []
+  },
+  {
+    "family": "4225-00",
+    "variants": [],
+    "main_image": "42/4225/Mohicano0591.jpg",
+    "gallery": [
+      "42/4225/Mohicano0591.jpg",
+      "42/4225/Mohicano0598.jpg",
+      "42/4225/Mohicano0602 copie.jpg",
+      "42/4225/Mohicano0607 copie.jpg",
+      "42/4225/Mohicano0607.jpg",
+      "42/4225/Mohicano0615.jpg"
+    ],
+    "description": "Modelo 4225-00",
+    "characteristics": []
+  },
+  {
+    "family": "4226-01",
+    "variants": [],
+    "main_image": "42/4226-01/Copia de CRI_7740.jpg",
+    "gallery": [
+      "42/4226-01/Copia de CRI_7740.jpg",
+      "42/4226-01/Copia de CRI_7743.jpg",
+      "42/4226-01/Copia de CRI_7747.jpg",
+      "42/4226-01/Copia de CRI_7759.jpg",
+      "42/4226-01/Copia de CRI_7762.jpg"
+    ],
+    "description": "Modelo 4226-01",
+    "characteristics": []
+  },
+  {
+    "family": "4227-00",
+    "variants": [
+      {
+        "sku": "4227-01",
+        "main_image": "42/4227-01/Copia de CRI_7538.jpg",
+        "gallery": [
+          "42/4227-01/Copia de CRI_7538.jpg",
+          "42/4227-01/Copia de CRI_7544.jpg",
+          "42/4227-01/Copia de CRI_7548.jpg",
+          "42/4227-01/Copia de CRI_7554.jpg",
+          "42/4227-01/Copia de CRI_7558.jpg"
+        ]
+      }
+    ],
+    "main_image": "42/4227/Copia de CRI_7427.jpg",
+    "gallery": [
+      "42/4227/Copia de CRI_7427.jpg",
+      "42/4227/Copia de CRI_7430.jpg",
+      "42/4227/Copia de CRI_7434.jpg",
+      "42/4227/Copia de CRI_7437.jpg",
+      "42/4227/Copia de CRI_7441.jpg",
+      "42/4227/Copia de CRI_7443.jpg"
+    ],
+    "description": "Modelo 4227-00",
+    "characteristics": []
+  },
+  {
+    "family": "4228",
+    "variants": [],
+    "main_image": "42/4228/Mohicano0372.jpg",
+    "gallery": [
+      "42/4228/Mohicano0372.jpg",
+      "42/4228/Mohicano0378.jpg",
+      "42/4228/Mohicano0379.jpg",
+      "42/4228/Mohicano0390 copie.jpg",
+      "42/4228/Mohicano0394 copie.jpg"
+    ],
+    "description": "Modelo 4228",
+    "characteristics": []
+  },
+  {
+    "family": "4229",
+    "variants": [],
+    "main_image": "42/4229/Copia de CRI_7654.jpg",
+    "gallery": [
+      "42/4229/Copia de CRI_7654.jpg",
+      "42/4229/Copia de CRI_7657.jpg",
+      "42/4229/Copia de CRI_7674.jpg",
+      "42/4229/Copia de CRI_7676.jpg",
+      "42/4229/CRI_7649.jpg"
+    ],
+    "description": "Modelo 4229",
+    "characteristics": []
+  },
+  {
+    "family": "4232",
+    "variants": [],
+    "main_image": "42/4232 hacer flare/Copia de CRI_7351.jpg",
+    "gallery": [
+      "42/4232 hacer flare/Copia de CRI_7351.jpg",
+      "42/4232 hacer flare/CRI_7336.jpg",
+      "42/4232 hacer flare/CRI_7339.jpg",
+      "42/4232 hacer flare/CRI_7346.jpg",
+      "42/4232 hacer flare/CRI_7349.jpg"
+    ],
+    "description": "Modelo 4232",
+    "characteristics": []
+  },
+  {
+    "family": "4233-08",
+    "variants": [],
+    "main_image": "42/4233-08/Copia de CRI_8456.jpg",
+    "gallery": [
+      "42/4233-08/Copia de CRI_8456.jpg",
+      "42/4233-08/Copia de CRI_8458.jpg",
+      "42/4233-08/Copia de CRI_8461.jpg",
+      "42/4233-08/Copia de CRI_8465.jpg",
+      "42/4233-08/Copia de CRI_8474.jpg"
+    ],
+    "description": "Modelo 4233-08",
+    "characteristics": []
+  },
+  {
+    "family": "4233-16",
+    "variants": [],
+    "main_image": "42/4233-16/Copia de CRI_8398.jpg",
+    "gallery": [
+      "42/4233-16/Copia de CRI_8398.jpg",
+      "42/4233-16/Copia de CRI_8402.jpg",
+      "42/4233-16/Copia de CRI_8406.jpg",
+      "42/4233-16/Copia de CRI_8411.jpg"
+    ],
+    "description": "Modelo 4233-16",
+    "characteristics": []
+  },
+  {
+    "family": "4234-04",
+    "variants": [],
+    "main_image": "42/4234- 04/Copia de CRI_8303.jpg",
+    "gallery": [
+      "42/4234- 04/Copia de CRI_8303.jpg",
+      "42/4234- 04/Copia de CRI_8309.jpg"
+    ],
+    "description": "Modelo 4234-04",
+    "characteristics": []
+  },
+  {
+    "family": "4234-08",
+    "variants": [],
+    "main_image": "42/4234-08/Copia de CRI_8274.jpg",
+    "gallery": [
+      "42/4234-08/Copia de CRI_8274.jpg",
+      "42/4234-08/Copia de CRI_8276.jpg",
+      "42/4234-08/Copia de CRI_8281.jpg",
+      "42/4234-08/Copia de CRI_8290.jpg"
+    ],
+    "description": "Modelo 4234-08",
+    "characteristics": []
+  },
+  {
+    "family": "4234-09",
+    "variants": [],
+    "main_image": "42/4234-09/Copia de CRI_8366.jpg",
+    "gallery": [
+      "42/4234-09/Copia de CRI_8366.jpg",
+      "42/4234-09/Copia de CRI_8372.jpg",
+      "42/4234-09/Copia de CRI_8375.jpg",
+      "42/4234-09/CRI_8365.jpg"
+    ],
+    "description": "Modelo 4234-09",
+    "characteristics": []
+  },
+  {
+    "family": "4234-16",
+    "variants": [],
+    "main_image": "42/4234-16/Copia de CRI_8332.jpg",
+    "gallery": [
+      "42/4234-16/Copia de CRI_8332.jpg",
+      "42/4234-16/Copia de CRI_8335.jpg",
+      "42/4234-16/Copia de CRI_8342.jpg",
+      "42/4234-16/Copia de CRI_8350.jpg"
+    ],
+    "description": "Modelo 4234-16",
+    "characteristics": []
+  },
+  {
+    "family": "4235-00",
+    "variants": [],
+    "main_image": "42/4235/Copia de CRI_8485.jpg",
+    "gallery": [
+      "42/4235/Copia de CRI_8485.jpg",
+      "42/4235/Copia de CRI_8490.jpg",
+      "42/4235/Copia de CRI_8494.jpg",
+      "42/4235/Copia de CRI_8498.jpg",
+      "42/4235/Copia de CRI_8502.jpg"
+    ],
+    "description": "Modelo 4235-00",
+    "characteristics": []
+  },
+  {
+    "family": "4236-00",
+    "variants": [],
+    "main_image": "42/4236/Copia de CRI_8579.jpg",
+    "gallery": [
+      "42/4236/Copia de CRI_8579.jpg",
+      "42/4236/Copia de CRI_8585.jpg",
+      "42/4236/Copia de CRI_8586.jpg",
+      "42/4236/Copia de CRI_8592.jpg",
+      "42/4236/Copia de CRI_8593.jpg"
+    ],
+    "description": "Modelo 4236-00",
+    "characteristics": []
+  },
+  {
+    "family": "4243-00",
+    "variants": [],
+    "main_image": "42/4243/Copia de CRI_8611.jpg",
+    "gallery": [
+      "42/4243/Copia de CRI_8611.jpg",
+      "42/4243/Copia de CRI_8613.jpg",
+      "42/4243/Copia de CRI_8619.jpg",
+      "42/4243/Copia de CRI_8628.jpg"
+    ],
+    "description": "Modelo 4243-00",
+    "characteristics": []
+  },
+  {
+    "family": "4245-00",
+    "variants": [],
+    "main_image": "42/4245/Copia de CRI_7864.jpg",
+    "gallery": [
+      "42/4245/Copia de CRI_7864.jpg",
+      "42/4245/Copia de CRI_7888.jpg",
+      "42/4245/CRI_7845.jpg",
+      "42/4245/CRI_7853.jpg"
+    ],
+    "description": "Modelo 4245-00",
+    "characteristics": []
+  },
+  {
+    "family": "4248-01",
+    "variants": [],
+    "main_image": "42/4248-01/Copia de CRI_8232.jpg",
+    "gallery": [
+      "42/4248-01/Copia de CRI_8232.jpg",
+      "42/4248-01/Copia de CRI_8236.jpg",
+      "42/4248-01/Copia de CRI_8243.jpg",
+      "42/4248-01/Copia de CRI_8244.jpg",
+      "42/4248-01/Copia de CRI_8249.jpg"
+    ],
+    "description": "Modelo 4248-01",
+    "characteristics": []
+  }
+]

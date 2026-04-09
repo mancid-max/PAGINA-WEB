@@ -145,3 +145,100 @@ $$;
 
 revoke all on function public.lookup_client_by_rut(text) from public;
 grant execute on function public.lookup_client_by_rut(text) to anon, authenticated;
+
+-- ============================================
+-- STOCK INTERNO (estructura base tipo Excel)
+-- ============================================
+
+create table if not exists public.stock_catalog (
+  id bigint generated always as identity primary key,
+  article_code text not null,
+  sku text not null unique,
+  tiro text,
+  bota text,
+  color text,
+  size_36 integer not null default 0 check (size_36 >= 0),
+  size_38 integer not null default 0 check (size_38 >= 0),
+  size_40 integer not null default 0 check (size_40 >= 0),
+  size_42 integer not null default 0 check (size_42 >= 0),
+  size_44 integer not null default 0 check (size_44 >= 0),
+  size_46 integer not null default 0 check (size_46 >= 0),
+  total_units integer generated always as (size_36 + size_38 + size_40 + size_42 + size_44 + size_46) stored,
+  active boolean not null default true,
+  source text not null default 'admin',
+  notes text,
+  updated_by uuid references auth.users(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_stock_catalog_sku on public.stock_catalog(sku);
+create index if not exists idx_stock_catalog_article_code on public.stock_catalog(article_code);
+create index if not exists idx_stock_catalog_active on public.stock_catalog(active);
+
+create or replace function public.set_stock_catalog_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_stock_catalog_updated_at on public.stock_catalog;
+create trigger trg_stock_catalog_updated_at
+before update on public.stock_catalog
+for each row
+execute function public.set_stock_catalog_updated_at();
+
+alter table public.stock_catalog enable row level security;
+
+drop policy if exists "authenticated_read_stock_catalog" on public.stock_catalog;
+create policy "authenticated_read_stock_catalog"
+on public.stock_catalog
+for select
+to authenticated
+using (true);
+
+drop policy if exists "authenticated_insert_stock_catalog" on public.stock_catalog;
+create policy "authenticated_insert_stock_catalog"
+on public.stock_catalog
+for insert
+to authenticated
+with check (true);
+
+drop policy if exists "authenticated_update_stock_catalog" on public.stock_catalog;
+create policy "authenticated_update_stock_catalog"
+on public.stock_catalog
+for update
+to authenticated
+using (true)
+with check (true);
+
+drop policy if exists "authenticated_delete_stock_catalog" on public.stock_catalog;
+create policy "authenticated_delete_stock_catalog"
+on public.stock_catalog
+for delete
+to authenticated
+using (true);
+
+-- Vista simple para frontend o paneles futuros.
+create or replace view public.stock_catalog_web as
+select
+  sku,
+  article_code,
+  tiro,
+  bota,
+  color,
+  size_36,
+  size_38,
+  size_40,
+  size_42,
+  size_44,
+  size_46,
+  total_units,
+  active,
+  updated_at
+from public.stock_catalog
+where active = true;

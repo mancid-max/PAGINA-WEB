@@ -21,7 +21,11 @@ let quotePanelReady = false;
 let stockBySku = {};
 let videoBySku = {};
 let videoActivoSrc = "";
+let catalogCoverBySku = {};
 const INVENTORY_ENABLED = true;
+const CATALOG_COVER_OVERRIDES = {
+  "4245-00": "Imagenes/4245/CRI_7845.jpg",
+};
 const LOCAL_CLIENT_OVERRIDES = [
   {
     rut: "77.886.495-9",
@@ -31,10 +35,90 @@ const LOCAL_CLIENT_OVERRIDES = [
 ];
 
 const ASSET_VERSION = Date.now();
+const OPTIMIZED_IMAGE_ROOT = "Imagenes-web";
+const OPTIMIZED_IMAGE_SOURCE_ROOTS = ["Imagenes", "Imagenes2", "Imagenes3", "42"];
 
 function withCacheBust(path) {
   if (!path) return path;
   return path.includes("?") ? `${path}&v=${ASSET_VERSION}` : `${path}?v=${ASSET_VERSION}`;
+}
+
+function normalizarRutaAsset(path) {
+  return String(path || "")
+    .trim()
+    .replace(/\\/g, "/")
+    .replace(/^\.?\//, "");
+}
+
+function obtenerRutaImagenOptimizada(path) {
+  const normalized = normalizarRutaAsset(path);
+  if (!normalized) return "";
+  const sourceRoot = OPTIMIZED_IMAGE_SOURCE_ROOTS.find((root) => normalized.startsWith(`${root}/`));
+  if (!sourceRoot) return normalized;
+  return `${OPTIMIZED_IMAGE_ROOT}/${normalized}`.replace(/\.[^./?]+$/, ".webp");
+}
+
+function restaurarImagenOriginal(img) {
+  if (!img || img.dataset.fallbackApplied === "1") return;
+  const originalSrc = img.dataset.originalSrc || "";
+  if (!originalSrc) return;
+  img.dataset.fallbackApplied = "1";
+  img.src = withCacheBust(originalSrc);
+}
+
+window.restaurarImagenOriginal = restaurarImagenOriginal;
+
+let imageLoadRequestId = 0;
+
+function asignarImagenCatalogo(img, path, options = {}) {
+  if (!img) return;
+
+  const normalized = normalizarRutaAsset(path);
+  if (!normalized) {
+    img.removeAttribute("src");
+    return;
+  }
+
+  const {
+    eager = false,
+    fetchPriority = eager ? "high" : "low",
+    preferOriginal = false,
+  } = options;
+
+  img.dataset.originalSrc = normalized;
+  img.dataset.optimizedSrc = obtenerRutaImagenOptimizada(normalized);
+  img.dataset.fallbackApplied = "0";
+  img.loading = eager ? "eager" : "lazy";
+  img.decoding = "async";
+  img.fetchPriority = fetchPriority;
+  img.onerror = null;
+
+  const requestId = String(++imageLoadRequestId);
+  img.dataset.requestId = requestId;
+
+  const optimizedSrc = withCacheBust(img.dataset.optimizedSrc || normalized);
+  const originalSrc = withCacheBust(normalized);
+
+  if (preferOriginal) {
+    img.dataset.fallbackApplied = "1";
+    img.src = originalSrc;
+    return;
+  }
+
+  const loader = new Image();
+
+  loader.onload = () => {
+    if (img.dataset.requestId !== requestId) return;
+    img.src = optimizedSrc;
+  };
+
+  loader.onerror = () => {
+    if (img.dataset.requestId !== requestId) return;
+    img.dataset.fallbackApplied = "1";
+    img.src = originalSrc;
+  };
+
+  loader.src = optimizedSrc;
 }
 
 const EMAIL_DESTINO = "man.cid@mohicanojeans.cl"; // <-- cambia si quieres
@@ -107,6 +191,45 @@ function crearCandidatosSku(value) {
   return [...candidates];
 }
 
+function obtenerBaseFamilia(value) {
+  const raw = normalizarSkuCatalogo(value);
+  const match = raw.match(/^(\d{4})/);
+  return match ? match[1] : "";
+}
+
+function obtenerImagenPortadaProducto(item) {
+  const family = normalizarSkuCatalogo(item?.family);
+  const coverCandidates = [
+    family,
+    ...crearCandidatosSku(family),
+  ].filter(Boolean);
+
+  for (const candidate of coverCandidates) {
+    if (CATALOG_COVER_OVERRIDES?.[candidate]) return normalizarRutaAsset(CATALOG_COVER_OVERRIDES[candidate]);
+    if (catalogCoverBySku?.[candidate]) return normalizarRutaAsset(catalogCoverBySku[candidate]);
+  }
+
+  const allImages = [
+    item?.main_image,
+    ...(Array.isArray(item?.gallery) ? item.gallery : []),
+  ]
+    .map((img) => normalizarRutaAsset(img))
+    .filter(Boolean);
+
+  const nonCatalogImage = allImages.find((img) => !img.toLowerCase().includes("catalogo"));
+  if (nonCatalogImage) return nonCatalogImage;
+
+  const variantImages = (item?.variants || [])
+    .flatMap((variant) => [variant?.main_image, ...((variant?.gallery || []))])
+    .map((img) => normalizarRutaAsset(img))
+    .filter(Boolean);
+  const variantNonCatalogImage = variantImages.find((img) => !img.toLowerCase().includes("catalogo"));
+  if (variantNonCatalogImage) return variantNonCatalogImage;
+
+  const catalogImage = allImages.find((img) => img.toLowerCase().includes("catalogo"));
+  return catalogImage || normalizarRutaAsset(item?.main_image) || allImages[0] || "";
+}
+
 function mergeCatalogItems(...groups) {
   const items = groups.flat().filter(Boolean);
   const map = new Map();
@@ -168,6 +291,224 @@ function mergeCatalogItems(...groups) {
   });
 }
 
+function consolidarFamiliasDuplicadas(items = []) {
+  const sourceMap = new Map(
+    items
+      .filter((item) => normalizarSkuCatalogo(item?.family))
+      .map((item) => [normalizarSkuCatalogo(item.family), item])
+  );
+
+  const absorbed = new Set();
+
+  items.forEach((item) => {
+    const family = normalizarSkuCatalogo(item?.family);
+    const match = family.match(/^(\d{4})-(\d{2})$/);
+    if (!match || match[2] === "00") return;
+
+    const baseCandidates = [`${match[1]}-00`, match[1]];
+    const baseKey = baseCandidates.find((candidate) => sourceMap.has(candidate));
+    if (!baseKey || baseKey === family) return;
+
+    const baseItem = sourceMap.get(baseKey);
+    if (!baseItem) return;
+
+    const variants = Array.isArray(baseItem.variants) ? [...baseItem.variants] : [];
+    const alreadyExists = variants.some((variant) => normalizarSkuCatalogo(variant?.sku) === family);
+
+    if (!alreadyExists) {
+      variants.push({
+        sku: family,
+        main_image: item?.main_image || "",
+        gallery: Array.isArray(item?.gallery) ? [...item.gallery] : [],
+      });
+      baseItem.variants = variants;
+    }
+
+    if ((!baseItem.main_image || !baseItem.gallery?.length) && item?.main_image) {
+      baseItem.main_image = baseItem.main_image || item.main_image;
+      const mergedGallery = new Set([...(baseItem.gallery || []), ...(item.gallery || [])].filter(Boolean));
+      baseItem.gallery = [...mergedGallery];
+    }
+
+    absorbed.add(family);
+  });
+
+  return items.filter((item) => !absorbed.has(normalizarSkuCatalogo(item?.family)));
+}
+
+function agruparVariantesPorFamilia(items = []) {
+  const grouped = new Map();
+
+  items.forEach((item) => {
+    const family = normalizarSkuCatalogo(item?.family);
+    const match = family.match(/^(\d{4})-(\d{2})$/);
+    const groupKey = match ? `${match[1]}-00` : family;
+
+    if (!grouped.has(groupKey)) {
+      grouped.set(groupKey, {
+        ...item,
+        family: groupKey,
+        gallery: Array.isArray(item?.gallery) ? [...item.gallery] : [],
+        characteristics: Array.isArray(item?.characteristics) ? [...item.characteristics] : [],
+        variants: Array.isArray(item?.variants) ? item.variants.map((variant) => ({ ...variant })) : [],
+      });
+    }
+
+    const target = grouped.get(groupKey);
+    if (!target) return;
+
+    if (family !== groupKey) {
+      const alreadyExists = (target.variants || []).some((variant) => normalizarSkuCatalogo(variant?.sku) === family);
+      if (!alreadyExists) {
+        target.variants = [
+          ...(target.variants || []),
+          {
+            sku: family,
+            main_image: item?.main_image || "",
+            gallery: Array.isArray(item?.gallery) ? [...item.gallery] : [],
+          },
+        ];
+      }
+
+      if (!target.main_image && item?.main_image) target.main_image = item.main_image;
+      if ((!target.gallery || !target.gallery.length) && Array.isArray(item?.gallery)) {
+        target.gallery = [...item.gallery];
+      }
+      if ((!target.description || /^Modelo\s/i.test(target.description)) && item?.description) {
+        target.description = item.description;
+      }
+      if ((!target.characteristics || !target.characteristics.length) && Array.isArray(item?.characteristics)) {
+        target.characteristics = [...item.characteristics];
+      }
+    }
+  });
+
+  return [...grouped.values()].sort((a, b) => {
+    const aKey = normalizarSkuCatalogo(a?.family);
+    const bKey = normalizarSkuCatalogo(b?.family);
+    return aKey.localeCompare(bKey, undefined, { numeric: true });
+  });
+}
+
+function obtenerImagenesVisibles(obj, options = {}) {
+  const { includeCatalog = false } = options;
+  let imgs = [];
+  if (obj?.main_image) imgs.push(obj.main_image);
+  if (Array.isArray(obj?.gallery)) imgs = imgs.concat(obj.gallery);
+  return [...new Set(imgs)]
+    .map((img) => normalizarRutaAsset(img))
+    .filter((img) => {
+      if (!img) return false;
+      if (includeCatalog) return true;
+      return !img.toLowerCase().includes("catalogo");
+    });
+}
+
+function tieneImagenesDeFuente(obj, prefix = "42/") {
+  return obtenerImagenesVisibles(obj, { includeCatalog: true }).some((img) => img.startsWith(prefix));
+}
+
+function priorizarImagenesDeFuenteEnObjeto(obj, prefix = "42/") {
+  if (!obj) return obj;
+  const images = obtenerImagenesVisibles(obj, { includeCatalog: true });
+  const preferred = images.filter((img) => img.startsWith(prefix));
+  if (!preferred.length) return obj;
+  const rest = images.filter((img) => !img.startsWith(prefix));
+  return {
+    ...obj,
+    main_image: preferred[0],
+    gallery: [...preferred, ...rest],
+  };
+}
+
+function priorizarImagenesNuevas(items = [], prefix = "42/") {
+  return items.map((item) => ({
+    ...priorizarImagenesDeFuenteEnObjeto(item, prefix),
+    variants: (item?.variants || []).map((variant) => priorizarImagenesDeFuenteEnObjeto(variant, prefix)),
+  }));
+}
+
+function filtrarFamiliasConDatosNuevos(items = [], presenceFamilies = [], prefix = "42/") {
+  const familySet = new Set((presenceFamilies || []).map((value) => String(value || "").trim()));
+  if (!familySet.size) return items;
+
+  return items.filter((item) => {
+    const baseFamily = obtenerBaseFamilia(item?.family);
+    if (!familySet.has(baseFamily)) return true;
+    if (tieneImagenesDeFuente(item, prefix)) return true;
+    return (item?.variants || []).some((variant) => tieneImagenesDeFuente(variant, prefix));
+  });
+}
+
+function tieneImagenesRenderizables(item) {
+  if (obtenerImagenesVisibles(item, { includeCatalog: true }).length) return true;
+  return (item?.variants || []).some((variant) => obtenerImagenesVisibles(variant, { includeCatalog: true }).length);
+}
+
+function crearFirmaImagenes(obj) {
+  const images = obtenerImagenesVisibles(obj);
+  if (!images.length) return "";
+  const names = [];
+  const seen = new Set();
+  images.forEach((img) => {
+    const key = img.split("/").pop()?.toLowerCase() || img.toLowerCase();
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    names.push(key);
+  });
+  return names.join("|");
+}
+
+function crearSetFirmaImagenes(obj) {
+  const signature = crearFirmaImagenes(obj);
+  return new Set(signature ? signature.split("|") : []);
+}
+
+function firmaEsSubconjunto(aObj, bObj) {
+  const aSet = crearSetFirmaImagenes(aObj);
+  const bSet = crearSetFirmaImagenes(bObj);
+  if (!aSet.size || !bSet.size) return false;
+  for (const key of aSet) {
+    if (!bSet.has(key)) return false;
+  }
+  return true;
+}
+
+function filtrarProductosConImagenes(items = []) {
+  return items.filter((item) => tieneImagenesRenderizables(item));
+}
+
+function deduplicarTarjetasPorModelo(items = []) {
+  const byCardKey = new Map();
+
+  items.forEach((item) => {
+    const cardModel = formatearModeloTarjeta(item?.family);
+    const imageSignature = crearFirmaImagenes(item) || crearFirmaImagenes(item?.variants?.[0] || {});
+    if (!cardModel || !imageSignature) return;
+
+    const dedupeKey = `${cardModel}::${imageSignature}`;
+    const current = byCardKey.get(dedupeKey);
+    if (!current) {
+      byCardKey.set(dedupeKey, item);
+      return;
+    }
+
+    const currentVariants = Array.isArray(current?.variants) ? current.variants.length : 0;
+    const nextVariants = Array.isArray(item?.variants) ? item.variants.length : 0;
+    const preferCurrent =
+      currentVariants > nextVariants ||
+      (currentVariants === nextVariants && /-00$/i.test(normalizarSkuCatalogo(current?.family)));
+
+    if (!preferCurrent) byCardKey.set(dedupeKey, item);
+  });
+
+  return [...byCardKey.values()].sort((a, b) => {
+    const aKey = normalizarSkuCatalogo(a?.family);
+    const bKey = normalizarSkuCatalogo(b?.family);
+    return aKey.localeCompare(bKey, undefined, { numeric: true });
+  });
+}
+
 function filtrarProductosPorStock(items = [], stockItems = {}) {
   const availableKeys = new Set();
 
@@ -190,6 +531,37 @@ function filtrarProductosPorStock(items = [], stockItems = {}) {
       if (availableKeys.has(key)) return true;
     }
     return false;
+  });
+}
+
+function filtrarVariantesPorStock(items = [], stockItems = {}) {
+  const availableKeys = new Set();
+
+  Object.entries(stockItems || {}).forEach(([sku, payload]) => {
+    const total = Number(payload?.total) || 0;
+    if (total <= 0) return;
+    crearCandidatosSku(sku).forEach((key) => {
+      if (key) availableKeys.add(key);
+    });
+  });
+
+  if (!availableKeys.size) return items;
+
+  return items.map((item) => ({
+    ...item,
+    variants: (Array.isArray(item?.variants) ? item.variants : []).filter((variant) => {
+      for (const key of crearCandidatosSku(variant?.sku)) {
+        if (availableKeys.has(key)) return true;
+      }
+      return false;
+    }),
+  }));
+}
+
+function stockTieneModelosCatalogo(stockItems = {}) {
+  return Object.entries(stockItems || {}).some(([sku, payload]) => {
+    const total = Number(payload?.total) || 0;
+    return total > 0 && /^42\d{2}(-\d{2})?$/i.test(normalizarSkuCatalogo(sku));
   });
 }
 
@@ -243,6 +615,16 @@ async function cargarProductosCatalogo() {
     const extraCatalogPromise = CATALOG_SOURCE === "catalogo-1"
       ? fetch(withCacheBust("data-catalogo-3.json")).then((res) => res.json())
       : Promise.resolve([]);
+    const catalog42Promise = CATALOG_SOURCE === "catalogo-1"
+      ? fetch(withCacheBust("data-catalogo-42.json")).then((res) => res.json())
+      : Promise.resolve([]);
+    const catalog42PresencePromise = CATALOG_SOURCE === "catalogo-1"
+      ? fetch(withCacheBust("data-catalogo-42-presence.json")).then((res) => res.json())
+      : Promise.resolve([]);
+    const catalogCoverMapPromise = fetch(withCacheBust("catalog-cover-map.json")).then((res) => {
+      if (!res.ok) throw new Error(`status ${res.status}`);
+      return res.json();
+    }).catch(() => ({}));
     const stockOverridesPromise = CATALOG_SOURCE === "catalogo-1"
       ? fetch(withCacheBust("data-stock-overrides.json")).then((res) => res.json())
       : Promise.resolve([]);
@@ -253,10 +635,13 @@ async function cargarProductosCatalogo() {
       })
       : Promise.resolve(null);
 
-    const [data, stockData, extraCatalogData, stockOverridesData, trazabilidadData] = await Promise.all([
+    const [data, stockData, extraCatalogData, catalog42Data, catalog42PresenceData, catalogCoverMapData, stockOverridesData, trazabilidadData] = await Promise.all([
       catalogPromise,
       stockPromise,
       extraCatalogPromise,
+      catalog42Promise,
+      catalog42PresencePromise,
+      catalogCoverMapPromise,
       stockOverridesPromise,
       trazabilidadPromise,
     ]);
@@ -264,12 +649,28 @@ async function cargarProductosCatalogo() {
     if (INVENTORY_ENABLED) {
       stockBySku = stockData?.items || {};
     }
+    catalogCoverBySku = catalogCoverMapData || {};
 
     let items = Array.isArray(data) ? data : [];
     if (CATALOG_SOURCE === "catalogo-1") {
-      items = mergeCatalogItems(items, Array.isArray(extraCatalogData) ? extraCatalogData : [], Array.isArray(stockOverridesData) ? stockOverridesData : []);
+      items = mergeCatalogItems(
+        items,
+        Array.isArray(extraCatalogData) ? extraCatalogData : [],
+        Array.isArray(catalog42Data) ? catalog42Data : [],
+        Array.isArray(stockOverridesData) ? stockOverridesData : []
+      );
+      items = consolidarFamiliasDuplicadas(items);
+      items = agruparVariantesPorFamilia(items);
+      items = priorizarImagenesNuevas(items);
+      items = filtrarFamiliasConDatosNuevos(items, Array.isArray(catalog42PresenceData) ? catalog42PresenceData : []);
     }
-    items = INVENTORY_ENABLED ? filtrarProductosPorStock(items, stockBySku) : filtrarProductosDisponiblesCole42(items, trazabilidadData);
+    const stockCatalogoValido = stockTieneModelosCatalogo(stockBySku);
+    items = (INVENTORY_ENABLED && stockCatalogoValido)
+      ? filtrarProductosPorStock(items, stockBySku)
+      : filtrarProductosDisponiblesCole42(items, trazabilidadData);
+    if (INVENTORY_ENABLED && stockCatalogoValido) items = filtrarVariantesPorStock(items, stockBySku);
+    items = filtrarProductosConImagenes(items);
+    items = deduplicarTarjetasPorModelo(items);
 
     productos = items;
     renderGrid(productos);
@@ -301,11 +702,7 @@ fetch(withCacheBust("video-data.json"))
  * UTILIDADES IMÁGENES
  ***********************/
 function buildImageList(obj) {
-  let imgs = [];
-  if (obj?.main_image) imgs.push(obj.main_image);
-  if (Array.isArray(obj?.gallery)) imgs = imgs.concat(obj.gallery);
-  // quitar duplicados y filtrar imágenes de catálogo
-  return [...new Set(imgs)].filter(img => !img.toLowerCase().includes("catalogo"));
+  return obtenerImagenesVisibles(obj);
 }
 
 function renderImages(imageList) {
@@ -319,19 +716,19 @@ function renderImages(imageList) {
   if (galleryBtn) galleryBtn.hidden = !imagenesModalActual.length;
 
   if (!imageList || !imageList.length) {
-    viewer.src = "";
+    viewer.removeAttribute("src");
     return;
   }
 
-  viewer.src = withCacheBust(imageList[0]);
+  asignarImagenCatalogo(viewer, imageList[0], { eager: true, fetchPriority: "high", preferOriginal: true });
 
   imageList.forEach((imgSrc, index) => {
     const thumb = document.createElement("img");
-    thumb.src = withCacheBust(imgSrc);
+    asignarImagenCatalogo(thumb, imgSrc, { eager: index < 6, fetchPriority: index < 4 ? "high" : "low" });
     if (index === 0) thumb.classList.add("active-thumb");
 
     thumb.onclick = () => {
-      viewer.src = withCacheBust(imgSrc);
+      asignarImagenCatalogo(viewer, imgSrc, { eager: true, fetchPriority: "high", preferOriginal: true });
       imagenModalIndex = index;
       // limpia active
       thumbContainer.querySelectorAll("img").forEach((t) => t.classList.remove("active-thumb"));
@@ -544,9 +941,11 @@ function aplicarStockATallas(sku) {
       const textEl = asegurarTextoTalla(label, talla);
       const badgeEl = asegurarBadgeStock(label);
       textEl.innerText = talla;
-      label.classList.remove("size-out-of-stock", "size-low-stock");
+      label.classList.remove("size-out-of-stock", "size-low-stock", "size-in-stock");
+      label.removeAttribute("aria-disabled");
       input.disabled = false;
       input.removeAttribute("max");
+      input.removeAttribute("aria-disabled");
       badgeEl.hidden = true;
       badgeEl.innerText = "";
     });
@@ -566,8 +965,11 @@ function aplicarStockATallas(sku) {
     if (qty === null) {
       label.classList.remove("size-out-of-stock");
       label.classList.remove("size-low-stock");
+      label.classList.remove("size-in-stock");
+      label.removeAttribute("aria-disabled");
       input.disabled = false;
       input.removeAttribute("max");
+      input.removeAttribute("aria-disabled");
       textEl.innerText = talla;
       badgeEl.hidden = true;
       badgeEl.innerText = "";
@@ -577,10 +979,17 @@ function aplicarStockATallas(sku) {
     textEl.innerText = talla;
     label.classList.toggle("size-out-of-stock", qty <= 0);
     label.classList.toggle("size-low-stock", qty > 0 && qty <= 5);
+    label.classList.toggle("size-in-stock", qty > 5);
+    label.setAttribute("aria-disabled", qty <= 0 ? "true" : "false");
     input.disabled = qty <= 0;
+    input.setAttribute("aria-disabled", qty <= 0 ? "true" : "false");
     input.max = String(qty);
     if (qty <= 0) input.value = "";
-    if (qty > 0 && qty <= 5) {
+
+    if (qty <= 0) {
+      badgeEl.hidden = false;
+      badgeEl.innerText = "Sin stock";
+    } else if (qty > 0 && qty <= 5) {
       badgeEl.hidden = false;
       badgeEl.innerText = qty === 1 ? "Ultima unidad" : `Ultimas ${qty} unidades`;
     } else {
@@ -598,7 +1007,7 @@ function renderZoomGallery() {
   zoomThumbs.innerHTML = "";
 
   if (!imagenesModalActual.length) {
-    zoomMain.src = "";
+    zoomMain.removeAttribute("src");
     return;
   }
 
@@ -606,11 +1015,11 @@ function renderZoomGallery() {
     imagenModalIndex = 0;
   }
 
-  zoomMain.src = withCacheBust(imagenesModalActual[imagenModalIndex]);
+  asignarImagenCatalogo(zoomMain, imagenesModalActual[imagenModalIndex], { eager: true, fetchPriority: "high", preferOriginal: true });
 
   imagenesModalActual.forEach((imgSrc, index) => {
     const thumb = document.createElement("img");
-    thumb.src = withCacheBust(imgSrc);
+    asignarImagenCatalogo(thumb, imgSrc, { eager: index < 6, fetchPriority: index < 4 ? "high" : "low" });
     thumb.alt = `Vista ${index + 1}`;
     if (index === imagenModalIndex) thumb.classList.add("active-thumb");
     thumb.onclick = () => {
@@ -878,13 +1287,27 @@ function renderGrid(lista) {
       (p, index) => `
       <div class="card" data-family="${p.family}" onclick="verProducto('${p.family}')">
         <div class="card-title-row">
-          <div class="card-title">Modelo ${p.family}</div>
+          <div class="card-title">Modelo ${formatearModeloTarjeta(p.family)}</div>
         </div>
-        <img src="${withCacheBust(p.main_image)}" alt="Modelo ${p.family}" loading="${index < 4 ? "eager" : "lazy"}" decoding="async">
+        <img data-image-src="${obtenerImagenPortadaProducto(p)}" alt="Modelo ${p.family}">
       </div>
     `
     )
     .join("");
+
+  container.querySelectorAll("img[data-image-src]").forEach((img, index) => {
+    asignarImagenCatalogo(img, img.dataset.imageSrc, {
+      eager: index < 4,
+      fetchPriority: index < 2 ? "high" : "low",
+      preferOriginal: true,
+    });
+  });
+}
+
+function formatearModeloTarjeta(value) {
+  const sku = normalizarSkuCatalogo(value);
+  const match = sku.match(/^(\d{4})-\d{2}$/);
+  return match ? match[1] : sku;
 }
 
 /***********************
@@ -931,8 +1354,25 @@ function verProducto(familyId) {
     btn.classList.add("active");
   }
 
-
   const familyImages = buildImageList(p);
+  const familySignature = crearFirmaImagenes(p);
+  const variantsToShow = [];
+  const seenVariantSignatures = new Set();
+
+  if (Array.isArray(p.variants) && p.variants.length) {
+    p.variants.forEach((variant) => {
+      const variantImages = buildImageList(variant);
+      if (!variantImages.length) return;
+      const signature = crearFirmaImagenes(variant);
+      if (!signature) return;
+      if (familySignature && (signature === familySignature || firmaEsSubconjunto(variant, p))) return;
+      if (seenVariantSignatures.has(signature)) return;
+      seenVariantSignatures.add(signature);
+      variantsToShow.push({ ...variant, __images: variantImages, __signature: signature });
+    });
+  }
+
+  const shouldShowFamilyButton = familyImages.length && (!familySignature || !seenVariantSignatures.has(familySignature));
 
   // 1) Botón Familia
   const btnFamily = document.createElement("button");
@@ -950,13 +1390,13 @@ function verProducto(familyId) {
     setActive(btnFamily);
   };
 
-  if (familyImages.length) {
+  if (shouldShowFamilyButton) {
     variantContainer.appendChild(btnFamily);
   }
 
   // 2) Botones variantes
-  if (Array.isArray(p.variants) && p.variants.length) {
-    p.variants.forEach((v) => {
+  if (variantsToShow.length) {
+    variantsToShow.forEach((v) => {
       const btn = document.createElement("button");
       btn.className = "variant-btn";
       btn.innerText = v.sku;
@@ -964,7 +1404,7 @@ function verProducto(familyId) {
       btn.onclick = () => {
         guardarDraftDelSkuActual();
         skuActivo = v.sku;
-        renderImages(buildImageList(v));
+        renderImages(v.__images || buildImageList(v));
         actualizarVideoModal(skuActivo);
         cargarDraftDelSku(skuActivo);
         aplicarStockATallas(skuActivo);
@@ -977,14 +1417,12 @@ function verProducto(familyId) {
   }
 
   // Estado inicial: si la familia no tiene imágenes visibles, abrir primera variante con imágenes
-  const firstVariantWithImages = Array.isArray(p.variants)
-    ? p.variants.find((v) => buildImageList(v).length)
-    : null;
+  const firstVariantWithImages = variantsToShow[0] || null;
 
-  const initialSku = familyImages.length ? p.family : (firstVariantWithImages?.sku || p.family);
-  const initialImages = familyImages.length
+  const initialSku = shouldShowFamilyButton ? p.family : (firstVariantWithImages?.sku || p.family);
+  const initialImages = shouldShowFamilyButton
     ? familyImages
-    : (firstVariantWithImages ? buildImageList(firstVariantWithImages) : []);
+    : (firstVariantWithImages ? (firstVariantWithImages.__images || buildImageList(firstVariantWithImages)) : []);
   const initialBtn = initialSku === p.family ? btnFamily : botonesPorSku[initialSku];
 
   skuActivo = initialSku;
