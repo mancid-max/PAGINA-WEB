@@ -19,8 +19,8 @@
     </div>
     <div class="header-actions">
         <button id="quotesAdminBtn" class="ghost-btn admin-btn" type="button">ADMIN</button>
-        <div id="cartToggle" class="cart-btn" aria-label="Abrir tu cotizacin">
-            <span class="cart-btn-caption">Tu cotizaci&oacute;n</span>
+        <div id="cartToggle" class="cart-btn" aria-label="Abrir tu cotización">
+            <span class="cart-btn-caption">Tu cotización</span>
             <span class="cart-btn-main">
               <span class="cart-btn-icon" aria-hidden="true">&#128722;</span>
               <span id="cartCount">0</span>
@@ -40,27 +40,38 @@
     <button id="modelSearchBtn" type="button">Buscar</button>
     <button id="modelSearchClear" type="button" class="ghost-btn">Limpiar</button>
   </div>
+  <div id="modelSearchStatus" class="model-search-status" aria-live="polite">Mostrando todos los modelos</div>
 </section>
 
 <section id="grid" class="product-grid"></section>
 
-<!-- SIDEBAR CARRITO -->
 <div id="cartSidebar" class="cart-sidebar">
     <button id="closeCart" class="cart-close">✕</button>
     <h2>Tu Cotización</h2>
     <div id="cartItems"></div>
 
     <label for="clientRut" class="cart-field-label">RUT cliente</label>
-    <input type="text" id="clientRut" placeholder="Ej: 76.454.354-8" autocomplete="off">
+    <input
+      type="text"
+      id="clientRut"
+      name="client_rut"
+      placeholder="Ej: 76.454.354-8"
+      inputmode="numeric"
+      enterkeyhint="done"
+      autocomplete="new-password"
+      autocorrect="off"
+      autocapitalize="off"
+      spellcheck="false"
+      data-lpignore="true"
+      data-form-type="other"
+    >
     <div id="clientLookupBadge" class="client-lookup-badge" hidden></div>
     <div id="clientLookupMsg" class="client-lookup-msg" aria-live="polite"></div>
     <button id="sendRequest">Enviar Cotización</button>
 </div>
 
-<!-- MODAL PRODUCTO -->
 <div id="modal" class="modal">
   <div class="modal-content">
-
     <span id="closeModal" class="close-modal">×</span>
 
     <div class="modal-left">
@@ -91,11 +102,9 @@
 
         <button id="addBtn">Agregar cotización</button>
     </div>
-
   </div>
 </div>
 
-<!-- VISOR AMPLIADO DE IMAGENES -->
 <div id="imageZoomModal" class="image-zoom-modal" hidden>
   <div class="image-zoom-backdrop" data-close-image-zoom></div>
   <div class="image-zoom-content" role="dialog" aria-modal="true" aria-label="Visor de imágenes">
@@ -117,7 +126,6 @@
   </div>
 </div>
 
-<!-- MODAL COTIZACIONES (ADMIN) -->
 <div id="quotesModal" class="modal">
   <div class="modal-content quotes-modal-content">
     <span id="closeQuotesModal" class="close-modal">×</span>
@@ -175,15 +183,10 @@
   <div class="success-toast-icon">!</div>
   <div class="success-toast-text">
     <strong id="errorToastTitle">Revisa los datos</strong>
-    <span id="errorToastMsg">Hay un problema con la informacion ingresada.</span>
+    <span id="errorToastMsg">Hay un problema con la información ingresada.</span>
   </div>
 </div>
 
 <script src="script.js?v=20260224z"></script>
 </body>
 </html>
-
-
-
-
-

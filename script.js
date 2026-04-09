@@ -23,6 +23,113 @@ let videoBySku = {};
 let videoActivoSrc = "";
 let catalogCoverBySku = {};
 const INVENTORY_ENABLED = true;
+const SOLD_OUT_CATALOG_ITEMS = [
+  {
+    family: "4208-00",
+    description: "BIO OSCURO FOCALIZADO TENUE 2 RELOJERO TIPO OJAL 3 PINZA ALTURA",
+    characteristics: ["Tiro: Cintura", "Bota: Flare", "Estado: Agotado"],
+    main_image: "42/4208/Mohicano0100.jpg",
+    gallery: [
+      "42/4208/Mohicano0100.jpg",
+      "42/4208/Mohicano0096 copie.jpg",
+      "42/4208/Mohicano0090.jpg",
+      "42/4208/Mohicano0088.jpg",
+      "42/4208/Mohicano0060.jpg",
+    ],
+    variants: [
+      {
+        sku: "4208-01",
+        main_image: "42/4208/Mohicano0096 copie.jpg",
+        gallery: [
+          "42/4208/Mohicano0096 copie.jpg",
+          "42/4208/Mohicano0090.jpg",
+          "42/4208/Mohicano0088.jpg",
+          "42/4208/Mohicano0060.jpg",
+        ],
+      },
+      {
+        sku: "4208-02",
+        main_image: "42/4208/Mohicano0090.jpg",
+        gallery: [
+          "42/4208/Mohicano0090.jpg",
+          "42/4208/Mohicano0088.jpg",
+          "42/4208/Mohicano0060.jpg",
+        ],
+      },
+    ],
+  },
+  {
+    family: "4217-00",
+    description: "NEGRO PARCHE DELANTERO",
+    characteristics: ["Tiro: Cintura", "Bota: Flare", "Estado: Agotado"],
+    main_image: "42/4217/Mohicano0725.jpg",
+    gallery: [
+      "42/4217/Mohicano0725.jpg",
+      "42/4217/Mohicano0737 copie.jpg",
+      "42/4217/Mohicano0734.jpg",
+      "42/4217/Mohicano0730.jpg",
+      "42/4217/Mohicano0754.jpg",
+    ],
+    variants: [],
+  },
+  {
+    family: "4224-00",
+    description: "BIOMEDIO BOTON DELANTERO 4",
+    characteristics: ["Tiro: Medio", "Bota: Oxford", "Estado: Agotado"],
+    main_image: "42/4224/Mohicano0500 copie.jpg",
+    gallery: [
+      "42/4224/Mohicano0500 copie.jpg",
+      "42/4224/Mohicano0495 copie.jpg",
+      "42/4224/Mohicano0489.jpg",
+      "42/4224/Mohicano0485.jpg",
+      "42/4224/Mohicano0479 copie.jpg",
+    ],
+    variants: [
+      {
+        sku: "4224-01",
+        main_image: "42/4224-01 gravillado/Mohicano0549.jpg",
+        gallery: [
+          "42/4224-01 gravillado/Mohicano0549.jpg",
+          "42/4224-01 gravillado/Mohicano0548.jpg",
+          "42/4224-01 gravillado/Mohicano0545 copie.jpg",
+          "42/4224-01 gravillado/Mohicano0542.jpg",
+          "42/4224-01 gravillado/Mohicano0540.jpg",
+          "42/4224-01 gravillado/Mohicano0537.jpg",
+          "42/4224-01 gravillado/Mohicano0530.jpg",
+        ],
+      },
+    ],
+  },
+  {
+    family: "4238-00",
+    description: "MARENGO FOCALIZADO ESTRELLAS BOLSILLO SIN BOLSILLOS TRASEROS",
+    characteristics: ["Tiro: Cintura", "Bota: Palazzo", "Estado: Agotado"],
+    main_image: "42/4238/CRI_7203.jpg",
+    gallery: [
+      "42/4238/CRI_7203.jpg",
+      "42/4238/Copia de CRI_7215.jpg",
+      "42/4238/Copia de CRI_7214.jpg",
+      "42/4238/Copia de CRI_7210.jpg",
+      "42/4238/Copia de CRI_7209.jpg",
+    ],
+    variants: [],
+  },
+  {
+    family: "4242-00",
+    description: "MARENGO FOCALIZADO ESTRELLAS COSTADO",
+    characteristics: ["Tiro: Cintura", "Bota: Palazzo", "Estado: Agotado"],
+    main_image: "42/4242/Mohicano0338.jpg",
+    gallery: [
+      "42/4242/Mohicano0338.jpg",
+      "42/4242/Mohicano0329.jpg",
+      "42/4242/Mohicano0321.jpg",
+      "42/4242/Mohicano0317.jpg",
+      "42/4242/Mohicano0310 copie.jpg",
+      "42/4242/Mohicano0308.jpg",
+    ],
+    variants: [],
+  },
+];
 const CATALOG_COVER_OVERRIDES = {
   "4245-00": "Imagenes/4245/CRI_7845.jpg",
 };
@@ -162,6 +269,44 @@ function buscarClienteLocalPorRut(rutInput) {
   if (!rutNormalizado) return null;
   const found = LOCAL_CLIENT_OVERRIDES.find((item) => item.rut_normalized === rutNormalizado);
   return found ? { ...found } : null;
+}
+
+function esProductoAgotado(item) {
+  return item?.isSoldOut === true;
+}
+
+function crearStockSinteticoAgotados() {
+  const zeroSizes = Object.fromEntries(TALLAS_DISPONIBLES.map((size) => [size, 0]));
+  const synthetic = {};
+
+  SOLD_OUT_CATALOG_ITEMS.forEach((item) => {
+    [item?.family, ...(Array.isArray(item?.variants) ? item.variants.map((variant) => variant?.sku) : [])]
+      .filter(Boolean)
+      .forEach((sku) => {
+        synthetic[sku] = {
+          total: 0,
+          sizes: { ...zeroSizes },
+          description: item?.description || "",
+        };
+      });
+  });
+
+  return synthetic;
+}
+
+function construirProductosAgotados() {
+  return SOLD_OUT_CATALOG_ITEMS.map((item) => ({
+    ...item,
+    isSoldOut: true,
+    gallery: Array.isArray(item?.gallery) ? [...item.gallery] : [],
+    characteristics: Array.isArray(item?.characteristics) ? [...item.characteristics] : [],
+    variants: Array.isArray(item?.variants)
+      ? item.variants.map((variant) => ({
+        ...variant,
+        gallery: Array.isArray(variant?.gallery) ? [...variant.gallery] : [],
+      }))
+      : [],
+  }));
 }
 
 /***********************
@@ -647,7 +792,10 @@ async function cargarProductosCatalogo() {
     ]);
 
     if (INVENTORY_ENABLED) {
-      stockBySku = stockData?.items || {};
+      stockBySku = {
+        ...(stockData?.items || {}),
+        ...crearStockSinteticoAgotados(),
+      };
     }
     catalogCoverBySku = catalogCoverMapData || {};
 
@@ -671,6 +819,18 @@ async function cargarProductosCatalogo() {
     if (INVENTORY_ENABLED && stockCatalogoValido) items = filtrarVariantesPorStock(items, stockBySku);
     items = filtrarProductosConImagenes(items);
     items = deduplicarTarjetasPorModelo(items);
+
+    if (CATALOG_SOURCE === "catalogo-1") {
+      const agotados = construirProductosAgotados().filter((agotado) => {
+        const key = normalizarSkuCatalogo(agotado?.family);
+        return key && !items.some((item) => normalizarSkuCatalogo(item?.family) === key);
+      });
+      items = [...items, ...agotados].sort((a, b) => {
+        const aKey = normalizarSkuCatalogo(a?.family);
+        const bKey = normalizarSkuCatalogo(b?.family);
+        return aKey.localeCompare(bKey, undefined, { numeric: true });
+      });
+    }
 
     productos = items;
     renderGrid(productos);
@@ -1153,11 +1313,34 @@ function inicializarBuscadorModelos() {
   const panel = document.getElementById("modelSuggestionsPanel");
   const btnBuscar = document.getElementById("modelSearchBtn");
   const btnLimpiar = document.getElementById("modelSearchClear");
+  const status = document.getElementById("modelSearchStatus");
   if (!input || !panel || !btnBuscar || !btnLimpiar) return;
 
   const modelos = [...new Set(productos.map((p) => String(p.family)).filter(Boolean))].sort();
   let sugerenciasActuales = [];
   let activeIndex = -1;
+
+  const actualizarEstadoBusqueda = (term, resultados) => {
+    if (!status) return;
+
+    const total = Array.isArray(productos) ? productos.length : 0;
+    const cantidad = Array.isArray(resultados) ? resultados.length : 0;
+    const termino = String(term || "").trim();
+
+    status.classList.toggle("is-empty", Boolean(termino) && cantidad === 0);
+
+    if (!termino) {
+      status.textContent = total ? `Mostrando todos los modelos (${total})` : "No hay modelos cargados";
+      return;
+    }
+
+    if (!cantidad) {
+      status.textContent = `No encontramos modelos para "${termino}"`;
+      return;
+    }
+
+    status.textContent = `Mostrando ${cantidad} ${cantidad === 1 ? "modelo" : "modelos"} para "${termino}"`;
+  };
 
   const hideSuggestions = () => {
     panel.hidden = true;
@@ -1197,15 +1380,19 @@ function inicializarBuscadorModelos() {
   const filtrarGrid = (term) => {
     if (!term) {
       renderGrid(productos);
+      actualizarEstadoBusqueda("", productos);
       return;
     }
-    renderGrid(productos.filter((p) => String(p.family).includes(term)));
+    const filtrados = productos.filter((p) => String(p.family).includes(term));
+    renderGrid(filtrados);
+    actualizarEstadoBusqueda(term, filtrados);
   };
 
   const buscarModelo = () => {
     const term = input.value.trim();
     if (!term) {
       renderGrid(productos);
+      actualizarEstadoBusqueda("", productos);
       hideSuggestions();
       return;
     }
@@ -1213,6 +1400,7 @@ function inicializarBuscadorModelos() {
     const exacto = productos.find((p) => String(p.family) === term);
     if (exacto) {
       renderGrid(productos);
+      actualizarEstadoBusqueda(term, [exacto]);
       hideSuggestions();
       setTimeout(() => verProducto(exacto.family), 0);
       return;
@@ -1260,6 +1448,7 @@ function inicializarBuscadorModelos() {
   btnLimpiar.addEventListener("click", () => {
     input.value = "";
     renderGrid(productos);
+    actualizarEstadoBusqueda("", productos);
     hideSuggestions();
     input.focus();
   });
@@ -1275,6 +1464,8 @@ function inicializarBuscadorModelos() {
     const box = document.querySelector(".model-search-box");
     if (!box?.contains(e.target)) hideSuggestions();
   });
+
+  actualizarEstadoBusqueda("", productos);
 }
 
 /***********************
@@ -1285,9 +1476,10 @@ function renderGrid(lista) {
   container.innerHTML = lista
     .map(
       (p, index) => `
-      <div class="card" data-family="${p.family}" onclick="verProducto('${p.family}')">
+      <div class="card ${esProductoAgotado(p) ? "card-sold-out" : ""}" data-family="${p.family}" onclick="verProducto('${p.family}')">
         <div class="card-title-row">
           <div class="card-title">Modelo ${formatearModeloTarjeta(p.family)}</div>
+          ${esProductoAgotado(p) ? '<span class="card-stock-badge sold-out">Agotado</span>' : ""}
         </div>
         <img data-image-src="${obtenerImagenPortadaProducto(p)}" alt="Modelo ${p.family}">
       </div>
@@ -1317,10 +1509,11 @@ function verProducto(familyId) {
   inicializarPanelCotizacionModal();
   const p = productos.find((item) => item.family === familyId);
   if (!p) return;
+  const soldOut = esProductoAgotado(p);
 
   // Reinicia drafts para evitar re-agregar items viejos al volver a abrir el modal
   resetDraftsModal();
-  document.getElementById("modalTitle").innerText = "Modelo " + p.family;
+  document.getElementById("modalTitle").innerText = soldOut ? `Modelo ${p.family} · Agotado` : "Modelo " + p.family;
   const quotePanelModelTitle = document.getElementById("quotePanelModelTitle");
   if (quotePanelModelTitle) quotePanelModelTitle.innerText = "Modelo " + p.family;
   cerrarPanelCotizacionModal();
@@ -1434,6 +1627,12 @@ function verProducto(familyId) {
 
   const modalRight = document.querySelector("#modal .modal-right");
   if (modalRight) modalRight.scrollTop = 0;
+
+  const addBtn = document.getElementById("addBtn");
+  if (addBtn) {
+    addBtn.disabled = soldOut;
+    addBtn.innerText = soldOut ? "Agotado" : "Agregar cotización";
+  }
 
   document.getElementById("modal").classList.add("active");
 }
