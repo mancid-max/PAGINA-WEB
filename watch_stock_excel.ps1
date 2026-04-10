@@ -2,7 +2,7 @@ $sourcePath = "C:\Users\manuh\OneDrive - Mohicano Jeans\INVENTARIO 01-04 COMPLET
 $projectPath = "C:\Users\manuh\Desktop\Backup\PAGINA WEB"
 $logPath = Join-Path $projectPath ".watch-stock.out.log"
 $errPath = Join-Path $projectPath ".watch-stock.err.log"
-$stockFile = "stock-data.json"
+$stockFiles = @("stock-data.json", "stock-data-catalogo-2.json")
 
 if (-not (Test-Path -LiteralPath $sourcePath)) {
   throw "No se encontro el archivo: $sourcePath"
@@ -23,16 +23,16 @@ try {
 
   function Publish-StockIfChanged() {
     try {
-      & git add -- $stockFile | Out-Null
-      & git diff --cached --quiet -- $stockFile
+      & git add -- $stockFiles | Out-Null
+      & git diff --cached --quiet -- $stockFiles
       if ($LASTEXITCODE -eq 0) {
-        Write-Log "Sin cambios en stock-data.json; no se publica."
+        Write-Log "Sin cambios en archivos de stock; no se publica."
         return
       }
 
       $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-      Write-Log "Cambios detectados en stock-data.json; publicando..."
-      & git commit -m "Auto-update stock data ($timestamp)" -- $stockFile | Tee-Object -FilePath $logPath -Append
+      Write-Log "Cambios detectados en archivos de stock; publicando..."
+      & git commit -m "Auto-update stock data ($timestamp)" -- $stockFiles | Tee-Object -FilePath $logPath -Append
       if ($LASTEXITCODE -ne 0) {
         Write-ErrLog "No se pudo crear el commit automatico."
         return

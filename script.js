@@ -314,6 +314,11 @@ function construirProductosAgotados() {
  ***********************/
 const CATALOG_DATA_FILE = (document.body?.dataset?.catalogFile || "data.json").trim() || "data.json";
 const CATALOG_SOURCE = (document.body?.dataset?.catalogSource || "catalogo-1").trim() || "catalogo-1";
+const STOCK_DATA_FILE_BY_SOURCE = {
+  "catalogo-1": "stock-data.json",
+  "catalogo-2": "stock-data-catalogo-2.json",
+};
+const STOCK_DATA_FILE = STOCK_DATA_FILE_BY_SOURCE[CATALOG_SOURCE] || "stock-data.json";
 
 function normalizarSkuCatalogo(value) {
   return String(value || "")
@@ -703,10 +708,65 @@ function filtrarVariantesPorStock(items = [], stockItems = {}) {
   }));
 }
 
+function obtenerStockParaSkuDesdeItems(sku, stockItems = {}) {
+  const key = String(sku || "").trim();
+  if (!key) return null;
+  if (stockItems[key]) return stockItems[key];
+  if (/^\d{4}$/.test(key) && stockItems[`${key}-00`]) return stockItems[`${key}-00`];
+  if (/-00$/i.test(key)) {
+    const familyKey = key.slice(0, 4);
+    if (stockItems[familyKey]) return stockItems[familyKey];
+  }
+  const familyMatch = key.match(/^(\d{4})-(\d{2})$/);
+  if (familyMatch) {
+    const familyKey = familyMatch[1];
+    if (stockItems[`${familyKey}-00`]) return stockItems[`${familyKey}-00`];
+  }
+  return null;
+}
+
+function skuTieneStockDisponible(sku, stockItems = {}) {
+  if (!Object.keys(stockItems || {}).length) return false;
+  const stock = obtenerStockParaSkuDesdeItems(sku, stockItems);
+  if (!stock) return false;
+  const total = Number(stock?.total) || 0;
+  if (total > 0) return true;
+  return TALLAS_DISPONIBLES.some((talla) => Math.max(0, Number(stock?.sizes?.[talla]) || 0) > 0);
+}
+
+function itemTieneStockDisponible(item, stockItems = {}) {
+  const skus = [item?.family, ...((Array.isArray(item?.variants) ? item.variants : []).map((variant) => variant?.sku))]
+    .filter(Boolean);
+  if (!skus.length || !Object.keys(stockItems || {}).length) return false;
+  return skus.some((sku) => skuTieneStockDisponible(sku, stockItems));
+}
+
+function marcarProductoAgotado(item) {
+  const characteristics = Array.isArray(item?.characteristics) ? [...item.characteristics] : [];
+  if (!characteristics.some((value) => String(value || "").toLowerCase().includes("agotado"))) {
+    characteristics.push("Estado: Agotado");
+  }
+  return {
+    ...item,
+    isSoldOut: true,
+    characteristics,
+  };
+}
+
+function construirProductosAgotadosSegunStock(items = [], stockItems = {}) {
+  if (!Object.keys(stockItems || {}).length) return [];
+  return items
+    .filter((item) => !itemTieneStockDisponible(item, stockItems))
+    .map((item) => marcarProductoAgotado(item));
+}
+
 function stockTieneModelosCatalogo(stockItems = {}) {
+  const pattern = CATALOG_SOURCE === "catalogo-2"
+    ? /^(40|41)\d{2}(-\d{2})?$/i
+    : /^42\d{2}(-\d{2})?$/i;
   return Object.entries(stockItems || {}).some(([sku, payload]) => {
     const total = Number(payload?.total) || 0;
-    return total > 0 && /^42\d{2}(-\d{2})?$/i.test(normalizarSkuCatalogo(sku));
+    return total > 0 && pattern.test(normalizarSkuCatalogo(sku));
   });
 }
 
@@ -752,7 +812,7 @@ async function cargarProductosCatalogo() {
   try {
     const catalogPromise = fetch(withCacheBust(CATALOG_DATA_FILE)).then((res) => res.json());
     const stockPromise = INVENTORY_ENABLED
-      ? fetch(withCacheBust("stock-data.json"), { cache: "no-store" }).then((res) => {
+      ? fetch(withCacheBust(STOCK_DATA_FILE), { cache: "no-store" }).then((res) => {
         if (!res.ok) throw new Error(`status ${res.status}`);
         return res.json();
       })
@@ -812,12 +872,14 @@ async function cargarProductosCatalogo() {
       items = priorizarImagenesNuevas(items);
       items = filtrarFamiliasConDatosNuevos(items, Array.isArray(catalog42PresenceData) ? catalog42PresenceData : []);
     }
+    const itemsCatalogoBase = filtrarProductosConImagenes(items);
     const stockCatalogoValido = stockTieneModelosCatalogo(stockBySku);
     items = (INVENTORY_ENABLED && stockCatalogoValido)
-      ? filtrarProductosPorStock(items, stockBySku)
-      : filtrarProductosDisponiblesCole42(items, trazabilidadData);
-    if (INVENTORY_ENABLED && stockCatalogoValido) items = filtrarVariantesPorStock(items, stockBySku);
-    items = filtrarProductosConImagenes(items);
+      ? [
+        ...filtrarProductosPorStock(itemsCatalogoBase, stockBySku),
+        ...construirProductosAgotadosSegunStock(itemsCatalogoBase, stockBySku),
+      ]
+      : filtrarProductosDisponiblesCole42(itemsCatalogoBase, trazabilidadData);
     items = deduplicarTarjetasPorModelo(items);
 
     if (CATALOG_SOURCE === "catalogo-1") {
@@ -830,6 +892,7 @@ async function cargarProductosCatalogo() {
         const bKey = normalizarSkuCatalogo(b?.family);
         return aKey.localeCompare(bKey, undefined, { numeric: true });
       });
+      items = deduplicarTarjetasPorModelo(items);
     }
 
     productos = items;
@@ -1034,24 +1097,18 @@ function escribirTallasUI(tallas = {}) {
 
 function obtenerStockParaSku(sku) {
   if (!INVENTORY_ENABLED) return null;
-  const key = String(sku || "").trim();
-  if (!key) return null;
-  if (stockBySku[key]) return stockBySku[key];
-  if (/^\d{4}$/.test(key) && stockBySku[`${key}-00`]) return stockBySku[`${key}-00`];
-  if (/-00$/i.test(key)) {
-    const familyKey = key.slice(0, 4);
-    if (stockBySku[familyKey]) return stockBySku[familyKey];
-  }
-  const familyMatch = key.match(/^(\d{4})-(\d{2})$/);
-  if (familyMatch) {
-    const familyKey = familyMatch[1];
-    if (stockBySku[`${familyKey}-00`]) return stockBySku[`${familyKey}-00`];
-  }
-  return null;
+  return obtenerStockParaSkuDesdeItems(sku, stockBySku);
+}
+
+function skuEstaAgotado(sku) {
+  if (!INVENTORY_ENABLED) return false;
+  const stock = obtenerStockParaSku(sku);
+  if (!stock || !stock.sizes || typeof stock.sizes !== "object") return true;
+  return TALLAS_DISPONIBLES.every((talla) => Math.max(0, Number(stock.sizes?.[talla]) || 0) <= 0);
 }
 
 function cargarStockData() {
-  return fetch(withCacheBust("stock-data.json"), { cache: "no-store" })
+  return fetch(withCacheBust(STOCK_DATA_FILE), { cache: "no-store" })
     .then((res) => {
       if (!res.ok) throw new Error(`status ${res.status}`);
       return res.json();
@@ -1060,7 +1117,7 @@ function cargarStockData() {
       stockBySku = data?.items || {};
       if (skuActivo) aplicarStockATallas(skuActivo);
     })
-    .catch((err) => console.warn("No se pudo cargar stock-data.json:", err));
+    .catch((err) => console.warn(`No se pudo cargar ${STOCK_DATA_FILE}:`, err));
 }
 
 function asegurarTextoTalla(label, talla) {
@@ -1157,6 +1214,51 @@ function aplicarStockATallas(sku) {
       badgeEl.innerText = "";
     }
   });
+}
+
+function bloquearInputsCotizacion(bloqueado) {
+  TALLAS_DISPONIBLES.forEach((talla) => {
+    const input = document.getElementById("t" + talla);
+    const label = input?.closest("label");
+    if (!input || !label) return;
+
+    if (bloqueado) {
+      input.value = "";
+      input.disabled = true;
+      input.readOnly = true;
+      input.setAttribute("aria-disabled", "true");
+      input.setAttribute("tabindex", "-1");
+      label.classList.add("size-out-of-stock");
+      label.classList.remove("size-low-stock", "size-in-stock");
+      label.setAttribute("aria-disabled", "true");
+      const badgeEl = asegurarBadgeStock(label);
+      badgeEl.hidden = false;
+      badgeEl.innerText = "Sin stock";
+      return;
+    }
+
+    input.readOnly = false;
+    input.removeAttribute("tabindex");
+  });
+}
+
+function actualizarEstadoCotizacionProducto(producto, sku) {
+  const addBtn = document.getElementById("addBtn");
+  const agotado = esProductoAgotado(producto) || skuEstaAgotado(sku);
+
+  bloquearInputsCotizacion(agotado);
+
+  if (addBtn) {
+    addBtn.disabled = agotado;
+    addBtn.innerText = agotado ? "Agotado" : "Agregar cotización";
+  }
+
+  const titleEl = document.getElementById("modalTitle");
+  if (titleEl) {
+    titleEl.innerText = agotado ? `Modelo ${producto.family} · Agotado` : "Modelo " + producto.family;
+  }
+
+  return agotado;
 }
 
 function renderZoomGallery() {
@@ -1509,11 +1611,10 @@ function verProducto(familyId) {
   inicializarPanelCotizacionModal();
   const p = productos.find((item) => item.family === familyId);
   if (!p) return;
-  const soldOut = esProductoAgotado(p);
 
   // Reinicia drafts para evitar re-agregar items viejos al volver a abrir el modal
   resetDraftsModal();
-  document.getElementById("modalTitle").innerText = soldOut ? `Modelo ${p.family} · Agotado` : "Modelo " + p.family;
+  document.getElementById("modalTitle").innerText = "Modelo " + p.family;
   const quotePanelModelTitle = document.getElementById("quotePanelModelTitle");
   if (quotePanelModelTitle) quotePanelModelTitle.innerText = "Modelo " + p.family;
   cerrarPanelCotizacionModal();
@@ -1580,6 +1681,7 @@ function verProducto(familyId) {
     actualizarVideoModal(skuActivo);
     cargarDraftDelSku(skuActivo);
     aplicarStockATallas(skuActivo);
+    actualizarEstadoCotizacionProducto(p, skuActivo);
     setActive(btnFamily);
   };
 
@@ -1601,6 +1703,7 @@ function verProducto(familyId) {
         actualizarVideoModal(skuActivo);
         cargarDraftDelSku(skuActivo);
         aplicarStockATallas(skuActivo);
+        actualizarEstadoCotizacionProducto(p, skuActivo);
         setActive(btn);
       };
 
@@ -1623,16 +1726,11 @@ function verProducto(familyId) {
   actualizarVideoModal(skuActivo);
   cargarDraftDelSku(skuActivo);
   aplicarStockATallas(skuActivo);
+  actualizarEstadoCotizacionProducto(p, skuActivo);
   setActive(initialBtn || btnFamily);
 
   const modalRight = document.querySelector("#modal .modal-right");
   if (modalRight) modalRight.scrollTop = 0;
-
-  const addBtn = document.getElementById("addBtn");
-  if (addBtn) {
-    addBtn.disabled = soldOut;
-    addBtn.innerText = soldOut ? "Agotado" : "Agregar cotización";
-  }
 
   document.getElementById("modal").classList.add("active");
 }
@@ -1678,6 +1776,10 @@ document.addEventListener("keydown", (e) => {
  * AGREGAR AL PEDIDO
  ***********************/
 document.getElementById("addBtn").onclick = () => {
+  if (skuEstaAgotado(skuActivo)) {
+    mostrarToastError("Modelo agotado", "Este modelo no tiene stock disponible y no se puede agregar a la cotizacion.");
+    return;
+  }
   // Tomar solo lo visible en pantalla para el SKU activo (sin borradores)
   const tallas = leerTallasUI();
   const total = Object.values(tallas).reduce((a, b) => a + b, 0);
