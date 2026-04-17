@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#131316">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=20260417m">
 </head>
 <body data-catalog-file="data.json" data-catalog-source="catalogo-1">
 
@@ -19,8 +19,8 @@
     </div>
     <div class="header-actions">
         <button id="quotesAdminBtn" class="ghost-btn admin-btn" type="button">ADMIN</button>
-        <div id="cartToggle" class="cart-btn" aria-label="Abrir tu cotización">
-            <span class="cart-btn-caption">Tu cotización</span>
+        <div id="cartToggle" class="cart-btn" aria-label="Abrir tu cotizaci&oacute;n">
+            <span class="cart-btn-caption">Tu cotizaci&oacute;n</span>
             <span class="cart-btn-main">
               <span class="cart-btn-icon" aria-hidden="true">&#128722;</span>
               <span id="cartCount">0</span>
@@ -30,8 +30,8 @@
 </header>
 
 <section class="hero">
-  <h1 class="hero-title">Nueva Colección</h1>
-  <p class="hero-sub">Diseño moderno. Calidad premium.</p>
+  <h1 class="hero-title">Nueva Colecci&oacute;n</h1>
+  <p class="hero-sub">Dise&ntilde;o moderno. Calidad premium.</p>
   <div class="model-search">
     <div class="model-search-box">
       <input id="modelSearchInput" type="text" inputmode="numeric" autocomplete="off" placeholder="Buscar modelo (ej: 4206)">
@@ -45,8 +45,8 @@
 <section id="grid" class="product-grid"></section>
 
 <div id="cartSidebar" class="cart-sidebar">
-    <button id="closeCart" class="cart-close">✕</button>
-    <h2>Tu Cotización</h2>
+    <button id="closeCart" class="cart-close">X</button>
+    <h2>Tu Cotizaci&oacute;n</h2>
     <div id="cartItems"></div>
 
     <label for="clientRut" class="cart-field-label">RUT cliente</label>
@@ -66,17 +66,18 @@
     >
     <div id="clientLookupBadge" class="client-lookup-badge" hidden></div>
     <div id="clientLookupMsg" class="client-lookup-msg" aria-live="polite"></div>
-    <button id="sendRequest">Enviar Cotización</button>
+    <button id="sendRequest">Enviar Cotizaci&oacute;n</button>
 </div>
 
 <div id="modal" class="modal">
   <div class="modal-content">
-    <span id="closeModal" class="close-modal">×</span>
+    <span id="closeModal" class="close-modal">X</span>
 
     <div class="modal-left">
         <div class="image-viewer">
-            <button id="openImageGalleryBtn" class="image-gallery-btn" type="button">Ver imágenes</button>
+            <button id="openImageGalleryBtn" class="image-gallery-btn" type="button">Ver im&aacute;genes</button>
             <button id="openVideoGalleryBtn" class="image-gallery-btn image-video-btn" type="button" hidden>Ver video</button>
+            <div id="imageSoldOutOverlay" class="image-sold-out-overlay" hidden>AGOTADO</div>
             <img id="viewerImg">
         </div>
         <div id="thumbContainer" class="thumbnails"></div>
@@ -99,15 +100,15 @@
         </div>
         </div>
 
-        <button id="addBtn">Agregar cotización</button>
+        <button id="addBtn">Agregar cotizaci&oacute;n</button>
     </div>
   </div>
 </div>
 
 <div id="imageZoomModal" class="image-zoom-modal" hidden>
   <div class="image-zoom-backdrop" data-close-image-zoom></div>
-  <div class="image-zoom-content" role="dialog" aria-modal="true" aria-label="Visor de imágenes">
-    <button id="closeImageZoomBtn" class="image-zoom-close" type="button" aria-label="Cerrar visor">×</button>
+  <div class="image-zoom-content" role="dialog" aria-modal="true" aria-label="Visor de im&aacute;genes">
+    <button id="closeImageZoomBtn" class="image-zoom-close" type="button" aria-label="Cerrar visor">X</button>
     <div class="image-zoom-stage">
       <img id="imageZoomMain" alt="Vista ampliada de producto">
     </div>
@@ -118,7 +119,7 @@
 <div id="videoZoomModal" class="image-zoom-modal" hidden>
   <div class="image-zoom-backdrop" data-close-video-zoom></div>
   <div class="image-zoom-content video-zoom-content" role="dialog" aria-modal="true" aria-label="Visor de video">
-    <button id="closeVideoZoomBtn" class="image-zoom-close" type="button" aria-label="Cerrar video">×</button>
+    <button id="closeVideoZoomBtn" class="image-zoom-close" type="button" aria-label="Cerrar video">X</button>
     <div class="image-zoom-stage video-zoom-stage">
       <video id="videoZoomPlayer" class="video-zoom-player" controls preload="metadata" playsinline controlsList="nodownload"></video>
     </div>
@@ -127,21 +128,21 @@
 
 <div id="quotesModal" class="modal">
   <div class="modal-content quotes-modal-content">
-    <span id="closeQuotesModal" class="close-modal">×</span>
+    <span id="closeQuotesModal" class="close-modal">X</span>
 
     <div class="quotes-admin">
       <div class="quotes-admin-head">
         <h2>Cotizaciones</h2>
         <div class="quotes-admin-actions">
           <button id="refreshQuotesBtn" type="button" class="ghost-btn">Actualizar</button>
-          <button id="logoutQuotesBtn" type="button" class="ghost-btn">Cerrar sesión</button>
+          <button id="logoutQuotesBtn" type="button" class="ghost-btn">Cerrar sesi&oacute;n</button>
         </div>
       </div>
 
       <div id="quotesLoginSection" class="quotes-login">
         <p>Ingresa Usuario</p>
         <input id="quotesEmail" type="email" placeholder="Correo administrador">
-        <input id="quotesPassword" type="password" placeholder="Contraseña">
+        <input id="quotesPassword" type="password" placeholder="Contrase&ntilde;a">
         <button id="quotesLoginBtn" type="button">Ingresar</button>
         <div id="quotesLoginMsg" class="quotes-msg"></div>
       </div>
@@ -149,7 +150,7 @@
       <div id="quotesPanel" class="quotes-panel" style="display:none;">
         <div id="quotesAdminTabs" class="quotes-admin-tabs" style="display:none;">
           <button id="quotesTabCotizaciones" type="button" class="ghost-btn quotes-tab-btn active">Cotizaciones</button>
-          <button id="quotesTabTrazabilidad" type="button" class="ghost-btn quotes-tab-btn">Disponible Cole 42</button>
+          <button id="quotesTabTrazabilidad" type="button" class="ghost-btn quotes-tab-btn">Stock Excel</button>
         </div>
 
         <div id="quotesCotizacionesPanel" class="quotes-tab-panel">
@@ -158,7 +159,7 @@
         </div>
 
         <div id="quotesTrazabilidadPanel" class="quotes-tab-panel" style="display:none;">
-          <div id="trazabilidadSummary" class="quotes-user-badge">Disponible Cole 42</div>
+          <div id="trazabilidadSummary" class="quotes-user-badge">Stock Excel</div>
           <div class="trazabilidad-search-row">
             <input id="trazabilidadSearchInput" type="text" placeholder="Buscar modelo (ej: 4201)">
             <button id="trazabilidadSearchClear" type="button" class="ghost-btn">Limpiar</button>
@@ -171,9 +172,9 @@
 </div>
 
 <div id="successToast" class="success-toast" aria-live="polite" hidden>
-  <div class="success-toast-icon">✓</div>
+  <div class="success-toast-icon">&#10003;</div>
   <div class="success-toast-text">
-    <strong>Cotización enviada con éxito</strong>
+    <strong>Cotizaci&oacute;n enviada con &eacute;xito</strong>
     <span>Recibimos tu solicitud correctamente.</span>
   </div>
 </div>
@@ -182,10 +183,58 @@
   <div class="success-toast-icon">!</div>
   <div class="success-toast-text">
     <strong id="errorToastTitle">Revisa los datos</strong>
-    <span id="errorToastMsg">Hay un problema con la información ingresada.</span>
+    <span id="errorToastMsg">Hay un problema con la informaci&oacute;n ingresada.</span>
   </div>
 </div>
 
-<script src="script.js?v=20260224z"></script>
+<script src="script-v2.js?v=20260417w"></script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

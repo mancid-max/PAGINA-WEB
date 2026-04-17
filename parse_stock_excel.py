@@ -20,9 +20,29 @@ SIZE_COLUMNS = {
 
 
 def normalize_article_code(value) -> str:
-    digits = "".join(ch for ch in str(value or "") if ch.isdigit())
+    raw = str(value or "").strip().upper()
+    if not raw:
+        return ""
+
+    if "-" in raw:
+        left, _, right = raw.partition("-")
+        left_digits = "".join(ch for ch in left if ch.isdigit())
+        right_digits = "".join(ch for ch in right if ch.isdigit())
+        if len(left_digits) >= 4:
+            model = left_digits[-4:]
+            variant = (right_digits[-2:] if right_digits else "00").zfill(2)
+            return f"{model}-{variant}"
+
+    digits = "".join(ch for ch in raw if ch.isdigit())
     if not digits:
         return ""
+
+    # Algunos excels entregan codigos como float (ej: 421801.0 -> "4218010")
+    if len(digits) == 7 and digits.endswith("0"):
+        digits = digits[:-1]
+
+    if len(digits) == 4:
+        return digits
 
     if len(digits) == 6:
         model = digits[:4]
@@ -66,7 +86,8 @@ def resolve_sheet_name(workbook, desired_name: str) -> str:
 def parse_sheet_items(ws) -> dict:
     items = {}
 
-    for row in ws.iter_rows(min_row=4, values_only=True):
+    # Algunos archivos tienen datos desde la fila 3 (no 4).
+    for row in ws.iter_rows(min_row=3, values_only=True):
         raw_code = row[1] if len(row) > 1 else None
         sku = normalize_article_code(raw_code)
         if not sku:
