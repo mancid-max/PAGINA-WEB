@@ -145,10 +145,29 @@ const LOCAL_CLIENT_OVERRIDES = [
 const ASSET_VERSION = Date.now();
 const OPTIMIZED_IMAGE_ROOT = "Imagenes-web";
 const OPTIMIZED_IMAGE_SOURCE_ROOTS = ["Imagenes", "Imagenes2", "Imagenes3", "42"];
+const TEXT_NORMALIZATION_REPLACEMENTS = [
+  [/Dise\?o/gi, "Diseño"],
+  [/disen\?o/gi, "diseño"],
+  [/recuperaci\?n/gi, "recuperación"],
+  [/f\?cil/gi, "fácil"],
+  [/c\?modo/gi, "cómodo"],
+  [/vers\?til/gi, "versátil"],
+  [/Cotizacion/g, "Cotización"],
+  [/cotizacion/g, "cotización"],
+];
 
 function withCacheBust(path) {
   if (!path) return path;
   return path.includes("?") ? `${path}&v=${ASSET_VERSION}` : `${path}?v=${ASSET_VERSION}`;
+}
+
+function normalizarTextoVisible(value) {
+  if (value === null || value === undefined) return "";
+  let text = String(value);
+  TEXT_NORMALIZATION_REPLACEMENTS.forEach(([pattern, replacement]) => {
+    text = text.replace(pattern, replacement);
+  });
+  return text;
 }
 
 function normalizarRutaAsset(path) {
@@ -927,6 +946,19 @@ function obtenerImagenesPropias(obj) {
   return deduplicarImagenesParaVisor(obtenerImagenesVisibles(obj, { includeCatalog: true }));
 }
 
+function imagenCompatibleConSku(path, sku) {
+  const normalizedPath = normalizarRutaAsset(path).toLowerCase();
+  const normalizedSku = normalizarSkuCatalogo(sku).toLowerCase();
+  const match = normalizedSku.match(/^(\d{4})-(\d{2})$/);
+  if (!match) return true;
+
+  const [, model, variant] = match;
+  const variantMatches = [...normalizedPath.matchAll(new RegExp(`${model}-(\\d{2})`, "g"))];
+  if (!variantMatches.length) return true; // sin variante explícita en ruta -> permitida
+
+  return variantMatches.some((m) => (m?.[1] || "") === variant);
+}
+
 function construirProductosGridPorSku(items = [], stockItems = {}) {
   const cards = [];
   const seenSku = new Set();
@@ -949,7 +981,7 @@ function construirProductosGridPorSku(items = [], stockItems = {}) {
       const total = Math.max(0, Number(stock?.total) || 0);
       if (total <= 0) return;
 
-      const images = obtenerImagenesPropias(entry.source);
+      const images = obtenerImagenesPropias(entry.source).filter((img) => imagenCompatibleConSku(img, entry.sku));
       const cardImage = images[0] || "";
       if (!cardImage) return;
 
@@ -1644,7 +1676,7 @@ function inicializarPanelCotizacionModal() {
     <div class="quote-panel-card">
       <div class="quote-panel-head">
         <div>
-          <div class="quote-panel-kicker">Cotizacion</div>
+          <div class="quote-panel-kicker">Cotización</div>
           <div id="quotePanelModelTitle" class="quote-panel-title">Modelo</div>
         </div>
         <button id="closeQuotePanelBtn" type="button" class="quote-panel-close" aria-label="Cerrar panel de cotizacion">×</button>
@@ -1919,7 +1951,7 @@ function inicializarBuscadorModelos() {
 function renderGrid(lista) {
   const container = document.getElementById("grid");
   const listaConImagen = (Array.isArray(lista) ? lista : [])
-    .filter((p) => Boolean(p?._cardImage || obtenerImagenPortadaProducto(p)));
+    .filter((p) => Boolean(p?._cardImage));
   const listaOrdenada = [...listaConImagen].sort((a, b) => {
     const stockB = Number(b?._stockTotal) || Math.max(0, Number(obtenerStockParaSkuDesdeItems(b?.family, stockBySku)?.total) || 0);
     const stockA = Number(a?._stockTotal) || Math.max(0, Number(obtenerStockParaSkuDesdeItems(a?.family, stockBySku)?.total) || 0);
@@ -1938,7 +1970,7 @@ function renderGrid(lista) {
           ${esProductoAgotado(p) ? '<span class="card-stock-badge sold-out">Agotado</span>' : ""}
         </div>
         <div class="card-image-wrap">
-          <img data-image-src="${p._cardImage || obtenerImagenPortadaProducto(p)}" alt="Modelo ${p.family}">
+          <img data-image-src="${p._cardImage}" alt="Modelo ${p.family}">
           ${esProductoAgotado(p) ? '<span class="sold-out-ribbon sold-out-ribbon-card">AGOTADO</span>' : ""}
         </div>
       </div>
@@ -1975,14 +2007,24 @@ function verProductoDesdeCard(baseFamily, preferredSku) {
 
 function verProducto(familyId, preferredSku = "") {
   inicializarPanelCotizacionModal();
-  const p = productos.find((item) => item.family === familyId);
+  const preferredSkuNormalized = normalizarSkuCatalogo(preferredSku);
+  let p = productos.find((item) => normalizarSkuCatalogo(item.family) === normalizarSkuCatalogo(familyId));
+  if (preferredSkuNormalized) {
+    const preferredItem = productos.find((item) => normalizarSkuCatalogo(item.family) === preferredSkuNormalized);
+    if (preferredItem) p = preferredItem;
+  }
   if (!p) return;
+
+  const preferredVariant = preferredSkuNormalized && Array.isArray(p?.variants)
+    ? p.variants.find((variant) => normalizarSkuCatalogo(variant?.sku) === preferredSkuNormalized)
+    : null;
+  const skuInicial = normalizarSkuCatalogo(preferredVariant?.sku || p.family);
 
   // Reinicia drafts para evitar re-agregar items viejos al volver a abrir el modal
   resetDraftsModal();
-  document.getElementById("modalTitle").innerText = "Modelo " + p.family;
+  document.getElementById("modalTitle").innerText = "Modelo " + skuInicial;
   const quotePanelModelTitle = document.getElementById("quotePanelModelTitle");
-  if (quotePanelModelTitle) quotePanelModelTitle.innerText = "Modelo " + p.family;
+  if (quotePanelModelTitle) quotePanelModelTitle.innerText = "Modelo " + skuInicial;
   cerrarPanelCotizacionModal();
   
   // Mostrar descripción y características
@@ -1990,7 +2032,7 @@ function verProducto(familyId, preferredSku = "") {
   const charList = document.getElementById("characteristics");
   const hasCharacteristics = Array.isArray(p.characteristics) && p.characteristics.length;
 
-  descriptionEl.innerText = hasCharacteristics ? "" : (p.description || "");
+  descriptionEl.innerText = hasCharacteristics ? "" : normalizarTextoVisible(p.description || "");
   descriptionEl.style.display = hasCharacteristics || !p.description ? "none" : "block";
 
   charList.innerHTML = "";
@@ -1999,7 +2041,7 @@ function verProducto(familyId, preferredSku = "") {
     const ul = document.createElement("ul");
     p.characteristics.forEach((char) => {
       const li = document.createElement("li");
-      li.innerText = char;
+      li.innerText = normalizarTextoVisible(char);
       ul.appendChild(li);
     });
     charList.appendChild(ul);
@@ -2007,109 +2049,22 @@ function verProducto(familyId, preferredSku = "") {
 
   const variantContainer = document.getElementById("variantContainer");
   variantContainer.innerHTML = "";
+  variantContainer.style.display = "none";
 
-  // helper: activar botón
-  function setActive(btn) {
-    variantContainer.querySelectorAll(".variant-btn").forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-  }
+  const ownImages = preferredVariant ? buildImageList(preferredVariant) : buildImageList(p);
+  const firstVariantWithImages = Array.isArray(p.variants)
+    ? p.variants.find((variant) => buildImageList(variant).length)
+    : null;
+  const initialImages = ownImages.length
+    ? ownImages
+    : (firstVariantWithImages ? buildImageList(firstVariantWithImages) : []);
 
-  const familyOwnNonCatalog = deduplicarImagenesParaVisor(obtenerImagenesVisibles(p));
-  const familyOwnAll = deduplicarImagenesParaVisor(obtenerImagenesVisibles(p, { includeCatalog: true }));
-  const familyHasOwnImages = familyOwnNonCatalog.length > 0 || familyOwnAll.length > 0;
-  const familyImages = familyOwnNonCatalog.length ? familyOwnNonCatalog : familyOwnAll;
-  const familySignature = crearFirmaImagenes(p);
-  const variantsToShow = [];
-  const seenVariantSignatures = new Set();
-
-  if (Array.isArray(p.variants) && p.variants.length) {
-    p.variants.forEach((variant) => {
-      const variantImages = buildImageList(variant);
-      if (!variantImages.length) return;
-      const signature = crearFirmaImagenes(variant);
-      if (!signature) return;
-      if (familySignature && (signature === familySignature || firmaEsSubconjunto(variant, p))) return;
-      if (seenVariantSignatures.has(signature)) return;
-      seenVariantSignatures.add(signature);
-      variantsToShow.push({ ...variant, __images: variantImages, __signature: signature });
-    });
-  }
-
-  const shouldShowFamilyButton = familyHasOwnImages && familyImages.length && (!familySignature || !seenVariantSignatures.has(familySignature));
-
-  // 1) Botón Familia
-  const btnFamily = document.createElement("button");
-  btnFamily.className = "variant-btn";
-  btnFamily.innerText = "Modelo " + p.family;
-  const botonesPorSku = {};
-
-  btnFamily.onclick = () => {
-    guardarDraftDelSkuActual();
-    skuActivo = p.family;
-    renderImages(buildImageList(p));
-    actualizarVideoModal(skuActivo);
-    cargarDraftDelSku(skuActivo);
-    aplicarStockATallas(skuActivo);
-    actualizarEstadoCotizacionProducto(p, skuActivo);
-    setActive(btnFamily);
-  };
-
-  if (shouldShowFamilyButton) {
-    variantContainer.appendChild(btnFamily);
-  }
-
-  // 2) Botones variantes
-  if (variantsToShow.length) {
-    variantsToShow.forEach((v) => {
-      const btn = document.createElement("button");
-      btn.className = "variant-btn";
-      btn.innerText = v.sku;
-
-      btn.onclick = () => {
-        guardarDraftDelSkuActual();
-        skuActivo = v.sku;
-        renderImages(v.__images || buildImageList(v));
-        actualizarVideoModal(skuActivo);
-        cargarDraftDelSku(skuActivo);
-        aplicarStockATallas(skuActivo);
-        actualizarEstadoCotizacionProducto(p, skuActivo);
-        setActive(btn);
-      };
-
-      botonesPorSku[v.sku] = btn;
-      variantContainer.appendChild(btn);
-    });
-  }
-
-  // Estado inicial: priorizar SKU con stock para evitar abrir en "agotado" si hay variantes disponibles
-  const preferredSkuNormalized = normalizarSkuCatalogo(preferredSku);
-  const firstVariantWithImages = variantsToShow[0] || null;
-  const firstVariantWithStock = variantsToShow.find((variant) => skuTieneStockDisponible(variant?.sku, stockBySku)) || null;
-  const familyHasStock = skuTieneStockDisponible(p?.family, stockBySku);
-  const initialVariant = firstVariantWithStock || firstVariantWithImages || null;
-  const useFamilyInitially = shouldShowFamilyButton && familyHasOwnImages && (familyHasStock || !initialVariant);
-
-  let initialSku = useFamilyInitially ? p.family : (initialVariant?.sku || p.family);
-  if (preferredSkuNormalized) {
-    if (preferredSkuNormalized === normalizarSkuCatalogo(p.family) && shouldShowFamilyButton) {
-      initialSku = p.family;
-    } else if (botonesPorSku[preferredSkuNormalized]) {
-      initialSku = preferredSkuNormalized;
-    }
-  }
-  const preferredVariant = variantsToShow.find((v) => normalizarSkuCatalogo(v?.sku) === initialSku) || null;
-  const initialImages = initialSku === p.family
-    ? familyImages
-    : (preferredVariant ? (preferredVariant.__images || buildImageList(preferredVariant)) : []);
-  const initialBtn = initialSku === p.family ? btnFamily : botonesPorSku[initialSku];
-
-  skuActivo = initialSku;
+  skuActivo = skuInicial;
   renderImages(initialImages);
   actualizarVideoModal(skuActivo);
   cargarDraftDelSku(skuActivo);
   aplicarStockATallas(skuActivo);
   actualizarEstadoCotizacionProducto(p, skuActivo);
-  setActive(initialBtn || btnFamily);
 
   const modalRight = document.querySelector("#modal .modal-right");
   if (modalRight) modalRight.scrollTop = 0;
@@ -2365,7 +2320,7 @@ function generarCSVQuoteAdmin(quote, items = []) {
   const BOM = "\uFEFF";
   const fecha = quote?.created_at ? new Date(quote.created_at).toLocaleString() : "";
   const codigo = generarCodigoCotizacionVisual(quote);
-  const estado = quote?.is_ready ? "Cotizacion lista" : "En proceso";
+  const estado = quote?.is_ready ? "Cotización lista" : "En proceso";
   const rows = [];
 
   rows.push(["RESUMEN COTIZACION"]);
@@ -2612,7 +2567,7 @@ async function descargarCotizacionAdmin(quoteId) {
     return;
   }
   const clienteNombre = sanitizeFileNamePart(quote.store_name, "cliente");
-  const nombreBase = `Cotizacion ${clienteNombre}`;
+  const nombreBase = `Cotización ${clienteNombre}`;
   try {
     const excelBlob = await Promise.race([
       generarExcelPlantillaQuoteAdmin(quote, items),
@@ -3489,7 +3444,7 @@ document.getElementById("sendRequest").onclick = async () => {
   try {
     await guardarCotizacionSupabase(cliente);
 
-    mostrarToastExito("Cotizacion enviada con exito", "Recibimos tu solicitud correctamente.");
+    mostrarToastExito("Cotización enviada con éxito", "Recibimos tu solicitud correctamente.");
     limpiarCarrito();
   } catch (error) {
     console.error(error);
@@ -3507,5 +3462,3 @@ document.getElementById("closeCart").onclick = () => {
   document.getElementById("cartSidebar").classList.remove("open");
   document.querySelector(".cart-overlay")?.classList.remove("active");
 };
-
-
