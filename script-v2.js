@@ -1177,10 +1177,7 @@ async function cargarProductosCatalogo() {
     const itemsCatalogoBase = filtrarProductosConImagenes(items);
     const stockCatalogoValido = stockTieneModelosCatalogo(stockBySku);
     items = (INVENTORY_ENABLED && stockCatalogoValido)
-      ? [
-        ...filtrarProductosPorStock(itemsCatalogoBase, stockBySku),
-        ...construirProductosAgotadosSegunStock(itemsCatalogoBase, stockBySku),
-      ]
+      ? filtrarProductosPorStock(itemsCatalogoBase, stockBySku)
       : filtrarProductosDisponiblesCole42(itemsCatalogoBase, trazabilidadData);
     if (CATALOG_SOURCE === "catalogo-1") {
       items = rescatarProductosConStockFaltantes(itemsCatalogoBase, items, stockBySku);
@@ -1188,11 +1185,7 @@ async function cargarProductosCatalogo() {
     items = deduplicarTarjetasPorModelo(items);
 
     if (CATALOG_SOURCE === "catalogo-1") {
-      const agotados = construirProductosAgotados().filter((agotado) => {
-        const key = normalizarSkuCatalogo(agotado?.family);
-        return key && !items.some((item) => normalizarSkuCatalogo(item?.family) === key);
-      });
-      items = [...items, ...agotados].sort((a, b) => {
+      items = items.sort((a, b) => {
         const aKey = normalizarSkuCatalogo(a?.family);
         const bKey = normalizarSkuCatalogo(b?.family);
         return aKey.localeCompare(bKey, undefined, { numeric: true });
