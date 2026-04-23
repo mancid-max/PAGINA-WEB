@@ -20,10 +20,23 @@ let imagenesModalActual = [];
 let imagenModalIndex = 0;
 let quotePanelReady = false;
 let stockBySku = {};
+let stockCatalogRows = [];
+let stockCatalogDraftVisible = false;
+let stockRealtimeChannel = null;
+let stockCatalogSeasonFilter = "";
 let videoBySku = {};
 let videoActivoSrc = "";
 let catalogCoverBySku = {};
 const INVENTORY_ENABLED = true;
+const STOCK_REFRESH_INTERVAL_MS = 30000;
+const STOCK_CATALOG_SIZE_FIELDS = {
+  "36": "size_36",
+  "38": "size_38",
+  "40": "size_40",
+  "42": "size_42",
+  "44": "size_44",
+  "46": "size_46",
+};
 const SOLD_OUT_CATALOG_ITEMS = [
   {
     family: "4208-00",
@@ -297,6 +310,25 @@ function supabaseConfigurado() {
   );
 }
 
+function clienteSupabaseDisponible() {
+  return !!(globalThis.supabase && typeof globalThis.supabase.createClient === "function" && supabaseConfigurado());
+}
+
+let supabaseBrowserClient = null;
+
+function obtenerClienteSupabase() {
+  if (!clienteSupabaseDisponible()) return null;
+  if (!supabaseBrowserClient) {
+    supabaseBrowserClient = globalThis.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    });
+  }
+  return supabaseBrowserClient;
+}
+
 function normalizarRut(valor) {
   return String(valor || "")
     .trim()
@@ -385,6 +417,44 @@ const STOCK_DATA_FILE_BY_SOURCE = {
 };
 const STOCK_DATA_FILE = STOCK_DATA_FILE_BY_SOURCE[CATALOG_SOURCE] || "stock-data.json";
 
+function stockSupabaseHabilitado() {
+  return INVENTORY_ENABLED && clienteSupabaseDisponible();
+}
+
+async function cargarStockJsonLocal() {
+  const res = await fetch(withCacheBust(STOCK_DATA_FILE), { cache: "no-store" });
+  if (!res.ok) throw new Error(`status ${res.status}`);
+  return res.json();
+}
+
+async function cargarStockSupabasePublico() {
+  const client = obtenerClienteSupabase();
+  if (!client) throw new Error("Cliente Supabase no disponible");
+
+  const { data, error } = await client
+    .from("stock_catalog")
+    .select("id,season,article_code,sku,tiro,bota,color,size_36,size_38,size_40,size_42,size_44,size_46,active,updated_at")
+    .eq("active", true)
+    .order("sku", { ascending: true });
+
+  if (error) throw error;
+  return {
+    source_file: "supabase:stock_catalog",
+    items: convertirFilasStockCatalogAItems(data || []),
+  };
+}
+
+async function cargarStockDatasetPreferido() {
+  if (stockSupabaseHabilitado()) {
+    try {
+      return await cargarStockSupabasePublico();
+    } catch (err) {
+      console.warn("No se pudo cargar stock desde Supabase, se usa JSON local:", err);
+    }
+  }
+  return cargarStockJsonLocal();
+}
+
 function normalizarSkuCatalogo(value) {
   const raw = String(value || "")
     .trim()
@@ -428,6 +498,59 @@ function normalizarMapaStockPorSku(items = {}) {
     if (!entry.article && payload?.article) entry.article = String(payload.article).trim();
   });
   return merged;
+}
+
+function construirDescripcionStockCatalog(row = {}) {
+  return [row?.tiro, row?.bota, row?.color]
+    .map((value) => String(value || "").trim())
+    .filter(Boolean)
+    .join(" / ");
+}
+
+function normalizarFilaStockCatalog(row = {}) {
+  const sku = normalizarSkuCatalogo(row?.sku);
+  const sizes = Object.fromEntries(
+    TALLAS_DISPONIBLES.map((size) => [size, Math.max(0, Number(row?.[STOCK_CATALOG_SIZE_FIELDS[size]]) || 0)])
+  );
+  const total = TALLAS_DISPONIBLES.reduce((acc, size) => acc + (Number(sizes?.[size]) || 0), 0);
+  return {
+    id: row?.id ?? null,
+    season: String(row?.season || "").trim() || "42",
+    article_code: String(row?.article_code || "").trim(),
+    sku,
+    tiro: String(row?.tiro || "").trim(),
+    bota: String(row?.bota || "").trim(),
+    color: String(row?.color || "").trim(),
+    active: row?.active !== false,
+    updated_at: row?.updated_at || null,
+    description: construirDescripcionStockCatalog(row),
+    sizes,
+    total,
+  };
+}
+
+function convertirFilasStockCatalogAItems(rows = []) {
+  const items = {};
+  (Array.isArray(rows) ? rows : [])
+    .map((row) => normalizarFilaStockCatalog(row))
+    .filter((row) => row?.sku && row?.active !== false)
+    .forEach((row) => {
+      items[row.sku] = {
+        article: row.article_code,
+        sku: row.sku,
+        description: row.description,
+        sizes: { ...row.sizes },
+        total: row.total,
+      };
+    });
+  return items;
+}
+
+function skuAArticleCode(sku) {
+  const normalized = normalizarSkuCatalogo(sku);
+  if (/^\d{4}$/.test(normalized)) return `${normalized}00`;
+  if (/^\d{4}-\d{2}$/.test(normalized)) return normalized.replace("-", "");
+  return normalized;
 }
 
 function normalizarMapaAssetsPorSku(map = {}) {
@@ -1113,12 +1236,7 @@ function filtrarProductosDisponiblesCole42(items = [], trazabilidadData = null) 
 async function cargarProductosCatalogo() {
   try {
     const catalogPromise = fetch(withCacheBust(CATALOG_DATA_FILE)).then((res) => res.json());
-    const stockPromise = INVENTORY_ENABLED
-      ? fetch(withCacheBust(STOCK_DATA_FILE), { cache: "no-store" }).then((res) => {
-        if (!res.ok) throw new Error(`status ${res.status}`);
-        return res.json();
-      })
-      : Promise.resolve(null);
+    const stockPromise = INVENTORY_ENABLED ? cargarStockDatasetPreferido() : Promise.resolve(null);
     const extraCatalogPromise = CATALOG_SOURCE === "catalogo-1"
       ? fetch(withCacheBust("data-catalogo-3.json")).then((res) => res.json())
       : Promise.resolve([]);
@@ -1205,8 +1323,9 @@ async function cargarProductosCatalogo() {
 cargarProductosCatalogo();
 
 if (INVENTORY_ENABLED) {
+  configurarRealtimeStock();
   cargarStockData();
-  window.setInterval(cargarStockData, 30000);
+  window.setInterval(cargarStockData, STOCK_REFRESH_INTERVAL_MS);
 }
 
 fetch(withCacheBust("video-data.json"))
@@ -1428,12 +1547,32 @@ function skuEstaAgotado(sku) {
   return TALLAS_DISPONIBLES.every((talla) => Math.max(0, Number(stock.sizes?.[talla]) || 0) <= 0);
 }
 
+function configurarRealtimeStock() {
+  if (!stockSupabaseHabilitado() || stockRealtimeChannel) return;
+  const client = obtenerClienteSupabase();
+  if (!client) return;
+
+  stockRealtimeChannel = client
+    .channel("public-stock-catalog")
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "stock_catalog",
+      },
+      () => {
+        cargarStockData();
+        if (quotesAccessToken && adminActiveTab === "stock") {
+          cargarStockCatalogAdmin().catch((err) => console.warn("No se pudo refrescar Stock:", err));
+        }
+      }
+    )
+    .subscribe();
+}
+
 function cargarStockData() {
-  return fetch(withCacheBust(STOCK_DATA_FILE), { cache: "no-store" })
-    .then((res) => {
-      if (!res.ok) throw new Error(`status ${res.status}`);
-      return res.json();
-    })
+  return cargarStockDatasetPreferido()
     .then((data) => {
       stockBySku = normalizarMapaStockPorSku(data?.items || {});
       if (skuActivo) aplicarStockATallas(skuActivo);
@@ -2899,11 +3038,13 @@ function logoutCotizaciones() {
   sessionStorage.removeItem("quotes_user_email");
   adminActiveTab = "cotizaciones";
   trazabilidadDisponibles = [];
+  stockCatalogRows = [];
+  stockCatalogDraftVisible = false;
   actualizarEstadoQuotesUI();
   const list = document.getElementById("quotesList");
   if (list) list.innerHTML = "";
-  const trazaList = document.getElementById("trazabilidadList");
-  if (trazaList) trazaList.innerHTML = "";
+  const stockList = document.getElementById("stockCatalogList");
+  if (stockList) stockList.innerHTML = "";
 }
 
 function obtenerDescripcionPorSkuArticle(sku, article) {
@@ -2926,45 +3067,221 @@ function obtenerDescripcionPorSkuArticle(sku, article) {
   return "";
 }
 
-function renderTrazabilidadAdmin(items = []) {
-  const list = document.getElementById("trazabilidadList");
+function crearFilaStockCatalogVacia() {
+  return {
+    id: null,
+    season: "42",
+    article_code: "",
+    sku: "",
+    tiro: "",
+    bota: "",
+    color: "",
+    active: true,
+    updated_at: null,
+    sizes: Object.fromEntries(TALLAS_DISPONIBLES.map((size) => [size, 0])),
+    total: 0,
+    description: "",
+  };
+}
+
+function formatStockUpdatedAt(value) {
+  if (!value) return "Sin fecha";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "Sin fecha";
+  return parsed.toLocaleString();
+}
+
+function stockCatalogSummaryText(rows = [], filteredRows = rows) {
+  const totalUnits = filteredRows.reduce((acc, row) => acc + (Number(row?.total) || 0), 0);
+  const seasonFilter = stockCatalogSeasonFilter || "";
+  return `Stock${seasonFilter ? ` T${seasonFilter}` : ""} · Modelos: ${formatNumberCL(filteredRows.length)} de ${formatNumberCL(rows.length)} · Unidades: ${formatNumberCL(totalUnits)}`;
+}
+
+function renderStockEditorRow(row = crearFilaStockCatalogVacia(), options = {}) {
+  const isNew = options?.isNew === true;
+  const normalized = normalizarFilaStockCatalog({
+    ...row,
+    ...(row?.sizes
+      ? Object.fromEntries(Object.entries(STOCK_CATALOG_SIZE_FIELDS).map(([size, field]) => [field, row.sizes?.[size]]))
+      : {}),
+  });
+  const total = normalized.total;
+
+  return `
+    <tr data-stock-id="${normalized.id ?? ""}" data-stock-new="${isNew ? "1" : "0"}">
+      <td class="col-code">
+        <input type="hidden" name="season" value="${String(normalized.season || "42").replace(/"/g, "&quot;")}">
+        <input type="hidden" name="sku" value="${String(normalized.sku || "").replace(/"/g, "&quot;")}">
+        <input type="text" name="article_code" value="${String(normalized.article_code || "").replace(/"/g, "&quot;")}">
+      </td>
+      <td class="col-text"><input type="text" name="tiro" value="${String(normalized.tiro || "").replace(/"/g, "&quot;")}"></td>
+      <td class="col-text"><input type="text" name="bota" value="${String(normalized.bota || "").replace(/"/g, "&quot;")}"></td>
+      <td class="col-text"><input type="text" name="color" value="${String(normalized.color || "").replace(/"/g, "&quot;")}"></td>
+      ${TALLAS_DISPONIBLES.map((size) => `<td class="col-size"><input type="number" min="0" step="1" name="size_${size}" value="${Math.max(0, Number(normalized.sizes?.[size]) || 0)}"></td>`).join("")}
+      <td class="col-total stock-sheet-total">
+        ${formatNumberCL(total)}
+        <input type="hidden" name="active" value="${normalized.active ? "1" : "0"}">
+      </td>
+    </tr>
+  `;
+}
+
+function renderStockCatalogAdmin(rows = []) {
+  const list = document.getElementById("stockCatalogList");
   if (!list) return;
 
-  if (!items.length) {
-    list.innerHTML = `<div class="quote-card"><div class="quote-meta">No hay articulos para mostrar.</div></div>`;
-    return;
+  const filteredRows = Array.isArray(rows) ? rows : [];
+  const summaryEl = document.getElementById("stockCatalogSummary");
+  if (summaryEl) summaryEl.innerText = stockCatalogSummaryText(stockCatalogRows, filteredRows);
+
+  const draftRow = stockCatalogDraftVisible ? renderStockEditorRow(crearFilaStockCatalogVacia(), { isNew: true }) : "";
+  const rowsHtml = filteredRows.map((row) => renderStockEditorRow(row)).join("");
+
+  list.innerHTML = `
+    <div class="stock-sheet-wrap">
+      <table class="stock-sheet">
+        <thead>
+          <tr>
+            <th class="col-code"><span class="stock-head-label">CODIGO</span><span class="stock-head-filter" aria-hidden="true"></span></th>
+            <th class="col-text"><span class="stock-head-label">TIRO</span><span class="stock-head-filter" aria-hidden="true"></span></th>
+            <th class="col-text"><span class="stock-head-label">BOTA</span><span class="stock-head-filter" aria-hidden="true"></span></th>
+            <th class="col-text"><span class="stock-head-label">COLOR</span><span class="stock-head-filter" aria-hidden="true"></span></th>
+            ${TALLAS_DISPONIBLES.map((size) => `<th class="col-size is-numeric"><span class="stock-head-label">${size}</span><span class="stock-head-filter" aria-hidden="true"></span></th>`).join("")}
+            <th class="col-total is-numeric"><span class="stock-head-label">TOTAL</span><span class="stock-head-filter" aria-hidden="true"></span></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${draftRow}
+          ${rowsHtml || `<tr><td colspan="11" class="stock-sheet-empty">No hay modelos para mostrar.</td></tr>`}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function aplicarFiltroStockCatalogAdmin() {
+  const input = document.getElementById("stockCatalogSearchInput");
+  const seasonFilter = stockCatalogSeasonFilter;
+  const query = normalizarBusquedaModelo(input?.value || "");
+  const base = Array.isArray(stockCatalogRows) ? stockCatalogRows : [];
+  const seasonRows = seasonFilter ? base.filter((row) => String(row?.season || "") === seasonFilter) : base;
+  const filtered = query
+    ? seasonRows.filter((row) => {
+      const tokens = [
+        row?.season,
+        row?.sku,
+        row?.article_code,
+        row?.tiro,
+        row?.bota,
+        row?.color,
+        row?.description,
+      ]
+        .map((value) => normalizarBusquedaModelo(value))
+        .filter(Boolean);
+      return tokens.some((token) => token.includes(query));
+    })
+    : seasonRows;
+
+  renderStockCatalogAdmin(filtered);
+}
+
+function leerStockCatalogDesdeCard(card) {
+  const read = (name) => card.querySelector(`[name="${name}"]`);
+  const sku = normalizarSkuCatalogo(read("sku")?.value || "");
+  const articleCodeInput = String(read("article_code")?.value || "").trim();
+  const payload = {
+    season: String(read("season")?.value || "42").trim(),
+    sku: sku || normalizarSkuCatalogo(articleCodeInput),
+    article_code: articleCodeInput || skuAArticleCode(sku),
+    tiro: String(read("tiro")?.value || "").trim().toUpperCase(),
+    bota: String(read("bota")?.value || "").trim().toUpperCase(),
+    color: String(read("color")?.value || "").trim().toUpperCase(),
+    active: String(read("active")?.value || "1") !== "0",
+  };
+
+  Object.entries(STOCK_CATALOG_SIZE_FIELDS).forEach(([size, field]) => {
+    const rawValue = read(`size_${size}`)?.value;
+    payload[field] = Math.max(0, Number(rawValue) || 0);
+  });
+
+  return payload;
+}
+
+function filaStockTieneDatos(row) {
+  if (!row) return false;
+  const articleCode = String(row.querySelector('[name="article_code"]')?.value || "").trim();
+  if (articleCode) return true;
+  return TALLAS_DISPONIBLES.some((size) => Math.max(0, Number(row.querySelector(`[name="size_${size}"]`)?.value) || 0) > 0);
+}
+
+function actualizarTotalFilaStock(row) {
+  if (!row) return;
+  const total = TALLAS_DISPONIBLES.reduce((acc, size) => {
+    const input = row.querySelector(`[name="size_${size}"]`);
+    return acc + Math.max(0, Number(input?.value) || 0);
+  }, 0);
+  const totalCell = row.querySelector(".stock-sheet-total");
+  if (totalCell) {
+    totalCell.innerHTML = `${formatNumberCL(total)}<input type="hidden" name="active" value="${row.querySelector('[name=\"active\"]')?.value || "1"}">`;
+  }
+}
+
+async function guardarStockCatalogAdmin(payload, options = {}) {
+  if (!quotesAccessToken) throw new Error("Debes iniciar sesion");
+  const id = options?.id;
+  const method = id ? "PATCH" : "POST";
+  const target = id
+    ? `${SUPABASE_URL}/rest/v1/stock_catalog?id=eq.${id}`
+    : `${SUPABASE_URL}/rest/v1/stock_catalog`;
+
+  const res = await fetch(target, {
+    method,
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${quotesAccessToken}`,
+      "Content-Type": "application/json",
+      Prefer: "return=representation",
+    },
+    body: JSON.stringify(id ? payload : [payload]),
+  });
+
+  if (!res.ok) {
+    if (res.status === 401 || res.status === 403) {
+      logoutCotizaciones();
+      throw new Error("No se pudo iniciar sesion");
+    }
+    const txt = await res.text();
+    throw new Error(`No se pudo guardar stock: ${txt || res.status}`);
   }
 
-  list.innerHTML = items.map((it) => {
-    const sku = String(it.sku || it.article || "");
-    const skuNew = String(it.sku_new || sku.split("/")[0] || "");
-    const skuEx = String(it.sku_ex || (sku.includes("/") ? sku.split("/")[1] : "") || "");
-    const available = Number(it.available_units ?? it.available_total ?? it.bodega_total) || 0;
-    const fabric = String(it.fabric || it.color || "").trim();
+  return res.json().catch(() => []);
+}
 
-    const sizes = it?.sizes_available && typeof it.sizes_available === "object"
-      ? it.sizes_available
-      : {};
-    const sizesText = Object.entries(sizes)
-      .map(([size, qty]) => [String(size), Number(qty) || 0])
-      .filter(([, qty]) => qty > 0)
-      .sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true }))
-      .map(([size, qty]) => `T${size}: <strong>${formatNumberCL(qty)}</strong>`)
-      .join(" · ");
+async function cargarStockCatalogAdmin() {
+  if (!quotesAccessToken) throw new Error("Debes iniciar sesion");
 
-    return `
-      <div class="trace-card">
-        <div class="trace-card-head">
-          <div class="trace-card-title">
-            Modelo ${skuNew || sku || "-"}${skuEx ? ` <span class="trace-ex-pill">Ex ${skuEx}</span>` : ""}
-          </div>
-          <div class="trace-card-qty">Disponible: ${formatNumberCL(available)}</div>
-        </div>
-        ${sizesText ? `<div class="trace-card-meta">${sizesText}</div>` : ""}
-        ${fabric ? `<div class="trace-card-meta">Tela: ${fabric}</div>` : ""}
-      </div>
-    `;
-  }).join("");
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/stock_catalog?select=id,season,article_code,sku,tiro,bota,color,size_36,size_38,size_40,size_42,size_44,size_46,active,updated_at&order=season.asc,sku.asc`,
+    {
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${quotesAccessToken}`,
+      },
+    }
+  );
+
+  if (!res.ok) {
+    if (res.status === 401 || res.status === 403) {
+      logoutCotizaciones();
+      throw new Error("No se pudo iniciar sesion");
+    }
+    const txt = await res.text();
+    throw new Error(`No se pudo cargar Stock: ${txt || res.status}`);
+  }
+
+  const data = await res.json();
+  stockCatalogRows = (Array.isArray(data) ? data : []).map((row) => normalizarFilaStockCatalog(row));
+  aplicarFiltroStockCatalogAdmin();
 }
 
 function normalizarBusquedaModelo(value) {
@@ -2974,79 +3291,20 @@ function normalizarBusquedaModelo(value) {
     .replace(/-00/g, "");
 }
 
-function aplicarFiltroTrazabilidad() {
-  const input = document.getElementById("trazabilidadSearchInput");
-  const query = normalizarBusquedaModelo(input?.value || "");
-  const base = Array.isArray(trazabilidadDisponibles) ? trazabilidadDisponibles : [];
-  const filtered = query
-    ? base.filter((it) => {
-      const tokens = [
-        it?.sku,
-        it?.sku_new,
-        it?.sku_new_00,
-        it?.sku_ex,
-        it?.sku_ex_00,
-        it?.article,
-      ]
-        .map((v) => normalizarBusquedaModelo(v))
-        .filter(Boolean);
-      return tokens.some((token) => token.includes(query));
-    })
-    : base;
-
-  const disponiblesFiltrados = filtered.reduce(
-    (acc, it) => acc + (Number(it.available_units ?? it.available_total ?? it.bodega_total) || 0),
-    0
-  );
-  const summaryEl = document.getElementById("trazabilidadSummary");
-  if (summaryEl) {
-    if (query) {
-      summaryEl.innerText = `Cole 42 · Resultados: ${formatNumberCL(filtered.length)} de ${formatNumberCL(base.length)} modelos · Unidades disponibles: ${formatNumberCL(disponiblesFiltrados)}`;
-    } else {
-      const disponibles = base.reduce((acc, it) => acc + (Number(it.available_units ?? it.available_total ?? it.bodega_total) || 0), 0);
-      summaryEl.innerText = `Cole 42 · Articulos disponibles: ${formatNumberCL(base.length)} · Unidades totales: ${formatNumberCL(disponibles)}`;
-    }
-  }
-
-  renderTrazabilidadAdmin(filtered);
-}
-
-async function cargarTrazabilidadAdmin() {
-  const summaryEl = document.getElementById("trazabilidadSummary");
-  if (summaryEl) summaryEl.innerText = "Cargando disponibles Cole 42...";
-
-  const res = await fetch(withCacheBust("trazabilidad-data.json"), { cache: "no-store" });
-  if (!res.ok) throw new Error(`No se pudo cargar trazabilidad (${res.status})`);
-  const data = await res.json();
-
-  trazabilidadMeta = data || null;
-  trazabilidadCache = Array.isArray(data?.items) ? data.items : [];
-  trazabilidadDisponibles = trazabilidadCache
-    .filter((it) => (Number(it.available_units ?? it.available_total ?? it.bodega_total) || 0) > 0)
-    .sort((a, b) => (Number(b.available_units ?? b.available_total ?? b.bodega_total) || 0) - (Number(a.available_units ?? a.available_total ?? a.bodega_total) || 0));
-
-  const totalDisponibles = trazabilidadDisponibles.reduce((acc, it) => acc + (Number(it.available_units ?? it.available_total ?? it.bodega_total) || 0), 0);
-  if (summaryEl) {
-    summaryEl.innerText = `Cole 42 · Articulos disponibles: ${formatNumberCL(trazabilidadDisponibles.length)} · Unidades totales: ${formatNumberCL(totalDisponibles)}`;
-  }
-  const input = document.getElementById("trazabilidadSearchInput");
-  if (input) input.value = "";
-  renderTrazabilidadAdmin(trazabilidadDisponibles);
-}
-
 function activarTabAdmin(tab = "cotizaciones", { cargar = true } = {}) {
-  adminActiveTab = tab === "trazabilidad" ? "trazabilidad" : "cotizaciones";
+  adminActiveTab = ["cotizaciones", "stock"].includes(tab) ? tab : "cotizaciones";
 
   const btnCot = document.getElementById("quotesTabCotizaciones");
-  const btnTra = document.getElementById("quotesTabTrazabilidad");
+  const btnStock = document.getElementById("quotesTabStock");
   const panelCot = document.getElementById("quotesCotizacionesPanel");
-  const panelTra = document.getElementById("quotesTrazabilidadPanel");
+  const panelStock = document.getElementById("quotesStockPanel");
 
   const isCot = adminActiveTab === "cotizaciones";
+  const isStock = adminActiveTab === "stock";
   btnCot?.classList.toggle("active", isCot);
-  btnTra?.classList.toggle("active", !isCot);
+  btnStock?.classList.toggle("active", isStock);
   if (panelCot) panelCot.style.display = isCot ? "flex" : "none";
-  if (panelTra) panelTra.style.display = isCot ? "none" : "flex";
+  if (panelStock) panelStock.style.display = isStock ? "flex" : "none";
 
   if (!quotesAccessToken || !cargar) return;
   if (isCot) {
@@ -3060,11 +3318,14 @@ function activarTabAdmin(tab = "cotizaciones", { cargar = true } = {}) {
     });
     return;
   }
-  cargarTrazabilidadAdmin().catch((err) => {
-    const summaryEl = document.getElementById("trazabilidadSummary");
-    if (summaryEl) summaryEl.innerText = err.message || "No se pudo cargar trazabilidad";
-    renderTrazabilidadAdmin([]);
-  });
+  if (isStock) {
+    cargarStockCatalogAdmin().catch((err) => {
+      const summaryEl = document.getElementById("stockCatalogSummary");
+      if (summaryEl) summaryEl.innerText = err.message || "No se pudo cargar Stock";
+      renderStockCatalogAdmin([]);
+    });
+    return;
+  }
 }
 
 function actualizarEstadoQuotesUI(msg = "") {
@@ -3282,9 +3543,12 @@ function configurarPanelCotizaciones() {
   const btnRefresh = document.getElementById("refreshQuotesBtn");
   const btnLogout = document.getElementById("logoutQuotesBtn");
   const btnTabCotizaciones = document.getElementById("quotesTabCotizaciones");
-  const btnTabTrazabilidad = document.getElementById("quotesTabTrazabilidad");
-  const trazaSearchInput = document.getElementById("trazabilidadSearchInput");
-  const trazaSearchClear = document.getElementById("trazabilidadSearchClear");
+  const btnTabStock = document.getElementById("quotesTabStock");
+  const stockSearchInput = document.getElementById("stockCatalogSearchInput");
+  const stockSearchClear = document.getElementById("stockCatalogSearchClear");
+  const stockSeasonTabs = document.getElementById("stockCatalogSeasonTabs");
+  const stockNewBtn = document.getElementById("stockCatalogNewBtn");
+  const stockListEl = document.getElementById("stockCatalogList");
   const emailEl = document.getElementById("quotesEmail");
   const passEl = document.getElementById("quotesPassword");
   const quotesListEl = document.getElementById("quotesList");
@@ -3335,7 +3599,7 @@ function configurarPanelCotizaciones() {
 
   btnRefresh?.addEventListener("click", async () => {
     try {
-      if (adminActiveTab === "trazabilidad") await cargarTrazabilidadAdmin();
+      if (adminActiveTab === "stock") await cargarStockCatalogAdmin();
       else await cargarCotizacionesAdmin();
     } catch (err) {
       actualizarEstadoQuotesUI("");
@@ -3348,12 +3612,31 @@ function configurarPanelCotizaciones() {
   });
 
   btnTabCotizaciones?.addEventListener("click", () => activarTabAdmin("cotizaciones", { cargar: true }));
-  btnTabTrazabilidad?.addEventListener("click", () => activarTabAdmin("trazabilidad", { cargar: true }));
-  trazaSearchInput?.addEventListener("input", aplicarFiltroTrazabilidad);
-  trazaSearchClear?.addEventListener("click", () => {
-    if (trazaSearchInput) trazaSearchInput.value = "";
-    aplicarFiltroTrazabilidad();
-    trazaSearchInput?.focus();
+  btnTabStock?.addEventListener("click", () => activarTabAdmin("stock", { cargar: true }));
+  stockSearchInput?.addEventListener("input", aplicarFiltroStockCatalogAdmin);
+  stockSeasonTabs?.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-stock-season]");
+    if (!btn) return;
+    stockCatalogSeasonFilter = String(btn.dataset.stockSeason || "").trim();
+    stockSeasonTabs.querySelectorAll("[data-stock-season]").forEach((tab) => {
+      tab.classList.toggle("active", tab === btn);
+    });
+    aplicarFiltroStockCatalogAdmin();
+  });
+  stockSearchClear?.addEventListener("click", () => {
+    if (stockSearchInput) stockSearchInput.value = "";
+    stockCatalogSeasonFilter = "";
+    stockSeasonTabs?.querySelectorAll("[data-stock-season]").forEach((tab) => {
+      tab.classList.toggle("active", (tab.dataset.stockSeason || "") === "");
+    });
+    aplicarFiltroStockCatalogAdmin();
+    const stockSheetWrap = document.querySelector("#stockCatalogList .stock-sheet-wrap");
+    if (stockSheetWrap) stockSheetWrap.scrollLeft = 0;
+    stockSearchInput?.focus();
+  });
+  stockNewBtn?.addEventListener("click", () => {
+    stockCatalogDraftVisible = !stockCatalogDraftVisible;
+    aplicarFiltroStockCatalogAdmin();
   });
 
   btnLogout?.addEventListener("click", logoutCotizaciones);
@@ -3411,6 +3694,41 @@ function configurarPanelCotizaciones() {
         deleteBtn.innerText = textoOriginal;
       }
     })();
+  });
+
+  stockListEl?.addEventListener("click", async (e) => {
+    const row = e.target.closest("tr");
+    if (!row) return;
+    if (!filaStockTieneDatos(row)) return;
+  });
+
+  stockListEl?.addEventListener("input", (e) => {
+    const sizeInput = e.target.closest('input[type="number"][name^="size_"]');
+    if (!sizeInput) return;
+    actualizarTotalFilaStock(sizeInput.closest("tr"));
+  });
+
+  stockListEl?.addEventListener("change", async (e) => {
+    const field = e.target.closest('input[type="text"], input[type="number"]');
+    if (!field) return;
+
+    const row = field.closest("tr");
+    if (!row || !filaStockTieneDatos(row)) return;
+
+    const isNew = row.dataset.stockNew === "1";
+    const stockId = row.dataset.stockId;
+    const payload = leerStockCatalogDesdeCard(row);
+
+    if (!payload.article_code || !payload.sku) return;
+
+    try {
+      await guardarStockCatalogAdmin(payload, { id: isNew ? null : stockId });
+      stockCatalogDraftVisible = false;
+      await cargarStockCatalogAdmin();
+      await cargarStockData();
+    } catch (err) {
+      mostrarToastError("No se pudo guardar", err.message || "Error guardando stock");
+    }
   });
 }
 
