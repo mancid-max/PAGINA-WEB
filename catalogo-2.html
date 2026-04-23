@@ -143,7 +143,7 @@
       <div id="quotesPanel" class="quotes-panel" style="display:none;">
         <div id="quotesAdminTabs" class="quotes-admin-tabs" style="display:none;">
           <button id="quotesTabCotizaciones" type="button" class="ghost-btn quotes-tab-btn active">Cotizaciones</button>
-          <button id="quotesTabTrazabilidad" type="button" class="ghost-btn quotes-tab-btn">Stock Excel</button>
+          <button id="quotesTabStock" type="button" class="ghost-btn quotes-tab-btn">Stock</button>
         </div>
 
         <div id="quotesCotizacionesPanel" class="quotes-tab-panel">
@@ -151,13 +151,25 @@
           <div id="quotesList" class="quotes-list"></div>
         </div>
 
-        <div id="quotesTrazabilidadPanel" class="quotes-tab-panel" style="display:none;">
-          <div id="trazabilidadSummary" class="quotes-user-badge">Stock Excel</div>
-          <div class="trazabilidad-search-row">
-            <input id="trazabilidadSearchInput" type="text" placeholder="Buscar modelo (ej: 4201)">
-            <button id="trazabilidadSearchClear" type="button" class="ghost-btn">Limpiar</button>
+        <div id="quotesStockPanel" class="quotes-tab-panel" style="display:none;">
+          <div class="stock-admin-toolbar">
+            <div id="stockCatalogSummary" class="quotes-user-badge">Stock</div>
+            <button id="stockCatalogNewBtn" type="button" class="ghost-btn">Nuevo modelo</button>
           </div>
-          <div id="trazabilidadList" class="quotes-list trazabilidad-list"></div>
+          <div id="stockCatalogSeasonTabs" class="quotes-admin-tabs stock-season-tabs">
+            <button type="button" class="ghost-btn quotes-tab-btn active" data-stock-season="">Todas</button>
+            <button type="button" class="ghost-btn quotes-tab-btn" data-stock-season="37">cole 37</button>
+            <button type="button" class="ghost-btn quotes-tab-btn" data-stock-season="38">cole 38</button>
+            <button type="button" class="ghost-btn quotes-tab-btn" data-stock-season="39">cole39</button>
+            <button type="button" class="ghost-btn quotes-tab-btn" data-stock-season="40">COLE 40</button>
+            <button type="button" class="ghost-btn quotes-tab-btn" data-stock-season="41">COLE 41</button>
+            <button type="button" class="ghost-btn quotes-tab-btn" data-stock-season="42">principal 42</button>
+          </div>
+          <div class="trazabilidad-search-row">
+            <input id="stockCatalogSearchInput" type="text" placeholder="Buscar SKU o modelo (ej: 4201)">
+            <button id="stockCatalogSearchClear" type="button" class="ghost-btn">Limpiar</button>
+          </div>
+          <div id="stockCatalogList" class="quotes-list stock-catalog-list"></div>
         </div>
       </div>
     </div>
@@ -180,14 +192,10 @@
   </div>
 </div>
 
-<script src="script-v2.js?v=20260420b"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="script-v2.js?v=20260422a"></script>
 </body>
 </html>
-
-
-
-
-
 
 
 
