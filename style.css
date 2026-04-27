@@ -155,6 +155,35 @@ margin-bottom:10px;
 color:#666;
 }
 
+.maintenance-card{
+width:min(720px, 100%);
+margin:24px auto 0;
+padding:24px 26px;
+border-radius:28px;
+background:rgba(255,255,255,0.88);
+border:1px solid rgba(0,0,0,0.08);
+box-shadow:0 20px 45px rgba(15,23,42,0.08);
+}
+
+.maintenance-title{
+margin:0 0 8px;
+font-size:clamp(1.35rem, 2vw, 1.7rem);
+color:#111;
+}
+
+.maintenance-copy{
+margin:0;
+font-size:1rem;
+line-height:1.6;
+color:rgba(33,33,38,0.72);
+}
+
+body.maintenance-mode .model-search,
+body.maintenance-mode #grid,
+body.maintenance-mode #cartToggle{
+display:none !important;
+}
+
 /* GRID */
 
 .product-grid{
