@@ -1,5 +1,5 @@
 {
-  "source_file": "C:\\Users\\manuh\\OneDrive - Mohicano Jeans\\INVENTARIO 01-04 COMPLETO.xlsx",
+  "source_file": "C:\\Users\\Lenovo\\OneDrive - Mohicano Jeans\\INVENTARIO 01-04 COMPLETO.xlsx",
   "sheet_names": [
     "COLE 40",
     "COLE 41"
@@ -375,13 +375,13 @@
       "description": "CINTURA / PALAZZO",
       "sizes": {
         "36": 0,
-        "38": 2,
+        "38": 0,
         "40": 0,
         "42": 1,
         "44": 0,
         "46": 0
       },
-      "total": 3
+      "total": 1
     },
     "4027-01": {
       "article": "4027-01",
