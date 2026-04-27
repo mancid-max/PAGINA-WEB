@@ -21,22 +21,18 @@ let imagenModalIndex = 0;
 let quotePanelReady = false;
 let stockBySku = {};
 let stockCatalogRows = [];
-let stockCatalogDraftVisible = false;
 let stockRealtimeChannel = null;
 let stockCatalogSeasonFilter = "";
+let stockEditorState = {
+  open: false,
+  item: null,
+  mode: "edit",
+};
 let videoBySku = {};
 let videoActivoSrc = "";
 let catalogCoverBySku = {};
 const INVENTORY_ENABLED = true;
 const STOCK_REFRESH_INTERVAL_MS = 30000;
-const STOCK_CATALOG_SIZE_FIELDS = {
-  "36": "size_36",
-  "38": "size_38",
-  "40": "size_40",
-  "42": "size_42",
-  "44": "size_44",
-  "46": "size_46",
-};
 const SOLD_OUT_CATALOG_ITEMS = [
   {
     family: "4208-00",
@@ -432,15 +428,15 @@ async function cargarStockSupabasePublico() {
   if (!client) throw new Error("Cliente Supabase no disponible");
 
   const { data, error } = await client
-    .from("stock_catalog")
-    .select("id,season,article_code,sku,tiro,bota,color,size_36,size_38,size_40,size_42,size_44,size_46,active,updated_at")
+    .from("stock_items")
+    .select("id,season,article_code,sku,tiro,bota,color,active,updated_at,stock_item_sizes(id,size_label,quantity,sort_order)")
     .eq("active", true)
     .order("sku", { ascending: true });
 
   if (error) throw error;
   return {
-    source_file: "supabase:stock_catalog",
-    items: convertirFilasStockCatalogAItems(data || []),
+    source_file: "supabase:stock_items",
+    items: convertirFilasStockItemsAItems(data || []),
   };
 }
 
@@ -488,12 +484,14 @@ function normalizarMapaStockPorSku(items = {}) {
     }
 
     const entry = merged[key];
-    TALLAS_DISPONIBLES.forEach((size) => {
+    const incomingSizes = Object.keys(payload?.sizes || {});
+    const knownSizes = new Set([...TALLAS_DISPONIBLES, ...incomingSizes.map((size) => normalizarStockSizeLabel(size))]);
+    [...knownSizes].forEach((size) => {
       const prev = Math.max(0, Number(entry.sizes?.[size]) || 0);
       const next = Math.max(0, Number(payload?.sizes?.[size]) || 0);
       entry.sizes[size] = prev + next;
     });
-    entry.total = TALLAS_DISPONIBLES.reduce((acc, size) => acc + (Math.max(0, Number(entry.sizes?.[size]) || 0)), 0);
+    entry.total = Object.values(entry.sizes || {}).reduce((acc, qty) => acc + (Math.max(0, Number(qty) || 0)), 0);
     if (!entry.description && payload?.description) entry.description = String(payload.description).trim();
     if (!entry.article && payload?.article) entry.article = String(payload.article).trim();
   });
@@ -507,12 +505,75 @@ function construirDescripcionStockCatalog(row = {}) {
     .join(" / ");
 }
 
+function normalizarStockSizeLabel(value) {
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, "");
+}
+
+function ordenarEtiquetasTalla(a, b) {
+  const aNorm = normalizarStockSizeLabel(a);
+  const bNorm = normalizarStockSizeLabel(b);
+  const aNum = Number(aNorm);
+  const bNum = Number(bNorm);
+  const aIsNum = Number.isFinite(aNum) && aNorm !== "";
+  const bIsNum = Number.isFinite(bNum) && bNorm !== "";
+  if (aIsNum && bIsNum) return aNum - bNum;
+  if (aIsNum) return -1;
+  if (bIsNum) return 1;
+  return aNorm.localeCompare(bNorm, undefined, { numeric: true, sensitivity: "base" });
+}
+
+function compararFilasStock(a = {}, b = {}) {
+  const seasonDiff = String(a?.season || "").localeCompare(String(b?.season || ""), undefined, { numeric: true });
+  if (seasonDiff !== 0) return seasonDiff;
+  return String(a?.sku || "").localeCompare(String(b?.sku || ""), undefined, { numeric: true });
+}
+
+function normalizarTallasStock(rows = []) {
+  const merged = new Map();
+  (Array.isArray(rows) ? rows : [])
+    .map((sizeRow, index) => ({
+      id: sizeRow?.id ?? null,
+      size_label: normalizarStockSizeLabel(sizeRow?.size_label ?? sizeRow?.label),
+      quantity: Math.max(0, Number(sizeRow?.quantity) || 0),
+      sort_order: Number.isFinite(Number(sizeRow?.sort_order))
+        ? Number(sizeRow.sort_order)
+        : ((index + 1) * 10),
+    }))
+    .filter((sizeRow) => sizeRow.size_label)
+    .forEach((sizeRow) => {
+      const existing = merged.get(sizeRow.size_label);
+      if (!existing) {
+        merged.set(sizeRow.size_label, sizeRow);
+        return;
+      }
+      existing.quantity += sizeRow.quantity;
+      existing.sort_order = Math.min(Number(existing.sort_order || 0), Number(sizeRow.sort_order || 0));
+    });
+
+  return [...merged.values()].sort((a, b) => {
+    const orderDiff = Number(a.sort_order || 0) - Number(b.sort_order || 0);
+    if (orderDiff !== 0) return orderDiff;
+    return ordenarEtiquetasTalla(a.size_label, b.size_label);
+  });
+}
+
 function normalizarFilaStockCatalog(row = {}) {
   const sku = normalizarSkuCatalogo(row?.sku);
-  const sizes = Object.fromEntries(
-    TALLAS_DISPONIBLES.map((size) => [size, Math.max(0, Number(row?.[STOCK_CATALOG_SIZE_FIELDS[size]]) || 0)])
+  const sizes = normalizarTallasStock(
+    Array.isArray(row?.stock_item_sizes)
+      ? row.stock_item_sizes
+      : Array.isArray(row?.sizes)
+        ? row.sizes
+        : TALLAS_DISPONIBLES.map((size, index) => ({
+          size_label: size,
+          quantity: Math.max(0, Number(row?.[`size_${size}`]) || 0),
+          sort_order: (index + 1) * 10,
+        }))
   );
-  const total = TALLAS_DISPONIBLES.reduce((acc, size) => acc + (Number(sizes?.[size]) || 0), 0);
+  const total = sizes.reduce((acc, sizeRow) => acc + (Number(sizeRow?.quantity) || 0), 0);
   return {
     id: row?.id ?? null,
     season: String(row?.season || "").trim() || "42",
@@ -529,17 +590,20 @@ function normalizarFilaStockCatalog(row = {}) {
   };
 }
 
-function convertirFilasStockCatalogAItems(rows = []) {
+function convertirFilasStockItemsAItems(rows = []) {
   const items = {};
   (Array.isArray(rows) ? rows : [])
     .map((row) => normalizarFilaStockCatalog(row))
     .filter((row) => row?.sku && row?.active !== false)
     .forEach((row) => {
+      const sizesMap = Object.fromEntries(
+        row.sizes.map((sizeRow) => [sizeRow.size_label, Math.max(0, Number(sizeRow.quantity) || 0)])
+      );
       items[row.sku] = {
         article: row.article_code,
         sku: row.sku,
         description: row.description,
-        sizes: { ...row.sizes },
+        sizes: sizesMap,
         total: row.total,
       };
     });
@@ -1559,7 +1623,21 @@ function configurarRealtimeStock() {
       {
         event: "*",
         schema: "public",
-        table: "stock_catalog",
+        table: "stock_items",
+      },
+      () => {
+        cargarStockData();
+        if (quotesAccessToken && adminActiveTab === "stock") {
+          cargarStockCatalogAdmin().catch((err) => console.warn("No se pudo refrescar Stock:", err));
+        }
+      }
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "stock_item_sizes",
       },
       () => {
         cargarStockData();
@@ -3039,7 +3117,7 @@ function logoutCotizaciones() {
   adminActiveTab = "cotizaciones";
   trazabilidadDisponibles = [];
   stockCatalogRows = [];
-  stockCatalogDraftVisible = false;
+  cerrarEditorStock();
   actualizarEstadoQuotesUI();
   const list = document.getElementById("quotesList");
   if (list) list.innerHTML = "";
@@ -3078,7 +3156,12 @@ function crearFilaStockCatalogVacia() {
     color: "",
     active: true,
     updated_at: null,
-    sizes: Object.fromEntries(TALLAS_DISPONIBLES.map((size) => [size, 0])),
+    sizes: TALLAS_DISPONIBLES.map((size, index) => ({
+      id: null,
+      size_label: size,
+      quantity: 0,
+      sort_order: (index + 1) * 10,
+    })),
     total: 0,
     description: "",
   };
@@ -3097,30 +3180,49 @@ function stockCatalogSummaryText(rows = [], filteredRows = rows) {
   return `Stock${seasonFilter ? ` T${seasonFilter}` : ""} · Modelos: ${formatNumberCL(filteredRows.length)} de ${formatNumberCL(rows.length)} · Unidades: ${formatNumberCL(totalUnits)}`;
 }
 
-function renderStockEditorRow(row = crearFilaStockCatalogVacia(), options = {}) {
-  const isNew = options?.isNew === true;
-  const normalized = normalizarFilaStockCatalog({
-    ...row,
-    ...(row?.sizes
-      ? Object.fromEntries(Object.entries(STOCK_CATALOG_SIZE_FIELDS).map(([size, field]) => [field, row.sizes?.[size]]))
-      : {}),
+function obtenerTallasVisiblesStock(rows = []) {
+  const labels = new Set();
+  (Array.isArray(rows) ? rows : []).forEach((row) => {
+    (Array.isArray(row?.sizes) ? row.sizes : []).forEach((sizeRow) => {
+      const label = normalizarStockSizeLabel(sizeRow?.size_label);
+      if (label) labels.add(label);
+    });
   });
-  const total = normalized.total;
+  if (!labels.size) {
+    TALLAS_DISPONIBLES.forEach((size) => labels.add(size));
+  }
+  return [...labels].sort(ordenarEtiquetasTalla);
+}
+
+function obtenerCantidadTalla(row, sizeLabel) {
+  return Math.max(
+    0,
+    Number(
+      (Array.isArray(row?.sizes) ? row.sizes : []).find((sizeRow) => normalizarStockSizeLabel(sizeRow?.size_label) === normalizarStockSizeLabel(sizeLabel))
+        ?.quantity
+    ) || 0
+  );
+}
+
+function renderStockSummaryRow(row = crearFilaStockCatalogVacia(), sizeLabels = []) {
+  const normalized = normalizarFilaStockCatalog(row);
 
   return `
-    <tr data-stock-id="${normalized.id ?? ""}" data-stock-new="${isNew ? "1" : "0"}">
+    <tr data-stock-id="${normalized.id ?? ""}">
       <td class="col-code">
-        <input type="hidden" name="season" value="${String(normalized.season || "42").replace(/"/g, "&quot;")}">
-        <input type="hidden" name="sku" value="${String(normalized.sku || "").replace(/"/g, "&quot;")}">
-        <input type="text" name="article_code" value="${String(normalized.article_code || "").replace(/"/g, "&quot;")}">
+        <button type="button" class="stock-code-btn" data-stock-open="${normalized.id ?? ""}">
+          ${String(normalized.article_code || normalized.sku || "-").replace(/</g, "&lt;")}
+        </button>
       </td>
-      <td class="col-text"><input type="text" name="tiro" value="${String(normalized.tiro || "").replace(/"/g, "&quot;")}"></td>
-      <td class="col-text"><input type="text" name="bota" value="${String(normalized.bota || "").replace(/"/g, "&quot;")}"></td>
-      <td class="col-text"><input type="text" name="color" value="${String(normalized.color || "").replace(/"/g, "&quot;")}"></td>
-      ${TALLAS_DISPONIBLES.map((size) => `<td class="col-size"><input type="number" min="0" step="1" name="size_${size}" value="${Math.max(0, Number(normalized.sizes?.[size]) || 0)}"></td>`).join("")}
-      <td class="col-total stock-sheet-total">
-        ${formatNumberCL(total)}
-        <input type="hidden" name="active" value="${normalized.active ? "1" : "0"}">
+      <td class="col-sku">${String(normalized.sku || "-").replace(/</g, "&lt;")}</td>
+      <td class="col-text">${String(normalized.tiro || "-").replace(/</g, "&lt;")}</td>
+      <td class="col-text">${String(normalized.bota || "-").replace(/</g, "&lt;")}</td>
+      <td class="col-text">${String(normalized.color || "-").replace(/</g, "&lt;")}</td>
+      ${sizeLabels.map((sizeLabel) => `<td class="col-size">${formatNumberCL(obtenerCantidadTalla(normalized, sizeLabel))}</td>`).join("")}
+      <td class="col-total stock-sheet-total">${formatNumberCL(normalized.total)}</td>
+      <td class="col-meta">${formatStockUpdatedAt(normalized.updated_at)}</td>
+      <td class="col-actions">
+        <button type="button" class="ghost-btn stock-row-action" data-stock-open="${normalized.id ?? ""}">Editar</button>
       </td>
     </tr>
   `;
@@ -3133,9 +3235,13 @@ function renderStockCatalogAdmin(rows = []) {
   const filteredRows = Array.isArray(rows) ? rows : [];
   const summaryEl = document.getElementById("stockCatalogSummary");
   if (summaryEl) summaryEl.innerText = stockCatalogSummaryText(stockCatalogRows, filteredRows);
+  const visibleSizes = obtenerTallasVisiblesStock(filteredRows.length ? filteredRows : stockCatalogRows);
 
-  const draftRow = stockCatalogDraftVisible ? renderStockEditorRow(crearFilaStockCatalogVacia(), { isNew: true }) : "";
-  const rowsHtml = filteredRows.map((row) => renderStockEditorRow(row)).join("");
+  const rowsHtml = filteredRows
+    .slice()
+    .sort(compararFilasStock)
+    .map((row) => renderStockSummaryRow(row, visibleSizes))
+    .join("");
 
   list.innerHTML = `
     <div class="stock-sheet-wrap">
@@ -3143,16 +3249,18 @@ function renderStockCatalogAdmin(rows = []) {
         <thead>
           <tr>
             <th class="col-code"><span class="stock-head-label">CODIGO</span><span class="stock-head-filter" aria-hidden="true"></span></th>
+            <th class="col-sku"><span class="stock-head-label">SKU</span><span class="stock-head-filter" aria-hidden="true"></span></th>
             <th class="col-text"><span class="stock-head-label">TIRO</span><span class="stock-head-filter" aria-hidden="true"></span></th>
             <th class="col-text"><span class="stock-head-label">BOTA</span><span class="stock-head-filter" aria-hidden="true"></span></th>
             <th class="col-text"><span class="stock-head-label">COLOR</span><span class="stock-head-filter" aria-hidden="true"></span></th>
-            ${TALLAS_DISPONIBLES.map((size) => `<th class="col-size is-numeric"><span class="stock-head-label">${size}</span><span class="stock-head-filter" aria-hidden="true"></span></th>`).join("")}
+            ${visibleSizes.map((size) => `<th class="col-size is-numeric"><span class="stock-head-label">${size}</span><span class="stock-head-filter" aria-hidden="true"></span></th>`).join("")}
             <th class="col-total is-numeric"><span class="stock-head-label">TOTAL</span><span class="stock-head-filter" aria-hidden="true"></span></th>
+            <th class="col-meta"><span class="stock-head-label">EDITADO</span><span class="stock-head-filter" aria-hidden="true"></span></th>
+            <th class="col-actions"><span class="stock-head-label">ACCION</span><span class="stock-head-filter" aria-hidden="true"></span></th>
           </tr>
         </thead>
         <tbody>
-          ${draftRow}
-          ${rowsHtml || `<tr><td colspan="11" class="stock-sheet-empty">No hay modelos para mostrar.</td></tr>`}
+          ${rowsHtml || `<tr><td colspan="${visibleSizes.length + 8}" class="stock-sheet-empty">No hay modelos para mostrar.</td></tr>`}
         </tbody>
       </table>
     </div>
@@ -3185,64 +3293,275 @@ function aplicarFiltroStockCatalogAdmin() {
   renderStockCatalogAdmin(filtered);
 }
 
-function leerStockCatalogDesdeCard(card) {
-  const read = (name) => card.querySelector(`[name="${name}"]`);
-  const sku = normalizarSkuCatalogo(read("sku")?.value || "");
+function abrirEditorStock(row = null) {
+  stockEditorState = {
+    open: true,
+    mode: row?.id ? "edit" : "create",
+    item: normalizarFilaStockCatalog(row || crearFilaStockCatalogVacia()),
+  };
+  renderStockEditorModal();
+}
+
+function cerrarEditorStock() {
+  stockEditorState = {
+    open: false,
+    mode: "edit",
+    item: null,
+  };
+  renderStockEditorModal();
+}
+
+function renderStockEditorModal() {
+  const modal = document.getElementById("stockEditorModal");
+  const body = document.getElementById("stockEditorBody");
+  const title = document.getElementById("stockEditorTitle");
+  const subtitle = document.getElementById("stockEditorSubtitle");
+  const deleteBtn = document.getElementById("stockEditorDeleteBtn");
+  if (!modal || !body) return;
+
+  if (!stockEditorState.open || !stockEditorState.item) {
+    modal.classList.remove("active");
+    modal.setAttribute("hidden", "hidden");
+    body.innerHTML = "";
+    return;
+  }
+
+  const item = normalizarFilaStockCatalog(stockEditorState.item);
+  const rowsHtml = (Array.isArray(item.sizes) ? item.sizes : [])
+    .map((sizeRow, index) => `
+      <div class="stock-editor-size-row" data-size-index="${index}">
+        <input type="text" name="size_label" value="${String(sizeRow.size_label || "").replace(/"/g, "&quot;")}" placeholder="Talla">
+        <input type="number" min="0" step="1" name="quantity" value="${Math.max(0, Number(sizeRow.quantity) || 0)}" placeholder="Cantidad">
+        <button type="button" class="ghost-btn stock-editor-remove-size" data-size-remove="${index}">Quitar</button>
+      </div>
+    `)
+    .join("");
+
+  if (title) title.innerText = item.id ? `Editar ${item.article_code || item.sku}` : "Nuevo modelo";
+  if (subtitle) subtitle.innerText = item.updated_at ? `Última edición: ${formatStockUpdatedAt(item.updated_at)}` : "Completa los datos del artículo y sus tallas.";
+  if (deleteBtn) deleteBtn.style.display = item.id ? "inline-flex" : "none";
+
+  body.innerHTML = `
+    <div class="stock-editor-grid">
+      <label>
+        <span>Temporada</span>
+        <input type="text" name="season" value="${String(item.season || "42").replace(/"/g, "&quot;")}" placeholder="42">
+      </label>
+      <label>
+        <span>Código</span>
+        <input type="text" name="article_code" value="${String(item.article_code || "").replace(/"/g, "&quot;")}" placeholder="420100">
+      </label>
+      <label>
+        <span>SKU</span>
+        <input type="text" name="sku" value="${String(item.sku || "").replace(/"/g, "&quot;")}" placeholder="4201-00">
+      </label>
+      <label>
+        <span>Tiro</span>
+        <input type="text" name="tiro" value="${String(item.tiro || "").replace(/"/g, "&quot;")}" placeholder="CINTURA">
+      </label>
+      <label>
+        <span>Bota</span>
+        <input type="text" name="bota" value="${String(item.bota || "").replace(/"/g, "&quot;")}" placeholder="PITILLO">
+      </label>
+      <label>
+        <span>Color</span>
+        <input type="text" name="color" value="${String(item.color || "").replace(/"/g, "&quot;")}" placeholder="NEGRO">
+      </label>
+    </div>
+    <label class="stock-editor-toggle">
+      <input type="checkbox" name="active" ${item.active ? "checked" : ""}>
+      <span>Activo</span>
+    </label>
+    <div class="stock-editor-sizes-head">
+      <strong>Tallas</strong>
+      <button type="button" class="ghost-btn" id="stockEditorAddSizeBtn">Agregar talla</button>
+    </div>
+    <div id="stockEditorSizesList" class="stock-editor-sizes-list">
+      ${rowsHtml || `<div class="stock-editor-empty">No hay tallas todavía.</div>`}
+    </div>
+    <div class="stock-editor-total">Total unidades: <strong>${formatNumberCL(item.total)}</strong></div>
+  `;
+
+  modal.removeAttribute("hidden");
+  modal.classList.add("active");
+}
+
+function leerStockEditorActual() {
+  const body = document.getElementById("stockEditorBody");
+  if (!body) return normalizarFilaStockCatalog(crearFilaStockCatalogVacia());
+  const read = (name) => body.querySelector(`[name="${name}"]`);
   const articleCodeInput = String(read("article_code")?.value || "").trim();
-  const payload = {
-    season: String(read("season")?.value || "42").trim(),
-    sku: sku || normalizarSkuCatalogo(articleCodeInput),
-    article_code: articleCodeInput || skuAArticleCode(sku),
+  const skuInput = normalizarSkuCatalogo(read("sku")?.value || "");
+  const season = String(read("season")?.value || "42").trim() || "42";
+  const sizes = [...body.querySelectorAll(".stock-editor-size-row")]
+    .map((row, index) => ({
+      id: null,
+      size_label: normalizarStockSizeLabel(row.querySelector('[name="size_label"]')?.value || ""),
+      quantity: Math.max(0, Number(row.querySelector('[name="quantity"]')?.value) || 0),
+      sort_order: (index + 1) * 10,
+    }))
+    .filter((sizeRow) => sizeRow.size_label);
+
+  return normalizarFilaStockCatalog({
+    id: stockEditorState.item?.id ?? null,
+    season,
+    article_code: articleCodeInput || skuAArticleCode(skuInput),
+    sku: skuInput || normalizarSkuCatalogo(articleCodeInput),
     tiro: String(read("tiro")?.value || "").trim().toUpperCase(),
     bota: String(read("bota")?.value || "").trim().toUpperCase(),
     color: String(read("color")?.value || "").trim().toUpperCase(),
-    active: String(read("active")?.value || "1") !== "0",
-  };
-
-  Object.entries(STOCK_CATALOG_SIZE_FIELDS).forEach(([size, field]) => {
-    const rawValue = read(`size_${size}`)?.value;
-    payload[field] = Math.max(0, Number(rawValue) || 0);
+    active: !!read("active")?.checked,
+    updated_at: stockEditorState.item?.updated_at || null,
+    sizes,
   });
-
-  return payload;
 }
 
-function filaStockTieneDatos(row) {
-  if (!row) return false;
-  const articleCode = String(row.querySelector('[name="article_code"]')?.value || "").trim();
-  if (articleCode) return true;
-  return TALLAS_DISPONIBLES.some((size) => Math.max(0, Number(row.querySelector(`[name="size_${size}"]`)?.value) || 0) > 0);
+function actualizarEditorStockDesdeDOM() {
+  if (!stockEditorState.open) return;
+  stockEditorState.item = leerStockEditorActual();
+  renderStockEditorModal();
 }
 
-function actualizarTotalFilaStock(row) {
-  if (!row) return;
-  const total = TALLAS_DISPONIBLES.reduce((acc, size) => {
-    const input = row.querySelector(`[name="size_${size}"]`);
-    return acc + Math.max(0, Number(input?.value) || 0);
-  }, 0);
-  const totalCell = row.querySelector(".stock-sheet-total");
-  if (totalCell) {
-    totalCell.innerHTML = `${formatNumberCL(total)}<input type="hidden" name="active" value="${row.querySelector('[name=\"active\"]')?.value || "1"}">`;
-  }
+function agregarTallaEditorStock() {
+  const current = leerStockEditorActual();
+  current.sizes.push({
+    id: null,
+    size_label: "",
+    quantity: 0,
+    sort_order: ((current.sizes.length + 1) * 10),
+  });
+  stockEditorState.item = current;
+  renderStockEditorModal();
+}
+
+function quitarTallaEditorStock(index) {
+  const current = leerStockEditorActual();
+  current.sizes = current.sizes.filter((_, rowIndex) => rowIndex !== index);
+  stockEditorState.item = current;
+  renderStockEditorModal();
+}
+
+function construirPayloadStockItem(item) {
+  const normalized = normalizarFilaStockCatalog(item);
+  const payload = {
+    season: String(normalized.season || "42").trim() || "42",
+    sku: normalizarSkuCatalogo(normalized.sku || normalized.article_code),
+    article_code: String(normalized.article_code || skuAArticleCode(normalized.sku)).trim(),
+    tiro: String(normalized.tiro || "").trim().toUpperCase(),
+    bota: String(normalized.bota || "").trim().toUpperCase(),
+    color: String(normalized.color || "").trim().toUpperCase(),
+    active: normalized.active !== false,
+  };
+  const sizes = normalizarTallasStock(normalized.sizes)
+    .filter((sizeRow) => sizeRow.size_label)
+    .map((sizeRow, index) => ({
+      stock_item_id: normalized.id ?? null,
+      size_label: sizeRow.size_label,
+      quantity: Math.max(0, Number(sizeRow.quantity) || 0),
+      sort_order: (index + 1) * 10,
+    }));
+  return { item: payload, sizes };
 }
 
 async function guardarStockCatalogAdmin(payload, options = {}) {
   if (!quotesAccessToken) throw new Error("Debes iniciar sesion");
   const id = options?.id;
-  const method = id ? "PATCH" : "POST";
-  const target = id
-    ? `${SUPABASE_URL}/rest/v1/stock_catalog?id=eq.${id}`
-    : `${SUPABASE_URL}/rest/v1/stock_catalog`;
+  const stockPayload = construirPayloadStockItem(payload);
+  if (!stockPayload.item.article_code || !stockPayload.item.sku) {
+    throw new Error("Completa código y SKU antes de guardar");
+  }
 
-  const res = await fetch(target, {
-    method,
+  const itemRes = await fetch(
+    id
+      ? `${SUPABASE_URL}/rest/v1/stock_items?id=eq.${id}`
+      : `${SUPABASE_URL}/rest/v1/stock_items`,
+    {
+      method: id ? "PATCH" : "POST",
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${quotesAccessToken}`,
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+      },
+      body: JSON.stringify(id ? stockPayload.item : [stockPayload.item]),
+    }
+  );
+
+  if (!itemRes.ok) {
+    if (itemRes.status === 401 || itemRes.status === 403) {
+      logoutCotizaciones();
+      throw new Error("No se pudo iniciar sesion");
+    }
+    const txt = await itemRes.text();
+    throw new Error(`No se pudo guardar stock: ${txt || itemRes.status}`);
+  }
+
+  const itemData = await itemRes.json().catch(() => []);
+  const savedItem = Array.isArray(itemData) ? itemData[0] : itemData;
+  const stockItemId = Number(savedItem?.id || id || 0);
+  if (!stockItemId) throw new Error("No se pudo obtener el ID del artículo");
+
+  const deleteSizesRes = await fetch(`${SUPABASE_URL}/rest/v1/stock_item_sizes?stock_item_id=eq.${stockItemId}`, {
+    method: "DELETE",
     headers: {
       apikey: SUPABASE_ANON_KEY,
       Authorization: `Bearer ${quotesAccessToken}`,
-      "Content-Type": "application/json",
-      Prefer: "return=representation",
+      Prefer: "return=minimal",
     },
-    body: JSON.stringify(id ? payload : [payload]),
+  });
+
+  if (!deleteSizesRes.ok) {
+    if (deleteSizesRes.status === 401 || deleteSizesRes.status === 403) {
+      logoutCotizaciones();
+      throw new Error("No se pudo iniciar sesion");
+    }
+    const txt = await deleteSizesRes.text();
+    throw new Error(`No se pudieron actualizar tallas: ${txt || deleteSizesRes.status}`);
+  }
+
+  const sizesPayload = stockPayload.sizes
+    .filter((sizeRow) => sizeRow.size_label)
+    .map((sizeRow) => ({
+      stock_item_id: stockItemId,
+      size_label: sizeRow.size_label,
+      quantity: Math.max(0, Number(sizeRow.quantity) || 0),
+      sort_order: sizeRow.sort_order,
+    }));
+
+  if (sizesPayload.length) {
+    const sizesRes = await fetch(`${SUPABASE_URL}/rest/v1/stock_item_sizes`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${quotesAccessToken}`,
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+      },
+      body: JSON.stringify(sizesPayload),
+    });
+
+    if (!sizesRes.ok) {
+      if (sizesRes.status === 401 || sizesRes.status === 403) {
+        logoutCotizaciones();
+        throw new Error("No se pudo iniciar sesion");
+      }
+      const txt = await sizesRes.text();
+      throw new Error(`No se pudieron guardar tallas: ${txt || sizesRes.status}`);
+    }
+  }
+
+  return stockItemId;
+}
+
+async function eliminarStockCatalogAdmin(itemId) {
+  if (!quotesAccessToken) throw new Error("Debes iniciar sesion");
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/stock_items?id=eq.${itemId}`, {
+    method: "DELETE",
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${quotesAccessToken}`,
+      Prefer: "return=minimal",
+    },
   });
 
   if (!res.ok) {
@@ -3251,17 +3570,15 @@ async function guardarStockCatalogAdmin(payload, options = {}) {
       throw new Error("No se pudo iniciar sesion");
     }
     const txt = await res.text();
-    throw new Error(`No se pudo guardar stock: ${txt || res.status}`);
+    throw new Error(`No se pudo eliminar stock: ${txt || res.status}`);
   }
-
-  return res.json().catch(() => []);
 }
 
 async function cargarStockCatalogAdmin() {
   if (!quotesAccessToken) throw new Error("Debes iniciar sesion");
 
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/stock_catalog?select=id,season,article_code,sku,tiro,bota,color,size_36,size_38,size_40,size_42,size_44,size_46,active,updated_at&order=season.asc,sku.asc`,
+    `${SUPABASE_URL}/rest/v1/stock_items?select=id,season,article_code,sku,tiro,bota,color,active,updated_at,stock_item_sizes(id,size_label,quantity,sort_order)&order=season.asc,sku.asc`,
     {
       headers: {
         apikey: SUPABASE_ANON_KEY,
@@ -3282,6 +3599,13 @@ async function cargarStockCatalogAdmin() {
   const data = await res.json();
   stockCatalogRows = (Array.isArray(data) ? data : []).map((row) => normalizarFilaStockCatalog(row));
   aplicarFiltroStockCatalogAdmin();
+  if (stockEditorState.open && stockEditorState.item?.id) {
+    const refreshed = stockCatalogRows.find((row) => Number(row.id) === Number(stockEditorState.item.id));
+    if (refreshed) {
+      stockEditorState.item = refreshed;
+      renderStockEditorModal();
+    }
+  }
 }
 
 function normalizarBusquedaModelo(value) {
@@ -3549,6 +3873,11 @@ function configurarPanelCotizaciones() {
   const stockSeasonTabs = document.getElementById("stockCatalogSeasonTabs");
   const stockNewBtn = document.getElementById("stockCatalogNewBtn");
   const stockListEl = document.getElementById("stockCatalogList");
+  const stockEditorModal = document.getElementById("stockEditorModal");
+  const stockEditorCloseBtn = document.getElementById("closeStockEditorModal");
+  const stockEditorCancelBtn = document.getElementById("stockEditorCancelBtn");
+  const stockEditorSaveBtn = document.getElementById("stockEditorSaveBtn");
+  const stockEditorDeleteBtn = document.getElementById("stockEditorDeleteBtn");
   const emailEl = document.getElementById("quotesEmail");
   const passEl = document.getElementById("quotesPassword");
   const quotesListEl = document.getElementById("quotesList");
@@ -3635,8 +3964,7 @@ function configurarPanelCotizaciones() {
     stockSearchInput?.focus();
   });
   stockNewBtn?.addEventListener("click", () => {
-    stockCatalogDraftVisible = !stockCatalogDraftVisible;
-    aplicarFiltroStockCatalogAdmin();
+    abrirEditorStock(crearFilaStockCatalogVacia());
   });
 
   btnLogout?.addEventListener("click", logoutCotizaciones);
@@ -3697,37 +4025,75 @@ function configurarPanelCotizaciones() {
   });
 
   stockListEl?.addEventListener("click", async (e) => {
-    const row = e.target.closest("tr");
+    const openBtn = e.target.closest("[data-stock-open]");
+    if (!openBtn) return;
+    const itemId = Number(openBtn.dataset.stockOpen || 0);
+    const row = stockCatalogRows.find((item) => Number(item.id) === itemId);
     if (!row) return;
-    if (!filaStockTieneDatos(row)) return;
+    abrirEditorStock(row);
   });
 
-  stockListEl?.addEventListener("input", (e) => {
-    const sizeInput = e.target.closest('input[type="number"][name^="size_"]');
-    if (!sizeInput) return;
-    actualizarTotalFilaStock(sizeInput.closest("tr"));
+  stockEditorCloseBtn?.addEventListener("click", cerrarEditorStock);
+  stockEditorCancelBtn?.addEventListener("click", cerrarEditorStock);
+  stockEditorModal?.addEventListener("click", (e) => {
+    if (e.target?.id === "stockEditorModal") cerrarEditorStock();
   });
 
-  stockListEl?.addEventListener("change", async (e) => {
-    const field = e.target.closest('input[type="text"], input[type="number"]');
+  stockEditorModal?.addEventListener("click", async (e) => {
+    const addBtn = e.target.closest("#stockEditorAddSizeBtn");
+    if (addBtn) {
+      agregarTallaEditorStock();
+      return;
+    }
+    const removeBtn = e.target.closest("[data-size-remove]");
+    if (removeBtn) {
+      quitarTallaEditorStock(Number(removeBtn.dataset.sizeRemove || 0));
+      return;
+    }
+  });
+
+  stockEditorModal?.addEventListener("input", (e) => {
+    const field = e.target.closest('input[type="text"], input[type="number"], input[type="checkbox"]');
     if (!field) return;
+    stockEditorState.item = leerStockEditorActual();
+    const totalEl = stockEditorModal.querySelector(".stock-editor-total strong");
+    if (totalEl) totalEl.innerText = formatNumberCL(stockEditorState.item.total);
+  });
 
-    const row = field.closest("tr");
-    if (!row || !filaStockTieneDatos(row)) return;
-
-    const isNew = row.dataset.stockNew === "1";
-    const stockId = row.dataset.stockId;
-    const payload = leerStockCatalogDesdeCard(row);
-
-    if (!payload.article_code || !payload.sku) return;
-
+  stockEditorSaveBtn?.addEventListener("click", async () => {
+    const payload = leerStockEditorActual();
+    if (!payload.article_code || !payload.sku) {
+      mostrarToastError("Faltan datos", "Completa el código y el SKU antes de guardar.");
+      return;
+    }
     try {
-      await guardarStockCatalogAdmin(payload, { id: isNew ? null : stockId });
-      stockCatalogDraftVisible = false;
+      await guardarStockCatalogAdmin(payload, { id: payload.id });
       await cargarStockCatalogAdmin();
       await cargarStockData();
+      cerrarEditorStock();
+      mostrarToastExito("Stock guardado", "Los cambios del artículo se guardaron correctamente.");
     } catch (err) {
       mostrarToastError("No se pudo guardar", err.message || "Error guardando stock");
+    }
+  });
+
+  stockEditorDeleteBtn?.addEventListener("click", async () => {
+    const itemId = Number(stockEditorState.item?.id || 0);
+    if (!itemId) return;
+    const confirmar = await mostrarConfirmacionAccion({
+      titulo: "Eliminar artículo",
+      mensaje: `Se eliminará ${stockEditorState.item?.article_code || stockEditorState.item?.sku || "este artículo"} junto con sus tallas.`,
+      confirmarTexto: "Sí, eliminar",
+    });
+    if (!confirmar) return;
+    try {
+      await eliminarStockCatalogAdmin(itemId);
+      await cargarStockCatalogAdmin();
+      await cargarStockData();
+      cerrarEditorStock();
+      mostrarToastExito("Artículo eliminado", "El artículo se eliminó correctamente.");
+    } catch (err) {
+      mostrarToastError("No se pudo eliminar", err.message || "Error eliminando artículo");
     }
   });
 }

@@ -172,6 +172,26 @@
           <div id="stockCatalogList" class="quotes-list stock-catalog-list"></div>
         </div>
       </div>
+
+      <div id="stockEditorModal" class="modal stock-editor-modal" hidden>
+        <div class="stock-editor-dialog">
+          <div class="stock-editor-head">
+            <div>
+              <h3 id="stockEditorTitle">Editar stock</h3>
+              <div id="stockEditorSubtitle" class="stock-editor-subtitle"></div>
+            </div>
+            <button id="closeStockEditorModal" type="button" class="ghost-btn">Cerrar</button>
+          </div>
+          <div id="stockEditorBody" class="stock-editor-body"></div>
+          <div class="stock-editor-actions">
+            <button id="stockEditorDeleteBtn" type="button" class="ghost-btn stock-editor-delete">Eliminar artículo</button>
+            <div class="stock-editor-actions-right">
+              <button id="stockEditorCancelBtn" type="button" class="ghost-btn">Cancelar</button>
+              <button id="stockEditorSaveBtn" type="button">Guardar cambios</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -193,13 +213,9 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="script-v2.js?v=20260422a"></script>
+<script src="script-v2.js?v=20260427a"></script>
 </body>
 </html>
-
-
-
-
 
 
 
