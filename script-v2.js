@@ -529,9 +529,13 @@ function ordenarEtiquetasTalla(a, b) {
 }
 
 function compararFilasStock(a = {}, b = {}) {
-  const seasonDiff = String(a?.season || "").localeCompare(String(b?.season || ""), undefined, { numeric: true });
+  const seasonDiff = String(b?.season || "").localeCompare(String(a?.season || ""), undefined, { numeric: true });
   if (seasonDiff !== 0) return seasonDiff;
-  return String(a?.sku || "").localeCompare(String(b?.sku || ""), undefined, { numeric: true });
+
+  const articleCodeDiff = String(b?.article_code || "").localeCompare(String(a?.article_code || ""), undefined, { numeric: true });
+  if (articleCodeDiff !== 0) return articleCodeDiff;
+
+  return String(b?.sku || "").localeCompare(String(a?.sku || ""), undefined, { numeric: true });
 }
 
 function normalizarTallasStock(rows = []) {
@@ -565,16 +569,18 @@ function normalizarTallasStock(rows = []) {
 
 function normalizarFilaStockCatalog(row = {}) {
   const sku = normalizarSkuCatalogo(row?.sku);
-  const sizes = normalizarTallasStock(
-    Array.isArray(row?.stock_item_sizes)
+  const sourceSizes =
+    Array.isArray(row?.stock_item_sizes) && row.stock_item_sizes.length
       ? row.stock_item_sizes
-      : Array.isArray(row?.sizes)
+      : Array.isArray(row?.sizes) && row.sizes.length
         ? row.sizes
         : TALLAS_DISPONIBLES.map((size, index) => ({
           size_label: size,
           quantity: Math.max(0, Number(row?.[`size_${size}`]) || 0),
           sort_order: (index + 1) * 10,
-        }))
+        }));
+  const sizes = normalizarTallasStock(
+    sourceSizes
   );
   const total = sizes.reduce((acc, sizeRow) => acc + (Number(sizeRow?.quantity) || 0), 0);
   return {
@@ -3251,15 +3257,15 @@ function renderStockCatalogAdmin(rows = []) {
       <table class="stock-sheet">
         <thead>
           <tr>
-            <th class="col-code"><span class="stock-head-label">CODIGO</span><span class="stock-head-filter" aria-hidden="true"></span></th>
-            <th class="col-sku"><span class="stock-head-label">SKU</span><span class="stock-head-filter" aria-hidden="true"></span></th>
-            <th class="col-text"><span class="stock-head-label">TIRO</span><span class="stock-head-filter" aria-hidden="true"></span></th>
-            <th class="col-text"><span class="stock-head-label">BOTA</span><span class="stock-head-filter" aria-hidden="true"></span></th>
-            <th class="col-text"><span class="stock-head-label">COLOR</span><span class="stock-head-filter" aria-hidden="true"></span></th>
-            ${visibleSizes.map((size) => `<th class="col-size is-numeric"><span class="stock-head-label">${size}</span><span class="stock-head-filter" aria-hidden="true"></span></th>`).join("")}
-            <th class="col-total is-numeric"><span class="stock-head-label">TOTAL</span><span class="stock-head-filter" aria-hidden="true"></span></th>
-            <th class="col-meta"><span class="stock-head-label">EDITADO</span><span class="stock-head-filter" aria-hidden="true"></span></th>
-            <th class="col-actions"><span class="stock-head-label">ACCION</span><span class="stock-head-filter" aria-hidden="true"></span></th>
+            <th class="col-code"><span class="stock-head-label">CODIGO</span></th>
+            <th class="col-sku"><span class="stock-head-label">SKU</span></th>
+            <th class="col-text"><span class="stock-head-label">TIRO</span></th>
+            <th class="col-text"><span class="stock-head-label">BOTA</span></th>
+            <th class="col-text"><span class="stock-head-label">COLOR</span></th>
+            ${visibleSizes.map((size) => `<th class="col-size is-numeric"><span class="stock-head-label">${size}</span></th>`).join("")}
+            <th class="col-total is-numeric"><span class="stock-head-label">TOTAL</span></th>
+            <th class="col-meta"><span class="stock-head-label">EDITADO</span></th>
+            <th class="col-actions"><span class="stock-head-label">ACCION</span></th>
           </tr>
         </thead>
         <tbody>
@@ -3335,7 +3341,6 @@ function renderStockEditorModal() {
       <div class="stock-editor-size-row" data-size-index="${index}">
         <input type="text" name="size_label" value="${String(sizeRow.size_label || "").replace(/"/g, "&quot;")}" placeholder="Talla">
         <input type="number" min="0" step="1" name="quantity" value="${Math.max(0, Number(sizeRow.quantity) || 0)}" placeholder="Cantidad">
-        <button type="button" class="ghost-btn stock-editor-remove-size" data-size-remove="${index}">Quitar</button>
       </div>
     `)
     .join("");
