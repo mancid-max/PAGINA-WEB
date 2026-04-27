@@ -414,7 +414,10 @@ const STOCK_DATA_FILE_BY_SOURCE = {
 const STOCK_DATA_FILE = STOCK_DATA_FILE_BY_SOURCE[CATALOG_SOURCE] || "stock-data.json";
 
 function stockSupabaseHabilitado() {
-  return INVENTORY_ENABLED && clienteSupabaseDisponible();
+  // La vitrina pública debe seguir funcionando aunque Supabase esté vacío,
+  // con RLS reciente o con datos en validación. Para el storefront usamos
+  // siempre el JSON regenerado desde el Excel y dejamos Supabase para el admin.
+  return false;
 }
 
 async function cargarStockJsonLocal() {
