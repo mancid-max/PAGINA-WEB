@@ -326,12 +326,37 @@ function obtenerClienteSupabase() {
 }
 
 function normalizarRut(valor) {
-  return String(valor || "")
+  const clean = String(valor || "")
     .trim()
     .toUpperCase()
     .replace(/\./g, "")
     .replace(/\s+/g, "")
-    .replace(/[^0-9K-]/g, "");
+    .replace(/[^0-9K]/g, "");
+  if (!clean) return "";
+  if (clean.length === 1) return clean;
+  return `${clean.slice(0, -1)}-${clean.slice(-1)}`;
+}
+
+function calcularDigitoVerificadorRut(cuerpoRut) {
+  const digits = String(cuerpoRut || "").replace(/\D/g, "");
+  if (!digits) return "";
+  let suma = 0;
+  let multiplicador = 2;
+  for (let i = digits.length - 1; i >= 0; i--) {
+    suma += Number(digits[i]) * multiplicador;
+    multiplicador = multiplicador === 7 ? 2 : multiplicador + 1;
+  }
+  const resto = 11 - (suma % 11);
+  if (resto === 11) return "0";
+  if (resto === 10) return "K";
+  return String(resto);
+}
+
+function esRutValido(valor) {
+  const n = normalizarRut(valor);
+  const [bodyRaw, dvRaw] = n.split("-");
+  if (!bodyRaw || !dvRaw || !/^\d+$/.test(bodyRaw)) return false;
+  return calcularDigitoVerificadorRut(bodyRaw) === dvRaw.toUpperCase();
 }
 
 function formatearRutVisual(rut) {
@@ -529,13 +554,21 @@ function ordenarEtiquetasTalla(a, b) {
 }
 
 function compararFilasStock(a = {}, b = {}) {
-  const seasonDiff = String(b?.season || "").localeCompare(String(a?.season || ""), undefined, { numeric: true });
+  const totalA = Number(normalizarFilaStockCatalog(a)?.total) || 0;
+  const totalB = Number(normalizarFilaStockCatalog(b)?.total) || 0;
+  const totalDiff = totalB - totalA;
+  if (totalDiff !== 0) return totalDiff;
+
+  const rowA = normalizarFilaStockCatalog(a);
+  const rowB = normalizarFilaStockCatalog(b);
+
+  const seasonDiff = String(rowB?.season || "").localeCompare(String(rowA?.season || ""), undefined, { numeric: true });
   if (seasonDiff !== 0) return seasonDiff;
 
-  const articleCodeDiff = String(b?.article_code || "").localeCompare(String(a?.article_code || ""), undefined, { numeric: true });
+  const articleCodeDiff = String(rowB?.article_code || "").localeCompare(String(rowA?.article_code || ""), undefined, { numeric: true });
   if (articleCodeDiff !== 0) return articleCodeDiff;
 
-  return String(b?.sku || "").localeCompare(String(a?.sku || ""), undefined, { numeric: true });
+  return String(rowB?.sku || "").localeCompare(String(rowA?.sku || ""), undefined, { numeric: true });
 }
 
 function normalizarTallasStock(rows = []) {
@@ -1136,10 +1169,39 @@ function obtenerTotalStockProducto(item, stockItems = {}) {
   return total;
 }
 
+function compararProductosPorStockDesc(a, b, stockItems = stockBySku) {
+  const stockA = Math.max(
+    0,
+    Number(a?._stockTotal) || 0,
+    Number(obtenerStockParaSkuDesdeItems(a?.family, stockItems)?.total) || 0
+  );
+  const stockB = Math.max(
+    0,
+    Number(b?._stockTotal) || 0,
+    Number(obtenerStockParaSkuDesdeItems(b?.family, stockItems)?.total) || 0
+  );
+  if (stockB !== stockA) return stockB - stockA;
+  const modelA = normalizarSkuCatalogo(a?.family);
+  const modelB = normalizarSkuCatalogo(b?.family);
+  return modelA.localeCompare(modelB, undefined, { numeric: true });
+}
+
 function obtenerImagenesPropias(obj) {
   const nonCatalog = deduplicarImagenesParaVisor(obtenerImagenesVisibles(obj));
   if (nonCatalog.length) return nonCatalog;
   return deduplicarImagenesParaVisor(obtenerImagenesVisibles(obj, { includeCatalog: true }));
+}
+
+function crearFirmaGaleriaTarjeta(images = []) {
+  const names = [];
+  const seen = new Set();
+  deduplicarImagenesParaVisor(images).forEach((img) => {
+    const key = normalizarRutaAsset(img).split("/").pop()?.toLowerCase() || "";
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    names.push(key);
+  });
+  return names.join("|");
 }
 
 function imagenCompatibleConSku(path, sku) {
@@ -1158,13 +1220,16 @@ function imagenCompatibleConSku(path, sku) {
 function construirProductosGridPorSku(items = [], stockItems = {}) {
   const cards = [];
   const seenSku = new Set();
+  const seenImageSignatureByFamily = new Map();
 
   (Array.isArray(items) ? items : []).forEach((item) => {
-    const baseFamily = normalizarSkuCatalogo(item?.family);
+    const rawFamily = normalizarSkuCatalogo(item?.family);
+    const familyRoot = obtenerBaseFamilia(rawFamily);
+    const baseFamily = familyRoot ? `${familyRoot}-00` : rawFamily;
     if (!baseFamily) return;
 
     const candidates = [
-      { sku: baseFamily, source: item },
+      { sku: rawFamily, source: item },
       ...((Array.isArray(item?.variants) ? item.variants : []).map((variant) => ({
         sku: normalizarSkuCatalogo(variant?.sku),
         source: variant,
@@ -1180,8 +1245,15 @@ function construirProductosGridPorSku(items = [], stockItems = {}) {
       const images = obtenerImagenesPropias(entry.source).filter((img) => imagenCompatibleConSku(img, entry.sku));
       const cardImage = images[0] || "";
       if (!cardImage) return;
+      const imageSignature = crearFirmaGaleriaTarjeta(images);
+      const knownSignatures = seenImageSignatureByFamily.get(baseFamily) || new Set();
+      if (imageSignature && knownSignatures.has(imageSignature)) return;
 
       seenSku.add(entry.sku);
+      if (imageSignature) {
+        knownSignatures.add(imageSignature);
+        seenImageSignatureByFamily.set(baseFamily, knownSignatures);
+      }
       cards.push({
         ...item,
         family: entry.sku,
@@ -1346,8 +1418,8 @@ async function cargarProductosCatalogo() {
 
     if (INVENTORY_ENABLED) {
       stockBySku = {
-        ...normalizarMapaStockPorSku(stockData?.items || {}),
         ...crearStockSinteticoAgotados(),
+        ...normalizarMapaStockPorSku(stockData?.items || {}),
       };
     }
     catalogCoverBySku = normalizarMapaAssetsPorSku(catalogCoverMapData || {});
@@ -1370,21 +1442,19 @@ async function cargarProductosCatalogo() {
     items = (INVENTORY_ENABLED && stockCatalogoValido)
       ? filtrarProductosPorStock(itemsCatalogoBase, stockBySku)
       : filtrarProductosDisponiblesCole42(itemsCatalogoBase, trazabilidadData);
+    if (INVENTORY_ENABLED && stockCatalogoValido) {
+      items = filtrarVariantesPorStock(items, stockBySku);
+    }
     if (CATALOG_SOURCE === "catalogo-1") {
       items = rescatarProductosConStockFaltantes(itemsCatalogoBase, items, stockBySku);
     }
     items = deduplicarTarjetasPorModelo(items);
 
     if (CATALOG_SOURCE === "catalogo-1") {
-      items = items.sort((a, b) => {
-        const aKey = normalizarSkuCatalogo(a?.family);
-        const bKey = normalizarSkuCatalogo(b?.family);
-        return aKey.localeCompare(bKey, undefined, { numeric: true });
-      });
       items = deduplicarTarjetasPorModelo(items);
     }
 
-    productos = items;
+    productos = [...items].sort((a, b) => compararProductosPorStockDesc(a, b, stockBySku));
     productosGrid = construirProductosGridPorSku(productos, stockBySku);
     renderGrid(productosGrid);
     inicializarBuscadorModelos();
@@ -2171,14 +2241,7 @@ function renderGrid(lista) {
   const container = document.getElementById("grid");
   const listaConImagen = (Array.isArray(lista) ? lista : [])
     .filter((p) => Boolean(p?._cardImage));
-  const listaOrdenada = [...listaConImagen].sort((a, b) => {
-    const stockB = Number(b?._stockTotal) || Math.max(0, Number(obtenerStockParaSkuDesdeItems(b?.family, stockBySku)?.total) || 0);
-    const stockA = Number(a?._stockTotal) || Math.max(0, Number(obtenerStockParaSkuDesdeItems(a?.family, stockBySku)?.total) || 0);
-    if (stockB !== stockA) return stockB - stockA;
-    const modelA = normalizarSkuCatalogo(a?.family);
-    const modelB = normalizarSkuCatalogo(b?.family);
-    return modelA.localeCompare(modelB, undefined, { numeric: true });
-  });
+  const listaOrdenada = [...listaConImagen].sort((a, b) => compararProductosPorStockDesc(a, b, stockBySku));
 
   container.innerHTML = listaOrdenada
     .map(
@@ -2378,33 +2441,41 @@ function actualizarCarrito() {
   const container = document.getElementById("cartItems");
   let totalItems = 0;
 
-  container.innerHTML = pedido
-    .map((item, index) => {
-      const cantidadModelo = Object.values(item.tallas).reduce((acc, qty) => acc + (Number(qty) || 0), 0);
-      totalItems += cantidadModelo;
-
-      return `
-      <div class="cart-item">
-        <div class="cart-item-top">
-          <div class="cart-item-title">Modelo ${item.sku}</div>
-          <button class="cart-trash" type="button" aria-label="Eliminar modelo ${item.sku}" onclick="eliminarItem(${index})">
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h2v9H7V9Zm4 0h2v9h-2V9Zm4 0h2v9h-2V9ZM6 7h12l-1 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Z"/>
-            </svg>
-          </button>
-        </div>
-        <div>
-          ${Object.entries(item.tallas)
-            .map(([t, c]) => `<div>Talla ${t}: <strong>${c}</strong></div>`)
-            .join("")}
-        </div>
-        <div class="cart-item-summary">
-          <div>Prendas: <strong>${cantidadModelo}</strong></div>
-        </div>
+  if (!pedido.length) {
+    container.innerHTML = `
+      <div class="cart-empty-state">
+        <div class="cart-empty-title">Aún no agregas modelos</div>
+        <div class="cart-empty-text">Selecciona tallas y cantidades para armar tu cotización.</div>
       </div>
-    `
-    })
-    .join("");
+    `;
+  } else {
+    container.innerHTML = pedido
+      .map((item, index) => {
+        const cantidadModelo = Object.values(item.tallas).reduce((acc, qty) => acc + (Number(qty) || 0), 0);
+        totalItems += cantidadModelo;
+        const tallasHtml = Object.entries(item.tallas)
+          .map(([t, c]) => `<span class="cart-size-pill">T${t} <strong>${c}</strong></span>`)
+          .join("");
+
+        return `
+        <div class="cart-item">
+          <div class="cart-item-top">
+            <div class="cart-item-title">Modelo ${item.sku}</div>
+            <button class="cart-trash" type="button" aria-label="Eliminar modelo ${item.sku}" onclick="eliminarItem(${index})">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h2v9H7V9Zm4 0h2v9h-2V9Zm4 0h2v9h-2V9ZM6 7h12l-1 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="cart-item-sizes">${tallasHtml}</div>
+          <div class="cart-item-summary">
+            <div>Prendas: <strong>${cantidadModelo}</strong></div>
+          </div>
+        </div>
+      `;
+      })
+      .join("");
+  }
 
   let totalsBox = document.getElementById("cartTotals");
   if (!totalsBox) {
@@ -2444,8 +2515,8 @@ document.addEventListener("click", (e) => {
  * COTIZACIÓN: CSV + MAILTO + LIMPIEZA
  ***********************/
 function generarCSV() {
-  const nombreTienda = clienteSeleccionado?.razon_social || "";
-  const rutCliente = clienteSeleccionado?.rut || clienteSeleccionado?.rut_normalized || "";
+  const nombreTienda = clienteSeleccionado?.razon_social || String(document.getElementById("clientName")?.value || "").trim();
+  const rutCliente = formatearRutVisual(document.getElementById("clientRut")?.value || clienteSeleccionado?.rut || clienteSeleccionado?.rut_normalized || "");
   if (!nombreTienda || !pedido.length) return null;
 
   const sep = ";";
@@ -2917,6 +2988,7 @@ function setClientLookupUI({ tipo = "", texto = "", badge = "" } = {}) {
     }
   }
   if (badgeEl) {
+    badgeEl.className = "client-lookup-badge" + (tipo ? ` ${tipo}` : "");
     if (badge) {
       badgeEl.hidden = false;
       badgeEl.innerText = badge;
@@ -2925,6 +2997,27 @@ function setClientLookupUI({ tipo = "", texto = "", badge = "" } = {}) {
       badgeEl.innerText = "";
     }
   }
+}
+
+function toggleClientNameField(show, { value = "", readonly = false } = {}) {
+  const wrapEl = document.getElementById("clientNameWrap");
+  const inputEl = document.getElementById("clientName");
+  if (!wrapEl || !inputEl) return;
+  wrapEl.hidden = !show;
+  inputEl.readOnly = !!readonly;
+  inputEl.value = value || "";
+  inputEl.classList.toggle("is-readonly", !!readonly);
+}
+
+function construirClienteNuevoDesdeInput(rutNormalizado) {
+  const nameEl = document.getElementById("clientName");
+  const nombre = String(nameEl?.value || "").trim();
+  return {
+    rut: formatearRutVisual(rutNormalizado),
+    rut_normalized: rutNormalizado,
+    razon_social: nombre,
+    is_new: true,
+  };
 }
 
 async function buscarClientePorRutSupabase(rutInput) {
@@ -2966,20 +3059,29 @@ async function validarRutClienteEnUI({ silencioso = false } = {}) {
 
   if (!rutNormalizado) {
     setClientLookupUI();
+    toggleClientNameField(false);
     return null;
   }
 
-  if (!/^[0-9]+-[0-9K]$/i.test(rutNormalizado)) {
+  if (!/^[0-9]+-[0-9K]$/i.test(rutNormalizado) || !esRutValido(rutNormalizado)) {
+    toggleClientNameField(false);
     if (!silencioso) setClientLookupUI({ tipo: "error", texto: "Formato de RUT inválido" });
     return null;
   }
 
+  input.value = formatearRutVisual(rutNormalizado);
   setClientLookupUI({ tipo: "loading", texto: "Buscando cliente..." });
   try {
     const cliente = await buscarClientePorRutSupabase(rutNormalizado);
     if (!cliente) {
-      setClientLookupUI({ tipo: "error", texto: "Cliente no existe" });
-      return null;
+      const clienteNuevo = construirClienteNuevoDesdeInput(rutNormalizado);
+      setClientLookupUI({
+        tipo: "new",
+        texto: "Cliente nuevo. Ingresa el nombre o razón social para continuar.",
+        badge: "Cliente nuevo",
+      });
+      toggleClientNameField(true, { value: clienteNuevo.razon_social, readonly: false });
+      return clienteNuevo;
     }
     clienteSeleccionado = cliente;
     input.value = formatearRutVisual(cliente.rut || cliente.rut_normalized);
@@ -2988,19 +3090,24 @@ async function validarRutClienteEnUI({ silencioso = false } = {}) {
       texto: "Cliente encontrado",
       badge: cliente.razon_social,
     });
+    toggleClientNameField(false);
     return cliente;
   } catch (err) {
     setClientLookupUI({ tipo: "error", texto: err.message || "No se pudo validar RUT" });
+    toggleClientNameField(false);
     return null;
   }
 }
 
 function configurarLookupCliente() {
   const input = document.getElementById("clientRut");
+  const nameInput = document.getElementById("clientName");
   if (!input) return;
   input.addEventListener("input", () => {
+    input.value = formatearRutVisual(input.value);
     clienteSeleccionado = null;
     setClientLookupUI();
+    toggleClientNameField(false);
     window.clearTimeout(clientLookupDebounce);
     clientLookupDebounce = window.setTimeout(() => {
       validarRutClienteEnUI({ silencioso: true });
@@ -3010,6 +3117,45 @@ function configurarLookupCliente() {
     window.clearTimeout(clientLookupDebounce);
     validarRutClienteEnUI();
   });
+  nameInput?.addEventListener("input", () => {
+    if (clienteSeleccionado) return;
+    const rutNormalizado = normalizarRut(input.value);
+    if (!rutNormalizado || !esRutValido(rutNormalizado)) return;
+    const nombre = String(nameInput.value || "").trim();
+    setClientLookupUI({
+      tipo: "new",
+      texto: nombre ? "Cliente nuevo listo para enviar." : "Completa el nombre del cliente nuevo.",
+      badge: "Cliente nuevo",
+    });
+  });
+}
+
+async function obtenerClienteParaCotizacion() {
+  const rutEl = document.getElementById("clientRut");
+  const nameEl = document.getElementById("clientName");
+  const clienteValidado = clienteSeleccionado || await validarRutClienteEnUI();
+  const rutNormalizado = normalizarRut(rutEl?.value || "");
+
+  if (!rutNormalizado || !esRutValido(rutNormalizado)) {
+    throw new Error("Ingresa un RUT válido");
+  }
+
+  if (clienteValidado && !clienteValidado.is_new) {
+    return clienteValidado;
+  }
+
+  const nombre = String(nameEl?.value || "").trim();
+  if (!nombre) {
+    toggleClientNameField(true, { value: "", readonly: false });
+    throw new Error("Completa el nombre o razón social del cliente nuevo");
+  }
+
+  return {
+    rut: formatearRutVisual(rutNormalizado),
+    rut_normalized: rutNormalizado,
+    razon_social: nombre,
+    is_new: true,
+  };
 }
 
 function construirPayloadCotizacion(cliente) {
@@ -3215,9 +3361,10 @@ function obtenerCantidadTalla(row, sizeLabel) {
 
 function renderStockSummaryRow(row = crearFilaStockCatalogVacia(), sizeLabels = []) {
   const normalized = normalizarFilaStockCatalog(row);
+  const totalClass = normalized.total > 0 ? "stock-sheet-total is-positive" : "stock-sheet-total is-zero";
 
   return `
-    <tr data-stock-id="${normalized.id ?? ""}">
+    <tr data-stock-id="${normalized.id ?? ""}" class="${normalized.total > 0 ? "stock-row-has-stock" : "stock-row-zero-stock"}">
       <td class="col-code">
         <button type="button" class="stock-code-btn" data-stock-open="${normalized.id ?? ""}">
           ${String(normalized.article_code || normalized.sku || "-").replace(/</g, "&lt;")}
@@ -3228,7 +3375,7 @@ function renderStockSummaryRow(row = crearFilaStockCatalogVacia(), sizeLabels = 
       <td class="col-text">${String(normalized.bota || "-").replace(/</g, "&lt;")}</td>
       <td class="col-text">${String(normalized.color || "-").replace(/</g, "&lt;")}</td>
       ${sizeLabels.map((sizeLabel) => `<td class="col-size">${formatNumberCL(obtenerCantidadTalla(normalized, sizeLabel))}</td>`).join("")}
-      <td class="col-total stock-sheet-total">${formatNumberCL(normalized.total)}</td>
+      <td class="col-total ${totalClass}">${formatNumberCL(normalized.total)}</td>
       <td class="col-meta">${formatStockUpdatedAt(normalized.updated_at)}</td>
       <td class="col-actions">
         <button type="button" class="ghost-btn stock-row-action" data-stock-open="${normalized.id ?? ""}">Editar</button>
@@ -3337,12 +3484,18 @@ function renderStockEditorModal() {
 
   const item = normalizarFilaStockCatalog(stockEditorState.item);
   const rowsHtml = (Array.isArray(item.sizes) ? item.sizes : [])
-    .map((sizeRow, index) => `
-      <div class="stock-editor-size-row" data-size-index="${index}">
-        <input type="text" name="size_label" value="${String(sizeRow.size_label || "").replace(/"/g, "&quot;")}" placeholder="Talla">
-        <input type="number" min="0" step="1" name="quantity" value="${Math.max(0, Number(sizeRow.quantity) || 0)}" placeholder="Cantidad">
+    .map((sizeRow, index) => {
+      const isExistingSize = Boolean(item.id && sizeRow.size_label);
+      return `
+      <div class="stock-editor-size-row ${isExistingSize ? "is-readonly" : "is-editable"}" data-size-index="${index}">
+        <input class="stock-editor-size-label-input" type="text" name="size_label" value="${String(sizeRow.size_label || "").replace(/"/g, "&quot;")}" placeholder="Talla" ${isExistingSize ? "readonly" : ""}>
+        <input class="stock-editor-size-qty-input" type="number" min="0" step="1" name="quantity" value="${Math.max(0, Number(sizeRow.quantity) || 0)}" placeholder="Cantidad">
+        ${isExistingSize
+          ? '<span class="stock-editor-size-lock">Talla fija</span>'
+          : `<button type="button" class="ghost-btn stock-editor-size-remove" data-size-remove="${index}">Quitar</button>`}
       </div>
-    `)
+    `;
+    })
     .join("");
 
   if (title) title.innerText = item.id ? `Editar ${item.article_code || item.sku}` : "Nuevo modelo";
@@ -3387,6 +3540,7 @@ function renderStockEditorModal() {
     <div id="stockEditorSizesList" class="stock-editor-sizes-list">
       ${rowsHtml || `<div class="stock-editor-empty">No hay tallas todavía.</div>`}
     </div>
+    ${item.id ? '<div class="stock-editor-note">Las tallas actuales quedan bloqueadas. Si necesitas agregar una nueva, usa "Agregar talla".</div>' : ""}
     <div class="stock-editor-total">Total unidades: <strong>${formatNumberCL(item.total)}</strong></div>
   `;
 
@@ -3729,7 +3883,7 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
     return `
       <div class="quote-card" data-quote-id="${q.id}">
         <div class="quote-card-head">
-          <div>
+          <div class="quote-card-main">
             <div class="quote-card-title-row">
               <div class="quote-card-title">${q.store_name || "Sin tienda"}</div>
               ${q.client_rut ? `<div class="quote-meta quote-meta-inline">RUT: ${q.client_rut}</div>` : ""}
@@ -3740,7 +3894,10 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
               <button type="button" class="ghost-btn quote-delete-btn" data-quote-delete="${q.id}">Eliminar cotización</button>
             </div>
           </div>
-          <div class="quote-meta">Total items: ${q.total_items || 0}<br>${fecha}</div>
+          <div class="quote-card-summary">
+            <div class="quote-card-total">Total items: ${q.total_items || 0}</div>
+            <div class="quote-card-date">${fecha}</div>
+          </div>
         </div>
         <div class="quote-status">
           <div class="quote-status-text ${isReady ? "ready" : ""}">
@@ -4110,15 +4267,16 @@ function limpiarCarrito() {
   pedido = [];
   actualizarCarrito();
   const rutEl = document.getElementById("clientRut");
+  const nameEl = document.getElementById("clientName");
   if (rutEl) rutEl.value = "";
+  if (nameEl) nameEl.value = "";
   clienteSeleccionado = null;
   setClientLookupUI();
+  toggleClientNameField(false);
   document.getElementById("cartSidebar").classList.remove("open");
 }
 
 document.getElementById("sendRequest").onclick = async () => {
-  const cliente = clienteSeleccionado || await validarRutClienteEnUI();
-  if (!cliente) return mostrarToastError("RUT no valido", "Ingresa un RUT registrado para enviar la cotizacion.");
   if (!pedido.length) return mostrarToastError("Hubo un error", "Intentelo nuevamente.");
 
   const btn = document.getElementById("sendRequest");
@@ -4127,13 +4285,14 @@ document.getElementById("sendRequest").onclick = async () => {
   btn.innerText = "Guardando...";
 
   try {
+    const cliente = await obtenerClienteParaCotizacion();
     await guardarCotizacionSupabase(cliente);
 
     mostrarToastExito("Cotización enviada con éxito", "Recibimos tu solicitud correctamente.");
     limpiarCarrito();
   } catch (error) {
     console.error(error);
-    mostrarToastError("Hubo un error", "Intentelo nuevamente.");
+    mostrarToastError("No se pudo enviar", error?.message || "Inténtalo nuevamente.");
   } finally {
     btn.disabled = false;
     btn.innerText = textoOriginal;
