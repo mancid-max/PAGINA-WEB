@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#131316">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20260417m">
+<link rel="stylesheet" href="style.css?v=20260427n">
 </head>
 <body data-catalog-file="data.json" data-catalog-source="catalogo-1">
 
@@ -30,8 +30,7 @@
 </header>
 
 <section class="hero">
-  <h1 class="hero-title">Nueva Colecci&oacute;n</h1>
-  <p class="hero-sub">Dise&ntilde;o moderno. Calidad premium.</p>
+  <h1 class="hero-title">Cole 42</h1>
   <div class="model-search">
     <div class="model-search-box">
       <input id="modelSearchInput" type="text" inputmode="numeric" autocomplete="off" placeholder="Buscar modelo (ej: 4206)">
@@ -47,25 +46,34 @@
 <div id="cartSidebar" class="cart-sidebar">
     <button id="closeCart" class="cart-close">X</button>
     <h2>Tu Cotizaci&oacute;n</h2>
+    <div class="cart-intro">
+      Revisa tus modelos, valida el RUT y env&iacute;a la cotizaci&oacute;n en segundos.
+    </div>
     <div id="cartItems"></div>
 
-    <label for="clientRut" class="cart-field-label">RUT cliente</label>
-    <input
-      type="text"
-      id="clientRut"
-      name="client_rut"
-      placeholder="Ej: 76.454.354-8"
-      inputmode="numeric"
-      enterkeyhint="done"
-      autocomplete="new-password"
-      autocorrect="off"
-      autocapitalize="off"
-      spellcheck="false"
-      data-lpignore="true"
-      data-form-type="other"
-    >
-    <div id="clientLookupBadge" class="client-lookup-badge" hidden></div>
-    <div id="clientLookupMsg" class="client-lookup-msg" aria-live="polite"></div>
+    <div class="cart-client-panel">
+      <label for="clientRut" class="cart-field-label">RUT cliente</label>
+      <input
+        type="text"
+        id="clientRut"
+        name="client_rut"
+        placeholder="Ej: 76.454.354-8"
+        inputmode="numeric"
+        enterkeyhint="done"
+        autocomplete="new-password"
+        autocorrect="off"
+        autocapitalize="off"
+        spellcheck="false"
+        data-lpignore="true"
+        data-form-type="other"
+      >
+      <div id="clientLookupBadge" class="client-lookup-badge" hidden></div>
+      <div id="clientLookupMsg" class="client-lookup-msg" aria-live="polite"></div>
+      <div id="clientNameWrap" class="client-name-wrap" hidden>
+        <label for="clientName" class="cart-field-label">Cliente nuevo</label>
+        <input type="text" id="clientName" placeholder="Raz&oacute;n social o nombre del cliente" autocomplete="off">
+      </div>
+    </div>
     <button id="sendRequest">Enviar Cotizaci&oacute;n</button>
 </div>
 
@@ -179,6 +187,26 @@
           <div id="stockCatalogList" class="quotes-list stock-catalog-list"></div>
         </div>
       </div>
+
+      <div id="stockEditorModal" class="modal stock-editor-modal" hidden>
+        <div class="stock-editor-dialog">
+          <div class="stock-editor-head">
+            <div>
+              <h3 id="stockEditorTitle">Editar stock</h3>
+              <div id="stockEditorSubtitle" class="stock-editor-subtitle"></div>
+            </div>
+            <button id="closeStockEditorModal" type="button" class="ghost-btn">Cerrar</button>
+          </div>
+          <div id="stockEditorBody" class="stock-editor-body"></div>
+          <div class="stock-editor-actions">
+            <button id="stockEditorDeleteBtn" type="button" class="ghost-btn stock-editor-delete">Eliminar artículo</button>
+            <div class="stock-editor-actions-right">
+              <button id="stockEditorCancelBtn" type="button" class="ghost-btn">Cancelar</button>
+              <button id="stockEditorSaveBtn" type="button" class="ghost-btn stock-editor-save">Guardar cambios</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -200,25 +228,9 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="script-v2.js?v=20260422a"></script>
+<script src="script-v2.js?v=20260429clientes"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

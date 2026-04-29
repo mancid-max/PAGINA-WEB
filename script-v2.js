@@ -21,22 +21,18 @@ let imagenModalIndex = 0;
 let quotePanelReady = false;
 let stockBySku = {};
 let stockCatalogRows = [];
-let stockCatalogDraftVisible = false;
 let stockRealtimeChannel = null;
 let stockCatalogSeasonFilter = "";
+let stockEditorState = {
+  open: false,
+  item: null,
+  mode: "edit",
+};
 let videoBySku = {};
 let videoActivoSrc = "";
 let catalogCoverBySku = {};
 const INVENTORY_ENABLED = true;
 const STOCK_REFRESH_INTERVAL_MS = 30000;
-const STOCK_CATALOG_SIZE_FIELDS = {
-  "36": "size_36",
-  "38": "size_38",
-  "40": "size_40",
-  "42": "size_42",
-  "44": "size_44",
-  "46": "size_46",
-};
 const SOLD_OUT_CATALOG_ITEMS = [
   {
     family: "4208-00",
@@ -330,12 +326,37 @@ function obtenerClienteSupabase() {
 }
 
 function normalizarRut(valor) {
-  return String(valor || "")
+  const clean = String(valor || "")
     .trim()
     .toUpperCase()
     .replace(/\./g, "")
     .replace(/\s+/g, "")
-    .replace(/[^0-9K-]/g, "");
+    .replace(/[^0-9K]/g, "");
+  if (!clean) return "";
+  if (clean.length === 1) return clean;
+  return `${clean.slice(0, -1)}-${clean.slice(-1)}`;
+}
+
+function calcularDigitoVerificadorRut(cuerpoRut) {
+  const digits = String(cuerpoRut || "").replace(/\D/g, "");
+  if (!digits) return "";
+  let suma = 0;
+  let multiplicador = 2;
+  for (let i = digits.length - 1; i >= 0; i--) {
+    suma += Number(digits[i]) * multiplicador;
+    multiplicador = multiplicador === 7 ? 2 : multiplicador + 1;
+  }
+  const resto = 11 - (suma % 11);
+  if (resto === 11) return "0";
+  if (resto === 10) return "K";
+  return String(resto);
+}
+
+function esRutValido(valor) {
+  const n = normalizarRut(valor);
+  const [bodyRaw, dvRaw] = n.split("-");
+  if (!bodyRaw || !dvRaw || !/^\d+$/.test(bodyRaw)) return false;
+  return calcularDigitoVerificadorRut(bodyRaw) === dvRaw.toUpperCase();
 }
 
 function formatearRutVisual(rut) {
@@ -418,7 +439,10 @@ const STOCK_DATA_FILE_BY_SOURCE = {
 const STOCK_DATA_FILE = STOCK_DATA_FILE_BY_SOURCE[CATALOG_SOURCE] || "stock-data.json";
 
 function stockSupabaseHabilitado() {
-  return INVENTORY_ENABLED && clienteSupabaseDisponible();
+  // La vitrina pública debe seguir funcionando aunque Supabase esté vacío,
+  // con RLS reciente o con datos en validación. Para el storefront usamos
+  // siempre el JSON regenerado desde el Excel y dejamos Supabase para el admin.
+  return false;
 }
 
 async function cargarStockJsonLocal() {
@@ -432,15 +456,15 @@ async function cargarStockSupabasePublico() {
   if (!client) throw new Error("Cliente Supabase no disponible");
 
   const { data, error } = await client
-    .from("stock_catalog")
-    .select("id,season,article_code,sku,tiro,bota,color,size_36,size_38,size_40,size_42,size_44,size_46,active,updated_at")
+    .from("stock_items")
+    .select("id,season,article_code,sku,tiro,bota,color,active,updated_at,stock_item_sizes(id,size_label,quantity,sort_order)")
     .eq("active", true)
     .order("sku", { ascending: true });
 
   if (error) throw error;
   return {
-    source_file: "supabase:stock_catalog",
-    items: convertirFilasStockCatalogAItems(data || []),
+    source_file: "supabase:stock_items",
+    items: convertirFilasStockItemsAItems(data || []),
   };
 }
 
@@ -488,12 +512,14 @@ function normalizarMapaStockPorSku(items = {}) {
     }
 
     const entry = merged[key];
-    TALLAS_DISPONIBLES.forEach((size) => {
+    const incomingSizes = Object.keys(payload?.sizes || {});
+    const knownSizes = new Set([...TALLAS_DISPONIBLES, ...incomingSizes.map((size) => normalizarStockSizeLabel(size))]);
+    [...knownSizes].forEach((size) => {
       const prev = Math.max(0, Number(entry.sizes?.[size]) || 0);
       const next = Math.max(0, Number(payload?.sizes?.[size]) || 0);
       entry.sizes[size] = prev + next;
     });
-    entry.total = TALLAS_DISPONIBLES.reduce((acc, size) => acc + (Math.max(0, Number(entry.sizes?.[size]) || 0)), 0);
+    entry.total = Object.values(entry.sizes || {}).reduce((acc, qty) => acc + (Math.max(0, Number(qty) || 0)), 0);
     if (!entry.description && payload?.description) entry.description = String(payload.description).trim();
     if (!entry.article && payload?.article) entry.article = String(payload.article).trim();
   });
@@ -507,12 +533,89 @@ function construirDescripcionStockCatalog(row = {}) {
     .join(" / ");
 }
 
+function normalizarStockSizeLabel(value) {
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, "");
+}
+
+function ordenarEtiquetasTalla(a, b) {
+  const aNorm = normalizarStockSizeLabel(a);
+  const bNorm = normalizarStockSizeLabel(b);
+  const aNum = Number(aNorm);
+  const bNum = Number(bNorm);
+  const aIsNum = Number.isFinite(aNum) && aNorm !== "";
+  const bIsNum = Number.isFinite(bNum) && bNorm !== "";
+  if (aIsNum && bIsNum) return aNum - bNum;
+  if (aIsNum) return -1;
+  if (bIsNum) return 1;
+  return aNorm.localeCompare(bNorm, undefined, { numeric: true, sensitivity: "base" });
+}
+
+function compararFilasStock(a = {}, b = {}) {
+  const totalA = Number(normalizarFilaStockCatalog(a)?.total) || 0;
+  const totalB = Number(normalizarFilaStockCatalog(b)?.total) || 0;
+  const totalDiff = totalB - totalA;
+  if (totalDiff !== 0) return totalDiff;
+
+  const rowA = normalizarFilaStockCatalog(a);
+  const rowB = normalizarFilaStockCatalog(b);
+
+  const seasonDiff = String(rowB?.season || "").localeCompare(String(rowA?.season || ""), undefined, { numeric: true });
+  if (seasonDiff !== 0) return seasonDiff;
+
+  const articleCodeDiff = String(rowB?.article_code || "").localeCompare(String(rowA?.article_code || ""), undefined, { numeric: true });
+  if (articleCodeDiff !== 0) return articleCodeDiff;
+
+  return String(rowB?.sku || "").localeCompare(String(rowA?.sku || ""), undefined, { numeric: true });
+}
+
+function normalizarTallasStock(rows = []) {
+  const merged = new Map();
+  (Array.isArray(rows) ? rows : [])
+    .map((sizeRow, index) => ({
+      id: sizeRow?.id ?? null,
+      size_label: normalizarStockSizeLabel(sizeRow?.size_label ?? sizeRow?.label),
+      quantity: Math.max(0, Number(sizeRow?.quantity) || 0),
+      sort_order: Number.isFinite(Number(sizeRow?.sort_order))
+        ? Number(sizeRow.sort_order)
+        : ((index + 1) * 10),
+    }))
+    .filter((sizeRow) => sizeRow.size_label)
+    .forEach((sizeRow) => {
+      const existing = merged.get(sizeRow.size_label);
+      if (!existing) {
+        merged.set(sizeRow.size_label, sizeRow);
+        return;
+      }
+      existing.quantity += sizeRow.quantity;
+      existing.sort_order = Math.min(Number(existing.sort_order || 0), Number(sizeRow.sort_order || 0));
+    });
+
+  return [...merged.values()].sort((a, b) => {
+    const orderDiff = Number(a.sort_order || 0) - Number(b.sort_order || 0);
+    if (orderDiff !== 0) return orderDiff;
+    return ordenarEtiquetasTalla(a.size_label, b.size_label);
+  });
+}
+
 function normalizarFilaStockCatalog(row = {}) {
   const sku = normalizarSkuCatalogo(row?.sku);
-  const sizes = Object.fromEntries(
-    TALLAS_DISPONIBLES.map((size) => [size, Math.max(0, Number(row?.[STOCK_CATALOG_SIZE_FIELDS[size]]) || 0)])
+  const sourceSizes =
+    Array.isArray(row?.stock_item_sizes) && row.stock_item_sizes.length
+      ? row.stock_item_sizes
+      : Array.isArray(row?.sizes) && row.sizes.length
+        ? row.sizes
+        : TALLAS_DISPONIBLES.map((size, index) => ({
+          size_label: size,
+          quantity: Math.max(0, Number(row?.[`size_${size}`]) || 0),
+          sort_order: (index + 1) * 10,
+        }));
+  const sizes = normalizarTallasStock(
+    sourceSizes
   );
-  const total = TALLAS_DISPONIBLES.reduce((acc, size) => acc + (Number(sizes?.[size]) || 0), 0);
+  const total = sizes.reduce((acc, sizeRow) => acc + (Number(sizeRow?.quantity) || 0), 0);
   return {
     id: row?.id ?? null,
     season: String(row?.season || "").trim() || "42",
@@ -529,17 +632,20 @@ function normalizarFilaStockCatalog(row = {}) {
   };
 }
 
-function convertirFilasStockCatalogAItems(rows = []) {
+function convertirFilasStockItemsAItems(rows = []) {
   const items = {};
   (Array.isArray(rows) ? rows : [])
     .map((row) => normalizarFilaStockCatalog(row))
     .filter((row) => row?.sku && row?.active !== false)
     .forEach((row) => {
+      const sizesMap = Object.fromEntries(
+        row.sizes.map((sizeRow) => [sizeRow.size_label, Math.max(0, Number(sizeRow.quantity) || 0)])
+      );
       items[row.sku] = {
         article: row.article_code,
         sku: row.sku,
         description: row.description,
-        sizes: { ...row.sizes },
+        sizes: sizesMap,
         total: row.total,
       };
     });
@@ -1063,10 +1169,39 @@ function obtenerTotalStockProducto(item, stockItems = {}) {
   return total;
 }
 
+function compararProductosPorStockDesc(a, b, stockItems = stockBySku) {
+  const stockA = Math.max(
+    0,
+    Number(a?._stockTotal) || 0,
+    Number(obtenerStockParaSkuDesdeItems(a?.family, stockItems)?.total) || 0
+  );
+  const stockB = Math.max(
+    0,
+    Number(b?._stockTotal) || 0,
+    Number(obtenerStockParaSkuDesdeItems(b?.family, stockItems)?.total) || 0
+  );
+  if (stockB !== stockA) return stockB - stockA;
+  const modelA = normalizarSkuCatalogo(a?.family);
+  const modelB = normalizarSkuCatalogo(b?.family);
+  return modelA.localeCompare(modelB, undefined, { numeric: true });
+}
+
 function obtenerImagenesPropias(obj) {
   const nonCatalog = deduplicarImagenesParaVisor(obtenerImagenesVisibles(obj));
   if (nonCatalog.length) return nonCatalog;
   return deduplicarImagenesParaVisor(obtenerImagenesVisibles(obj, { includeCatalog: true }));
+}
+
+function crearFirmaGaleriaTarjeta(images = []) {
+  const names = [];
+  const seen = new Set();
+  deduplicarImagenesParaVisor(images).forEach((img) => {
+    const key = normalizarRutaAsset(img).split("/").pop()?.toLowerCase() || "";
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    names.push(key);
+  });
+  return names.join("|");
 }
 
 function imagenCompatibleConSku(path, sku) {
@@ -1085,13 +1220,16 @@ function imagenCompatibleConSku(path, sku) {
 function construirProductosGridPorSku(items = [], stockItems = {}) {
   const cards = [];
   const seenSku = new Set();
+  const seenImageSignatureByFamily = new Map();
 
   (Array.isArray(items) ? items : []).forEach((item) => {
-    const baseFamily = normalizarSkuCatalogo(item?.family);
+    const rawFamily = normalizarSkuCatalogo(item?.family);
+    const familyRoot = obtenerBaseFamilia(rawFamily);
+    const baseFamily = familyRoot ? `${familyRoot}-00` : rawFamily;
     if (!baseFamily) return;
 
     const candidates = [
-      { sku: baseFamily, source: item },
+      { sku: rawFamily, source: item },
       ...((Array.isArray(item?.variants) ? item.variants : []).map((variant) => ({
         sku: normalizarSkuCatalogo(variant?.sku),
         source: variant,
@@ -1107,8 +1245,15 @@ function construirProductosGridPorSku(items = [], stockItems = {}) {
       const images = obtenerImagenesPropias(entry.source).filter((img) => imagenCompatibleConSku(img, entry.sku));
       const cardImage = images[0] || "";
       if (!cardImage) return;
+      const imageSignature = crearFirmaGaleriaTarjeta(images);
+      const knownSignatures = seenImageSignatureByFamily.get(baseFamily) || new Set();
+      if (imageSignature && knownSignatures.has(imageSignature)) return;
 
       seenSku.add(entry.sku);
+      if (imageSignature) {
+        knownSignatures.add(imageSignature);
+        seenImageSignatureByFamily.set(baseFamily, knownSignatures);
+      }
       cards.push({
         ...item,
         family: entry.sku,
@@ -1273,8 +1418,8 @@ async function cargarProductosCatalogo() {
 
     if (INVENTORY_ENABLED) {
       stockBySku = {
-        ...normalizarMapaStockPorSku(stockData?.items || {}),
         ...crearStockSinteticoAgotados(),
+        ...normalizarMapaStockPorSku(stockData?.items || {}),
       };
     }
     catalogCoverBySku = normalizarMapaAssetsPorSku(catalogCoverMapData || {});
@@ -1297,21 +1442,19 @@ async function cargarProductosCatalogo() {
     items = (INVENTORY_ENABLED && stockCatalogoValido)
       ? filtrarProductosPorStock(itemsCatalogoBase, stockBySku)
       : filtrarProductosDisponiblesCole42(itemsCatalogoBase, trazabilidadData);
+    if (INVENTORY_ENABLED && stockCatalogoValido) {
+      items = filtrarVariantesPorStock(items, stockBySku);
+    }
     if (CATALOG_SOURCE === "catalogo-1") {
       items = rescatarProductosConStockFaltantes(itemsCatalogoBase, items, stockBySku);
     }
     items = deduplicarTarjetasPorModelo(items);
 
     if (CATALOG_SOURCE === "catalogo-1") {
-      items = items.sort((a, b) => {
-        const aKey = normalizarSkuCatalogo(a?.family);
-        const bKey = normalizarSkuCatalogo(b?.family);
-        return aKey.localeCompare(bKey, undefined, { numeric: true });
-      });
       items = deduplicarTarjetasPorModelo(items);
     }
 
-    productos = items;
+    productos = [...items].sort((a, b) => compararProductosPorStockDesc(a, b, stockBySku));
     productosGrid = construirProductosGridPorSku(productos, stockBySku);
     renderGrid(productosGrid);
     inicializarBuscadorModelos();
@@ -1559,7 +1702,21 @@ function configurarRealtimeStock() {
       {
         event: "*",
         schema: "public",
-        table: "stock_catalog",
+        table: "stock_items",
+      },
+      () => {
+        cargarStockData();
+        if (quotesAccessToken && adminActiveTab === "stock") {
+          cargarStockCatalogAdmin().catch((err) => console.warn("No se pudo refrescar Stock:", err));
+        }
+      }
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "stock_item_sizes",
       },
       () => {
         cargarStockData();
@@ -2084,14 +2241,7 @@ function renderGrid(lista) {
   const container = document.getElementById("grid");
   const listaConImagen = (Array.isArray(lista) ? lista : [])
     .filter((p) => Boolean(p?._cardImage));
-  const listaOrdenada = [...listaConImagen].sort((a, b) => {
-    const stockB = Number(b?._stockTotal) || Math.max(0, Number(obtenerStockParaSkuDesdeItems(b?.family, stockBySku)?.total) || 0);
-    const stockA = Number(a?._stockTotal) || Math.max(0, Number(obtenerStockParaSkuDesdeItems(a?.family, stockBySku)?.total) || 0);
-    if (stockB !== stockA) return stockB - stockA;
-    const modelA = normalizarSkuCatalogo(a?.family);
-    const modelB = normalizarSkuCatalogo(b?.family);
-    return modelA.localeCompare(modelB, undefined, { numeric: true });
-  });
+  const listaOrdenada = [...listaConImagen].sort((a, b) => compararProductosPorStockDesc(a, b, stockBySku));
 
   container.innerHTML = listaOrdenada
     .map(
@@ -2291,33 +2441,41 @@ function actualizarCarrito() {
   const container = document.getElementById("cartItems");
   let totalItems = 0;
 
-  container.innerHTML = pedido
-    .map((item, index) => {
-      const cantidadModelo = Object.values(item.tallas).reduce((acc, qty) => acc + (Number(qty) || 0), 0);
-      totalItems += cantidadModelo;
-
-      return `
-      <div class="cart-item">
-        <div class="cart-item-top">
-          <div class="cart-item-title">Modelo ${item.sku}</div>
-          <button class="cart-trash" type="button" aria-label="Eliminar modelo ${item.sku}" onclick="eliminarItem(${index})">
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h2v9H7V9Zm4 0h2v9h-2V9Zm4 0h2v9h-2V9ZM6 7h12l-1 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Z"/>
-            </svg>
-          </button>
-        </div>
-        <div>
-          ${Object.entries(item.tallas)
-            .map(([t, c]) => `<div>Talla ${t}: <strong>${c}</strong></div>`)
-            .join("")}
-        </div>
-        <div class="cart-item-summary">
-          <div>Prendas: <strong>${cantidadModelo}</strong></div>
-        </div>
+  if (!pedido.length) {
+    container.innerHTML = `
+      <div class="cart-empty-state">
+        <div class="cart-empty-title">Aún no agregas modelos</div>
+        <div class="cart-empty-text">Selecciona tallas y cantidades para armar tu cotización.</div>
       </div>
-    `
-    })
-    .join("");
+    `;
+  } else {
+    container.innerHTML = pedido
+      .map((item, index) => {
+        const cantidadModelo = Object.values(item.tallas).reduce((acc, qty) => acc + (Number(qty) || 0), 0);
+        totalItems += cantidadModelo;
+        const tallasHtml = Object.entries(item.tallas)
+          .map(([t, c]) => `<span class="cart-size-pill">T${t} <strong>${c}</strong></span>`)
+          .join("");
+
+        return `
+        <div class="cart-item">
+          <div class="cart-item-top">
+            <div class="cart-item-title">Modelo ${item.sku}</div>
+            <button class="cart-trash" type="button" aria-label="Eliminar modelo ${item.sku}" onclick="eliminarItem(${index})">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h2v9H7V9Zm4 0h2v9h-2V9Zm4 0h2v9h-2V9ZM6 7h12l-1 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="cart-item-sizes">${tallasHtml}</div>
+          <div class="cart-item-summary">
+            <div>Prendas: <strong>${cantidadModelo}</strong></div>
+          </div>
+        </div>
+      `;
+      })
+      .join("");
+  }
 
   let totalsBox = document.getElementById("cartTotals");
   if (!totalsBox) {
@@ -2357,8 +2515,8 @@ document.addEventListener("click", (e) => {
  * COTIZACIÓN: CSV + MAILTO + LIMPIEZA
  ***********************/
 function generarCSV() {
-  const nombreTienda = clienteSeleccionado?.razon_social || "";
-  const rutCliente = clienteSeleccionado?.rut || clienteSeleccionado?.rut_normalized || "";
+  const nombreTienda = clienteSeleccionado?.razon_social || String(document.getElementById("clientName")?.value || "").trim();
+  const rutCliente = formatearRutVisual(document.getElementById("clientRut")?.value || clienteSeleccionado?.rut || clienteSeleccionado?.rut_normalized || "");
   if (!nombreTienda || !pedido.length) return null;
 
   const sep = ";";
@@ -2830,6 +2988,7 @@ function setClientLookupUI({ tipo = "", texto = "", badge = "" } = {}) {
     }
   }
   if (badgeEl) {
+    badgeEl.className = "client-lookup-badge" + (tipo ? ` ${tipo}` : "");
     if (badge) {
       badgeEl.hidden = false;
       badgeEl.innerText = badge;
@@ -2838,6 +2997,27 @@ function setClientLookupUI({ tipo = "", texto = "", badge = "" } = {}) {
       badgeEl.innerText = "";
     }
   }
+}
+
+function toggleClientNameField(show, { value = "", readonly = false } = {}) {
+  const wrapEl = document.getElementById("clientNameWrap");
+  const inputEl = document.getElementById("clientName");
+  if (!wrapEl || !inputEl) return;
+  wrapEl.hidden = !show;
+  inputEl.readOnly = !!readonly;
+  inputEl.value = value || "";
+  inputEl.classList.toggle("is-readonly", !!readonly);
+}
+
+function construirClienteNuevoDesdeInput(rutNormalizado) {
+  const nameEl = document.getElementById("clientName");
+  const nombre = String(nameEl?.value || "").trim();
+  return {
+    rut: formatearRutVisual(rutNormalizado),
+    rut_normalized: rutNormalizado,
+    razon_social: nombre,
+    is_new: true,
+  };
 }
 
 async function buscarClientePorRutSupabase(rutInput) {
@@ -2879,20 +3059,29 @@ async function validarRutClienteEnUI({ silencioso = false } = {}) {
 
   if (!rutNormalizado) {
     setClientLookupUI();
+    toggleClientNameField(false);
     return null;
   }
 
-  if (!/^[0-9]+-[0-9K]$/i.test(rutNormalizado)) {
+  if (!/^[0-9]+-[0-9K]$/i.test(rutNormalizado) || !esRutValido(rutNormalizado)) {
+    toggleClientNameField(false);
     if (!silencioso) setClientLookupUI({ tipo: "error", texto: "Formato de RUT inválido" });
     return null;
   }
 
+  input.value = formatearRutVisual(rutNormalizado);
   setClientLookupUI({ tipo: "loading", texto: "Buscando cliente..." });
   try {
     const cliente = await buscarClientePorRutSupabase(rutNormalizado);
     if (!cliente) {
-      setClientLookupUI({ tipo: "error", texto: "Cliente no existe" });
-      return null;
+      const clienteNuevo = construirClienteNuevoDesdeInput(rutNormalizado);
+      setClientLookupUI({
+        tipo: "new",
+        texto: "Cliente nuevo. Ingresa el nombre o razón social para continuar.",
+        badge: "Cliente nuevo",
+      });
+      toggleClientNameField(true, { value: clienteNuevo.razon_social, readonly: false });
+      return clienteNuevo;
     }
     clienteSeleccionado = cliente;
     input.value = formatearRutVisual(cliente.rut || cliente.rut_normalized);
@@ -2901,19 +3090,24 @@ async function validarRutClienteEnUI({ silencioso = false } = {}) {
       texto: "Cliente encontrado",
       badge: cliente.razon_social,
     });
+    toggleClientNameField(false);
     return cliente;
   } catch (err) {
     setClientLookupUI({ tipo: "error", texto: err.message || "No se pudo validar RUT" });
+    toggleClientNameField(false);
     return null;
   }
 }
 
 function configurarLookupCliente() {
   const input = document.getElementById("clientRut");
+  const nameInput = document.getElementById("clientName");
   if (!input) return;
   input.addEventListener("input", () => {
+    input.value = formatearRutVisual(input.value);
     clienteSeleccionado = null;
     setClientLookupUI();
+    toggleClientNameField(false);
     window.clearTimeout(clientLookupDebounce);
     clientLookupDebounce = window.setTimeout(() => {
       validarRutClienteEnUI({ silencioso: true });
@@ -2923,6 +3117,45 @@ function configurarLookupCliente() {
     window.clearTimeout(clientLookupDebounce);
     validarRutClienteEnUI();
   });
+  nameInput?.addEventListener("input", () => {
+    if (clienteSeleccionado) return;
+    const rutNormalizado = normalizarRut(input.value);
+    if (!rutNormalizado || !esRutValido(rutNormalizado)) return;
+    const nombre = String(nameInput.value || "").trim();
+    setClientLookupUI({
+      tipo: "new",
+      texto: nombre ? "Cliente nuevo listo para enviar." : "Completa el nombre del cliente nuevo.",
+      badge: "Cliente nuevo",
+    });
+  });
+}
+
+async function obtenerClienteParaCotizacion() {
+  const rutEl = document.getElementById("clientRut");
+  const nameEl = document.getElementById("clientName");
+  const clienteValidado = clienteSeleccionado || await validarRutClienteEnUI();
+  const rutNormalizado = normalizarRut(rutEl?.value || "");
+
+  if (!rutNormalizado || !esRutValido(rutNormalizado)) {
+    throw new Error("Ingresa un RUT válido");
+  }
+
+  if (clienteValidado && !clienteValidado.is_new) {
+    return clienteValidado;
+  }
+
+  const nombre = String(nameEl?.value || "").trim();
+  if (!nombre) {
+    toggleClientNameField(true, { value: "", readonly: false });
+    throw new Error("Completa el nombre o razón social del cliente nuevo");
+  }
+
+  return {
+    rut: formatearRutVisual(rutNormalizado),
+    rut_normalized: rutNormalizado,
+    razon_social: nombre,
+    is_new: true,
+  };
 }
 
 function construirPayloadCotizacion(cliente) {
@@ -3039,7 +3272,7 @@ function logoutCotizaciones() {
   adminActiveTab = "cotizaciones";
   trazabilidadDisponibles = [];
   stockCatalogRows = [];
-  stockCatalogDraftVisible = false;
+  cerrarEditorStock();
   actualizarEstadoQuotesUI();
   const list = document.getElementById("quotesList");
   if (list) list.innerHTML = "";
@@ -3078,7 +3311,12 @@ function crearFilaStockCatalogVacia() {
     color: "",
     active: true,
     updated_at: null,
-    sizes: Object.fromEntries(TALLAS_DISPONIBLES.map((size) => [size, 0])),
+    sizes: TALLAS_DISPONIBLES.map((size, index) => ({
+      id: null,
+      size_label: size,
+      quantity: 0,
+      sort_order: (index + 1) * 10,
+    })),
     total: 0,
     description: "",
   };
@@ -3097,30 +3335,50 @@ function stockCatalogSummaryText(rows = [], filteredRows = rows) {
   return `Stock${seasonFilter ? ` T${seasonFilter}` : ""} · Modelos: ${formatNumberCL(filteredRows.length)} de ${formatNumberCL(rows.length)} · Unidades: ${formatNumberCL(totalUnits)}`;
 }
 
-function renderStockEditorRow(row = crearFilaStockCatalogVacia(), options = {}) {
-  const isNew = options?.isNew === true;
-  const normalized = normalizarFilaStockCatalog({
-    ...row,
-    ...(row?.sizes
-      ? Object.fromEntries(Object.entries(STOCK_CATALOG_SIZE_FIELDS).map(([size, field]) => [field, row.sizes?.[size]]))
-      : {}),
+function obtenerTallasVisiblesStock(rows = []) {
+  const labels = new Set();
+  (Array.isArray(rows) ? rows : []).forEach((row) => {
+    (Array.isArray(row?.sizes) ? row.sizes : []).forEach((sizeRow) => {
+      const label = normalizarStockSizeLabel(sizeRow?.size_label);
+      if (label) labels.add(label);
+    });
   });
-  const total = normalized.total;
+  if (!labels.size) {
+    TALLAS_DISPONIBLES.forEach((size) => labels.add(size));
+  }
+  return [...labels].sort(ordenarEtiquetasTalla);
+}
+
+function obtenerCantidadTalla(row, sizeLabel) {
+  return Math.max(
+    0,
+    Number(
+      (Array.isArray(row?.sizes) ? row.sizes : []).find((sizeRow) => normalizarStockSizeLabel(sizeRow?.size_label) === normalizarStockSizeLabel(sizeLabel))
+        ?.quantity
+    ) || 0
+  );
+}
+
+function renderStockSummaryRow(row = crearFilaStockCatalogVacia(), sizeLabels = []) {
+  const normalized = normalizarFilaStockCatalog(row);
+  const totalClass = normalized.total > 0 ? "stock-sheet-total is-positive" : "stock-sheet-total is-zero";
 
   return `
-    <tr data-stock-id="${normalized.id ?? ""}" data-stock-new="${isNew ? "1" : "0"}">
+    <tr data-stock-id="${normalized.id ?? ""}" class="${normalized.total > 0 ? "stock-row-has-stock" : "stock-row-zero-stock"}">
       <td class="col-code">
-        <input type="hidden" name="season" value="${String(normalized.season || "42").replace(/"/g, "&quot;")}">
-        <input type="hidden" name="sku" value="${String(normalized.sku || "").replace(/"/g, "&quot;")}">
-        <input type="text" name="article_code" value="${String(normalized.article_code || "").replace(/"/g, "&quot;")}">
+        <button type="button" class="stock-code-btn" data-stock-open="${normalized.id ?? ""}">
+          ${String(normalized.article_code || normalized.sku || "-").replace(/</g, "&lt;")}
+        </button>
       </td>
-      <td class="col-text"><input type="text" name="tiro" value="${String(normalized.tiro || "").replace(/"/g, "&quot;")}"></td>
-      <td class="col-text"><input type="text" name="bota" value="${String(normalized.bota || "").replace(/"/g, "&quot;")}"></td>
-      <td class="col-text"><input type="text" name="color" value="${String(normalized.color || "").replace(/"/g, "&quot;")}"></td>
-      ${TALLAS_DISPONIBLES.map((size) => `<td class="col-size"><input type="number" min="0" step="1" name="size_${size}" value="${Math.max(0, Number(normalized.sizes?.[size]) || 0)}"></td>`).join("")}
-      <td class="col-total stock-sheet-total">
-        ${formatNumberCL(total)}
-        <input type="hidden" name="active" value="${normalized.active ? "1" : "0"}">
+      <td class="col-sku">${String(normalized.sku || "-").replace(/</g, "&lt;")}</td>
+      <td class="col-text">${String(normalized.tiro || "-").replace(/</g, "&lt;")}</td>
+      <td class="col-text">${String(normalized.bota || "-").replace(/</g, "&lt;")}</td>
+      <td class="col-text">${String(normalized.color || "-").replace(/</g, "&lt;")}</td>
+      ${sizeLabels.map((sizeLabel) => `<td class="col-size">${formatNumberCL(obtenerCantidadTalla(normalized, sizeLabel))}</td>`).join("")}
+      <td class="col-total ${totalClass}">${formatNumberCL(normalized.total)}</td>
+      <td class="col-meta">${formatStockUpdatedAt(normalized.updated_at)}</td>
+      <td class="col-actions">
+        <button type="button" class="ghost-btn stock-row-action" data-stock-open="${normalized.id ?? ""}">Editar</button>
       </td>
     </tr>
   `;
@@ -3133,26 +3391,32 @@ function renderStockCatalogAdmin(rows = []) {
   const filteredRows = Array.isArray(rows) ? rows : [];
   const summaryEl = document.getElementById("stockCatalogSummary");
   if (summaryEl) summaryEl.innerText = stockCatalogSummaryText(stockCatalogRows, filteredRows);
+  const visibleSizes = obtenerTallasVisiblesStock(filteredRows.length ? filteredRows : stockCatalogRows);
 
-  const draftRow = stockCatalogDraftVisible ? renderStockEditorRow(crearFilaStockCatalogVacia(), { isNew: true }) : "";
-  const rowsHtml = filteredRows.map((row) => renderStockEditorRow(row)).join("");
+  const rowsHtml = filteredRows
+    .slice()
+    .sort(compararFilasStock)
+    .map((row) => renderStockSummaryRow(row, visibleSizes))
+    .join("");
 
   list.innerHTML = `
     <div class="stock-sheet-wrap">
       <table class="stock-sheet">
         <thead>
           <tr>
-            <th class="col-code"><span class="stock-head-label">CODIGO</span><span class="stock-head-filter" aria-hidden="true"></span></th>
-            <th class="col-text"><span class="stock-head-label">TIRO</span><span class="stock-head-filter" aria-hidden="true"></span></th>
-            <th class="col-text"><span class="stock-head-label">BOTA</span><span class="stock-head-filter" aria-hidden="true"></span></th>
-            <th class="col-text"><span class="stock-head-label">COLOR</span><span class="stock-head-filter" aria-hidden="true"></span></th>
-            ${TALLAS_DISPONIBLES.map((size) => `<th class="col-size is-numeric"><span class="stock-head-label">${size}</span><span class="stock-head-filter" aria-hidden="true"></span></th>`).join("")}
-            <th class="col-total is-numeric"><span class="stock-head-label">TOTAL</span><span class="stock-head-filter" aria-hidden="true"></span></th>
+            <th class="col-code"><span class="stock-head-label">CODIGO</span></th>
+            <th class="col-sku"><span class="stock-head-label">SKU</span></th>
+            <th class="col-text"><span class="stock-head-label">TIRO</span></th>
+            <th class="col-text"><span class="stock-head-label">BOTA</span></th>
+            <th class="col-text"><span class="stock-head-label">COLOR</span></th>
+            ${visibleSizes.map((size) => `<th class="col-size is-numeric"><span class="stock-head-label">${size}</span></th>`).join("")}
+            <th class="col-total is-numeric"><span class="stock-head-label">TOTAL</span></th>
+            <th class="col-meta"><span class="stock-head-label">EDITADO</span></th>
+            <th class="col-actions"><span class="stock-head-label">ACCION</span></th>
           </tr>
         </thead>
         <tbody>
-          ${draftRow}
-          ${rowsHtml || `<tr><td colspan="11" class="stock-sheet-empty">No hay modelos para mostrar.</td></tr>`}
+          ${rowsHtml || `<tr><td colspan="${visibleSizes.length + 8}" class="stock-sheet-empty">No hay modelos para mostrar.</td></tr>`}
         </tbody>
       </table>
     </div>
@@ -3185,64 +3449,281 @@ function aplicarFiltroStockCatalogAdmin() {
   renderStockCatalogAdmin(filtered);
 }
 
-function leerStockCatalogDesdeCard(card) {
-  const read = (name) => card.querySelector(`[name="${name}"]`);
-  const sku = normalizarSkuCatalogo(read("sku")?.value || "");
+function abrirEditorStock(row = null) {
+  stockEditorState = {
+    open: true,
+    mode: row?.id ? "edit" : "create",
+    item: normalizarFilaStockCatalog(row || crearFilaStockCatalogVacia()),
+  };
+  renderStockEditorModal();
+}
+
+function cerrarEditorStock() {
+  stockEditorState = {
+    open: false,
+    mode: "edit",
+    item: null,
+  };
+  renderStockEditorModal();
+}
+
+function renderStockEditorModal() {
+  const modal = document.getElementById("stockEditorModal");
+  const body = document.getElementById("stockEditorBody");
+  const title = document.getElementById("stockEditorTitle");
+  const subtitle = document.getElementById("stockEditorSubtitle");
+  const deleteBtn = document.getElementById("stockEditorDeleteBtn");
+  if (!modal || !body) return;
+
+  if (!stockEditorState.open || !stockEditorState.item) {
+    modal.classList.remove("active");
+    modal.setAttribute("hidden", "hidden");
+    body.innerHTML = "";
+    return;
+  }
+
+  const item = normalizarFilaStockCatalog(stockEditorState.item);
+  const rowsHtml = (Array.isArray(item.sizes) ? item.sizes : [])
+    .map((sizeRow, index) => {
+      const isExistingSize = Boolean(item.id && sizeRow.size_label);
+      return `
+      <div class="stock-editor-size-row ${isExistingSize ? "is-readonly" : "is-editable"}" data-size-index="${index}">
+        <input class="stock-editor-size-label-input" type="text" name="size_label" value="${String(sizeRow.size_label || "").replace(/"/g, "&quot;")}" placeholder="Talla" ${isExistingSize ? "readonly" : ""}>
+        <input class="stock-editor-size-qty-input" type="number" min="0" step="1" name="quantity" value="${Math.max(0, Number(sizeRow.quantity) || 0)}" placeholder="Cantidad">
+        ${isExistingSize
+          ? '<span class="stock-editor-size-lock">Talla fija</span>'
+          : `<button type="button" class="ghost-btn stock-editor-size-remove" data-size-remove="${index}">Quitar</button>`}
+      </div>
+    `;
+    })
+    .join("");
+
+  if (title) title.innerText = item.id ? `Editar ${item.article_code || item.sku}` : "Nuevo modelo";
+  if (subtitle) subtitle.innerText = item.updated_at ? `Última edición: ${formatStockUpdatedAt(item.updated_at)}` : "Completa los datos del artículo y sus tallas.";
+  if (deleteBtn) deleteBtn.style.display = item.id ? "inline-flex" : "none";
+
+  body.innerHTML = `
+    <div class="stock-editor-grid">
+      <label>
+        <span>Temporada</span>
+        <input type="text" name="season" value="${String(item.season || "42").replace(/"/g, "&quot;")}" placeholder="42">
+      </label>
+      <label>
+        <span>Código</span>
+        <input type="text" name="article_code" value="${String(item.article_code || "").replace(/"/g, "&quot;")}" placeholder="420100">
+      </label>
+      <label>
+        <span>SKU</span>
+        <input type="text" name="sku" value="${String(item.sku || "").replace(/"/g, "&quot;")}" placeholder="4201-00">
+      </label>
+      <label>
+        <span>Tiro</span>
+        <input type="text" name="tiro" value="${String(item.tiro || "").replace(/"/g, "&quot;")}" placeholder="CINTURA">
+      </label>
+      <label>
+        <span>Bota</span>
+        <input type="text" name="bota" value="${String(item.bota || "").replace(/"/g, "&quot;")}" placeholder="PITILLO">
+      </label>
+      <label>
+        <span>Color</span>
+        <input type="text" name="color" value="${String(item.color || "").replace(/"/g, "&quot;")}" placeholder="NEGRO">
+      </label>
+    </div>
+    <label class="stock-editor-toggle">
+      <input type="checkbox" name="active" ${item.active ? "checked" : ""}>
+      <span>Activo</span>
+    </label>
+    <div class="stock-editor-sizes-head">
+      <strong>Tallas</strong>
+      <button type="button" class="ghost-btn" id="stockEditorAddSizeBtn">Agregar talla</button>
+    </div>
+    <div id="stockEditorSizesList" class="stock-editor-sizes-list">
+      ${rowsHtml || `<div class="stock-editor-empty">No hay tallas todavía.</div>`}
+    </div>
+    ${item.id ? '<div class="stock-editor-note">Las tallas actuales quedan bloqueadas. Si necesitas agregar una nueva, usa "Agregar talla".</div>' : ""}
+    <div class="stock-editor-total">Total unidades: <strong>${formatNumberCL(item.total)}</strong></div>
+  `;
+
+  modal.removeAttribute("hidden");
+  modal.classList.add("active");
+}
+
+function leerStockEditorActual() {
+  const body = document.getElementById("stockEditorBody");
+  if (!body) return normalizarFilaStockCatalog(crearFilaStockCatalogVacia());
+  const read = (name) => body.querySelector(`[name="${name}"]`);
   const articleCodeInput = String(read("article_code")?.value || "").trim();
-  const payload = {
-    season: String(read("season")?.value || "42").trim(),
-    sku: sku || normalizarSkuCatalogo(articleCodeInput),
-    article_code: articleCodeInput || skuAArticleCode(sku),
+  const skuInput = normalizarSkuCatalogo(read("sku")?.value || "");
+  const season = String(read("season")?.value || "42").trim() || "42";
+  const sizes = [...body.querySelectorAll(".stock-editor-size-row")]
+    .map((row, index) => ({
+      id: null,
+      size_label: normalizarStockSizeLabel(row.querySelector('[name="size_label"]')?.value || ""),
+      quantity: Math.max(0, Number(row.querySelector('[name="quantity"]')?.value) || 0),
+      sort_order: (index + 1) * 10,
+    }))
+    .filter((sizeRow) => sizeRow.size_label);
+
+  return normalizarFilaStockCatalog({
+    id: stockEditorState.item?.id ?? null,
+    season,
+    article_code: articleCodeInput || skuAArticleCode(skuInput),
+    sku: skuInput || normalizarSkuCatalogo(articleCodeInput),
     tiro: String(read("tiro")?.value || "").trim().toUpperCase(),
     bota: String(read("bota")?.value || "").trim().toUpperCase(),
     color: String(read("color")?.value || "").trim().toUpperCase(),
-    active: String(read("active")?.value || "1") !== "0",
-  };
-
-  Object.entries(STOCK_CATALOG_SIZE_FIELDS).forEach(([size, field]) => {
-    const rawValue = read(`size_${size}`)?.value;
-    payload[field] = Math.max(0, Number(rawValue) || 0);
+    active: !!read("active")?.checked,
+    updated_at: stockEditorState.item?.updated_at || null,
+    sizes,
   });
-
-  return payload;
 }
 
-function filaStockTieneDatos(row) {
-  if (!row) return false;
-  const articleCode = String(row.querySelector('[name="article_code"]')?.value || "").trim();
-  if (articleCode) return true;
-  return TALLAS_DISPONIBLES.some((size) => Math.max(0, Number(row.querySelector(`[name="size_${size}"]`)?.value) || 0) > 0);
+function actualizarEditorStockDesdeDOM() {
+  if (!stockEditorState.open) return;
+  stockEditorState.item = leerStockEditorActual();
+  renderStockEditorModal();
 }
 
-function actualizarTotalFilaStock(row) {
-  if (!row) return;
-  const total = TALLAS_DISPONIBLES.reduce((acc, size) => {
-    const input = row.querySelector(`[name="size_${size}"]`);
-    return acc + Math.max(0, Number(input?.value) || 0);
-  }, 0);
-  const totalCell = row.querySelector(".stock-sheet-total");
-  if (totalCell) {
-    totalCell.innerHTML = `${formatNumberCL(total)}<input type="hidden" name="active" value="${row.querySelector('[name=\"active\"]')?.value || "1"}">`;
-  }
+function agregarTallaEditorStock() {
+  const current = leerStockEditorActual();
+  current.sizes.push({
+    id: null,
+    size_label: "",
+    quantity: 0,
+    sort_order: ((current.sizes.length + 1) * 10),
+  });
+  stockEditorState.item = current;
+  renderStockEditorModal();
+}
+
+function quitarTallaEditorStock(index) {
+  const current = leerStockEditorActual();
+  current.sizes = current.sizes.filter((_, rowIndex) => rowIndex !== index);
+  stockEditorState.item = current;
+  renderStockEditorModal();
+}
+
+function construirPayloadStockItem(item) {
+  const normalized = normalizarFilaStockCatalog(item);
+  const payload = {
+    season: String(normalized.season || "42").trim() || "42",
+    sku: normalizarSkuCatalogo(normalized.sku || normalized.article_code),
+    article_code: String(normalized.article_code || skuAArticleCode(normalized.sku)).trim(),
+    tiro: String(normalized.tiro || "").trim().toUpperCase(),
+    bota: String(normalized.bota || "").trim().toUpperCase(),
+    color: String(normalized.color || "").trim().toUpperCase(),
+    active: normalized.active !== false,
+  };
+  const sizes = normalizarTallasStock(normalized.sizes)
+    .filter((sizeRow) => sizeRow.size_label)
+    .map((sizeRow, index) => ({
+      stock_item_id: normalized.id ?? null,
+      size_label: sizeRow.size_label,
+      quantity: Math.max(0, Number(sizeRow.quantity) || 0),
+      sort_order: (index + 1) * 10,
+    }));
+  return { item: payload, sizes };
 }
 
 async function guardarStockCatalogAdmin(payload, options = {}) {
   if (!quotesAccessToken) throw new Error("Debes iniciar sesion");
   const id = options?.id;
-  const method = id ? "PATCH" : "POST";
-  const target = id
-    ? `${SUPABASE_URL}/rest/v1/stock_catalog?id=eq.${id}`
-    : `${SUPABASE_URL}/rest/v1/stock_catalog`;
+  const stockPayload = construirPayloadStockItem(payload);
+  if (!stockPayload.item.article_code || !stockPayload.item.sku) {
+    throw new Error("Completa código y SKU antes de guardar");
+  }
 
-  const res = await fetch(target, {
-    method,
+  const itemRes = await fetch(
+    id
+      ? `${SUPABASE_URL}/rest/v1/stock_items?id=eq.${id}`
+      : `${SUPABASE_URL}/rest/v1/stock_items`,
+    {
+      method: id ? "PATCH" : "POST",
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${quotesAccessToken}`,
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+      },
+      body: JSON.stringify(id ? stockPayload.item : [stockPayload.item]),
+    }
+  );
+
+  if (!itemRes.ok) {
+    if (itemRes.status === 401 || itemRes.status === 403) {
+      logoutCotizaciones();
+      throw new Error("No se pudo iniciar sesion");
+    }
+    const txt = await itemRes.text();
+    throw new Error(`No se pudo guardar stock: ${txt || itemRes.status}`);
+  }
+
+  const itemData = await itemRes.json().catch(() => []);
+  const savedItem = Array.isArray(itemData) ? itemData[0] : itemData;
+  const stockItemId = Number(savedItem?.id || id || 0);
+  if (!stockItemId) throw new Error("No se pudo obtener el ID del artículo");
+
+  const deleteSizesRes = await fetch(`${SUPABASE_URL}/rest/v1/stock_item_sizes?stock_item_id=eq.${stockItemId}`, {
+    method: "DELETE",
     headers: {
       apikey: SUPABASE_ANON_KEY,
       Authorization: `Bearer ${quotesAccessToken}`,
-      "Content-Type": "application/json",
-      Prefer: "return=representation",
+      Prefer: "return=minimal",
     },
-    body: JSON.stringify(id ? payload : [payload]),
+  });
+
+  if (!deleteSizesRes.ok) {
+    if (deleteSizesRes.status === 401 || deleteSizesRes.status === 403) {
+      logoutCotizaciones();
+      throw new Error("No se pudo iniciar sesion");
+    }
+    const txt = await deleteSizesRes.text();
+    throw new Error(`No se pudieron actualizar tallas: ${txt || deleteSizesRes.status}`);
+  }
+
+  const sizesPayload = stockPayload.sizes
+    .filter((sizeRow) => sizeRow.size_label)
+    .map((sizeRow) => ({
+      stock_item_id: stockItemId,
+      size_label: sizeRow.size_label,
+      quantity: Math.max(0, Number(sizeRow.quantity) || 0),
+      sort_order: sizeRow.sort_order,
+    }));
+
+  if (sizesPayload.length) {
+    const sizesRes = await fetch(`${SUPABASE_URL}/rest/v1/stock_item_sizes`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${quotesAccessToken}`,
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+      },
+      body: JSON.stringify(sizesPayload),
+    });
+
+    if (!sizesRes.ok) {
+      if (sizesRes.status === 401 || sizesRes.status === 403) {
+        logoutCotizaciones();
+        throw new Error("No se pudo iniciar sesion");
+      }
+      const txt = await sizesRes.text();
+      throw new Error(`No se pudieron guardar tallas: ${txt || sizesRes.status}`);
+    }
+  }
+
+  return stockItemId;
+}
+
+async function eliminarStockCatalogAdmin(itemId) {
+  if (!quotesAccessToken) throw new Error("Debes iniciar sesion");
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/stock_items?id=eq.${itemId}`, {
+    method: "DELETE",
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${quotesAccessToken}`,
+      Prefer: "return=minimal",
+    },
   });
 
   if (!res.ok) {
@@ -3251,17 +3732,15 @@ async function guardarStockCatalogAdmin(payload, options = {}) {
       throw new Error("No se pudo iniciar sesion");
     }
     const txt = await res.text();
-    throw new Error(`No se pudo guardar stock: ${txt || res.status}`);
+    throw new Error(`No se pudo eliminar stock: ${txt || res.status}`);
   }
-
-  return res.json().catch(() => []);
 }
 
 async function cargarStockCatalogAdmin() {
   if (!quotesAccessToken) throw new Error("Debes iniciar sesion");
 
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/stock_catalog?select=id,season,article_code,sku,tiro,bota,color,size_36,size_38,size_40,size_42,size_44,size_46,active,updated_at&order=season.asc,sku.asc`,
+    `${SUPABASE_URL}/rest/v1/stock_items?select=id,season,article_code,sku,tiro,bota,color,active,updated_at,stock_item_sizes(id,size_label,quantity,sort_order)&order=season.asc,sku.asc`,
     {
       headers: {
         apikey: SUPABASE_ANON_KEY,
@@ -3282,6 +3761,13 @@ async function cargarStockCatalogAdmin() {
   const data = await res.json();
   stockCatalogRows = (Array.isArray(data) ? data : []).map((row) => normalizarFilaStockCatalog(row));
   aplicarFiltroStockCatalogAdmin();
+  if (stockEditorState.open && stockEditorState.item?.id) {
+    const refreshed = stockCatalogRows.find((row) => Number(row.id) === Number(stockEditorState.item.id));
+    if (refreshed) {
+      stockEditorState.item = refreshed;
+      renderStockEditorModal();
+    }
+  }
 }
 
 function normalizarBusquedaModelo(value) {
@@ -3397,7 +3883,7 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
     return `
       <div class="quote-card" data-quote-id="${q.id}">
         <div class="quote-card-head">
-          <div>
+          <div class="quote-card-main">
             <div class="quote-card-title-row">
               <div class="quote-card-title">${q.store_name || "Sin tienda"}</div>
               ${q.client_rut ? `<div class="quote-meta quote-meta-inline">RUT: ${q.client_rut}</div>` : ""}
@@ -3408,7 +3894,10 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
               <button type="button" class="ghost-btn quote-delete-btn" data-quote-delete="${q.id}">Eliminar cotización</button>
             </div>
           </div>
-          <div class="quote-meta">Total items: ${q.total_items || 0}<br>${fecha}</div>
+          <div class="quote-card-summary">
+            <div class="quote-card-total">Total items: ${q.total_items || 0}</div>
+            <div class="quote-card-date">${fecha}</div>
+          </div>
         </div>
         <div class="quote-status">
           <div class="quote-status-text ${isReady ? "ready" : ""}">
@@ -3549,6 +4038,11 @@ function configurarPanelCotizaciones() {
   const stockSeasonTabs = document.getElementById("stockCatalogSeasonTabs");
   const stockNewBtn = document.getElementById("stockCatalogNewBtn");
   const stockListEl = document.getElementById("stockCatalogList");
+  const stockEditorModal = document.getElementById("stockEditorModal");
+  const stockEditorCloseBtn = document.getElementById("closeStockEditorModal");
+  const stockEditorCancelBtn = document.getElementById("stockEditorCancelBtn");
+  const stockEditorSaveBtn = document.getElementById("stockEditorSaveBtn");
+  const stockEditorDeleteBtn = document.getElementById("stockEditorDeleteBtn");
   const emailEl = document.getElementById("quotesEmail");
   const passEl = document.getElementById("quotesPassword");
   const quotesListEl = document.getElementById("quotesList");
@@ -3635,8 +4129,7 @@ function configurarPanelCotizaciones() {
     stockSearchInput?.focus();
   });
   stockNewBtn?.addEventListener("click", () => {
-    stockCatalogDraftVisible = !stockCatalogDraftVisible;
-    aplicarFiltroStockCatalogAdmin();
+    abrirEditorStock(crearFilaStockCatalogVacia());
   });
 
   btnLogout?.addEventListener("click", logoutCotizaciones);
@@ -3697,37 +4190,75 @@ function configurarPanelCotizaciones() {
   });
 
   stockListEl?.addEventListener("click", async (e) => {
-    const row = e.target.closest("tr");
+    const openBtn = e.target.closest("[data-stock-open]");
+    if (!openBtn) return;
+    const itemId = Number(openBtn.dataset.stockOpen || 0);
+    const row = stockCatalogRows.find((item) => Number(item.id) === itemId);
     if (!row) return;
-    if (!filaStockTieneDatos(row)) return;
+    abrirEditorStock(row);
   });
 
-  stockListEl?.addEventListener("input", (e) => {
-    const sizeInput = e.target.closest('input[type="number"][name^="size_"]');
-    if (!sizeInput) return;
-    actualizarTotalFilaStock(sizeInput.closest("tr"));
+  stockEditorCloseBtn?.addEventListener("click", cerrarEditorStock);
+  stockEditorCancelBtn?.addEventListener("click", cerrarEditorStock);
+  stockEditorModal?.addEventListener("click", (e) => {
+    if (e.target?.id === "stockEditorModal") cerrarEditorStock();
   });
 
-  stockListEl?.addEventListener("change", async (e) => {
-    const field = e.target.closest('input[type="text"], input[type="number"]');
+  stockEditorModal?.addEventListener("click", async (e) => {
+    const addBtn = e.target.closest("#stockEditorAddSizeBtn");
+    if (addBtn) {
+      agregarTallaEditorStock();
+      return;
+    }
+    const removeBtn = e.target.closest("[data-size-remove]");
+    if (removeBtn) {
+      quitarTallaEditorStock(Number(removeBtn.dataset.sizeRemove || 0));
+      return;
+    }
+  });
+
+  stockEditorModal?.addEventListener("input", (e) => {
+    const field = e.target.closest('input[type="text"], input[type="number"], input[type="checkbox"]');
     if (!field) return;
+    stockEditorState.item = leerStockEditorActual();
+    const totalEl = stockEditorModal.querySelector(".stock-editor-total strong");
+    if (totalEl) totalEl.innerText = formatNumberCL(stockEditorState.item.total);
+  });
 
-    const row = field.closest("tr");
-    if (!row || !filaStockTieneDatos(row)) return;
-
-    const isNew = row.dataset.stockNew === "1";
-    const stockId = row.dataset.stockId;
-    const payload = leerStockCatalogDesdeCard(row);
-
-    if (!payload.article_code || !payload.sku) return;
-
+  stockEditorSaveBtn?.addEventListener("click", async () => {
+    const payload = leerStockEditorActual();
+    if (!payload.article_code || !payload.sku) {
+      mostrarToastError("Faltan datos", "Completa el código y el SKU antes de guardar.");
+      return;
+    }
     try {
-      await guardarStockCatalogAdmin(payload, { id: isNew ? null : stockId });
-      stockCatalogDraftVisible = false;
+      await guardarStockCatalogAdmin(payload, { id: payload.id });
       await cargarStockCatalogAdmin();
       await cargarStockData();
+      cerrarEditorStock();
+      mostrarToastExito("Stock guardado", "Los cambios del artículo se guardaron correctamente.");
     } catch (err) {
       mostrarToastError("No se pudo guardar", err.message || "Error guardando stock");
+    }
+  });
+
+  stockEditorDeleteBtn?.addEventListener("click", async () => {
+    const itemId = Number(stockEditorState.item?.id || 0);
+    if (!itemId) return;
+    const confirmar = await mostrarConfirmacionAccion({
+      titulo: "Eliminar artículo",
+      mensaje: `Se eliminará ${stockEditorState.item?.article_code || stockEditorState.item?.sku || "este artículo"} junto con sus tallas.`,
+      confirmarTexto: "Sí, eliminar",
+    });
+    if (!confirmar) return;
+    try {
+      await eliminarStockCatalogAdmin(itemId);
+      await cargarStockCatalogAdmin();
+      await cargarStockData();
+      cerrarEditorStock();
+      mostrarToastExito("Artículo eliminado", "El artículo se eliminó correctamente.");
+    } catch (err) {
+      mostrarToastError("No se pudo eliminar", err.message || "Error eliminando artículo");
     }
   });
 }
@@ -3736,15 +4267,16 @@ function limpiarCarrito() {
   pedido = [];
   actualizarCarrito();
   const rutEl = document.getElementById("clientRut");
+  const nameEl = document.getElementById("clientName");
   if (rutEl) rutEl.value = "";
+  if (nameEl) nameEl.value = "";
   clienteSeleccionado = null;
   setClientLookupUI();
+  toggleClientNameField(false);
   document.getElementById("cartSidebar").classList.remove("open");
 }
 
 document.getElementById("sendRequest").onclick = async () => {
-  const cliente = clienteSeleccionado || await validarRutClienteEnUI();
-  if (!cliente) return mostrarToastError("RUT no valido", "Ingresa un RUT registrado para enviar la cotizacion.");
   if (!pedido.length) return mostrarToastError("Hubo un error", "Intentelo nuevamente.");
 
   const btn = document.getElementById("sendRequest");
@@ -3753,13 +4285,14 @@ document.getElementById("sendRequest").onclick = async () => {
   btn.innerText = "Guardando...";
 
   try {
+    const cliente = await obtenerClienteParaCotizacion();
     await guardarCotizacionSupabase(cliente);
 
     mostrarToastExito("Cotización enviada con éxito", "Recibimos tu solicitud correctamente.");
     limpiarCarrito();
   } catch (error) {
     console.error(error);
-    mostrarToastError("Hubo un error", "Intentelo nuevamente.");
+    mostrarToastError("No se pudo enviar", error?.message || "Inténtalo nuevamente.");
   } finally {
     btn.disabled = false;
     btn.innerText = textoOriginal;
