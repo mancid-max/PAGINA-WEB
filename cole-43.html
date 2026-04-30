@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mohicano | Cole 43</title>
+<link rel="icon" type="image/png" href="Imagenes/Logo/app-icon.png">
+<link rel="apple-touch-icon" href="Imagenes/Logo/app-icon.png">
+<meta name="theme-color" content="#131316">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=20260430cole43j">
+</head>
+<body data-catalog-file="data-catalogo-43.json" data-catalog-source="catalogo-43">
+
+<section class="top-marquee" aria-label="Promoción superior">
+  <div class="top-marquee-track">
+    <div class="top-marquee-group">
+      <span>APROVECHA EL 10% DEL DÍA DE LA MADRE EN TU COTIZACIÓN</span>
+      <span>APROVECHA EL 10% DEL DÍA DE LA MADRE EN TU COTIZACIÓN</span>
+      <span>APROVECHA EL 10% DEL DÍA DE LA MADRE EN TU COTIZACIÓN</span>
+      <span>APROVECHA EL 10% DEL DÍA DE LA MADRE EN TU COTIZACIÓN</span>
+    </div>
+    <div class="top-marquee-group" aria-hidden="true">
+      <span>APROVECHA EL 10% DEL DÍA DE LA MADRE EN TU COTIZACIÓN</span>
+      <span>APROVECHA EL 10% DEL DÍA DE LA MADRE EN TU COTIZACIÓN</span>
+      <span>APROVECHA EL 10% DEL DÍA DE LA MADRE EN TU COTIZACIÓN</span>
+      <span>APROVECHA EL 10% DEL DÍA DE LA MADRE EN TU COTIZACIÓN</span>
+    </div>
+  </div>
+</section>
+
+<header class="header">
+    <div class="logo">
+        <img src="Imagenes/Logo/Logo.png" alt="Mohicano Logo">
+    </div>
+    <div class="header-actions">
+        <button id="quotesAdminBtn" class="ghost-btn admin-btn" type="button">ADMIN</button>
+        <div id="cartToggle" class="cart-btn" aria-label="Abrir tu cotización">
+            <span class="cart-btn-caption">Tu cotización</span>
+            <span class="cart-btn-main">
+              <span class="cart-btn-icon" aria-hidden="true">&#128722;</span>
+              <span id="cartCount">0</span>
+            </span>
+        </div>
+    </div>
+</header>
+
+<section class="promo-banner" aria-label="Promoción Día de las Madres">
+  <div class="promo-banner-copy">
+    <span class="promo-banner-kicker">Especial temporada</span>
+    <h2>Día de las Madres</h2>
+    <p>Ingresa en especial Día de las Madres y obtén un <strong>10% de descuento</strong>.</p>
+  </div>
+  <div class="promo-banner-gallery">
+    <img src="banner/mom%20day%202026_page-0002.jpg" alt="Promoción Día de las Madres 1">
+    <img src="banner/mom%20day%202026_page-0001.jpg" alt="Promoción Día de las Madres 2">
+  </div>
+</section>
+
+<section class="hero">
+  <div class="collection-switch-row">
+    <span class="collection-switch-label">Colección</span>
+    <div class="collection-switch" aria-label="Colecciones">
+      <a class="collection-switch-link" href="index.html">42</a>
+      <a class="collection-switch-link active" href="cole-43.html">43</a>
+    </div>
+  </div>
+  <h1 class="hero-title">Cole 43</h1>
+</section>
+
+<section class="catalog-explorer" aria-label="Sección de modelos">
+  <div class="catalog-section-divider">
+    <div class="catalog-section-divider-copy">
+      <span class="catalog-section-divider-kicker">Colección 43</span>
+      <h2>Modelos Disponibles</h2>
+      <p>Explora la vitrina y abre cada modelo para cotizar por talla.</p>
+    </div>
+  </div>
+  <div class="model-search model-search-section">
+    <div class="model-search-box">
+      <input id="modelSearchInput" type="text" inputmode="numeric" autocomplete="off" placeholder="Buscar modelo (ej: 4309)">
+      <div id="modelSuggestionsPanel" class="model-suggestions-panel" hidden></div>
+    </div>
+    <button id="modelSearchBtn" type="button">Buscar</button>
+    <button id="modelSearchClear" type="button" class="ghost-btn">Limpiar</button>
+  </div>
+</section>
+
+<section id="grid" class="product-grid"></section>
+
+<div id="cartSidebar" class="cart-sidebar">
+    <button id="closeCart" class="cart-close">X</button>
+    <div class="cart-header">
+      <h2>Tu Cotización</h2>
+      <div class="cart-intro">
+        Revisa tus modelos, valida el RUT y envía la cotización en segundos.
+      </div>
+    </div>
+    <div class="cart-layout">
+      <div class="cart-summary-column">
+        <div id="cartItems"></div>
+      </div>
+      <div class="cart-form-column">
+        <div class="cart-client-panel">
+          <div class="cart-autofill-trap" aria-hidden="true">
+            <input type="text" tabindex="-1" autocomplete="username">
+            <input type="password" tabindex="-1" autocomplete="current-password">
+          </div>
+          <label for="clientRut" class="cart-field-label">RUT cliente</label>
+          <input
+            type="search"
+            id="clientRut"
+            name="rut_lookup_off"
+            placeholder="Ej: 76.454.354-8"
+            inputmode="numeric"
+            enterkeyhint="done"
+            autocomplete="chrome-off"
+            autocorrect="off"
+            autocapitalize="none"
+            spellcheck="false"
+            readonly
+            data-lpignore="true"
+            data-1p-ignore="true"
+            data-bwignore="true"
+            data-dashlane-rid="off"
+            data-form-type="other"
+          >
+          <div id="clientLookupBadge" class="client-lookup-badge" hidden></div>
+          <div id="clientLookupMsg" class="client-lookup-msg" aria-live="polite"></div>
+          <div id="clientNameWrap" class="client-name-wrap" hidden>
+            <label for="clientName" class="cart-field-label">Cliente nuevo</label>
+            <input type="search" id="clientName" name="client_name_lookup_off" placeholder="Razón social o nombre del cliente" autocomplete="chrome-off" readonly data-lpignore="true" data-1p-ignore="true" data-bwignore="true">
+          </div>
+        </div>
+        <button id="sendRequest">Enviar Cotización</button>
+      </div>
+    </div>
+</div>
+
+<div id="modal" class="modal">
+  <div class="modal-content">
+    <span id="closeModal" class="close-modal">X</span>
+
+    <div class="modal-left">
+        <div class="image-viewer">
+            <button id="openImageGalleryBtn" class="image-gallery-btn" type="button">Ver imágenes</button>
+            <button id="openVideoGalleryBtn" class="image-gallery-btn image-video-btn" type="button" hidden>Ver video</button>
+            <div id="imageSoldOutOverlay" class="image-sold-out-overlay" hidden>AGOTADO</div>
+            <img id="viewerImg">
+        </div>
+        <div id="thumbContainer" class="thumbnails"></div>
+    </div>
+
+    <div class="modal-right">
+        <h2 id="modalTitle"></h2>
+        <p id="description" class="product-description"></p>
+        <div id="characteristics" class="product-characteristics"></div>
+        <div id="variantContainer" class="variants"></div>
+        <div class="sizes-panel">
+        <div class="sizes-divider">Cantidad por talla</div>
+        <div class="sizes">
+            <label>36 <input type="number" id="t36" min="0" step="1"></label>
+            <label>38 <input type="number" id="t38" min="0" step="1"></label>
+            <label>40 <input type="number" id="t40" min="0" step="1"></label>
+            <label>42 <input type="number" id="t42" min="0" step="1"></label>
+            <label>44 <input type="number" id="t44" min="0" step="1"></label>
+            <label>46 <input type="number" id="t46" min="0" step="1"></label>
+        </div>
+        </div>
+
+        <button id="addBtn">Agregar cotización</button>
+    </div>
+  </div>
+</div>
+
+<div id="imageZoomModal" class="image-zoom-modal" hidden>
+  <div class="image-zoom-backdrop" data-close-image-zoom></div>
+  <div class="image-zoom-content" role="dialog" aria-modal="true" aria-label="Visor de imágenes">
+    <button id="closeImageZoomBtn" class="image-zoom-close" type="button" aria-label="Cerrar visor">X</button>
+    <div class="image-zoom-stage">
+      <img id="imageZoomMain" alt="Vista ampliada de producto">
+    </div>
+    <div id="imageZoomThumbs" class="image-zoom-thumbs"></div>
+  </div>
+</div>
+
+<div id="videoZoomModal" class="image-zoom-modal" hidden>
+  <div class="image-zoom-backdrop" data-close-video-zoom></div>
+  <div class="image-zoom-content video-zoom-content" role="dialog" aria-modal="true" aria-label="Visor de video">
+    <button id="closeVideoZoomBtn" class="image-zoom-close" type="button" aria-label="Cerrar video">X</button>
+    <div class="image-zoom-stage video-zoom-stage">
+      <video id="videoZoomPlayer" class="video-zoom-player" controls preload="metadata" playsinline controlsList="nodownload"></video>
+    </div>
+  </div>
+</div>
+
+<div id="quotesModal" class="modal">
+  <div class="modal-content quotes-modal-content">
+    <span id="closeQuotesModal" class="close-modal">X</span>
+
+    <div class="quotes-admin">
+      <div class="quotes-admin-head">
+        <h2>Cotizaciones</h2>
+        <div class="quotes-admin-actions">
+          <button id="refreshQuotesBtn" type="button" class="ghost-btn">Actualizar</button>
+          <button id="logoutQuotesBtn" type="button" class="ghost-btn">Cerrar sesión</button>
+        </div>
+      </div>
+
+      <div id="quotesLoginSection" class="quotes-login">
+        <p>Ingresa Usuario</p>
+        <input id="quotesEmail" type="email" placeholder="Correo administrador">
+        <input id="quotesPassword" type="password" placeholder="Contraseña">
+        <button id="quotesLoginBtn" type="button">Ingresar</button>
+        <div id="quotesLoginMsg" class="quotes-msg"></div>
+      </div>
+
+      <div id="quotesPanel" class="quotes-panel" style="display:none;">
+        <div id="quotesAdminTabs" class="quotes-admin-tabs" style="display:none;">
+          <button id="quotesTabCotizaciones" type="button" class="ghost-btn quotes-tab-btn active">Cotizaciones</button>
+          <button id="quotesTabStock" type="button" class="ghost-btn quotes-tab-btn">Stock</button>
+        </div>
+
+        <div id="quotesCotizacionesPanel" class="quotes-tab-panel">
+          <div id="quotesUserBadge" class="quotes-user-badge"></div>
+          <div id="quotesList" class="quotes-list"></div>
+        </div>
+
+        <div id="quotesStockPanel" class="quotes-tab-panel" style="display:none;">
+          <div class="stock-admin-toolbar">
+            <div id="stockCatalogSummary" class="quotes-user-badge">Stock</div>
+            <button id="stockCatalogNewBtn" type="button" class="ghost-btn">Nuevo modelo</button>
+          </div>
+          <div id="stockCatalogSeasonTabs" class="quotes-admin-tabs stock-season-tabs">
+            <button type="button" class="ghost-btn quotes-tab-btn active" data-stock-season="">Todas</button>
+            <button type="button" class="ghost-btn quotes-tab-btn" data-stock-season="37">cole 37</button>
+            <button type="button" class="ghost-btn quotes-tab-btn" data-stock-season="38">cole 38</button>
+            <button type="button" class="ghost-btn quotes-tab-btn" data-stock-season="39">cole39</button>
+            <button type="button" class="ghost-btn quotes-tab-btn" data-stock-season="40">COLE 40</button>
+            <button type="button" class="ghost-btn quotes-tab-btn" data-stock-season="41">COLE 41</button>
+            <button type="button" class="ghost-btn quotes-tab-btn" data-stock-season="42">principal 42</button>
+          </div>
+          <div class="trazabilidad-search-row">
+            <input id="stockCatalogSearchInput" type="text" placeholder="Buscar SKU o modelo (ej: 4201)">
+            <button id="stockCatalogSearchClear" type="button" class="ghost-btn">Limpiar</button>
+          </div>
+          <div id="stockCatalogList" class="quotes-list stock-catalog-list"></div>
+        </div>
+      </div>
+
+      <div id="stockEditorModal" class="modal stock-editor-modal" hidden>
+        <div class="stock-editor-dialog">
+          <div class="stock-editor-head">
+            <div>
+              <h3 id="stockEditorTitle">Editar stock</h3>
+              <div id="stockEditorSubtitle" class="stock-editor-subtitle"></div>
+            </div>
+            <button id="closeStockEditorModal" type="button" class="ghost-btn">Cerrar</button>
+          </div>
+          <div id="stockEditorBody" class="stock-editor-body"></div>
+          <div class="stock-editor-actions">
+            <button id="stockEditorDeleteBtn" type="button" class="ghost-btn stock-editor-delete">Eliminar artículo</button>
+            <div class="stock-editor-actions-right">
+              <button id="stockEditorCancelBtn" type="button" class="ghost-btn">Cancelar</button>
+              <button id="stockEditorSaveBtn" type="button" class="ghost-btn stock-editor-save">Guardar cambios</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="successToast" class="success-toast" aria-live="polite" hidden>
+  <div class="success-toast-icon">&#10003;</div>
+  <div class="success-toast-text">
+    <strong>Cotización enviada con éxito</strong>
+    <span>Recibimos tu solicitud correctamente.</span>
+  </div>
+</div>
+
+<div id="errorToast" class="success-toast error-toast" aria-live="polite" hidden>
+  <div class="success-toast-icon">!</div>
+  <div class="success-toast-text">
+    <strong id="errorToastTitle">Revisa los datos</strong>
+    <span id="errorToastMsg">Hay un problema con la información ingresada.</span>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="script-v2.js?v=20260430cole43j"></script>
+</body>
+</html>

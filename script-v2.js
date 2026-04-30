@@ -3,6 +3,7 @@
  ***********************/
 let productos = [];
 let productosGrid = [];
+let productosCatalogoBase = [];
 let pedido = [];
 let skuActivo = "";
 let draftTallasPorSku = {}; // legacy (borradores desactivados)
@@ -153,7 +154,7 @@ const LOCAL_CLIENT_OVERRIDES = [
 
 const ASSET_VERSION = Date.now();
 const OPTIMIZED_IMAGE_ROOT = "Imagenes-web";
-const OPTIMIZED_IMAGE_SOURCE_ROOTS = ["Imagenes", "Imagenes2", "Imagenes3", "42"];
+const OPTIMIZED_IMAGE_SOURCE_ROOTS = ["Imagenes", "Imagenes2", "Imagenes3", "42", "43"];
 const TEXT_NORMALIZATION_REPLACEMENTS = [
   [/Dise\?o/gi, "Diseño"],
   [/disen\?o/gi, "diseño"],
@@ -168,6 +169,12 @@ const TEXT_NORMALIZATION_REPLACEMENTS = [
 function withCacheBust(path) {
   if (!path) return path;
   return path.includes("?") ? `${path}&v=${ASSET_VERSION}` : `${path}?v=${ASSET_VERSION}`;
+}
+
+function buildAssetUrl(path) {
+  const withVersion = withCacheBust(path);
+  if (!withVersion) return withVersion;
+  return encodeURI(withVersion);
 }
 
 function normalizarTextoVisible(value) {
@@ -268,8 +275,8 @@ function asignarImagenCatalogo(img, path, options = {}) {
   const requestId = String(++imageLoadRequestId);
   img.dataset.requestId = requestId;
 
-  const optimizedSrc = withCacheBust(img.dataset.optimizedSrc || normalized);
-  const originalSrc = withCacheBust(normalized);
+  const optimizedSrc = buildAssetUrl(img.dataset.optimizedSrc || normalized);
+  const originalSrc = buildAssetUrl(normalized);
 
   if (preferOriginal) {
     img.dataset.fallbackApplied = "1";
@@ -326,12 +333,37 @@ function obtenerClienteSupabase() {
 }
 
 function normalizarRut(valor) {
-  return String(valor || "")
+  const clean = String(valor || "")
     .trim()
     .toUpperCase()
     .replace(/\./g, "")
     .replace(/\s+/g, "")
-    .replace(/[^0-9K-]/g, "");
+    .replace(/[^0-9K]/g, "");
+  if (!clean) return "";
+  if (clean.length === 1) return clean;
+  return `${clean.slice(0, -1)}-${clean.slice(-1)}`;
+}
+
+function calcularDigitoVerificadorRut(cuerpoRut) {
+  const digits = String(cuerpoRut || "").replace(/\D/g, "");
+  if (!digits) return "";
+  let suma = 0;
+  let multiplicador = 2;
+  for (let i = digits.length - 1; i >= 0; i--) {
+    suma += Number(digits[i]) * multiplicador;
+    multiplicador = multiplicador === 7 ? 2 : multiplicador + 1;
+  }
+  const resto = 11 - (suma % 11);
+  if (resto === 11) return "0";
+  if (resto === 10) return "K";
+  return String(resto);
+}
+
+function esRutValido(valor) {
+  const n = normalizarRut(valor);
+  const [bodyRaw, dvRaw] = n.split("-");
+  if (!bodyRaw || !dvRaw || !/^\d+$/.test(bodyRaw)) return false;
+  return calcularDigitoVerificadorRut(bodyRaw) === dvRaw.toUpperCase();
 }
 
 function formatearRutVisual(rut) {
@@ -356,6 +388,7 @@ function buscarClienteLocalPorRut(rutInput) {
 }
 
 function esProductoAgotado(item) {
+  if (CATALOG_SOURCE === "catalogo-43") return false;
   if (item?.isSoldOut === true) return true;
   if (!INVENTORY_ENABLED || !Object.keys(stockBySku || {}).length) return false;
   const skus = [item?.family, ...((Array.isArray(item?.variants) ? item.variants : []).map((variant) => variant?.sku))]
@@ -410,11 +443,34 @@ const CATALOG_SOURCE = (document.body?.dataset?.catalogSource || "catalogo-1").t
 const STOCK_DATA_FILE_BY_SOURCE = {
   "catalogo-1": "stock-data.json",
   "catalogo-2": "stock-data-catalogo-2.json",
+  "catalogo-43": "stock-data-catalogo-43.json",
 };
 const STOCK_DATA_FILE = STOCK_DATA_FILE_BY_SOURCE[CATALOG_SOURCE] || "stock-data.json";
+const CATALOG_43_PRICE_BY_SKU = {
+  "4301-00": 26990,
+  "4309-00": 27990,
+  "4318-00": 26990,
+  "4314-00": 25990,
+  "4323-00": 26990,
+};
+
+function obtenerPrecioCatalogo43(value) {
+  if (CATALOG_SOURCE !== "catalogo-43") return null;
+  const sku = normalizarSkuCatalogo(typeof value === "string" ? value : value?.family || value?.sku);
+  return Number(CATALOG_43_PRICE_BY_SKU[sku]) || null;
+}
+
+function formatearPrecioCLP(value) {
+  const amount = Number(value);
+  if (!Number.isFinite(amount) || amount <= 0) return "";
+  return `$${amount.toLocaleString("es-CL")}`;
+}
 
 function stockSupabaseHabilitado() {
-  return INVENTORY_ENABLED && clienteSupabaseDisponible();
+  // La vitrina pública debe seguir funcionando aunque Supabase esté vacío,
+  // con RLS reciente o con datos en validación. Para el storefront usamos
+  // siempre el JSON regenerado desde el Excel y dejamos Supabase para el admin.
+  return false;
 }
 
 async function cargarStockJsonLocal() {
@@ -526,9 +582,21 @@ function ordenarEtiquetasTalla(a, b) {
 }
 
 function compararFilasStock(a = {}, b = {}) {
-  const seasonDiff = String(a?.season || "").localeCompare(String(b?.season || ""), undefined, { numeric: true });
+  const totalA = Number(normalizarFilaStockCatalog(a)?.total) || 0;
+  const totalB = Number(normalizarFilaStockCatalog(b)?.total) || 0;
+  const totalDiff = totalB - totalA;
+  if (totalDiff !== 0) return totalDiff;
+
+  const rowA = normalizarFilaStockCatalog(a);
+  const rowB = normalizarFilaStockCatalog(b);
+
+  const seasonDiff = String(rowB?.season || "").localeCompare(String(rowA?.season || ""), undefined, { numeric: true });
   if (seasonDiff !== 0) return seasonDiff;
-  return String(a?.sku || "").localeCompare(String(b?.sku || ""), undefined, { numeric: true });
+
+  const articleCodeDiff = String(rowB?.article_code || "").localeCompare(String(rowA?.article_code || ""), undefined, { numeric: true });
+  if (articleCodeDiff !== 0) return articleCodeDiff;
+
+  return String(rowB?.sku || "").localeCompare(String(rowA?.sku || ""), undefined, { numeric: true });
 }
 
 function normalizarTallasStock(rows = []) {
@@ -562,16 +630,18 @@ function normalizarTallasStock(rows = []) {
 
 function normalizarFilaStockCatalog(row = {}) {
   const sku = normalizarSkuCatalogo(row?.sku);
-  const sizes = normalizarTallasStock(
-    Array.isArray(row?.stock_item_sizes)
+  const sourceSizes =
+    Array.isArray(row?.stock_item_sizes) && row.stock_item_sizes.length
       ? row.stock_item_sizes
-      : Array.isArray(row?.sizes)
+      : Array.isArray(row?.sizes) && row.sizes.length
         ? row.sizes
         : TALLAS_DISPONIBLES.map((size, index) => ({
           size_label: size,
           quantity: Math.max(0, Number(row?.[`size_${size}`]) || 0),
           sort_order: (index + 1) * 10,
-        }))
+        }));
+  const sizes = normalizarTallasStock(
+    sourceSizes
   );
   const total = sizes.reduce((acc, sizeRow) => acc + (Number(sizeRow?.quantity) || 0), 0);
   return {
@@ -1127,10 +1197,39 @@ function obtenerTotalStockProducto(item, stockItems = {}) {
   return total;
 }
 
+function compararProductosPorStockDesc(a, b, stockItems = stockBySku) {
+  const stockA = Math.max(
+    0,
+    Number(a?._stockTotal) || 0,
+    Number(obtenerStockParaSkuDesdeItems(a?.family, stockItems)?.total) || 0
+  );
+  const stockB = Math.max(
+    0,
+    Number(b?._stockTotal) || 0,
+    Number(obtenerStockParaSkuDesdeItems(b?.family, stockItems)?.total) || 0
+  );
+  if (stockB !== stockA) return stockB - stockA;
+  const modelA = normalizarSkuCatalogo(a?.family);
+  const modelB = normalizarSkuCatalogo(b?.family);
+  return modelA.localeCompare(modelB, undefined, { numeric: true });
+}
+
 function obtenerImagenesPropias(obj) {
   const nonCatalog = deduplicarImagenesParaVisor(obtenerImagenesVisibles(obj));
   if (nonCatalog.length) return nonCatalog;
   return deduplicarImagenesParaVisor(obtenerImagenesVisibles(obj, { includeCatalog: true }));
+}
+
+function crearFirmaGaleriaTarjeta(images = []) {
+  const names = [];
+  const seen = new Set();
+  deduplicarImagenesParaVisor(images).forEach((img) => {
+    const key = normalizarRutaAsset(img).split("/").pop()?.toLowerCase() || "";
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    names.push(key);
+  });
+  return names.join("|");
 }
 
 function imagenCompatibleConSku(path, sku) {
@@ -1149,13 +1248,16 @@ function imagenCompatibleConSku(path, sku) {
 function construirProductosGridPorSku(items = [], stockItems = {}) {
   const cards = [];
   const seenSku = new Set();
+  const seenImageSignatureByFamily = new Map();
 
   (Array.isArray(items) ? items : []).forEach((item) => {
-    const baseFamily = normalizarSkuCatalogo(item?.family);
+    const rawFamily = normalizarSkuCatalogo(item?.family);
+    const familyRoot = obtenerBaseFamilia(rawFamily);
+    const baseFamily = familyRoot ? `${familyRoot}-00` : rawFamily;
     if (!baseFamily) return;
 
     const candidates = [
-      { sku: baseFamily, source: item },
+      { sku: rawFamily, source: item },
       ...((Array.isArray(item?.variants) ? item.variants : []).map((variant) => ({
         sku: normalizarSkuCatalogo(variant?.sku),
         source: variant,
@@ -1171,8 +1273,15 @@ function construirProductosGridPorSku(items = [], stockItems = {}) {
       const images = obtenerImagenesPropias(entry.source).filter((img) => imagenCompatibleConSku(img, entry.sku));
       const cardImage = images[0] || "";
       if (!cardImage) return;
+      const imageSignature = crearFirmaGaleriaTarjeta(images);
+      const knownSignatures = seenImageSignatureByFamily.get(baseFamily) || new Set();
+      if (imageSignature && knownSignatures.has(imageSignature)) return;
 
       seenSku.add(entry.sku);
+      if (imageSignature) {
+        knownSignatures.add(imageSignature);
+        seenImageSignatureByFamily.set(baseFamily, knownSignatures);
+      }
       cards.push({
         ...item,
         family: entry.sku,
@@ -1194,6 +1303,74 @@ function construirProductosGridPorSku(items = [], stockItems = {}) {
   });
 
   return cards;
+}
+
+function construirProductosGridFallback(items = [], stockItems = {}) {
+  return (Array.isArray(items) ? items : [])
+    .map((item) => {
+      const family = normalizarSkuCatalogo(item?.family);
+      const stock = obtenerStockParaSkuDesdeItems(family, stockItems);
+      const total = Math.max(0, Number(stock?.total) || 0);
+      const images = obtenerImagenesPropias(item);
+      const cardImage = images[0] || "";
+      if (!family || total <= 0 || !cardImage) return null;
+      return {
+        ...item,
+        family,
+        _baseFamily: obtenerBaseFamilia(family) ? `${obtenerBaseFamilia(family)}-00` : family,
+        _preferredSku: family,
+        _cardImage: cardImage,
+        _stockTotal: total,
+        isSoldOut: false,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => compararProductosPorStockDesc(a, b, stockItems));
+}
+
+function obtenerTotalFallbackCatalogo43(item) {
+  const characteristics = Array.isArray(item?.characteristics) ? item.characteristics : [];
+  for (const value of characteristics) {
+    const text = String(value || "");
+    const match = text.match(/disponible:\s*(\d+)\s*unidades/i);
+    if (match) return Math.max(0, Number(match[1]) || 0);
+  }
+  return 0;
+}
+
+function prepararCatalogo43Directo(items = [], stockItems = {}) {
+  const directItems = (Array.isArray(items) ? items : [])
+    .map((item) => {
+      const family = normalizarSkuCatalogo(item?.family);
+      const stock = obtenerStockParaSkuDesdeItems(family, stockItems);
+      const fallbackTotal = obtenerTotalFallbackCatalogo43(item);
+      const total = Math.max(0, Number(stock?.total) || 0, fallbackTotal);
+      const images = obtenerImagenesPropias(item);
+      const mainImage = images[0] || normalizarRutaImagenCatalogo(item?.main_image) || "";
+      if (!family || total <= 0 || !mainImage) return null;
+      return {
+        ...item,
+        family,
+        main_image: mainImage,
+        gallery: images.length ? images : (Array.isArray(item?.gallery) ? item.gallery : []),
+        variants: [],
+        _baseFamily: obtenerBaseFamilia(family) ? `${obtenerBaseFamilia(family)}-00` : family,
+        _preferredSku: family,
+        _cardImage: mainImage,
+        _stockTotal: total,
+        isSoldOut: false,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => compararProductosPorStockDesc(a, b, stockItems));
+
+  return {
+    productos: directItems,
+    productosGrid: directItems.map((item) => ({
+      ...item,
+      _cardImage: item._cardImage || item.main_image,
+    })),
+  };
 }
 
 function marcarProductoAgotado(item) {
@@ -1218,7 +1395,7 @@ function construirProductosAgotadosSegunStock(items = [], stockItems = {}) {
 function stockTieneModelosCatalogo(stockItems = {}) {
   const pattern = CATALOG_SOURCE === "catalogo-2"
     ? /^(40|41)\d{2}(-\d{2})?$/i
-    : /^42\d{2}(-\d{2})?$/i;
+    : (CATALOG_SOURCE === "catalogo-43" ? /^43\d{2}(-\d{2})?$/i : /^42\d{2}(-\d{2})?$/i);
   return Object.entries(stockItems || {}).some(([sku, payload]) => {
     const total = Number(payload?.total) || 0;
     return total > 0 && pattern.test(normalizarSkuCatalogo(sku));
@@ -1300,7 +1477,15 @@ function filtrarProductosDisponiblesCole42(items = [], trazabilidadData = null) 
 async function cargarProductosCatalogo() {
   try {
     const catalogPromise = fetch(withCacheBust(CATALOG_DATA_FILE)).then((res) => res.json());
-    const stockPromise = INVENTORY_ENABLED ? cargarStockDatasetPreferido() : Promise.resolve(null);
+    const stockPromise = INVENTORY_ENABLED
+      ? cargarStockDatasetPreferido().catch((err) => {
+        if (CATALOG_SOURCE === "catalogo-43") {
+          console.warn(`No se pudo cargar ${STOCK_DATA_FILE}, se usa fallback de catálogo 43:`, err);
+          return null;
+        }
+        throw err;
+      })
+      : Promise.resolve(null);
     const extraCatalogPromise = CATALOG_SOURCE === "catalogo-1"
       ? fetch(withCacheBust("data-catalogo-3.json")).then((res) => res.json())
       : Promise.resolve([]);
@@ -1337,13 +1522,24 @@ async function cargarProductosCatalogo() {
 
     if (INVENTORY_ENABLED) {
       stockBySku = {
-        ...normalizarMapaStockPorSku(stockData?.items || {}),
         ...crearStockSinteticoAgotados(),
+        ...normalizarMapaStockPorSku(stockData?.items || {}),
       };
     }
     catalogCoverBySku = normalizarMapaAssetsPorSku(catalogCoverMapData || {});
 
     let items = Array.isArray(data) ? data : [];
+    if (CATALOG_SOURCE === "catalogo-43") {
+      productosCatalogoBase = Array.isArray(items) ? [...items] : [];
+    }
+    if (CATALOG_SOURCE === "catalogo-43") {
+      const directCatalog43 = prepararCatalogo43Directo(items, stockBySku);
+      productos = directCatalog43.productos;
+      productosGrid = directCatalog43.productosGrid;
+      renderGrid(productosGrid);
+      inicializarBuscadorModelos();
+      return;
+    }
     if (CATALOG_SOURCE === "catalogo-1") {
       items = mergeCatalogItems(
         items,
@@ -1361,22 +1557,23 @@ async function cargarProductosCatalogo() {
     items = (INVENTORY_ENABLED && stockCatalogoValido)
       ? filtrarProductosPorStock(itemsCatalogoBase, stockBySku)
       : filtrarProductosDisponiblesCole42(itemsCatalogoBase, trazabilidadData);
+    if (INVENTORY_ENABLED && stockCatalogoValido) {
+      items = filtrarVariantesPorStock(items, stockBySku);
+    }
     if (CATALOG_SOURCE === "catalogo-1") {
       items = rescatarProductosConStockFaltantes(itemsCatalogoBase, items, stockBySku);
     }
     items = deduplicarTarjetasPorModelo(items);
 
     if (CATALOG_SOURCE === "catalogo-1") {
-      items = items.sort((a, b) => {
-        const aKey = normalizarSkuCatalogo(a?.family);
-        const bKey = normalizarSkuCatalogo(b?.family);
-        return aKey.localeCompare(bKey, undefined, { numeric: true });
-      });
       items = deduplicarTarjetasPorModelo(items);
     }
 
-    productos = items;
+    productos = [...items].sort((a, b) => compararProductosPorStockDesc(a, b, stockBySku));
     productosGrid = construirProductosGridPorSku(productos, stockBySku);
+    if (CATALOG_SOURCE === "catalogo-43" && !productosGrid.length) {
+      productosGrid = construirProductosGridFallback(productos, stockBySku);
+    }
     renderGrid(productosGrid);
     inicializarBuscadorModelos();
   } catch (err) {
@@ -1605,6 +1802,7 @@ function obtenerStockParaSku(sku) {
 }
 
 function skuEstaAgotado(sku) {
+  if (CATALOG_SOURCE === "catalogo-43") return false;
   if (!INVENTORY_ENABLED) return false;
   const stock = obtenerStockParaSku(sku);
   if (!stock || !stock.sizes || typeof stock.sizes !== "object") return true;
@@ -1654,6 +1852,16 @@ function cargarStockData() {
     .then((data) => {
       stockBySku = normalizarMapaStockPorSku(data?.items || {});
       if (skuActivo) aplicarStockATallas(skuActivo);
+      if (CATALOG_SOURCE === "catalogo-43") {
+        const baseItems43 = Array.isArray(productosCatalogoBase) && productosCatalogoBase.length
+          ? productosCatalogoBase
+          : productos;
+        const directCatalog43 = prepararCatalogo43Directo(baseItems43, stockBySku);
+        productos = directCatalog43.productos;
+        productosGrid = directCatalog43.productosGrid;
+        renderGrid(productosGrid);
+        return;
+      }
       if (Array.isArray(productos) && productos.length) {
         productosGrid = construirProductosGridPorSku(productos, stockBySku);
         renderGrid(productosGrid);
@@ -1692,6 +1900,24 @@ function asegurarBadgeStock(label) {
 }
 
 function aplicarStockATallas(sku) {
+  if (CATALOG_SOURCE === "catalogo-43") {
+    TALLAS_DISPONIBLES.forEach((talla) => {
+      const input = document.getElementById("t" + talla);
+      const label = input?.closest("label");
+      if (!input || !label) return;
+      const textEl = asegurarTextoTalla(label, talla);
+      const badgeEl = asegurarBadgeStock(label);
+      textEl.innerText = talla;
+      label.classList.remove("size-out-of-stock", "size-low-stock", "size-in-stock");
+      label.removeAttribute("aria-disabled");
+      input.disabled = false;
+      input.removeAttribute("max");
+      input.removeAttribute("aria-disabled");
+      badgeEl.hidden = true;
+      badgeEl.innerText = "";
+    });
+    return;
+  }
   if (!INVENTORY_ENABLED) {
     TALLAS_DISPONIBLES.forEach((talla) => {
       const input = document.getElementById("t" + talla);
@@ -1720,6 +1946,20 @@ function aplicarStockATallas(sku) {
     const textEl = asegurarTextoTalla(label, talla);
     const badgeEl = asegurarBadgeStock(label);
     const qty = stock ? Math.max(0, Number(stock?.sizes?.[talla]) || 0) : null;
+
+    if (CATALOG_SOURCE === "catalogo-43" && (Number(stock?.total) || 0) > 0) {
+      label.classList.remove("size-out-of-stock");
+      label.classList.add("size-in-stock");
+      label.classList.remove("size-low-stock");
+      label.removeAttribute("aria-disabled");
+      input.disabled = false;
+      input.removeAttribute("max");
+      input.removeAttribute("aria-disabled");
+      textEl.innerText = talla;
+      badgeEl.hidden = false;
+      badgeEl.innerText = "Consultar";
+      return;
+    }
 
     if (qty === null) {
       label.classList.remove("size-out-of-stock");
@@ -1800,10 +2040,16 @@ function actualizarEstadoCotizacionProducto(producto, sku) {
 
   const titleEl = document.getElementById("modalTitle");
   const quotePanelModelTitle = document.getElementById("quotePanelModelTitle");
+  const descriptionEl = document.getElementById("description");
+  const precio43 = obtenerPrecioCatalogo43(sku || producto?.family);
   if (titleEl) {
     titleEl.innerText = agotado ? `Modelo ${skuLabel} - Agotado` : "Modelo " + skuLabel;
   }
   if (quotePanelModelTitle) quotePanelModelTitle.innerText = "Modelo " + skuLabel;
+  if (descriptionEl && precio43) {
+    const textoBase = normalizarTextoVisible(producto?.description || "");
+    descriptionEl.innerText = `${textoBase}${textoBase ? " · " : ""}Precio mayor s/iva: ${formatearPrecioCLP(precio43)}`;
+  }
   if (imageViewerEl) {
     imageViewerEl.classList.toggle("is-sold-out", agotado);
   }
@@ -2158,29 +2404,56 @@ function inicializarBuscadorModelos() {
 /***********************
  * GRID
  ***********************/
+function obtenerImagenSeguraTarjeta(producto) {
+  const images = obtenerImagenesPropias(producto);
+  const candidate = images[0]
+    || normalizarRutaImagenCatalogo(producto?._cardImage)
+    || normalizarRutaImagenCatalogo(producto?.main_image)
+    || "Imagenes/Logo/app-icon.png";
+  return candidate || "Imagenes/Logo/app-icon.png";
+}
+
+function tarjetaSinImagenCatalogo43(producto) {
+  if (CATALOG_SOURCE !== "catalogo-43") return false;
+  const imagePath = normalizarRutaAsset(producto?._safeCardImage || producto?._cardImage || producto?.main_image || "");
+  return imagePath === "Imagenes/Logo/app-icon.png";
+}
+
 function renderGrid(lista) {
   const container = document.getElementById("grid");
   const listaConImagen = (Array.isArray(lista) ? lista : [])
-    .filter((p) => Boolean(p?._cardImage));
-  const listaOrdenada = [...listaConImagen].sort((a, b) => {
-    const stockB = Number(b?._stockTotal) || Math.max(0, Number(obtenerStockParaSkuDesdeItems(b?.family, stockBySku)?.total) || 0);
-    const stockA = Number(a?._stockTotal) || Math.max(0, Number(obtenerStockParaSkuDesdeItems(a?.family, stockBySku)?.total) || 0);
-    if (stockB !== stockA) return stockB - stockA;
-    const modelA = normalizarSkuCatalogo(a?.family);
-    const modelB = normalizarSkuCatalogo(b?.family);
-    return modelA.localeCompare(modelB, undefined, { numeric: true });
-  });
+    .map((p) => ({
+      ...p,
+      _safeCardImage: obtenerImagenSeguraTarjeta(p),
+    }))
+    .filter((p) => Boolean(p?._safeCardImage));
+  const listaOrdenada = [...listaConImagen].sort((a, b) => compararProductosPorStockDesc(a, b, stockBySku));
 
   container.innerHTML = listaOrdenada
     .map(
       (p, index) => `
       <div class="card ${esProductoAgotado(p) ? "card-sold-out" : ""}" data-family="${p.family}" onclick="verProductoDesdeCard('${p._baseFamily || p.family}','${p._preferredSku || p.family}')">
         <div class="card-title-row">
-          <div class="card-title">Modelo ${normalizarSkuCatalogo(p.family)}</div>
+          <div class="card-title-block">
+            <div class="card-title">Modelo ${normalizarSkuCatalogo(p.family)}</div>
+            ${
+              obtenerPrecioCatalogo43(p)
+                ? `<div class="card-price">${formatearPrecioCLP(obtenerPrecioCatalogo43(p))}</div>`
+                : ""
+            }
+          </div>
           ${esProductoAgotado(p) ? '<span class="card-stock-badge sold-out">Agotado</span>' : ""}
         </div>
         <div class="card-image-wrap">
-          <img data-image-src="${p._cardImage}" alt="Modelo ${p.family}">
+          ${
+            tarjetaSinImagenCatalogo43(p)
+              ? `<div class="card-no-image">
+                  <span class="card-no-image-badge">Sin imagen</span>
+                  <strong>Modelo ${normalizarSkuCatalogo(p.family)}</strong>
+                  <p>Este modelo aún no tiene fotos cargadas.</p>
+                </div>`
+              : `<img data-image-src="${p._safeCardImage}" alt="Modelo ${p.family}">`
+          }
           ${esProductoAgotado(p) ? '<span class="sold-out-ribbon sold-out-ribbon-card">AGOTADO</span>' : ""}
         </div>
       </div>
@@ -2190,8 +2463,18 @@ function renderGrid(lista) {
 
   container.querySelectorAll("img[data-image-src]").forEach((img, index) => {
     img.addEventListener("error", () => {
-      const card = img.closest(".card");
-      if (card) card.remove();
+      const placeholder = "Imagenes/Logo/app-icon.png";
+      const originalPath = normalizarRutaAsset(img.dataset.imageSrc || "");
+      if (originalPath === normalizarRutaAsset(placeholder)) {
+        img.onerror = null;
+        return;
+      }
+      img.dataset.imageSrc = placeholder;
+      asignarImagenCatalogo(img, placeholder, {
+        eager: index < 4,
+        fetchPriority: index < 2 ? "high" : "low",
+        preferOriginal: true,
+      });
     }, { once: true });
 
     asignarImagenCatalogo(img, img.dataset.imageSrc, {
@@ -2241,8 +2524,11 @@ function verProducto(familyId, preferredSku = "") {
   const descriptionEl = document.getElementById("description");
   const charList = document.getElementById("characteristics");
   const hasCharacteristics = Array.isArray(p.characteristics) && p.characteristics.length;
+  const precio43 = obtenerPrecioCatalogo43(skuInicial);
 
-  descriptionEl.innerText = hasCharacteristics ? "" : normalizarTextoVisible(p.description || "");
+  descriptionEl.innerText = hasCharacteristics
+    ? ""
+    : normalizarTextoVisible(p.description || "") + (precio43 ? ` · Precio mayor s/iva: ${formatearPrecioCLP(precio43)}` : "");
   descriptionEl.style.display = hasCharacteristics || !p.description ? "none" : "block";
 
   charList.innerHTML = "";
@@ -2254,6 +2540,11 @@ function verProducto(familyId, preferredSku = "") {
       li.innerText = normalizarTextoVisible(char);
       ul.appendChild(li);
     });
+    if (precio43) {
+      const li = document.createElement("li");
+      li.innerText = `Precio mayor s/iva: ${formatearPrecioCLP(precio43)}`;
+      ul.appendChild(li);
+    }
     charList.appendChild(ul);
   }
 
@@ -2364,38 +2655,55 @@ document.getElementById("addBtn").onclick = () => {
  * CARRITO: ACTUALIZAR / ELIMINAR
  ***********************/
 function actualizarCarrito() {
-  document.getElementById("cartCount").innerText = pedido.length;
+  const cartCountEl = document.getElementById("cartCount");
 
   const container = document.getElementById("cartItems");
   let totalItems = 0;
+  let totalEstimado = 0;
 
-  container.innerHTML = pedido
-    .map((item, index) => {
-      const cantidadModelo = Object.values(item.tallas).reduce((acc, qty) => acc + (Number(qty) || 0), 0);
-      totalItems += cantidadModelo;
-
-      return `
-      <div class="cart-item">
-        <div class="cart-item-top">
-          <div class="cart-item-title">Modelo ${item.sku}</div>
-          <button class="cart-trash" type="button" aria-label="Eliminar modelo ${item.sku}" onclick="eliminarItem(${index})">
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h2v9H7V9Zm4 0h2v9h-2V9Zm4 0h2v9h-2V9ZM6 7h12l-1 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Z"/>
-            </svg>
-          </button>
-        </div>
-        <div>
-          ${Object.entries(item.tallas)
-            .map(([t, c]) => `<div>Talla ${t}: <strong>${c}</strong></div>`)
-            .join("")}
-        </div>
-        <div class="cart-item-summary">
-          <div>Prendas: <strong>${cantidadModelo}</strong></div>
-        </div>
+  if (!pedido.length) {
+    container.innerHTML = `
+      <div class="cart-empty-state">
+        <div class="cart-empty-title">Aún no agregas modelos</div>
+        <div class="cart-empty-text">Selecciona tallas y cantidades para armar tu cotización.</div>
       </div>
-    `
-    })
-    .join("");
+    `;
+  } else {
+    container.innerHTML = pedido
+      .map((item, index) => {
+        const cantidadModelo = Object.values(item.tallas).reduce((acc, qty) => acc + (Number(qty) || 0), 0);
+        const precioUnitario = obtenerPrecioCatalogo43(item.sku);
+        const subtotal = precioUnitario ? precioUnitario * cantidadModelo : 0;
+        totalItems += cantidadModelo;
+        totalEstimado += subtotal;
+        const tallasHtml = Object.entries(item.tallas)
+          .map(([t, c]) => `<span class="cart-size-pill">T${t} <strong>${c}</strong></span>`)
+          .join("");
+
+        return `
+        <div class="cart-item">
+          <div class="cart-item-top">
+            <div class="cart-item-title">Modelo ${item.sku}</div>
+            <button class="cart-trash" type="button" aria-label="Eliminar modelo ${item.sku}" onclick="eliminarItem(${index})">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h2v9H7V9Zm4 0h2v9h-2V9Zm4 0h2v9h-2V9ZM6 7h12l-1 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="cart-item-sizes">${tallasHtml}</div>
+          <div class="cart-item-summary">
+            <div>Prendas: <strong>${cantidadModelo}</strong></div>
+            ${precioUnitario ? `<div>Subtotal: <strong>${formatearPrecioCLP(subtotal)}</strong></div>` : ""}
+          </div>
+        </div>
+      `;
+      })
+      .join("");
+  }
+
+  if (cartCountEl) {
+    cartCountEl.innerText = String(totalItems);
+  }
 
   let totalsBox = document.getElementById("cartTotals");
   if (!totalsBox) {
@@ -2407,6 +2715,7 @@ function actualizarCarrito() {
 
   totalsBox.innerHTML = `
     <div class="cart-totals-row"><span>Total prendas</span><strong>${totalItems}</strong></div>
+    ${totalEstimado > 0 ? `<div class="cart-totals-row"><span>Total estimado</span><strong>${formatearPrecioCLP(totalEstimado)}</strong></div>` : ""}
   `;
 }
 
@@ -2435,8 +2744,8 @@ document.addEventListener("click", (e) => {
  * COTIZACIÓN: CSV + MAILTO + LIMPIEZA
  ***********************/
 function generarCSV() {
-  const nombreTienda = clienteSeleccionado?.razon_social || "";
-  const rutCliente = clienteSeleccionado?.rut || clienteSeleccionado?.rut_normalized || "";
+  const nombreTienda = clienteSeleccionado?.razon_social || String(document.getElementById("clientName")?.value || "").trim();
+  const rutCliente = formatearRutVisual(document.getElementById("clientRut")?.value || clienteSeleccionado?.rut || clienteSeleccionado?.rut_normalized || "");
   if (!nombreTienda || !pedido.length) return null;
 
   const sep = ";";
@@ -2908,6 +3217,7 @@ function setClientLookupUI({ tipo = "", texto = "", badge = "" } = {}) {
     }
   }
   if (badgeEl) {
+    badgeEl.className = "client-lookup-badge" + (tipo ? ` ${tipo}` : "");
     if (badge) {
       badgeEl.hidden = false;
       badgeEl.innerText = badge;
@@ -2916,6 +3226,43 @@ function setClientLookupUI({ tipo = "", texto = "", badge = "" } = {}) {
       badgeEl.innerText = "";
     }
   }
+}
+
+function toggleClientNameField(show, { value = "", readonly = false } = {}) {
+  const wrapEl = document.getElementById("clientNameWrap");
+  const inputEl = document.getElementById("clientName");
+  if (!wrapEl || !inputEl) return;
+  wrapEl.hidden = !show;
+  inputEl.readOnly = !!readonly;
+  inputEl.value = value || "";
+  inputEl.classList.toggle("is-readonly", !!readonly);
+}
+
+function habilitarInputManual(inputEl) {
+  if (!inputEl) return;
+  if (inputEl.dataset.manualReady === "1") return;
+  inputEl.dataset.manualReady = "1";
+
+  const unlock = () => {
+    if (inputEl.classList.contains("is-readonly")) return;
+    inputEl.readOnly = false;
+  };
+
+  inputEl.addEventListener("focus", unlock);
+  inputEl.addEventListener("pointerdown", unlock);
+  inputEl.addEventListener("mousedown", unlock);
+  inputEl.addEventListener("keydown", unlock);
+}
+
+function construirClienteNuevoDesdeInput(rutNormalizado) {
+  const nameEl = document.getElementById("clientName");
+  const nombre = String(nameEl?.value || "").trim();
+  return {
+    rut: formatearRutVisual(rutNormalizado),
+    rut_normalized: rutNormalizado,
+    razon_social: nombre,
+    is_new: true,
+  };
 }
 
 async function buscarClientePorRutSupabase(rutInput) {
@@ -2957,20 +3304,29 @@ async function validarRutClienteEnUI({ silencioso = false } = {}) {
 
   if (!rutNormalizado) {
     setClientLookupUI();
+    toggleClientNameField(false);
     return null;
   }
 
-  if (!/^[0-9]+-[0-9K]$/i.test(rutNormalizado)) {
+  if (!/^[0-9]+-[0-9K]$/i.test(rutNormalizado) || !esRutValido(rutNormalizado)) {
+    toggleClientNameField(false);
     if (!silencioso) setClientLookupUI({ tipo: "error", texto: "Formato de RUT inválido" });
     return null;
   }
 
+  input.value = formatearRutVisual(rutNormalizado);
   setClientLookupUI({ tipo: "loading", texto: "Buscando cliente..." });
   try {
     const cliente = await buscarClientePorRutSupabase(rutNormalizado);
     if (!cliente) {
-      setClientLookupUI({ tipo: "error", texto: "Cliente no existe" });
-      return null;
+      const clienteNuevo = construirClienteNuevoDesdeInput(rutNormalizado);
+      setClientLookupUI({
+        tipo: "new",
+        texto: "Cliente nuevo. Ingresa el nombre o razón social para continuar.",
+        badge: "Cliente nuevo",
+      });
+      toggleClientNameField(true, { value: clienteNuevo.razon_social, readonly: false });
+      return clienteNuevo;
     }
     clienteSeleccionado = cliente;
     input.value = formatearRutVisual(cliente.rut || cliente.rut_normalized);
@@ -2979,19 +3335,26 @@ async function validarRutClienteEnUI({ silencioso = false } = {}) {
       texto: "Cliente encontrado",
       badge: cliente.razon_social,
     });
+    toggleClientNameField(false);
     return cliente;
   } catch (err) {
     setClientLookupUI({ tipo: "error", texto: err.message || "No se pudo validar RUT" });
+    toggleClientNameField(false);
     return null;
   }
 }
 
 function configurarLookupCliente() {
   const input = document.getElementById("clientRut");
+  const nameInput = document.getElementById("clientName");
   if (!input) return;
+  habilitarInputManual(input);
+  habilitarInputManual(nameInput);
   input.addEventListener("input", () => {
+    input.value = formatearRutVisual(input.value);
     clienteSeleccionado = null;
     setClientLookupUI();
+    toggleClientNameField(false);
     window.clearTimeout(clientLookupDebounce);
     clientLookupDebounce = window.setTimeout(() => {
       validarRutClienteEnUI({ silencioso: true });
@@ -3001,6 +3364,45 @@ function configurarLookupCliente() {
     window.clearTimeout(clientLookupDebounce);
     validarRutClienteEnUI();
   });
+  nameInput?.addEventListener("input", () => {
+    if (clienteSeleccionado) return;
+    const rutNormalizado = normalizarRut(input.value);
+    if (!rutNormalizado || !esRutValido(rutNormalizado)) return;
+    const nombre = String(nameInput.value || "").trim();
+    setClientLookupUI({
+      tipo: "new",
+      texto: nombre ? "Cliente nuevo listo para enviar." : "Completa el nombre del cliente nuevo.",
+      badge: "Cliente nuevo",
+    });
+  });
+}
+
+async function obtenerClienteParaCotizacion() {
+  const rutEl = document.getElementById("clientRut");
+  const nameEl = document.getElementById("clientName");
+  const clienteValidado = clienteSeleccionado || await validarRutClienteEnUI();
+  const rutNormalizado = normalizarRut(rutEl?.value || "");
+
+  if (!rutNormalizado || !esRutValido(rutNormalizado)) {
+    throw new Error("Ingresa un RUT válido");
+  }
+
+  if (clienteValidado && !clienteValidado.is_new) {
+    return clienteValidado;
+  }
+
+  const nombre = String(nameEl?.value || "").trim();
+  if (!nombre) {
+    toggleClientNameField(true, { value: "", readonly: false });
+    throw new Error("Completa el nombre o razón social del cliente nuevo");
+  }
+
+  return {
+    rut: formatearRutVisual(rutNormalizado),
+    rut_normalized: rutNormalizado,
+    razon_social: nombre,
+    is_new: true,
+  };
 }
 
 function construirPayloadCotizacion(cliente) {
@@ -3081,6 +3483,39 @@ async function guardarCotizacionSupabase(cliente) {
   }
 
   return quoteId;
+}
+
+async function registrarClienteNuevoSupabase(cliente) {
+  if (!supabaseConfigurado() || !cliente?.is_new) return cliente;
+
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/register_client_if_missing`, {
+    method: "POST",
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      p_rut: cliente?.rut || cliente?.rut_normalized || "",
+      p_razon_social: cliente?.razon_social || "",
+    }),
+  });
+
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(`No se pudo registrar el cliente: ${txt || res.status}`);
+  }
+
+  const data = await res.json().catch(() => null);
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) return cliente;
+
+  return {
+    rut: row.rut || cliente.rut,
+    rut_normalized: row.rut_normalized || cliente.rut_normalized,
+    razon_social: row.razon_social || cliente.razon_social,
+    is_new: false,
+  };
 }
 
 async function loginCotizacionesSupabase(email, password) {
@@ -3206,9 +3641,10 @@ function obtenerCantidadTalla(row, sizeLabel) {
 
 function renderStockSummaryRow(row = crearFilaStockCatalogVacia(), sizeLabels = []) {
   const normalized = normalizarFilaStockCatalog(row);
+  const totalClass = normalized.total > 0 ? "stock-sheet-total is-positive" : "stock-sheet-total is-zero";
 
   return `
-    <tr data-stock-id="${normalized.id ?? ""}">
+    <tr data-stock-id="${normalized.id ?? ""}" class="${normalized.total > 0 ? "stock-row-has-stock" : "stock-row-zero-stock"}">
       <td class="col-code">
         <button type="button" class="stock-code-btn" data-stock-open="${normalized.id ?? ""}">
           ${String(normalized.article_code || normalized.sku || "-").replace(/</g, "&lt;")}
@@ -3219,7 +3655,7 @@ function renderStockSummaryRow(row = crearFilaStockCatalogVacia(), sizeLabels = 
       <td class="col-text">${String(normalized.bota || "-").replace(/</g, "&lt;")}</td>
       <td class="col-text">${String(normalized.color || "-").replace(/</g, "&lt;")}</td>
       ${sizeLabels.map((sizeLabel) => `<td class="col-size">${formatNumberCL(obtenerCantidadTalla(normalized, sizeLabel))}</td>`).join("")}
-      <td class="col-total stock-sheet-total">${formatNumberCL(normalized.total)}</td>
+      <td class="col-total ${totalClass}">${formatNumberCL(normalized.total)}</td>
       <td class="col-meta">${formatStockUpdatedAt(normalized.updated_at)}</td>
       <td class="col-actions">
         <button type="button" class="ghost-btn stock-row-action" data-stock-open="${normalized.id ?? ""}">Editar</button>
@@ -3248,15 +3684,15 @@ function renderStockCatalogAdmin(rows = []) {
       <table class="stock-sheet">
         <thead>
           <tr>
-            <th class="col-code"><span class="stock-head-label">CODIGO</span><span class="stock-head-filter" aria-hidden="true"></span></th>
-            <th class="col-sku"><span class="stock-head-label">SKU</span><span class="stock-head-filter" aria-hidden="true"></span></th>
-            <th class="col-text"><span class="stock-head-label">TIRO</span><span class="stock-head-filter" aria-hidden="true"></span></th>
-            <th class="col-text"><span class="stock-head-label">BOTA</span><span class="stock-head-filter" aria-hidden="true"></span></th>
-            <th class="col-text"><span class="stock-head-label">COLOR</span><span class="stock-head-filter" aria-hidden="true"></span></th>
-            ${visibleSizes.map((size) => `<th class="col-size is-numeric"><span class="stock-head-label">${size}</span><span class="stock-head-filter" aria-hidden="true"></span></th>`).join("")}
-            <th class="col-total is-numeric"><span class="stock-head-label">TOTAL</span><span class="stock-head-filter" aria-hidden="true"></span></th>
-            <th class="col-meta"><span class="stock-head-label">EDITADO</span><span class="stock-head-filter" aria-hidden="true"></span></th>
-            <th class="col-actions"><span class="stock-head-label">ACCION</span><span class="stock-head-filter" aria-hidden="true"></span></th>
+            <th class="col-code"><span class="stock-head-label">CODIGO</span></th>
+            <th class="col-sku"><span class="stock-head-label">SKU</span></th>
+            <th class="col-text"><span class="stock-head-label">TIRO</span></th>
+            <th class="col-text"><span class="stock-head-label">BOTA</span></th>
+            <th class="col-text"><span class="stock-head-label">COLOR</span></th>
+            ${visibleSizes.map((size) => `<th class="col-size is-numeric"><span class="stock-head-label">${size}</span></th>`).join("")}
+            <th class="col-total is-numeric"><span class="stock-head-label">TOTAL</span></th>
+            <th class="col-meta"><span class="stock-head-label">EDITADO</span></th>
+            <th class="col-actions"><span class="stock-head-label">ACCION</span></th>
           </tr>
         </thead>
         <tbody>
@@ -3328,13 +3764,18 @@ function renderStockEditorModal() {
 
   const item = normalizarFilaStockCatalog(stockEditorState.item);
   const rowsHtml = (Array.isArray(item.sizes) ? item.sizes : [])
-    .map((sizeRow, index) => `
-      <div class="stock-editor-size-row" data-size-index="${index}">
-        <input type="text" name="size_label" value="${String(sizeRow.size_label || "").replace(/"/g, "&quot;")}" placeholder="Talla">
-        <input type="number" min="0" step="1" name="quantity" value="${Math.max(0, Number(sizeRow.quantity) || 0)}" placeholder="Cantidad">
-        <button type="button" class="ghost-btn stock-editor-remove-size" data-size-remove="${index}">Quitar</button>
+    .map((sizeRow, index) => {
+      const isExistingSize = Boolean(item.id && sizeRow.size_label);
+      return `
+      <div class="stock-editor-size-row ${isExistingSize ? "is-readonly" : "is-editable"}" data-size-index="${index}">
+        <input class="stock-editor-size-label-input" type="text" name="size_label" value="${String(sizeRow.size_label || "").replace(/"/g, "&quot;")}" placeholder="Talla" ${isExistingSize ? "readonly" : ""}>
+        <input class="stock-editor-size-qty-input" type="number" min="0" step="1" name="quantity" value="${Math.max(0, Number(sizeRow.quantity) || 0)}" placeholder="Cantidad">
+        ${isExistingSize
+          ? '<span class="stock-editor-size-lock">Talla fija</span>'
+          : `<button type="button" class="ghost-btn stock-editor-size-remove" data-size-remove="${index}">Quitar</button>`}
       </div>
-    `)
+    `;
+    })
     .join("");
 
   if (title) title.innerText = item.id ? `Editar ${item.article_code || item.sku}` : "Nuevo modelo";
@@ -3379,6 +3820,7 @@ function renderStockEditorModal() {
     <div id="stockEditorSizesList" class="stock-editor-sizes-list">
       ${rowsHtml || `<div class="stock-editor-empty">No hay tallas todavía.</div>`}
     </div>
+    ${item.id ? '<div class="stock-editor-note">Las tallas actuales quedan bloqueadas. Si necesitas agregar una nueva, usa "Agregar talla".</div>' : ""}
     <div class="stock-editor-total">Total unidades: <strong>${formatNumberCL(item.total)}</strong></div>
   `;
 
@@ -3721,7 +4163,7 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
     return `
       <div class="quote-card" data-quote-id="${q.id}">
         <div class="quote-card-head">
-          <div>
+          <div class="quote-card-main">
             <div class="quote-card-title-row">
               <div class="quote-card-title">${q.store_name || "Sin tienda"}</div>
               ${q.client_rut ? `<div class="quote-meta quote-meta-inline">RUT: ${q.client_rut}</div>` : ""}
@@ -3732,7 +4174,10 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
               <button type="button" class="ghost-btn quote-delete-btn" data-quote-delete="${q.id}">Eliminar cotización</button>
             </div>
           </div>
-          <div class="quote-meta">Total items: ${q.total_items || 0}<br>${fecha}</div>
+          <div class="quote-card-summary">
+            <div class="quote-card-total">Total items: ${q.total_items || 0}</div>
+            <div class="quote-card-date">${fecha}</div>
+          </div>
         </div>
         <div class="quote-status">
           <div class="quote-status-text ${isReady ? "ready" : ""}">
@@ -4102,15 +4547,16 @@ function limpiarCarrito() {
   pedido = [];
   actualizarCarrito();
   const rutEl = document.getElementById("clientRut");
+  const nameEl = document.getElementById("clientName");
   if (rutEl) rutEl.value = "";
+  if (nameEl) nameEl.value = "";
   clienteSeleccionado = null;
   setClientLookupUI();
+  toggleClientNameField(false);
   document.getElementById("cartSidebar").classList.remove("open");
 }
 
 document.getElementById("sendRequest").onclick = async () => {
-  const cliente = clienteSeleccionado || await validarRutClienteEnUI();
-  if (!cliente) return mostrarToastError("RUT no valido", "Ingresa un RUT registrado para enviar la cotizacion.");
   if (!pedido.length) return mostrarToastError("Hubo un error", "Intentelo nuevamente.");
 
   const btn = document.getElementById("sendRequest");
@@ -4119,13 +4565,21 @@ document.getElementById("sendRequest").onclick = async () => {
   btn.innerText = "Guardando...";
 
   try {
+    let cliente = await obtenerClienteParaCotizacion();
+    if (cliente?.is_new) {
+      btn.innerText = "Creando cliente...";
+      cliente = await registrarClienteNuevoSupabase(cliente);
+      clienteSeleccionado = cliente;
+    }
+
+    btn.innerText = "Guardando cotización...";
     await guardarCotizacionSupabase(cliente);
 
     mostrarToastExito("Cotización enviada con éxito", "Recibimos tu solicitud correctamente.");
     limpiarCarrito();
   } catch (error) {
     console.error(error);
-    mostrarToastError("Hubo un error", "Intentelo nuevamente.");
+    mostrarToastError("No se pudo enviar", error?.message || "Inténtalo nuevamente.");
   } finally {
     btn.disabled = false;
     btn.innerText = textoOriginal;

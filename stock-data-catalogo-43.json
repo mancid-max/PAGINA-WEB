@@ -1,0 +1,62 @@
+{
+  "source_file": "DATA Trazabilidad/SALDOS-SECCI 43.TXT",
+  "sheet_name": "SALDOS-SECCI 43",
+  "items": {
+    "4323-00": {
+      "article": "01432300",
+      "sku": "4323-00",
+      "description": "Coleccion 43 / Cortes 11582",
+      "sizes": {
+        "36": 0,
+        "38": 0,
+        "40": 0,
+        "42": 0,
+        "44": 0,
+        "46": 0
+      },
+      "total": 452
+    },
+    "4309-00": {
+      "article": "01430900",
+      "sku": "4309-00",
+      "description": "Coleccion 43 / Cortes 11584",
+      "sizes": {
+        "36": 0,
+        "38": 0,
+        "40": 0,
+        "42": 0,
+        "44": 0,
+        "46": 0
+      },
+      "total": 647
+    },
+    "4301-00": {
+      "article": "01430100",
+      "sku": "4301-00",
+      "description": "Coleccion 43 / Cortes 11585",
+      "sizes": {
+        "36": 0,
+        "38": 0,
+        "40": 0,
+        "42": 0,
+        "44": 0,
+        "46": 0
+      },
+      "total": 652
+    },
+    "4329-00": {
+      "article": "01432900",
+      "sku": "4329-00",
+      "description": "Coleccion 43 / Cortes 11587",
+      "sizes": {
+        "36": 0,
+        "38": 0,
+        "40": 0,
+        "42": 0,
+        "44": 0,
+        "46": 0
+      },
+      "total": 600
+    }
+  }
+}
