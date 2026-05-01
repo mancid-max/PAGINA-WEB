@@ -4276,13 +4276,13 @@ body{
   }
 
   .promo-banner-gallery img{
-    min-height:168px;
-    max-height:220px;
+    min-height:0;
+    max-height:none;
     height:auto;
-    aspect-ratio:16 / 9;
-    object-fit:contain;
-    object-position:center;
-    background:rgba(255,255,255,0.72);
+    aspect-ratio:auto;
+    object-fit:cover;
+    object-position:center top;
+    background:transparent;
     border-radius:18px;
   }
 
@@ -4387,9 +4387,29 @@ body{
     padding:18px 14px 16px;
   }
 
+  .cart-intro{
+    display:none;
+  }
+
+  .cart-header{
+    margin-bottom:6px;
+  }
+
   .cart-layout{
-    grid-template-columns:1fr;
+    display:flex;
+    flex-direction:column;
     gap:14px;
+    min-height:calc(100vh - 140px);
+  }
+
+  .cart-summary-column{
+    flex:1 1 auto;
+    min-height:0;
+  }
+
+  .cart-form-column{
+    margin-top:auto;
+    padding-top:10px;
   }
 }
 
@@ -4445,8 +4465,8 @@ body{
   }
 
   .promo-banner-gallery img{
-    min-height:148px;
-    max-height:180px;
+    min-height:0;
+    max-height:none;
   }
 
   .catalog-explorer{
