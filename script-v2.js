@@ -1644,6 +1644,8 @@ function renderImages(imageList) {
   uniqueImages.forEach((imgSrc, index) => {
     const thumb = document.createElement("img");
     asignarImagenCatalogo(thumb, imgSrc, { eager: index < 6, fetchPriority: index < 4 ? "high" : "low" });
+    thumb.alt = "";
+    thumb.setAttribute("aria-hidden", "true");
     if (index === 0) thumb.classList.add("active-thumb");
 
     thumb.onclick = () => {
@@ -2046,7 +2048,7 @@ function actualizarEstadoCotizacionProducto(producto, sku) {
     titleEl.innerText = agotado ? `Modelo ${skuLabel} - Agotado` : "Modelo " + skuLabel;
   }
   if (quotePanelModelTitle) quotePanelModelTitle.innerText = "Modelo " + skuLabel;
-  if (descriptionEl && precio43) {
+  if (descriptionEl && precio43 && CATALOG_SOURCE !== "catalogo-43") {
     const textoBase = normalizarTextoVisible(producto?.description || "");
     descriptionEl.innerText = `${textoBase}${textoBase ? " · " : ""}Precio mayor s/iva: ${formatearPrecioCLP(precio43)}`;
   }
@@ -2082,7 +2084,8 @@ function renderZoomGallery() {
   imagenesModalActual.forEach((imgSrc, index) => {
     const thumb = document.createElement("img");
     asignarImagenCatalogo(thumb, imgSrc, { eager: index < 6, fetchPriority: index < 4 ? "high" : "low" });
-    thumb.alt = `Vista ${index + 1}`;
+    thumb.alt = "";
+    thumb.setAttribute("aria-hidden", "true");
     if (index === imagenModalIndex) thumb.classList.add("active-thumb");
     thumb.onclick = () => {
       imagenModalIndex = index;
@@ -2526,26 +2529,50 @@ function verProducto(familyId, preferredSku = "") {
   const hasCharacteristics = Array.isArray(p.characteristics) && p.characteristics.length;
   const precio43 = obtenerPrecioCatalogo43(skuInicial);
 
-  descriptionEl.innerText = hasCharacteristics
-    ? ""
-    : normalizarTextoVisible(p.description || "") + (precio43 ? ` · Precio mayor s/iva: ${formatearPrecioCLP(precio43)}` : "");
-  descriptionEl.style.display = hasCharacteristics || !p.description ? "none" : "block";
+  if (CATALOG_SOURCE === "catalogo-43") {
+    const texto43 = normalizarTextoVisible(p.description || "");
+    const partes43 = texto43
+      .split("·")
+      .map((value) => normalizarTextoVisible(value))
+      .map((value) => value.trim())
+      .filter(Boolean);
 
-  charList.innerHTML = "";
-  charList.style.display = hasCharacteristics ? "block" : "none";
-  if (hasCharacteristics) {
-    const ul = document.createElement("ul");
-    p.characteristics.forEach((char) => {
-      const li = document.createElement("li");
-      li.innerText = normalizarTextoVisible(char);
-      ul.appendChild(li);
-    });
-    if (precio43) {
-      const li = document.createElement("li");
-      li.innerText = `Precio mayor s/iva: ${formatearPrecioCLP(precio43)}`;
-      ul.appendChild(li);
+    descriptionEl.innerText = "";
+    descriptionEl.style.display = "none";
+    charList.innerHTML = "";
+    charList.style.display = partes43.length ? "block" : "none";
+
+    if (partes43.length) {
+      const ul = document.createElement("ul");
+      partes43.forEach((parte) => {
+        const li = document.createElement("li");
+        li.innerText = parte;
+        ul.appendChild(li);
+      });
+      charList.appendChild(ul);
     }
-    charList.appendChild(ul);
+  } else {
+    descriptionEl.innerText = hasCharacteristics
+      ? ""
+      : normalizarTextoVisible(p.description || "") + (precio43 ? ` · Precio mayor s/iva: ${formatearPrecioCLP(precio43)}` : "");
+    descriptionEl.style.display = hasCharacteristics || !p.description ? "none" : "block";
+
+    charList.innerHTML = "";
+    charList.style.display = hasCharacteristics ? "block" : "none";
+    if (hasCharacteristics) {
+      const ul = document.createElement("ul");
+      p.characteristics.forEach((char) => {
+        const li = document.createElement("li");
+        li.innerText = normalizarTextoVisible(char);
+        ul.appendChild(li);
+      });
+      if (precio43) {
+        const li = document.createElement("li");
+        li.innerText = `Precio mayor s/iva: ${formatearPrecioCLP(precio43)}`;
+        ul.appendChild(li);
+      }
+      charList.appendChild(ul);
+    }
   }
 
   const variantContainer = document.getElementById("variantContainer");
