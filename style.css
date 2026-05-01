@@ -4130,3 +4130,353 @@ body{
   text-decoration:none;
   white-space:nowrap;
 }
+
+/* Responsive final: storefront public pages */
+@media (max-width: 1024px){
+  body::before{
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.84), rgba(244,247,252,0.92)),
+      url("banner/mom%20day%202026_page-0002.jpg") center 160px / min(980px, 96vw) auto no-repeat;
+  }
+
+  .promo-banner{
+    width:min(100%, calc(100% - 28px));
+    grid-template-columns:1fr;
+    gap:16px;
+  }
+
+  .promo-banner-copy{
+    text-align:center;
+    align-items:center;
+  }
+
+  .promo-banner-kicker{
+    align-self:center;
+  }
+
+  .promo-banner-gallery{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+
+  .catalog-explorer{
+    width:min(100%, calc(100% - 28px));
+  }
+}
+
+@media (max-width: 768px){
+  body::before{
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.9), rgba(244,247,252,0.95)),
+      url("banner/mom%20day%202026_page-0002.jpg") center 132px / 120vw auto no-repeat;
+    background-attachment:scroll, scroll;
+    opacity:0.2;
+  }
+
+  .top-marquee-group{
+    gap:20px;
+    padding:6px 0;
+  }
+
+  .top-marquee-group::after{
+    margin-left:20px;
+    height:10px;
+  }
+
+  .top-marquee-group span{
+    font-size:9px;
+    letter-spacing:0.08em;
+  }
+
+  .header{
+    padding:10px 12px;
+    gap:10px;
+  }
+
+  .header-actions{
+    gap:6px;
+  }
+
+  .ghost-btn{
+    padding:7px 9px;
+    font-size:11px;
+  }
+
+  .admin-btn{
+    padding-inline:12px;
+  }
+
+  .cart-btn{
+    min-width:86px;
+    padding:7px 9px;
+  }
+
+  .cart-btn-caption{
+    font-size:8px;
+  }
+
+  .hero{
+    padding:34px 14px 24px;
+  }
+
+  .hero-title{
+    font-size:clamp(2.2rem, 11vw, 3.2rem);
+    line-height:0.98;
+    letter-spacing:-0.04em;
+  }
+
+  .hero-title::after{
+    bottom:-8px;
+    height:8px;
+  }
+
+  .collection-switch-row{
+    width:100%;
+    margin:0 auto 14px;
+    gap:10px;
+  }
+
+  .collection-switch-label{
+    font-size:12px;
+    letter-spacing:0.14em;
+  }
+
+  .collection-switch{
+    width:min(100%, 230px);
+    padding:6px;
+    gap:6px;
+  }
+
+  .collection-switch-link{
+    min-width:0;
+    padding:10px 12px;
+    font-size:1.05rem;
+  }
+
+  .promo-banner{
+    width:min(100%, calc(100% - 20px));
+    margin:0 auto 18px;
+    padding:14px;
+    border-radius:22px;
+    gap:14px;
+  }
+
+  .promo-banner-copy h2{
+    font-size:clamp(1.9rem, 9vw, 2.4rem);
+    line-height:0.98;
+  }
+
+  .promo-banner-copy p{
+    font-size:0.95rem;
+    line-height:1.45;
+  }
+
+  .promo-banner-gallery{
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+
+  .promo-banner-gallery img{
+    min-height:168px;
+    max-height:220px;
+    height:auto;
+    aspect-ratio:16 / 9;
+    object-fit:contain;
+    object-position:center;
+    background:rgba(255,255,255,0.72);
+    border-radius:18px;
+  }
+
+  [data-catalog-source="catalogo-43"] .promo-banner-gallery img{
+    min-height:168px;
+  }
+
+  .catalog-explorer{
+    width:min(100%, calc(100% - 20px));
+    gap:12px;
+    margin:0 auto 2px;
+  }
+
+  .catalog-section-divider-copy{
+    width:100%;
+    padding:14px 16px;
+    border-radius:20px;
+  }
+
+  .catalog-section-divider-kicker{
+    font-size:10px;
+    letter-spacing:0.16em;
+  }
+
+  .catalog-section-divider-copy h2{
+    font-size:clamp(1.9rem, 10vw, 2.6rem);
+    line-height:1;
+  }
+
+  .catalog-section-divider-copy p{
+    font-size:0.95rem;
+    line-height:1.42;
+  }
+
+  .model-search{
+    width:100%;
+    grid-template-columns:1fr;
+    gap:10px;
+    margin:8px auto 0;
+  }
+
+  .model-search input{
+    padding:12px 14px;
+    font-size:16px;
+  }
+
+  .model-search input::placeholder{
+    font-size:0.84em;
+  }
+
+  .model-search #modelSearchBtn,
+  .model-search .ghost-btn{
+    width:100%;
+    min-height:48px;
+    justify-content:center;
+  }
+
+  .product-grid{
+    grid-template-columns:1fr;
+    gap:18px;
+    padding:18px 12px 28px;
+  }
+
+  .card{
+    border-radius:18px;
+  }
+
+  .card-title-row{
+    padding:12px 12px 8px;
+    gap:8px;
+  }
+
+  .card-title{
+    font-size:1.05rem;
+    line-height:1.15;
+  }
+
+  .card-price{
+    font-size:13px;
+  }
+
+  .card-image-wrap{
+    width:calc(100% - 20px);
+    height:min(68vh, 430px);
+    margin:0 10px 10px;
+    border-radius:12px;
+  }
+
+  .card-no-image{
+    padding:22px;
+  }
+
+  .card-no-image strong{
+    font-size:22px;
+  }
+
+  .card-no-image p{
+    font-size:14px;
+  }
+
+  .cart-sidebar{
+    padding:18px 14px 16px;
+  }
+
+  .cart-layout{
+    grid-template-columns:1fr;
+    gap:14px;
+  }
+}
+
+@media (max-width: 480px){
+  .header{
+    padding:8px 10px;
+  }
+
+  .logo{
+    padding:4px 6px;
+  }
+
+  .logo img{
+    height:24px;
+  }
+
+  .header-actions{
+    gap:4px;
+  }
+
+  .ghost-btn{
+    padding:6px 8px;
+    font-size:10px;
+    border-radius:9px;
+  }
+
+  .cart-btn{
+    min-width:80px;
+    padding:6px 8px;
+    border-radius:10px;
+  }
+
+  .cart-btn-main{
+    gap:3px;
+  }
+
+  .hero{
+    padding:28px 12px 18px;
+  }
+
+  .promo-banner{
+    width:min(100%, calc(100% - 16px));
+    padding:12px;
+    border-radius:18px;
+  }
+
+  .promo-banner-copy h2{
+    font-size:1.7rem;
+  }
+
+  .promo-banner-copy p{
+    font-size:0.9rem;
+  }
+
+  .promo-banner-gallery img{
+    min-height:148px;
+    max-height:180px;
+  }
+
+  .catalog-explorer{
+    width:min(100%, calc(100% - 16px));
+  }
+
+  .catalog-section-divider-copy{
+    padding:12px 14px;
+    border-radius:18px;
+  }
+
+  .catalog-section-divider-copy h2{
+    font-size:1.85rem;
+  }
+
+  .catalog-section-divider-copy p{
+    font-size:0.88rem;
+  }
+
+  .model-search input{
+    padding:11px 13px;
+    font-size:15px;
+  }
+
+  .product-grid{
+    padding:16px 10px 24px;
+    gap:16px;
+  }
+
+  .card-image-wrap{
+    height:min(62vh, 360px);
+  }
+}
