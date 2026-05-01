@@ -156,6 +156,7 @@ const ASSET_VERSION = Date.now();
 const OPTIMIZED_IMAGE_ROOT = "Imagenes-web";
 const OPTIMIZED_IMAGE_SOURCE_ROOTS = ["Imagenes", "Imagenes2", "Imagenes3", "42", "43"];
 const TEXT_NORMALIZATION_REPLACEMENTS = [
+  [/Â·/g, "·"],
   [/Dise\?o/gi, "Diseño"],
   [/disen\?o/gi, "diseño"],
   [/recuperaci\?n/gi, "recuperación"],
@@ -165,6 +166,14 @@ const TEXT_NORMALIZATION_REPLACEMENTS = [
   [/Cotizacion/g, "Cotización"],
   [/cotizacion/g, "cotización"],
 ];
+
+const CATALOG_43_DESCRIPTION_MAP = {
+  "4301-00": "Jean · Medio · Flare",
+  "4309-00": "Jean · Cintura · Flare",
+  "4314-00": "Jean · Cintura · Recto",
+  "4323-00": "Jean · Cintura · Wide leg",
+  "4329-00": "Jean · Urrutia · New Glue",
+};
 
 function withCacheBust(path) {
   if (!path) return path;
@@ -2089,7 +2098,9 @@ function renderZoomGallery() {
     if (index === imagenModalIndex) thumb.classList.add("active-thumb");
     thumb.onclick = () => {
       imagenModalIndex = index;
-      renderZoomGallery();
+      asignarImagenCatalogo(zoomMain, imgSrc, { eager: true, fetchPriority: "high", preferOriginal: true });
+      zoomThumbs.querySelectorAll("img").forEach((t) => t.classList.remove("active-thumb"));
+      thumb.classList.add("active-thumb");
     };
     zoomThumbs.appendChild(thumb);
   });
@@ -2530,7 +2541,11 @@ function verProducto(familyId, preferredSku = "") {
   const precio43 = obtenerPrecioCatalogo43(skuInicial);
 
   if (CATALOG_SOURCE === "catalogo-43") {
-    const texto43 = normalizarTextoVisible(p.description || "");
+    const sku43 = normalizarSkuCatalogo(skuInicial || p.family);
+    const descripcion43Base = normalizarTextoVisible(p.description || "");
+    const texto43 = (!descripcion43Base || /^Modelo\s/i.test(descripcion43Base))
+      ? normalizarTextoVisible(CATALOG_43_DESCRIPTION_MAP[sku43] || "")
+      : descripcion43Base;
     const partes43 = texto43
       .split("·")
       .map((value) => normalizarTextoVisible(value))
