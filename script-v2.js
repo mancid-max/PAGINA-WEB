@@ -172,7 +172,7 @@ const CATALOG_43_DESCRIPTION_MAP = {
   "4309-00": "Jean · Cintura · Flare",
   "4314-00": "Jean · Cintura · Recto",
   "4323-00": "Jean · Cintura · Wide leg",
-  "4329-00": "Jean · Urrutia · New Glue",
+  "4329-00": "Jean · New Glue",
 };
 
 function withCacheBust(path) {
