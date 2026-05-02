@@ -1057,7 +1057,10 @@ function firmaEsSubconjunto(aObj, bObj) {
 }
 
 function filtrarProductosConImagenes(items = []) {
-  return items.filter((item) => tieneImagenesRenderizables(item));
+  return items.filter((item) => {
+    if (obtenerImagenesReales(item).length) return true;
+    return (item?.variants || []).some((variant) => obtenerImagenesReales(variant).length);
+  });
 }
 
 function deduplicarTarjetasPorModelo(items = []) {
@@ -1229,6 +1232,10 @@ function obtenerImagenesPropias(obj) {
   return deduplicarImagenesParaVisor(obtenerImagenesVisibles(obj, { includeCatalog: true }));
 }
 
+function obtenerImagenesReales(obj) {
+  return deduplicarImagenesParaVisor(obtenerImagenesVisibles(obj));
+}
+
 function crearFirmaGaleriaTarjeta(images = []) {
   const names = [];
   const seen = new Set();
@@ -1279,7 +1286,7 @@ function construirProductosGridPorSku(items = [], stockItems = {}) {
       const total = Math.max(0, Number(stock?.total) || 0);
       if (total <= 0) return;
 
-      const images = obtenerImagenesPropias(entry.source).filter((img) => imagenCompatibleConSku(img, entry.sku));
+      const images = obtenerImagenesReales(entry.source).filter((img) => imagenCompatibleConSku(img, entry.sku));
       const cardImage = images[0] || "";
       if (!cardImage) return;
       const imageSignature = crearFirmaGaleriaTarjeta(images);
@@ -1297,6 +1304,7 @@ function construirProductosGridPorSku(items = [], stockItems = {}) {
         _baseFamily: baseFamily,
         _preferredSku: entry.sku,
         _cardImage: cardImage,
+        _preferredImages: [...images],
         _stockTotal: total,
         isSoldOut: false,
       });
@@ -1320,7 +1328,7 @@ function construirProductosGridFallback(items = [], stockItems = {}) {
       const family = normalizarSkuCatalogo(item?.family);
       const stock = obtenerStockParaSkuDesdeItems(family, stockItems);
       const total = Math.max(0, Number(stock?.total) || 0);
-      const images = obtenerImagenesPropias(item);
+      const images = obtenerImagenesReales(item);
       const cardImage = images[0] || "";
       if (!family || total <= 0 || !cardImage) return null;
       return {
@@ -1329,6 +1337,7 @@ function construirProductosGridFallback(items = [], stockItems = {}) {
         _baseFamily: obtenerBaseFamilia(family) ? `${obtenerBaseFamilia(family)}-00` : family,
         _preferredSku: family,
         _cardImage: cardImage,
+        _preferredImages: [...images],
         _stockTotal: total,
         isSoldOut: false,
       };
@@ -1354,8 +1363,8 @@ function prepararCatalogo43Directo(items = [], stockItems = {}) {
       const stock = obtenerStockParaSkuDesdeItems(family, stockItems);
       const fallbackTotal = obtenerTotalFallbackCatalogo43(item);
       const total = Math.max(0, Number(stock?.total) || 0, fallbackTotal);
-      const images = obtenerImagenesPropias(item);
-      const mainImage = images[0] || normalizarRutaImagenCatalogo(item?.main_image) || "";
+      const images = obtenerImagenesReales(item);
+      const mainImage = images[0] || "";
       if (!family || total <= 0 || !mainImage) return null;
       return {
         ...item,
@@ -1366,6 +1375,7 @@ function prepararCatalogo43Directo(items = [], stockItems = {}) {
         _baseFamily: obtenerBaseFamilia(family) ? `${obtenerBaseFamilia(family)}-00` : family,
         _preferredSku: family,
         _cardImage: mainImage,
+        _preferredImages: [...images],
         _stockTotal: total,
         isSoldOut: false,
       };
@@ -1433,7 +1443,11 @@ function rescatarProductosConStockFaltantes(itemsBase = [], itemsActuales = [], 
   const rescates = [];
   modeloConStock.forEach((model) => {
     if (mostrados.has(model)) return;
-    const candidates = (itemsBase || []).filter((item) => obtenerBaseFamilia(item?.family) === model && tieneImagenesRenderizables(item));
+    const candidates = (itemsBase || []).filter((item) => {
+      if (obtenerBaseFamilia(item?.family) !== model) return false;
+      if (obtenerImagenesReales(item).length) return true;
+      return (item?.variants || []).some((variant) => obtenerImagenesReales(variant).length);
+    });
     if (!candidates.length) return;
     const best =
       candidates.find((item) => itemTieneStockDisponible(item, stockItems)) ||
@@ -2526,6 +2540,10 @@ function verProducto(familyId, preferredSku = "") {
     ? p.variants.find((variant) => normalizarSkuCatalogo(variant?.sku) === preferredSkuNormalized)
     : null;
   const skuInicial = normalizarSkuCatalogo(preferredVariant?.sku || p.family);
+  const selectedGridEntry = (Array.isArray(productosGrid) ? productosGrid : []).find((item) => {
+    const itemSku = normalizarSkuCatalogo(item?._preferredSku || item?.family);
+    return itemSku === skuInicial;
+  }) || null;
 
   // Reinicia drafts para evitar re-agregar items viejos al volver a abrir el modal
   resetDraftsModal();
@@ -2594,7 +2612,9 @@ function verProducto(familyId, preferredSku = "") {
   variantContainer.innerHTML = "";
   variantContainer.style.display = "none";
 
-  const ownImages = preferredVariant ? buildImageList(preferredVariant) : buildImageList(p);
+  const ownImages = Array.isArray(selectedGridEntry?._preferredImages) && selectedGridEntry._preferredImages.length
+    ? [...selectedGridEntry._preferredImages]
+    : (preferredVariant ? buildImageList(preferredVariant) : buildImageList(p));
   const firstVariantWithImages = Array.isArray(p.variants)
     ? p.variants.find((variant) => buildImageList(variant).length)
     : null;
