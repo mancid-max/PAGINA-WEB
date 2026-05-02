@@ -2496,18 +2496,12 @@ function renderGrid(lista) {
 
   container.querySelectorAll("img[data-image-src]").forEach((img, index) => {
     img.addEventListener("error", () => {
-      const placeholder = "Imagenes/Logo/app-icon.png";
-      const originalPath = normalizarRutaAsset(img.dataset.imageSrc || "");
-      if (originalPath === normalizarRutaAsset(placeholder)) {
-        img.onerror = null;
-        return;
+      const card = img.closest(".card");
+      if (card) {
+        card.remove();
+      } else {
+        img.remove();
       }
-      img.dataset.imageSrc = placeholder;
-      asignarImagenCatalogo(img, placeholder, {
-        eager: index < 4,
-        fetchPriority: index < 2 ? "high" : "low",
-        preferOriginal: true,
-      });
     }, { once: true });
 
     asignarImagenCatalogo(img, img.dataset.imageSrc, {
