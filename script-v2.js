@@ -2433,12 +2433,17 @@ function inicializarBuscadorModelos() {
  * GRID
  ***********************/
 function obtenerImagenSeguraTarjeta(producto) {
-  const images = obtenerImagenesPropias(producto);
-  const candidate = images[0]
+  const preferredImages = Array.isArray(producto?._preferredImages)
+    ? producto._preferredImages.map((img) => normalizarRutaImagenCatalogo(img)).filter(Boolean)
+    : [];
+  const realImages = obtenerImagenesReales(producto).map((img) => normalizarRutaImagenCatalogo(img)).filter(Boolean);
+  const candidate = preferredImages[0]
     || normalizarRutaImagenCatalogo(producto?._cardImage)
-    || normalizarRutaImagenCatalogo(producto?.main_image)
-    || "Imagenes/Logo/app-icon.png";
-  return candidate || "Imagenes/Logo/app-icon.png";
+    || realImages[0]
+    || "";
+  const normalizedCandidate = normalizarRutaAsset(candidate);
+  if (!normalizedCandidate || normalizedCandidate === "Imagenes/Logo/app-icon.png") return "";
+  return candidate;
 }
 
 function tarjetaSinImagenCatalogo43(producto) {
@@ -2454,7 +2459,7 @@ function renderGrid(lista) {
       ...p,
       _safeCardImage: obtenerImagenSeguraTarjeta(p),
     }))
-    .filter((p) => Boolean(p?._safeCardImage));
+    .filter((p) => Boolean(p?._safeCardImage) && normalizarRutaAsset(p._safeCardImage) !== "Imagenes/Logo/app-icon.png");
   const listaOrdenada = [...listaConImagen].sort((a, b) => compararProductosPorStockDesc(a, b, stockBySku));
 
   container.innerHTML = listaOrdenada
