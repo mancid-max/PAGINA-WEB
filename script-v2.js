@@ -163,6 +163,11 @@ const TEXT_NORMALIZATION_REPLACEMENTS = [
   [/f\?cil/gi, "fácil"],
   [/c\?modo/gi, "cómodo"],
   [/vers\?til/gi, "versátil"],
+  [/seg\?n/gi, "según"],
+  [/adaptaci\?n/gi, "adaptación"],
+  [/peque\?a/gi, "pequeña"],
+  [/m\?s/gi, "más"],
+  [/elasti[c]?idad y recuperaci\?n/gi, "elasticidad y recuperación"],
   [/Cotizacion/g, "Cotización"],
   [/cotizacion/g, "cotización"],
 ];
@@ -914,10 +919,6 @@ function agruparVariantesPorFamilia(items = []) {
         ];
       }
 
-      if (!target.main_image && item?.main_image) target.main_image = item.main_image;
-      if ((!target.gallery || !target.gallery.length) && Array.isArray(item?.gallery)) {
-        target.gallery = [...item.gallery];
-      }
       if ((!target.description || /^Modelo\s/i.test(target.description)) && item?.description) {
         target.description = item.description;
       }
@@ -2247,7 +2248,7 @@ function inicializarBuscadorModelos() {
   if (!input || !panel || !btnBuscar || !btnLimpiar) return;
 
   const obtenerFuenteBusqueda = () => (
-    Array.isArray(productosGrid) && productosGrid.length ? productosGrid : productos
+    Array.isArray(productosGrid) ? productosGrid : []
   );
   const modelos = [...new Set(obtenerFuenteBusqueda().map((p) => String(p.family)).filter(Boolean))].sort();
   let sugerenciasActuales = [];
