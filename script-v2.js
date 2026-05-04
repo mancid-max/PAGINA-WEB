@@ -466,6 +466,7 @@ const CATALOG_43_PRICE_BY_SKU = {
   "4318-00": 26990,
   "4314-00": 25990,
   "4323-00": 26990,
+  "4329-00": 26990,
 };
 
 function obtenerPrecioCatalogo43(value) {
