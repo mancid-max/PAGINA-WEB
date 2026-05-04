@@ -25,6 +25,7 @@ let stockBySku = {};
 let stockCatalogRows = [];
 let stockRealtimeChannel = null;
 let stockCatalogSeasonFilter = "";
+let lastRenderedStockSignature = "";
 let stockEditorState = {
   open: false,
   item: null,
@@ -809,6 +810,19 @@ function normalizarMapaAssetsPorSku(map = {}) {
     if (!normalized[key]) normalized[key] = value;
   });
   return normalized;
+}
+
+function crearFirmaStock(stockItems = {}) {
+  return Object.entries(stockItems || {})
+    .sort(([a], [b]) => String(a).localeCompare(String(b), undefined, { numeric: true }))
+    .map(([sku, payload]) => {
+      const total = Math.max(0, Number(payload?.total) || 0);
+      const sizes = TALLAS_DISPONIBLES
+        .map((size) => `${size}:${Math.max(0, Number(payload?.sizes?.[size]) || 0)}`)
+        .join(",");
+      return `${normalizarSkuCatalogo(sku)}|${total}|${sizes}`;
+    })
+    .join(";");
 }
 
 function crearCandidatosSku(value) {
@@ -1658,8 +1672,10 @@ async function cargarProductosCatalogo() {
         ...crearStockSinteticoAgotados(),
         ...normalizarMapaStockPorSku(stockData?.items || {}),
       };
+      lastRenderedStockSignature = crearFirmaStock(stockBySku);
     } else if (CATALOG_SOURCE === "catalogo-43") {
       stockBySku = {};
+      lastRenderedStockSignature = "";
     }
     catalogCoverBySku = normalizarMapaAssetsPorSku(catalogCoverMapData || {});
 
@@ -1999,11 +2015,15 @@ function cargarStockData() {
   }
   return cargarStockDatasetPreferido()
     .then((data) => {
-      stockBySku = normalizarMapaStockPorSku(data?.items || {});
+      const nextStock = normalizarMapaStockPorSku(data?.items || {});
+      const nextSignature = crearFirmaStock(nextStock);
+      const stockChanged = nextSignature !== lastRenderedStockSignature;
+      stockBySku = nextStock;
       if (skuActivo) aplicarStockATallas(skuActivo);
-      if (Array.isArray(productos) && productos.length) {
+      if (stockChanged && Array.isArray(productos) && productos.length) {
         productosGrid = construirProductosGridPorSku(productos, stockBySku);
         renderGrid(productosGrid);
+        lastRenderedStockSignature = nextSignature;
       }
     })
     .catch((err) => console.warn(`No se pudo cargar ${STOCK_DATA_FILE}:`, err));
