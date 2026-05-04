@@ -4897,13 +4897,7 @@ document.getElementById("sendRequest").onclick = async () => {
   btn.innerText = "Guardando...";
 
   try {
-    let cliente = await obtenerClienteParaCotizacion();
-    if (cliente?.is_new) {
-      btn.innerText = "Creando cliente...";
-      cliente = await registrarClienteNuevoSupabase(cliente);
-      clienteSeleccionado = cliente;
-    }
-
+    const cliente = await obtenerClienteParaCotizacion();
     btn.innerText = "Guardando cotización...";
     await guardarCotizacionSupabase(cliente);
 
