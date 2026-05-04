@@ -1523,7 +1523,7 @@ function filtrarProductosDisponiblesCole42(items = [], trazabilidadData = null) 
 async function cargarProductosCatalogo() {
   try {
     const catalogPromise = fetch(withCacheBust(CATALOG_DATA_FILE)).then((res) => res.json());
-    const stockPromise = INVENTORY_ENABLED
+    const stockPromise = INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43"
       ? cargarStockDatasetPreferido().catch((err) => {
         if (CATALOG_SOURCE === "catalogo-43") {
           console.warn(`No se pudo cargar ${STOCK_DATA_FILE}, se usa fallback de catálogo 43:`, err);
@@ -1566,11 +1566,13 @@ async function cargarProductosCatalogo() {
       trazabilidadPromise,
     ]);
 
-    if (INVENTORY_ENABLED) {
+    if (INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43") {
       stockBySku = {
         ...crearStockSinteticoAgotados(),
         ...normalizarMapaStockPorSku(stockData?.items || {}),
       };
+    } else if (CATALOG_SOURCE === "catalogo-43") {
+      stockBySku = {};
     }
     catalogCoverBySku = normalizarMapaAssetsPorSku(catalogCoverMapData || {});
 
@@ -1629,7 +1631,7 @@ async function cargarProductosCatalogo() {
 
 cargarProductosCatalogo();
 
-if (INVENTORY_ENABLED) {
+if (INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43") {
   configurarRealtimeStock();
   cargarStockData();
   window.setInterval(cargarStockData, STOCK_REFRESH_INTERVAL_MS);
@@ -1896,20 +1898,22 @@ function configurarRealtimeStock() {
 }
 
 function cargarStockData() {
+  if (CATALOG_SOURCE === "catalogo-43") {
+    stockBySku = {};
+    if (skuActivo) aplicarStockATallas(skuActivo);
+    const baseItems43 = Array.isArray(productosCatalogoBase) && productosCatalogoBase.length
+      ? productosCatalogoBase
+      : productos;
+    const directCatalog43 = prepararCatalogo43Directo(baseItems43, {});
+    productos = directCatalog43.productos;
+    productosGrid = directCatalog43.productosGrid;
+    renderGrid(productosGrid);
+    return Promise.resolve();
+  }
   return cargarStockDatasetPreferido()
     .then((data) => {
       stockBySku = normalizarMapaStockPorSku(data?.items || {});
       if (skuActivo) aplicarStockATallas(skuActivo);
-      if (CATALOG_SOURCE === "catalogo-43") {
-        const baseItems43 = Array.isArray(productosCatalogoBase) && productosCatalogoBase.length
-          ? productosCatalogoBase
-          : productos;
-        const directCatalog43 = prepararCatalogo43Directo(baseItems43, stockBySku);
-        productos = directCatalog43.productos;
-        productosGrid = directCatalog43.productosGrid;
-        renderGrid(productosGrid);
-        return;
-      }
       if (Array.isArray(productos) && productos.length) {
         productosGrid = construirProductosGridPorSku(productos, stockBySku);
         renderGrid(productosGrid);
@@ -4338,8 +4342,10 @@ function construirTextoReporteCotizacionesWhatsApp(quotes = []) {
     `*Reporte de cotizaciones ${mesLabel}*`,
     `Total cotizaciones: ${total}`,
     `Cotizaciones listas: ${listas} (${pctListas}%)`,
-    `Cotizaciones no listas / caídas: ${caidas} (${pctCaidas}%)`,
   ];
+  if (caidas > 0) {
+    lines.push(`Cotizaciones no listas / caídas: ${caidas} (${pctCaidas}%)`);
+  }
   if (quotesMes.length) {
     lines.push("", "*Detalle por cotización*");
     quotesMes.forEach((q, index) => {
@@ -4391,10 +4397,11 @@ function renderReporteCotizacionesAdmin(quotes = []) {
           <span>Listas</span>
           <strong>${listas}</strong>
         </div>
+        ${caidas > 0 ? `
         <div class="quotes-report-metric is-open">
           <span>No listas / caídas</span>
           <strong>${caidas}</strong>
-        </div>
+        </div>` : ""}
       </div>
       <pre class="quotes-report-text">${reportText}</pre>
     </div>
