@@ -4181,22 +4181,27 @@ function normalizarBusquedaModelo(value) {
 }
 
 function activarTabAdmin(tab = "cotizaciones", { cargar = true } = {}) {
-  adminActiveTab = ["cotizaciones", "stock"].includes(tab) ? tab : "cotizaciones";
+  adminActiveTab = ["cotizaciones", "reporte", "stock"].includes(tab) ? tab : "cotizaciones";
 
   const btnCot = document.getElementById("quotesTabCotizaciones");
+  const btnRep = document.getElementById("quotesTabReporte");
   const btnStock = document.getElementById("quotesTabStock");
   const panelCot = document.getElementById("quotesCotizacionesPanel");
+  const panelRep = document.getElementById("quotesReportePanel");
   const panelStock = document.getElementById("quotesStockPanel");
 
   const isCot = adminActiveTab === "cotizaciones";
+  const isRep = adminActiveTab === "reporte";
   const isStock = adminActiveTab === "stock";
   btnCot?.classList.toggle("active", isCot);
+  btnRep?.classList.toggle("active", isRep);
   btnStock?.classList.toggle("active", isStock);
   if (panelCot) panelCot.style.display = isCot ? "flex" : "none";
+  if (panelRep) panelRep.style.display = isRep ? "flex" : "none";
   if (panelStock) panelStock.style.display = isStock ? "flex" : "none";
 
   if (!quotesAccessToken || !cargar) return;
-  if (isCot) {
+  if (isCot || isRep) {
     cargarCotizacionesAdmin().catch((err) => {
       actualizarEstadoQuotesUI("");
       if ((err?.message || "").toLowerCase().includes("iniciar sesion")) {
@@ -4284,31 +4289,89 @@ function obtenerEtiquetaMesActual() {
   return new Date().toLocaleDateString("es-CL", { month: "long", year: "numeric" });
 }
 
+function calcularMontoCotizacion(quote = {}, items = []) {
+  if (!Array.isArray(items) || !items.length) return null;
+  const source = String(quote?.source || "").trim();
+  let total = 0;
+  let hasPrice = false;
+  items.forEach((item) => {
+    const qty = Number(item?.quantity) || 0;
+    if (qty <= 0) return;
+    const sku = normalizarSkuCatalogo(item?.sku);
+    if (!sku) return;
+    let precioUnitario = null;
+    if (source === "catalogo-43" || CATALOG_43_PRICE_BY_SKU[sku]) {
+      const precioLista = obtenerPrecioListaCatalogo43(sku);
+      if (precioLista) {
+        precioUnitario = Math.round(precioLista * (1 - CATALOG_43_MOTHERS_DAY_DISCOUNT));
+      }
+    }
+    if (!precioUnitario) return;
+    total += precioUnitario * qty;
+    hasPrice = true;
+  });
+  return hasPrice ? total : null;
+}
+
+function construirBloqueDetalleReporte(q = {}, items = []) {
+  const detalleAgrupado = agruparDetallePorModelo(items);
+  if (!detalleAgrupado.length) return ["Sin detalle de artículos."];
+  return detalleAgrupado.map((g) => {
+    const tallasTxt = Object.entries(g.tallas)
+      .sort((a, b) => String(a[0]).localeCompare(String(b[0]), undefined, { numeric: true }))
+      .map(([t, qty]) => `T${t}: ${qty}`)
+      .join(" · ");
+    return `Artículo ${g.sku}: ${tallasTxt}`;
+  });
+}
+
 function construirTextoReporteCotizacionesWhatsApp(quotes = []) {
-  const quotesMes = obtenerCotizacionesMesActual(quotes);
+  const quotesMes = obtenerCotizacionesFiltradas(obtenerCotizacionesMesActual(quotes));
   const total = quotesMes.length;
   const listas = quotesMes.filter((q) => !!q.is_ready).length;
   const caidas = total - listas;
   const pctListas = total ? Math.round((listas / total) * 100) : 0;
   const pctCaidas = total ? Math.round((caidas / total) * 100) : 0;
   const mesLabel = obtenerEtiquetaMesActual();
-  return [
+  const itemsMap = quotesAdminCache.itemsByQuote instanceof Map ? quotesAdminCache.itemsByQuote : new Map();
+  const lines = [
     `*Reporte de cotizaciones ${mesLabel}*`,
     `Total cotizaciones: ${total}`,
     `Cotizaciones listas: ${listas} (${pctListas}%)`,
     `Cotizaciones no listas / caídas: ${caidas} (${pctCaidas}%)`,
-  ].join("\n");
+  ];
+  if (quotesMes.length) {
+    lines.push("", "*Detalle por cotización*");
+    quotesMes.forEach((q, index) => {
+      const detalles = (itemsMap.get(q.id) || []).sort((a, b) => {
+        if (String(a.sku) !== String(b.sku)) return String(a.sku).localeCompare(String(b.sku));
+        return String(a.size).localeCompare(String(b.size), undefined, { numeric: true });
+      });
+      const codigo = generarCodigoCotizacionVisual(q);
+      const monto = calcularMontoCotizacion(q, detalles);
+      lines.push(
+        "",
+        `${index + 1}. ${q.store_name || "Sin cliente"} · ${codigo}`,
+        `RUT: ${q.client_rut || "Sin RUT"}`,
+        `Estado: ${q.is_ready ? "Lista" : "No lista / caída"}`,
+        `Prendas: ${q.total_items || 0}${monto ? ` · Monto: ${formatearPrecioCLP(monto)}` : ""}`,
+        ...construirBloqueDetalleReporte(q, detalles)
+      );
+    });
+  }
+  return lines.join("\n");
 }
 
 function renderReporteCotizacionesAdmin(quotes = []) {
   const panel = document.getElementById("quotesReportPanel");
   if (!panel) return;
-  const quotesMes = obtenerCotizacionesMesActual(quotes);
+  const quotesMes = obtenerCotizacionesFiltradas(obtenerCotizacionesMesActual(quotes));
   const total = quotesMes.length;
   const listas = quotesMes.filter((q) => !!q.is_ready).length;
   const caidas = total - listas;
   const mesLabel = obtenerEtiquetaMesActual();
   const reportText = construirTextoReporteCotizacionesWhatsApp(quotes);
+  const itemsMap = quotesAdminCache.itemsByQuote instanceof Map ? quotesAdminCache.itemsByQuote : new Map();
 
   panel.innerHTML = `
     <div class="quotes-report-card">
@@ -4340,14 +4403,55 @@ function renderReporteCotizacionesAdmin(quotes = []) {
       <button type="button" class="ghost-btn quotes-filter-btn ${quotesStatusFilter === "ready" ? "active" : ""}" data-quotes-filter="ready">Listas</button>
       <button type="button" class="ghost-btn quotes-filter-btn ${quotesStatusFilter === "open" ? "active" : ""}" data-quotes-filter="open">No listas / caídas</button>
     </div>
+    <div class="quotes-report-detail-list">
+      ${quotesMes.length
+        ? quotesMes.map((q) => {
+          const detalles = (itemsMap.get(q.id) || []).sort((a, b) => {
+            if (String(a.sku) !== String(b.sku)) return String(a.sku).localeCompare(String(b.sku));
+            return String(a.size).localeCompare(String(b.size), undefined, { numeric: true });
+          });
+          const detalleAgrupado = agruparDetallePorModelo(detalles);
+          const fecha = q.created_at ? new Date(q.created_at).toLocaleString() : "-";
+          const codigo = generarCodigoCotizacionVisual(q);
+          const monto = calcularMontoCotizacion(q, detalles);
+          return `
+            <div class="quotes-report-detail-card">
+              <div class="quotes-report-detail-head">
+                <div>
+                  <div class="quotes-report-detail-client">${q.store_name || "Sin cliente"}</div>
+                  <div class="quotes-report-detail-sub">RUT: ${q.client_rut || "Sin RUT"} · ${codigo}</div>
+                </div>
+                <div class="quotes-report-detail-side">
+                  <strong>${q.total_items || 0} prendas</strong>
+                  <span>${q.is_ready ? "Lista" : "No lista / caída"} · ${fecha}</span>
+                  ${monto ? `<span>Monto: ${formatearPrecioCLP(monto)}</span>` : ""}
+                </div>
+              </div>
+              <div class="quotes-report-detail-items">
+                ${detalleAgrupado.length
+                  ? detalleAgrupado.map((g) => {
+                    const totalModelo = Object.values(g.tallas).reduce((acc, qty) => acc + (Number(qty) || 0), 0);
+                    const tallasTxt = Object.entries(g.tallas)
+                      .sort((a, b) => String(a[0]).localeCompare(String(b[0]), undefined, { numeric: true }))
+                      .map(([t, qty]) => `T${t}: ${qty}`)
+                      .join(" · ");
+                    return `<div class="quotes-report-detail-item"><strong>Artículo ${g.sku}</strong><span>Total: ${totalModelo}</span><span>${tallasTxt}</span></div>`;
+                  }).join("")
+                  : `<div class="quotes-report-detail-item"><span>Sin detalle</span></div>`
+                }
+              </div>
+            </div>
+          `;
+        }).join("")
+        : `<div class="quote-card"><div class="quote-meta">No hay cotizaciones de mayo en este filtro.</div></div>`
+      }
+    </div>
   `;
 }
 
 function renderCotizacionesAdmin(quotes = [], items = []) {
   const list = document.getElementById("quotesList");
   if (!list) return;
-
-  renderReporteCotizacionesAdmin(quotes);
 
   if (!quotes.length) {
     list.innerHTML = `<div class="quote-card"><div class="quote-meta">No hay cotizaciones para mostrar.</div></div>`;
@@ -4356,24 +4460,15 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
 
   const itemsMap = agruparItemsPorQuote(items);
   quotesAdminCache = { quotes: [...quotes], itemsByQuote: itemsMap };
-  const filteredQuotes = obtenerCotizacionesFiltradas(quotes);
-  if (!filteredQuotes.length) {
-    list.innerHTML = `<div class="quote-card"><div class="quote-meta">No hay cotizaciones en este filtro.</div></div>`;
-    return;
-  }
-  list.innerHTML = filteredQuotes.map((q) => {
+  list.innerHTML = quotes.map((q) => {
     const detalles = (itemsMap.get(q.id) || []).sort((a, b) => {
       if (String(a.sku) !== String(b.sku)) return String(a.sku).localeCompare(String(b.sku));
       return String(a.size).localeCompare(String(b.size), undefined, { numeric: true });
     });
     const detalleAgrupado = agruparDetallePorModelo(detalles);
     const fecha = q.created_at ? new Date(q.created_at).toLocaleString() : "-";
-    const fechaCliente = q.created_at_client ? new Date(q.created_at_client).toLocaleString() : fecha;
-    const fechaLista = q.ready_at ? new Date(q.ready_at).toLocaleString() : "Pendiente";
     const isReady = !!q.is_ready;
     const codigo = generarCodigoCotizacionVisual(q);
-    const totalPrendas = Number(q.total_items) || 0;
-    const totalModelos = detalleAgrupado.length;
     return `
       <div class="quote-card" data-quote-id="${q.id}">
         <div class="quote-card-head">
@@ -4389,39 +4484,13 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
             </div>
           </div>
           <div class="quote-card-summary">
-            <div class="quote-card-total">Total prendas: ${totalPrendas}</div>
+            <div class="quote-card-total">Total items: ${q.total_items || 0}</div>
             <div class="quote-card-date">${fecha}</div>
-          </div>
-        </div>
-        <div class="quote-detail-meta-grid">
-          <div class="quote-detail-meta-box">
-            <span>Cliente</span>
-            <strong>${q.store_name || "Sin nombre"}</strong>
-          </div>
-          <div class="quote-detail-meta-box">
-            <span>RUT</span>
-            <strong>${q.client_rut || "Sin RUT"}</strong>
-          </div>
-          <div class="quote-detail-meta-box">
-            <span>Modelos</span>
-            <strong>${totalModelos}</strong>
-          </div>
-          <div class="quote-detail-meta-box">
-            <span>Fecha solicitud</span>
-            <strong>${fechaCliente}</strong>
-          </div>
-          <div class="quote-detail-meta-box">
-            <span>Estado</span>
-            <strong>${isReady ? "Lista" : "No lista / caída"}</strong>
-          </div>
-          <div class="quote-detail-meta-box">
-            <span>Fecha lista</span>
-            <strong>${fechaLista}</strong>
           </div>
         </div>
         <div class="quote-status">
           <div class="quote-status-text ${isReady ? "ready" : ""}">
-            ${isReady ? "Cotización lista" : "Cotización no lista / caída"}
+            ${isReady ? "Cotización lista" : "En proceso"}
           </div>
           <label class="quote-status-toggle">
             <input type="checkbox" class="quote-ready-checkbox" data-quote-id="${q.id}" ${isReady ? "checked" : ""}>
@@ -4431,12 +4500,11 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
         <div class="quote-items-grid">
           ${detalleAgrupado.length
             ? detalleAgrupado.map((g) => {
-              const totalModelo = Object.values(g.tallas).reduce((acc, qty) => acc + (Number(qty) || 0), 0);
               const tallasTxt = Object.entries(g.tallas)
                 .sort((a, b) => String(a[0]).localeCompare(String(b[0]), undefined, { numeric: true }))
                 .map(([t, q]) => `T${t}: <strong>${q}</strong>`)
                 .join(" · ");
-              return `<div class="quote-item-line"><span class="quote-item-model">Modelo ${g.sku}</span><span class="quote-item-qty">Total: <strong>${totalModelo}</strong></span><span class="quote-item-sizes">${tallasTxt}</span></div>`;
+              return `<div class="quote-item-line"><span class="quote-item-model">Modelo ${g.sku}</span><span class="quote-item-sizes">${tallasTxt}</span></div>`;
             }).join("")
             : `<div class="quote-item-line">Sin detalle</div>`
           }
@@ -4510,6 +4578,7 @@ async function cargarCotizacionesAdmin() {
   const quotes = await quotesRes.json();
   if (!quotes.length) {
     renderCotizacionesAdmin([], []);
+    renderReporteCotizacionesAdmin([]);
     return;
   }
 
@@ -4529,6 +4598,7 @@ async function cargarCotizacionesAdmin() {
   }
 
   renderCotizacionesAdmin(quotes, items);
+  renderReporteCotizacionesAdmin(quotes);
 }
 
 function abrirQuotesModal() {
@@ -4553,6 +4623,7 @@ function configurarPanelCotizaciones() {
   const btnRefresh = document.getElementById("refreshQuotesBtn");
   const btnLogout = document.getElementById("logoutQuotesBtn");
   const btnTabCotizaciones = document.getElementById("quotesTabCotizaciones");
+  const btnTabReporte = document.getElementById("quotesTabReporte");
   const btnTabStock = document.getElementById("quotesTabStock");
   const stockSearchInput = document.getElementById("stockCatalogSearchInput");
   const stockSearchClear = document.getElementById("stockCatalogSearchClear");
@@ -4567,7 +4638,7 @@ function configurarPanelCotizaciones() {
   const emailEl = document.getElementById("quotesEmail");
   const passEl = document.getElementById("quotesPassword");
   const quotesListEl = document.getElementById("quotesList");
-  const quotesCotizacionesPanel = document.getElementById("quotesCotizacionesPanel");
+  const quotesReportePanel = document.getElementById("quotesReportePanel");
 
   const ejecutarLogin = async () => {
     const email = emailEl?.value.trim();
@@ -4628,6 +4699,7 @@ function configurarPanelCotizaciones() {
   });
 
   btnTabCotizaciones?.addEventListener("click", () => activarTabAdmin("cotizaciones", { cargar: true }));
+  btnTabReporte?.addEventListener("click", () => activarTabAdmin("reporte", { cargar: true }));
   btnTabStock?.addEventListener("click", () => activarTabAdmin("stock", { cargar: true }));
   stockSearchInput?.addEventListener("input", aplicarFiltroStockCatalogAdmin);
   stockSeasonTabs?.addEventListener("click", (e) => {
@@ -4673,11 +4745,11 @@ function configurarPanelCotizaciones() {
     }
   });
 
-  quotesCotizacionesPanel?.addEventListener("click", (e) => {
+  quotesReportePanel?.addEventListener("click", (e) => {
     const filterBtn = e.target.closest("[data-quotes-filter]");
     if (filterBtn) {
       quotesStatusFilter = filterBtn.dataset.quotesFilter || "all";
-      renderCotizacionesAdmin(quotesAdminCache.quotes, [...quotesAdminCache.itemsByQuote.values()].flat());
+      renderReporteCotizacionesAdmin(quotesAdminCache.quotes);
       return;
     }
 
@@ -4689,7 +4761,9 @@ function configurarPanelCotizaciones() {
         .catch(() => mostrarToastError("No se pudo copiar", "Copia manualmente el texto del reporte."));
       return;
     }
+  });
 
+  quotesListEl?.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-quote-export]");
     if (btn) {
       descargarCotizacionAdmin(btn.dataset.quoteExport);

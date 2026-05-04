@@ -2096,6 +2096,80 @@ box-shadow: 0 -10px 18px rgba(255,255,255,0.95), 0 10px 24px rgba(0,0,0,0.16);
   color:#ffffff;
 }
 
+.quotes-report-detail-list{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.quotes-report-detail-card{
+  padding:16px;
+  border-radius:18px;
+  border:1px solid rgba(203,213,225,0.9);
+  background:rgba(255,255,255,0.92);
+}
+
+.quotes-report-detail-head{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+}
+
+.quotes-report-detail-client{
+  font-size:20px;
+  font-weight:900;
+  color:#0f172a;
+}
+
+.quotes-report-detail-sub{
+  margin-top:4px;
+  font-size:13px;
+  color:#64748b;
+}
+
+.quotes-report-detail-side{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:4px;
+  text-align:right;
+}
+
+.quotes-report-detail-side strong{
+  font-size:18px;
+  color:#0f172a;
+}
+
+.quotes-report-detail-side span{
+  font-size:13px;
+  color:#64748b;
+}
+
+.quotes-report-detail-items{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));
+  gap:10px;
+  margin-top:14px;
+}
+
+.quotes-report-detail-item{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px solid rgba(226,232,240,0.9);
+  background:#f8fafc;
+  color:#475569;
+  font-size:14px;
+}
+
+.quotes-report-detail-item strong{
+  color:#0f172a;
+  font-size:16px;
+}
+
 .quotes-list{
   flex:1;
   min-height:0;
@@ -2733,37 +2807,6 @@ box-shadow: 0 -10px 18px rgba(255,255,255,0.95), 0 10px 24px rgba(0,0,0,0.16);
   text-align:right;
 }
 
-.quote-detail-meta-grid{
-  display:grid;
-  grid-template-columns:repeat(3, minmax(0, 1fr));
-  gap:12px;
-  margin-bottom:16px;
-}
-
-.quote-detail-meta-box{
-  padding:12px 14px;
-  border-radius:16px;
-  border:1px solid rgba(226,232,240,0.95);
-  background:rgba(255,255,255,0.82);
-}
-
-.quote-detail-meta-box span{
-  display:block;
-  font-size:12px;
-  font-weight:700;
-  text-transform:uppercase;
-  letter-spacing:.04em;
-  color:#64748b;
-}
-
-.quote-detail-meta-box strong{
-  display:block;
-  margin-top:6px;
-  font-size:16px;
-  line-height:1.35;
-  color:#0f172a;
-}
-
 .quote-status{
   display:flex;
   align-items:center;
@@ -2846,12 +2889,6 @@ box-shadow: 0 -10px 18px rgba(255,255,255,0.95), 0 10px 24px rgba(0,0,0,0.16);
   font-weight:800;
   color:#0f172a;
   font-size:18px;
-}
-
-.quote-item-qty{
-  font-size:14px;
-  color:#475569;
-  font-weight:700;
 }
 
 .quote-item-sizes{
@@ -3709,10 +3746,6 @@ box-shadow: 0 -10px 18px rgba(255,255,255,0.95), 0 10px 24px rgba(0,0,0,0.16);
     align-items:flex-start;
   }
 
-  .quote-detail-meta-grid{
-    grid-template-columns:1fr;
-  }
-
   .quote-card-date{
     text-align:left;
   }
@@ -3724,6 +3757,15 @@ box-shadow: 0 -10px 18px rgba(255,255,255,0.95), 0 10px 24px rgba(0,0,0,0.16);
 
   .quote-items-grid{
     grid-template-columns:1fr;
+  }
+
+  .quotes-report-detail-head{
+    flex-direction:column;
+  }
+
+  .quotes-report-detail-side{
+    align-items:flex-start;
+    text-align:left;
   }
 
   .hero-sub-compact{
