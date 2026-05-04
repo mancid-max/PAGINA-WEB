@@ -460,6 +460,7 @@ const STOCK_DATA_FILE_BY_SOURCE = {
   "catalogo-43": "stock-data-catalogo-43.json",
 };
 const STOCK_DATA_FILE = STOCK_DATA_FILE_BY_SOURCE[CATALOG_SOURCE] || "stock-data.json";
+const CATALOG_43_MOTHERS_DAY_DISCOUNT = 0.10;
 const CATALOG_43_PRICE_BY_SKU = {
   "4301-00": 26990,
   "4309-00": 27990,
@@ -469,10 +470,29 @@ const CATALOG_43_PRICE_BY_SKU = {
   "4329-00": 26990,
 };
 
-function obtenerPrecioCatalogo43(value) {
-  if (CATALOG_SOURCE !== "catalogo-43") return null;
+function obtenerPrecioListaCatalogo43(value) {
   const sku = normalizarSkuCatalogo(typeof value === "string" ? value : value?.family || value?.sku);
   return Number(CATALOG_43_PRICE_BY_SKU[sku]) || null;
+}
+
+function obtenerPrecioCatalogo43(value) {
+  if (CATALOG_SOURCE !== "catalogo-43") return null;
+  const precioLista = obtenerPrecioListaCatalogo43(value);
+  if (!precioLista) return null;
+  return Math.round(precioLista * (1 - CATALOG_43_MOTHERS_DAY_DISCOUNT));
+}
+
+function obtenerDetallePrecioCatalogo43(value) {
+  if (CATALOG_SOURCE !== "catalogo-43") return null;
+  const precioLista = obtenerPrecioListaCatalogo43(value);
+  const precioFinal = obtenerPrecioCatalogo43(value);
+  if (!precioLista || !precioFinal) return null;
+  return {
+    lista: precioLista,
+    final: precioFinal,
+    descuento: CATALOG_43_MOTHERS_DAY_DISCOUNT,
+    ahorro: Math.max(0, precioLista - precioFinal),
+  };
 }
 
 function formatearPrecioCLP(value) {
@@ -2466,14 +2486,20 @@ function renderGrid(lista) {
 
   container.innerHTML = listaOrdenada
     .map(
-      (p, index) => `
+      (p, index) => {
+        const detallePrecio43 = obtenerDetallePrecioCatalogo43(p);
+        return `
       <div class="card ${esProductoAgotado(p) ? "card-sold-out" : ""}" data-family="${p.family}" onclick="verProductoDesdeCard('${p._baseFamily || p.family}','${p._preferredSku || p.family}')">
         <div class="card-title-row">
           <div class="card-title-block">
             <div class="card-title">Modelo ${normalizarSkuCatalogo(p.family)}</div>
             ${
-              obtenerPrecioCatalogo43(p)
-                ? `<div class="card-price">${formatearPrecioCLP(obtenerPrecioCatalogo43(p))}</div>`
+              detallePrecio43
+                ? `<div class="card-price">
+                    <span class="card-price-current">${formatearPrecioCLP(detallePrecio43.final)}</span>
+                    <span class="card-price-original">${formatearPrecioCLP(detallePrecio43.lista)}</span>
+                    <span class="card-price-badge">-10%</span>
+                  </div>`
                 : ""
             }
           </div>
@@ -2492,7 +2518,8 @@ function renderGrid(lista) {
           ${esProductoAgotado(p) ? '<span class="sold-out-ribbon sold-out-ribbon-card">AGOTADO</span>' : ""}
         </div>
       </div>
-    `
+    `;
+      }
     )
     .join("");
 
@@ -2558,6 +2585,7 @@ function verProducto(familyId, preferredSku = "") {
   const charList = document.getElementById("characteristics");
   const hasCharacteristics = Array.isArray(p.characteristics) && p.characteristics.length;
   const precio43 = obtenerPrecioCatalogo43(skuInicial);
+  const detallePrecio43 = obtenerDetallePrecioCatalogo43(skuInicial);
 
   if (CATALOG_SOURCE === "catalogo-43") {
     const sku43 = normalizarSkuCatalogo(skuInicial || p.family);
@@ -2583,6 +2611,15 @@ function verProducto(familyId, preferredSku = "") {
         li.innerText = parte;
         ul.appendChild(li);
       });
+      if (detallePrecio43) {
+        const liPromo = document.createElement("li");
+        liPromo.innerText = `Precio oferta Día de la Madre: ${formatearPrecioCLP(detallePrecio43.final)}`;
+        ul.appendChild(liPromo);
+
+        const liLista = document.createElement("li");
+        liLista.innerText = `Precio lista: ${formatearPrecioCLP(detallePrecio43.lista)} · Descuento: 10%`;
+        ul.appendChild(liLista);
+      }
       charList.appendChild(ul);
     }
   } else {
@@ -2723,6 +2760,7 @@ function actualizarCarrito() {
   const container = document.getElementById("cartItems");
   let totalItems = 0;
   let totalEstimado = 0;
+  let totalLista = 0;
 
   if (!pedido.length) {
     container.innerHTML = `
@@ -2735,9 +2773,13 @@ function actualizarCarrito() {
     container.innerHTML = pedido
       .map((item, index) => {
         const cantidadModelo = Object.values(item.tallas).reduce((acc, qty) => acc + (Number(qty) || 0), 0);
+        const detallePrecio43 = obtenerDetallePrecioCatalogo43(item.sku);
+        const precioListaUnitario = detallePrecio43?.lista || null;
         const precioUnitario = obtenerPrecioCatalogo43(item.sku);
+        const subtotalLista = precioListaUnitario ? precioListaUnitario * cantidadModelo : 0;
         const subtotal = precioUnitario ? precioUnitario * cantidadModelo : 0;
         totalItems += cantidadModelo;
+        totalLista += subtotalLista;
         totalEstimado += subtotal;
         const tallasHtml = Object.entries(item.tallas)
           .map(([t, c]) => `<span class="cart-size-pill">T${t} <strong>${c}</strong></span>`)
@@ -2756,7 +2798,12 @@ function actualizarCarrito() {
           <div class="cart-item-sizes">${tallasHtml}</div>
           <div class="cart-item-summary">
             <div>Prendas: <strong>${cantidadModelo}</strong></div>
-            ${precioUnitario ? `<div>Subtotal: <strong>${formatearPrecioCLP(subtotal)}</strong></div>` : ""}
+            ${
+              precioUnitario
+                ? `<div>Subtotal oferta: <strong>${formatearPrecioCLP(subtotal)}</strong></div>
+                   ${subtotalLista ? `<div>Precio lista: <s>${formatearPrecioCLP(subtotalLista)}</s></div>` : ""}`
+                : ""
+            }
           </div>
         </div>
       `;
@@ -2778,7 +2825,9 @@ function actualizarCarrito() {
 
   totalsBox.innerHTML = `
     <div class="cart-totals-row"><span>Total prendas</span><strong>${totalItems}</strong></div>
+    ${totalLista > 0 ? `<div class="cart-totals-row"><span>Total lista</span><strong><s>${formatearPrecioCLP(totalLista)}</s></strong></div>` : ""}
     ${totalEstimado > 0 ? `<div class="cart-totals-row"><span>Total estimado</span><strong>${formatearPrecioCLP(totalEstimado)}</strong></div>` : ""}
+    ${totalLista > totalEstimado ? `<div class="cart-totals-row"><span>Ahorro Día de la Madre</span><strong>${formatearPrecioCLP(totalLista - totalEstimado)}</strong></div>` : ""}
   `;
 }
 
