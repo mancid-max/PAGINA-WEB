@@ -252,6 +252,14 @@ function obtenerRutaImagenOptimizada(path) {
   return `${OPTIMIZED_IMAGE_ROOT}/${normalized}`.replace(/\.[^./?]+$/, ".webp");
 }
 
+function obtenerRutaImagenOptimizadaJpg(path) {
+  const normalized = normalizarRutaAsset(path);
+  if (!normalized) return "";
+  const sourceRoot = OPTIMIZED_IMAGE_SOURCE_ROOTS.find((root) => normalized.startsWith(`${root}/`));
+  if (!sourceRoot) return normalized;
+  return `${OPTIMIZED_IMAGE_ROOT}/${normalized}`;
+}
+
 function restaurarImagenOriginal(img) {
   if (!img || img.dataset.fallbackApplied === "1") return;
   const originalSrc = img.dataset.originalSrc || "";
@@ -281,6 +289,7 @@ function asignarImagenCatalogo(img, path, options = {}) {
 
   img.dataset.originalSrc = normalized;
   img.dataset.optimizedSrc = obtenerRutaImagenOptimizada(normalized);
+  img.dataset.optimizedJpgSrc = obtenerRutaImagenOptimizadaJpg(normalized);
   img.dataset.fallbackApplied = "0";
   img.loading = eager ? "eager" : "lazy";
   img.decoding = "async";
@@ -291,6 +300,7 @@ function asignarImagenCatalogo(img, path, options = {}) {
   img.dataset.requestId = requestId;
 
   const optimizedSrc = buildAssetUrl(img.dataset.optimizedSrc || normalized);
+  const optimizedJpgSrc = buildAssetUrl(img.dataset.optimizedJpgSrc || normalized);
   const originalSrc = buildAssetUrl(normalized);
 
   if (preferOriginal) {
@@ -308,8 +318,17 @@ function asignarImagenCatalogo(img, path, options = {}) {
 
   loader.onerror = () => {
     if (img.dataset.requestId !== requestId) return;
-    img.dataset.fallbackApplied = "1";
-    img.src = originalSrc;
+    const jpgLoader = new Image();
+    jpgLoader.onload = () => {
+      if (img.dataset.requestId !== requestId) return;
+      img.src = optimizedJpgSrc;
+    };
+    jpgLoader.onerror = () => {
+      if (img.dataset.requestId !== requestId) return;
+      img.dataset.fallbackApplied = "1";
+      img.src = originalSrc;
+    };
+    jpgLoader.src = optimizedJpgSrc;
   };
 
   loader.src = optimizedSrc;
@@ -2541,7 +2560,7 @@ function renderGrid(lista) {
     asignarImagenCatalogo(img, img.dataset.imageSrc, {
       eager: index < 4,
       fetchPriority: index < 2 ? "high" : "low",
-      preferOriginal: true,
+      preferOriginal: false,
     });
   });
 }
@@ -4368,6 +4387,68 @@ function construirTextoReporteCotizacionesWhatsApp(quotes = []) {
   return lines.join("\n");
 }
 
+function construirVistaReporteCotizaciones(quotes = [], itemsMap = new Map()) {
+  if (!quotes.length) {
+    return `<div class="quotes-report-preview-empty">No hay cotizaciones de mayo en este filtro.</div>`;
+  }
+
+  return quotes.map((q, index) => {
+    const detalles = (itemsMap.get(q.id) || []).sort((a, b) => {
+      if (String(a.sku) !== String(b.sku)) return String(a.sku).localeCompare(String(b.sku));
+      return String(a.size).localeCompare(String(b.size), undefined, { numeric: true });
+    });
+    const detalleAgrupado = agruparDetallePorModelo(detalles);
+    const codigo = generarCodigoCotizacionVisual(q);
+    const monto = calcularMontoCotizacion(q, detalles);
+    const fecha = q.created_at ? new Date(q.created_at).toLocaleString() : "-";
+
+    const rows = detalleAgrupado.length
+      ? detalleAgrupado.map((g) => {
+        const totalModelo = Object.values(g.tallas).reduce((acc, qty) => acc + (Number(qty) || 0), 0);
+        const tallasTxt = Object.entries(g.tallas)
+          .sort((a, b) => String(a[0]).localeCompare(String(b[0]), undefined, { numeric: true }))
+          .map(([t, qty]) => `T${t}: ${qty}`)
+          .join(" · ");
+        return `
+          <tr>
+            <td>${escapeHtmlExcel(g.sku)}</td>
+            <td>${escapeHtmlExcel(tallasTxt)}</td>
+            <td class="is-num">${escapeHtmlExcel(totalModelo)}</td>
+          </tr>
+        `;
+      }).join("")
+      : `<tr><td colspan="3">Sin detalle</td></tr>`;
+
+    return `
+      <div class="quotes-report-preview-card">
+        <div class="quotes-report-preview-head">
+          <strong>${index + 1}. ${escapeHtmlExcel(q.store_name || "Sin cliente")}</strong>
+          <span>${escapeHtmlExcel(codigo)}</span>
+        </div>
+        <div class="quotes-report-preview-meta">
+          <div><span>RUT</span><strong>${escapeHtmlExcel(q.client_rut || "Sin RUT")}</strong></div>
+          <div><span>Estado</span><strong>${escapeHtmlExcel(q.is_ready ? "Lista" : "No lista / caída")}</strong></div>
+          <div><span>Fecha</span><strong>${escapeHtmlExcel(fecha)}</strong></div>
+          <div><span>Prendas</span><strong>${escapeHtmlExcel(q.total_items || 0)}</strong></div>
+          ${monto ? `<div><span>Monto</span><strong>${escapeHtmlExcel(formatearPrecioCLP(monto))}</strong></div>` : ""}
+        </div>
+        <div class="quotes-report-preview-table-wrap">
+          <table class="quotes-report-preview-table">
+            <thead>
+              <tr>
+                <th>Artículo</th>
+                <th>Tallas</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
 function renderReporteCotizacionesAdmin(quotes = []) {
   const panel = document.getElementById("quotesReportPanel");
   if (!panel) return;
@@ -4378,6 +4459,7 @@ function renderReporteCotizacionesAdmin(quotes = []) {
   const mesLabel = obtenerEtiquetaMesActual();
   const reportText = construirTextoReporteCotizacionesWhatsApp(quotes);
   const itemsMap = quotesAdminCache.itemsByQuote instanceof Map ? quotesAdminCache.itemsByQuote : new Map();
+  const reportPreview = construirVistaReporteCotizaciones(quotesMes, itemsMap);
 
   panel.innerHTML = `
     <div class="quotes-report-card">
@@ -4403,7 +4485,10 @@ function renderReporteCotizacionesAdmin(quotes = []) {
           <strong>${caidas}</strong>
         </div>` : ""}
       </div>
-      <pre class="quotes-report-text">${reportText}</pre>
+      <div class="quotes-report-text">
+        <div class="quotes-report-text-head">Vista previa ordenada</div>
+        <div class="quotes-report-preview-list">${reportPreview}</div>
+      </div>
     </div>
     <div class="quotes-filter-row" id="quotesStatusFilters">
       <button type="button" class="ghost-btn quotes-filter-btn ${quotesStatusFilter === "all" ? "active" : ""}" data-quotes-filter="all">Todas</button>
