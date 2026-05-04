@@ -485,37 +485,91 @@ const STOCK_DATA_FILE_BY_SOURCE = {
   "catalogo-43": "stock-data-catalogo-43.json",
 };
 const STOCK_DATA_FILE = STOCK_DATA_FILE_BY_SOURCE[CATALOG_SOURCE] || "stock-data.json";
-const CATALOG_43_MOTHERS_DAY_DISCOUNT = 0.10;
-const CATALOG_43_PRICE_BY_SKU = {
-  "4301-00": 26990,
-  "4309-00": 27990,
-  "4318-00": 26990,
-  "4314-00": 25990,
-  "4323-00": 26990,
-  "4329-00": 26990,
+const CATALOG_PROMO_CONFIG_BY_SOURCE = {
+  "catalogo-1": {
+    discount: 0.10,
+    priceFile: "price-data.json",
+  },
+  "catalogo-43": {
+    discount: 0.10,
+    inlinePrices: {
+      "4301-00": 26990,
+      "4309-00": 27990,
+      "4318-00": 26990,
+      "4314-00": 25990,
+      "4323-00": 26990,
+      "4329-00": 26990,
+    },
+  },
 };
+const CATALOG_PROMO_BADGE = "-10%";
+let catalogPriceBySource = {};
 
-function obtenerPrecioListaCatalogo43(value) {
+function obtenerConfiguracionPrecioCatalogo(source = CATALOG_SOURCE) {
+  return CATALOG_PROMO_CONFIG_BY_SOURCE[source] || null;
+}
+
+function normalizarMapaPreciosCatalogo(rawItems) {
+  const entries = rawItems && typeof rawItems === "object" ? Object.entries(rawItems) : [];
+  return entries.reduce((acc, [rawSku, rawPrice]) => {
+    const sku = normalizarSkuCatalogo(rawSku);
+    const price = Number(rawPrice);
+    if (!sku || !Number.isFinite(price) || price <= 0) return acc;
+    acc[sku] = price;
+    return acc;
+  }, {});
+}
+
+function obtenerCandidatosSkuPrecio(value) {
   const sku = normalizarSkuCatalogo(typeof value === "string" ? value : value?.family || value?.sku);
-  return Number(CATALOG_43_PRICE_BY_SKU[sku]) || null;
+  if (!sku) return [];
+  const candidates = [sku];
+  const familyMatch = sku.match(/^(\d{4})$/);
+  if (familyMatch) candidates.push(`${familyMatch[1]}-00`);
+  const zeroVariantMatch = sku.match(/^(\d{4})-00$/);
+  if (zeroVariantMatch) candidates.push(zeroVariantMatch[1]);
+  return [...new Set(candidates)];
 }
 
-function obtenerPrecioCatalogo43(value) {
-  if (CATALOG_SOURCE !== "catalogo-43") return null;
-  const precioLista = obtenerPrecioListaCatalogo43(value);
+async function cargarMapaPreciosCatalogo(source = CATALOG_SOURCE) {
+  const config = obtenerConfiguracionPrecioCatalogo(source);
+  if (!config) return {};
+  if (config.inlinePrices) return normalizarMapaPreciosCatalogo(config.inlinePrices);
+  if (!config.priceFile) return {};
+  const res = await fetch(withCacheBust(config.priceFile), { cache: "no-store" });
+  if (!res.ok) throw new Error(`status ${res.status}`);
+  const data = await res.json();
+  return normalizarMapaPreciosCatalogo(data?.items || {});
+}
+
+function obtenerPrecioListaCatalogo(value, source = CATALOG_SOURCE) {
+  const priceMap = catalogPriceBySource[source] || {};
+  const candidates = obtenerCandidatosSkuPrecio(value);
+  for (const sku of candidates) {
+    const price = Number(priceMap[sku]);
+    if (Number.isFinite(price) && price > 0) return price;
+  }
+  return null;
+}
+
+function obtenerPrecioCatalogo(value, source = CATALOG_SOURCE) {
+  const config = obtenerConfiguracionPrecioCatalogo(source);
+  if (!config) return null;
+  const precioLista = obtenerPrecioListaCatalogo(value, source);
   if (!precioLista) return null;
-  return Math.round(precioLista * (1 - CATALOG_43_MOTHERS_DAY_DISCOUNT));
+  return Math.round(precioLista * (1 - Number(config.discount || 0)));
 }
 
-function obtenerDetallePrecioCatalogo43(value) {
-  if (CATALOG_SOURCE !== "catalogo-43") return null;
-  const precioLista = obtenerPrecioListaCatalogo43(value);
-  const precioFinal = obtenerPrecioCatalogo43(value);
+function obtenerDetallePrecioCatalogo(value, source = CATALOG_SOURCE) {
+  const config = obtenerConfiguracionPrecioCatalogo(source);
+  if (!config) return null;
+  const precioLista = obtenerPrecioListaCatalogo(value, source);
+  const precioFinal = obtenerPrecioCatalogo(value, source);
   if (!precioLista || !precioFinal) return null;
   return {
     lista: precioLista,
     final: precioFinal,
-    descuento: CATALOG_43_MOTHERS_DAY_DISCOUNT,
+    descuento: Number(config.discount || 0),
     ahorro: Math.max(0, precioLista - precioFinal),
   };
 }
@@ -1546,6 +1600,10 @@ function filtrarProductosDisponiblesCole42(items = [], trazabilidadData = null) 
 async function cargarProductosCatalogo() {
   try {
     const catalogPromise = fetch(withCacheBust(CATALOG_DATA_FILE)).then((res) => res.json());
+    const priceDataPromise = cargarMapaPreciosCatalogo(CATALOG_SOURCE).catch((err) => {
+      console.warn(`No se pudo cargar precios promo para ${CATALOG_SOURCE}:`, err);
+      return {};
+    });
     const stockPromise = INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43"
       ? cargarStockDatasetPreferido().catch((err) => {
         if (CATALOG_SOURCE === "catalogo-43") {
@@ -1578,8 +1636,9 @@ async function cargarProductosCatalogo() {
       })
       : Promise.resolve(null);
 
-    const [data, stockData, extraCatalogData, catalog42Data, catalog42PresenceData, catalogCoverMapData, stockOverridesData, trazabilidadData] = await Promise.all([
+    const [data, priceData, stockData, extraCatalogData, catalog42Data, catalog42PresenceData, catalogCoverMapData, stockOverridesData, trazabilidadData] = await Promise.all([
       catalogPromise,
+      priceDataPromise,
       stockPromise,
       extraCatalogPromise,
       catalog42Promise,
@@ -1588,6 +1647,11 @@ async function cargarProductosCatalogo() {
       stockOverridesPromise,
       trazabilidadPromise,
     ]);
+
+    catalogPriceBySource = {
+      ...catalogPriceBySource,
+      [CATALOG_SOURCE]: priceData || {},
+    };
 
     if (INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43") {
       stockBySku = {
@@ -2116,14 +2180,14 @@ function actualizarEstadoCotizacionProducto(producto, sku) {
   const titleEl = document.getElementById("modalTitle");
   const quotePanelModelTitle = document.getElementById("quotePanelModelTitle");
   const descriptionEl = document.getElementById("description");
-  const precio43 = obtenerPrecioCatalogo43(sku || producto?.family);
+  const detallePrecio = obtenerDetallePrecioCatalogo(sku || producto?.family);
   if (titleEl) {
     titleEl.innerText = agotado ? `Modelo ${skuLabel} - Agotado` : "Modelo " + skuLabel;
   }
   if (quotePanelModelTitle) quotePanelModelTitle.innerText = "Modelo " + skuLabel;
-  if (descriptionEl && precio43 && CATALOG_SOURCE !== "catalogo-43") {
+  if (descriptionEl && detallePrecio && CATALOG_SOURCE !== "catalogo-43") {
     const textoBase = normalizarTextoVisible(producto?.description || "");
-    descriptionEl.innerText = `${textoBase}${textoBase ? " · " : ""}Precio mayor s/iva: ${formatearPrecioCLP(precio43)}`;
+    descriptionEl.innerText = `${textoBase}${textoBase ? " · " : ""}Precio oferta mayor s/iva: ${formatearPrecioCLP(detallePrecio.final)}`;
   }
   if (imageViewerEl) {
     imageViewerEl.classList.toggle("is-sold-out", agotado);
@@ -2515,18 +2579,18 @@ function renderGrid(lista) {
   container.innerHTML = listaOrdenada
     .map(
       (p, index) => {
-        const detallePrecio43 = obtenerDetallePrecioCatalogo43(p);
+        const detallePrecio = obtenerDetallePrecioCatalogo(p);
         return `
       <div class="card ${esProductoAgotado(p) ? "card-sold-out" : ""}" data-family="${p.family}" onclick="verProductoDesdeCard('${p._baseFamily || p.family}','${p._preferredSku || p.family}')">
         <div class="card-title-row">
           <div class="card-title-block">
             <div class="card-title">Modelo ${normalizarSkuCatalogo(p.family)}</div>
             ${
-              detallePrecio43
+              detallePrecio
                 ? `<div class="card-price">
-                    <span class="card-price-current">${formatearPrecioCLP(detallePrecio43.final)}</span>
-                    <span class="card-price-original">${formatearPrecioCLP(detallePrecio43.lista)}</span>
-                    <span class="card-price-badge">-10%</span>
+                    <span class="card-price-current">${formatearPrecioCLP(detallePrecio.final)}</span>
+                    <span class="card-price-original">${formatearPrecioCLP(detallePrecio.lista)}</span>
+                    <span class="card-price-badge">${CATALOG_PROMO_BADGE}</span>
                   </div>`
                 : ""
             }
@@ -2612,8 +2676,7 @@ function verProducto(familyId, preferredSku = "") {
   const descriptionEl = document.getElementById("description");
   const charList = document.getElementById("characteristics");
   const hasCharacteristics = Array.isArray(p.characteristics) && p.characteristics.length;
-  const precio43 = obtenerPrecioCatalogo43(skuInicial);
-  const detallePrecio43 = obtenerDetallePrecioCatalogo43(skuInicial);
+  const detallePrecio = obtenerDetallePrecioCatalogo(skuInicial);
 
   if (CATALOG_SOURCE === "catalogo-43") {
     const sku43 = normalizarSkuCatalogo(skuInicial || p.family);
@@ -2639,13 +2702,13 @@ function verProducto(familyId, preferredSku = "") {
         li.innerText = parte;
         ul.appendChild(li);
       });
-      if (detallePrecio43) {
+      if (detallePrecio) {
         const liPromo = document.createElement("li");
-        liPromo.innerText = `Precio oferta Día de la Madre: ${formatearPrecioCLP(detallePrecio43.final)}`;
+        liPromo.innerText = `Precio oferta Día de la Madre: ${formatearPrecioCLP(detallePrecio.final)}`;
         ul.appendChild(liPromo);
 
         const liLista = document.createElement("li");
-        liLista.innerText = `Precio lista: ${formatearPrecioCLP(detallePrecio43.lista)} · Descuento: 10%`;
+        liLista.innerText = `Precio lista: ${formatearPrecioCLP(detallePrecio.lista)} · Descuento: 10%`;
         ul.appendChild(liLista);
       }
       charList.appendChild(ul);
@@ -2653,7 +2716,7 @@ function verProducto(familyId, preferredSku = "") {
   } else {
     descriptionEl.innerText = hasCharacteristics
       ? ""
-      : normalizarTextoVisible(p.description || "") + (precio43 ? ` · Precio mayor s/iva: ${formatearPrecioCLP(precio43)}` : "");
+      : normalizarTextoVisible(p.description || "") + (detallePrecio ? ` · Precio oferta mayor s/iva: ${formatearPrecioCLP(detallePrecio.final)}` : "");
     descriptionEl.style.display = hasCharacteristics || !p.description ? "none" : "block";
 
     charList.innerHTML = "";
@@ -2665,10 +2728,14 @@ function verProducto(familyId, preferredSku = "") {
         li.innerText = normalizarTextoVisible(char);
         ul.appendChild(li);
       });
-      if (precio43) {
-        const li = document.createElement("li");
-        li.innerText = `Precio mayor s/iva: ${formatearPrecioCLP(precio43)}`;
-        ul.appendChild(li);
+      if (detallePrecio) {
+        const liPromo = document.createElement("li");
+        liPromo.innerText = `Precio oferta mayor s/iva: ${formatearPrecioCLP(detallePrecio.final)}`;
+        ul.appendChild(liPromo);
+
+        const liLista = document.createElement("li");
+        liLista.innerText = `Precio lista: ${formatearPrecioCLP(detallePrecio.lista)} · Descuento: 10%`;
+        ul.appendChild(liLista);
       }
       charList.appendChild(ul);
     }
@@ -2801,9 +2868,9 @@ function actualizarCarrito() {
     container.innerHTML = pedido
       .map((item, index) => {
         const cantidadModelo = Object.values(item.tallas).reduce((acc, qty) => acc + (Number(qty) || 0), 0);
-        const detallePrecio43 = obtenerDetallePrecioCatalogo43(item.sku);
-        const precioListaUnitario = detallePrecio43?.lista || null;
-        const precioUnitario = obtenerPrecioCatalogo43(item.sku);
+        const detallePrecio = obtenerDetallePrecioCatalogo(item.sku);
+        const precioListaUnitario = detallePrecio?.lista || null;
+        const precioUnitario = detallePrecio?.final || null;
         const subtotalLista = precioListaUnitario ? precioListaUnitario * cantidadModelo : 0;
         const subtotal = precioUnitario ? precioUnitario * cantidadModelo : 0;
         totalItems += cantidadModelo;
@@ -4476,13 +4543,7 @@ function calcularMontoCotizacion(quote = {}, items = []) {
     if (qty <= 0) return;
     const sku = normalizarSkuCatalogo(item?.sku);
     if (!sku) return;
-    let precioUnitario = null;
-    if (source === "catalogo-43" || CATALOG_43_PRICE_BY_SKU[sku]) {
-      const precioLista = obtenerPrecioListaCatalogo43(sku);
-      if (precioLista) {
-        precioUnitario = Math.round(precioLista * (1 - CATALOG_43_MOTHERS_DAY_DISCOUNT));
-      }
-    }
+    const precioUnitario = obtenerPrecioCatalogo(sku, source || CATALOG_SOURCE);
     if (!precioUnitario) return;
     total += precioUnitario * qty;
     hasPrice = true;
