@@ -522,10 +522,9 @@ function formatearPrecioCLP(value) {
 }
 
 function stockSupabaseHabilitado() {
-  // La vitrina pública debe seguir funcionando aunque Supabase esté vacío,
-  // con RLS reciente o con datos en validación. Para el storefront usamos
-  // siempre el JSON regenerado desde el Excel y dejamos Supabase para el admin.
-  return false;
+  // Solo la coleccion 42 debe leer stock en vivo desde Supabase.
+  // Si la lectura falla, el storefront vuelve al JSON regenerado desde Excel.
+  return CATALOG_SOURCE === "catalogo-1";
 }
 
 async function cargarStockJsonLocal() {
@@ -2821,7 +2820,7 @@ function actualizarCarrito() {
           </div>
           <div class="cart-item-sizes">${tallasHtml}</div>
           <div class="cart-item-summary">
-            <div>Prendas: <strong>${cantidadModelo}</strong></div>
+            <div>Prendas modelo: <strong>${cantidadModelo}</strong></div>
             ${
               precioUnitario
                 ? `<div>Subtotal oferta: <strong>${formatearPrecioCLP(subtotal)}</strong></div>
@@ -2848,6 +2847,7 @@ function actualizarCarrito() {
   }
 
   totalsBox.innerHTML = `
+    <div class="cart-totals-head"><span class="cart-totals-title">Resumen total</span></div>
     <div class="cart-totals-row"><span>Total prendas</span><strong>${totalItems}</strong></div>
     ${totalLista > 0 ? `<div class="cart-totals-row"><span>Total lista</span><strong><s>${formatearPrecioCLP(totalLista)}</s></strong></div>` : ""}
     ${totalEstimado > 0 ? `<div class="cart-totals-row"><span>Total estimado</span><strong>${formatearPrecioCLP(totalEstimado)}</strong></div>` : ""}
@@ -2981,6 +2981,7 @@ function generarCSVQuoteAdmin(quote, items = []) {
   rows.push(["RESUMEN COTIZACION"]);
   rows.push(["Codigo", codigo]);
   rows.push(["Tienda", quote?.store_name || ""]);
+  rows.push(["Telefono", quote?.client_phone || ""]);
   rows.push(["Estado", estado]);
   rows.push(["Fecha", fecha]);
   rows.push(["Total items", quote?.total_items || 0]);
@@ -3129,6 +3130,7 @@ async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
   sheet.cell("U1").value(codigo);
   sheet.cell("K5").value(quote?.client_rut || "");
   sheet.cell("K8").value(new Date());
+  sheet.cell("K6").value(quote?.client_phone || "");
 
   grouped.forEach((entry, index) => {
     const row = ORDER_TEMPLATE_FIRST_ROW + index;
@@ -3148,6 +3150,7 @@ function generarExcelHtmlQuoteAdmin(quote, items = []) {
   const codigo = generarCodigoCotizacionVisual(quote);
   const estado = quote?.is_ready ? "Cotización lista" : "En proceso";
   const rut = quote?.client_rut || "";
+  const telefono = quote?.client_phone || "";
 
   const ordered = [...items].sort((a, b) => {
     if (String(a.sku) !== String(b.sku)) return String(a.sku).localeCompare(String(b.sku));
@@ -3199,6 +3202,7 @@ function generarExcelHtmlQuoteAdmin(quote, items = []) {
     <tr><td class="label">Codigo</td><td class="value" colspan="2">${escapeHtmlExcel(codigo)}</td></tr>
     <tr><td class="label">Tienda</td><td class="value" colspan="2">${escapeHtmlExcel(quote?.store_name || "")}</td></tr>
     <tr><td class="label">RUT</td><td class="value" colspan="2">${escapeHtmlExcel(rut)}</td></tr>
+    <tr><td class="label">Telefono</td><td class="value" colspan="2">${escapeHtmlExcel(telefono)}</td></tr>
     <tr><td class="label">Estado</td><td class="${quote?.is_ready ? "pill" : "pill warn"}" colspan="2">${escapeHtmlExcel(estado)}</td></tr>
     <tr><td class="label">Fecha</td><td class="value" colspan="2">${escapeHtmlExcel(fecha)}</td></tr>
     <tr><td class="label">Total items</td><td class="value num" colspan="2">${escapeHtmlExcel(quote?.total_items || 0)}</td></tr>
@@ -3365,6 +3369,45 @@ function setClientLookupUI({ tipo = "", texto = "", badge = "" } = {}) {
   }
 }
 
+function setCartFieldInvalid(inputEl, message = "") {
+  if (!inputEl) return;
+  inputEl.classList.add("cart-field-invalid");
+  if (message) {
+    inputEl.setCustomValidity(message);
+  }
+  const labelEl = inputEl.id ? document.querySelector(`label[for="${inputEl.id}"]`) : null;
+  labelEl?.classList.add("is-invalid");
+}
+
+function clearCartFieldInvalid(inputEl) {
+  if (!inputEl) return;
+  inputEl.classList.remove("cart-field-invalid");
+  inputEl.setCustomValidity("");
+  const labelEl = inputEl.id ? document.querySelector(`label[for="${inputEl.id}"]`) : null;
+  labelEl?.classList.remove("is-invalid");
+}
+
+function clearCartFieldInvalidState() {
+  clearCartFieldInvalid(document.getElementById("clientRut"));
+  clearCartFieldInvalid(document.getElementById("clientName"));
+  clearCartFieldInvalid(document.getElementById("clientPhone"));
+}
+
+function renderClientNewHelper(show, text = "Completa nombre y teléfono para enviar la cotización del cliente nuevo.") {
+  const panelEl = document.querySelector(".cart-client-panel");
+  if (!panelEl) return;
+  let helpEl = document.getElementById("clientNewHelper");
+  if (!helpEl) {
+    helpEl = document.createElement("div");
+    helpEl.id = "clientNewHelper";
+    helpEl.className = "cart-client-help";
+    panelEl.appendChild(helpEl);
+  }
+  panelEl.classList.toggle("has-new-client", !!show);
+  helpEl.hidden = !show;
+  helpEl.innerText = show ? text : "";
+}
+
 function toggleClientNameField(show, { value = "", readonly = false } = {}) {
   const wrapEl = document.getElementById("clientNameWrap");
   const inputEl = document.getElementById("clientName");
@@ -3374,9 +3417,36 @@ function toggleClientNameField(show, { value = "", readonly = false } = {}) {
   inputEl.readOnly = !!readonly;
   inputEl.value = value || "";
   inputEl.classList.toggle("is-readonly", !!readonly);
+  wrapEl.classList.toggle("is-highlighted", !!show && !readonly);
   if (labelEl) {
     labelEl.innerText = "Nombre o razón social";
   }
+}
+
+function toggleClientPhoneField(show, { value = "", readonly = false } = {}) {
+  const wrapEl = document.getElementById("clientPhoneWrap");
+  const inputEl = document.getElementById("clientPhone");
+  const labelEl = document.querySelector('label[for="clientPhone"]');
+  if (!wrapEl || !inputEl) return;
+  wrapEl.hidden = !show;
+  inputEl.readOnly = !!readonly;
+  inputEl.value = value || "";
+  inputEl.classList.toggle("is-readonly", !!readonly);
+  wrapEl.classList.toggle("is-highlighted", !!show && !readonly);
+  if (labelEl) {
+    labelEl.innerText = "Teléfono del cliente";
+  }
+}
+
+function normalizarTelefonoCliente(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const cleaned = raw.replace(/[^\d+]/g, "");
+  if (!cleaned) return "";
+  if (cleaned.startsWith("+")) {
+    return `+${cleaned.slice(1).replace(/\+/g, "")}`;
+  }
+  return cleaned;
 }
 
 function habilitarInputManual(inputEl) {
@@ -3397,11 +3467,14 @@ function habilitarInputManual(inputEl) {
 
 function construirClienteNuevoDesdeInput(rutNormalizado) {
   const nameEl = document.getElementById("clientName");
+  const phoneEl = document.getElementById("clientPhone");
   const nombre = String(nameEl?.value || "").trim();
+  const telefono = normalizarTelefonoCliente(phoneEl?.value || "");
   return {
     rut: formatearRutVisual(rutNormalizado),
     rut_normalized: rutNormalizado,
     razon_social: nombre,
+    client_phone: telefono,
     is_new: true,
   };
 }
@@ -3444,13 +3517,17 @@ async function validarRutClienteEnUI({ silencioso = false } = {}) {
   clienteSeleccionado = null;
 
   if (!rutNormalizado) {
+    renderClientNewHelper(false);
     setClientLookupUI();
     toggleClientNameField(false);
+    toggleClientPhoneField(false);
     return null;
   }
 
   if (!/^[0-9]+-[0-9K]$/i.test(rutNormalizado) || !esRutValido(rutNormalizado)) {
+    renderClientNewHelper(false);
     toggleClientNameField(false);
+    toggleClientPhoneField(false);
     if (!silencioso) setClientLookupUI({ tipo: "error", texto: "Formato de RUT inválido" });
     return null;
   }
@@ -3463,9 +3540,11 @@ async function validarRutClienteEnUI({ silencioso = false } = {}) {
       const clienteNuevo = construirClienteNuevoDesdeInput(rutNormalizado);
       setClientLookupUI({
         tipo: "new",
-        texto: "Cliente nuevo. Agrega su nombre o razón social y envía la cotización.",
+        texto: "Cliente nuevo detectado.",
       });
+      renderClientNewHelper(true, "Completa nombre y teléfono del cliente nuevo para enviar la cotización.");
       toggleClientNameField(true, { value: clienteNuevo.razon_social, readonly: false });
+      toggleClientPhoneField(true, { value: clienteNuevo.client_phone, readonly: false });
       return clienteNuevo;
     }
     clienteSeleccionado = cliente;
@@ -3475,11 +3554,15 @@ async function validarRutClienteEnUI({ silencioso = false } = {}) {
       texto: "Cliente encontrado",
       badge: cliente.razon_social,
     });
+    renderClientNewHelper(false);
     toggleClientNameField(false);
+    toggleClientPhoneField(false);
     return cliente;
   } catch (err) {
+    renderClientNewHelper(false);
     setClientLookupUI({ tipo: "error", texto: err.message || "No se pudo validar RUT" });
     toggleClientNameField(false);
+    toggleClientPhoneField(false);
     return null;
   }
 }
@@ -3487,14 +3570,19 @@ async function validarRutClienteEnUI({ silencioso = false } = {}) {
 function configurarLookupCliente() {
   const input = document.getElementById("clientRut");
   const nameInput = document.getElementById("clientName");
+  const phoneInput = document.getElementById("clientPhone");
   if (!input) return;
   habilitarInputManual(input);
   habilitarInputManual(nameInput);
+  habilitarInputManual(phoneInput);
   input.addEventListener("input", () => {
     input.value = formatearRutVisual(input.value);
     clienteSeleccionado = null;
+    clearCartFieldInvalid(input);
     setClientLookupUI();
+    renderClientNewHelper(false);
     toggleClientNameField(false);
+    toggleClientPhoneField(false);
     window.clearTimeout(clientLookupDebounce);
     clientLookupDebounce = window.setTimeout(() => {
       validarRutClienteEnUI({ silencioso: true });
@@ -3506,14 +3594,37 @@ function configurarLookupCliente() {
   });
   nameInput?.addEventListener("input", () => {
     if (clienteSeleccionado) return;
+    clearCartFieldInvalid(nameInput);
     const rutNormalizado = normalizarRut(input.value);
     if (!rutNormalizado || !esRutValido(rutNormalizado)) return;
     const nombre = String(nameInput.value || "").trim();
+    const telefono = normalizarTelefonoCliente(phoneInput?.value || "");
+    renderClientNewHelper(true, nombre && telefono
+      ? "Cliente nuevo listo. Ya puedes enviar la cotización."
+      : "Completa nombre y teléfono del cliente nuevo para enviar la cotización.");
     setClientLookupUI({
       tipo: "new",
-      texto: nombre
+      texto: nombre && telefono
         ? "Cliente nuevo listo. Ya puedes enviar la cotización."
-        : "Cliente nuevo. Agrega su nombre o razón social para enviar la cotización.",
+        : "Cliente nuevo. Agrega nombre y teléfono para enviar la cotización.",
+    });
+  });
+  phoneInput?.addEventListener("input", () => {
+    if (clienteSeleccionado) return;
+    phoneInput.value = normalizarTelefonoCliente(phoneInput.value);
+    clearCartFieldInvalid(phoneInput);
+    const rutNormalizado = normalizarRut(input.value);
+    if (!rutNormalizado || !esRutValido(rutNormalizado)) return;
+    const nombre = String(nameInput?.value || "").trim();
+    const telefono = normalizarTelefonoCliente(phoneInput.value || "");
+    renderClientNewHelper(true, nombre && telefono
+      ? "Cliente nuevo listo. Ya puedes enviar la cotización."
+      : "Completa nombre y teléfono del cliente nuevo para enviar la cotización.");
+    setClientLookupUI({
+      tipo: "new",
+      texto: nombre && telefono
+        ? "Cliente nuevo listo. Ya puedes enviar la cotización."
+        : "Cliente nuevo. Agrega nombre y teléfono para enviar la cotización.",
     });
   });
 }
@@ -3521,10 +3632,14 @@ function configurarLookupCliente() {
 async function obtenerClienteParaCotizacion() {
   const rutEl = document.getElementById("clientRut");
   const nameEl = document.getElementById("clientName");
+  const phoneEl = document.getElementById("clientPhone");
+  clearCartFieldInvalidState();
   const clienteValidado = clienteSeleccionado || await validarRutClienteEnUI();
   const rutNormalizado = normalizarRut(rutEl?.value || "");
 
   if (!rutNormalizado || !esRutValido(rutNormalizado)) {
+    setCartFieldInvalid(rutEl, "Ingresa un RUT válido");
+    rutEl?.focus();
     throw new Error("Ingresa un RUT válido");
   }
 
@@ -3533,20 +3648,37 @@ async function obtenerClienteParaCotizacion() {
   }
 
   const nombre = String(nameEl?.value || "").trim();
+  const telefono = normalizarTelefonoCliente(phoneEl?.value || "");
   if (!nombre) {
     toggleClientNameField(true, { value: "", readonly: false });
+    toggleClientPhoneField(true, { value: telefono, readonly: false });
+    renderClientNewHelper(true, "Completa nombre y teléfono del cliente nuevo para enviar la cotización.");
+    setCartFieldInvalid(nameEl, "Completa el nombre o razón social");
     setClientLookupUI({
       tipo: "error",
-      texto: "Agrega el nombre o razón social del cliente nuevo para enviar la cotización.",
+      texto: "Agrega nombre y teléfono del cliente nuevo para enviar la cotización.",
     });
     nameEl?.focus();
     throw new Error("Agrega el nombre o razón social del cliente nuevo para enviar la cotización");
+  }
+  if (!telefono) {
+    toggleClientNameField(true, { value: nombre, readonly: false });
+    toggleClientPhoneField(true, { value: "", readonly: false });
+    renderClientNewHelper(true, "Completa nombre y teléfono del cliente nuevo para enviar la cotización.");
+    setCartFieldInvalid(phoneEl, "Completa el teléfono del cliente");
+    setClientLookupUI({
+      tipo: "error",
+      texto: "Agrega el teléfono del cliente nuevo para enviar la cotización.",
+    });
+    phoneEl?.focus();
+    throw new Error("Agrega el teléfono del cliente nuevo para enviar la cotización");
   }
 
   return {
     rut: formatearRutVisual(rutNormalizado),
     rut_normalized: rutNormalizado,
     razon_social: nombre,
+    client_phone: telefono,
     is_new: true,
   };
 }
@@ -3574,6 +3706,7 @@ function construirPayloadCotizacion(cliente) {
       store_name: cliente?.razon_social || "",
       client_rut: cliente?.rut || cliente?.rut_normalized || null,
       client_rut_normalized: cliente?.rut_normalized || normalizarRut(cliente?.rut || ""),
+      client_phone: cliente?.client_phone || null,
       total_items: totalItems,
       created_at_client: createdAtIso,
       source: CATALOG_SOURCE,
@@ -3604,7 +3737,23 @@ async function guardarCotizacionSupabase(cliente) {
 
   if (!quoteRes.ok) {
     const errText = await quoteRes.text();
-    throw new Error(`Error guardando cotizacion: ${errText || quoteRes.status}`);
+    if ((errText || "").toLowerCase().includes("client_phone")) {
+      const fallbackQuote = { ...payload.quote };
+      delete fallbackQuote.client_phone;
+      const retryRes = await fetch(`${SUPABASE_URL}/rest/v1/quotes`, {
+        method: "POST",
+        headers: { ...headers, Prefer: "return=minimal" },
+        body: JSON.stringify([fallbackQuote]),
+      });
+      if (retryRes.ok) {
+        payload.quote = fallbackQuote;
+      } else {
+        const retryTxt = await retryRes.text();
+        throw new Error(`Error guardando cotizacion: ${retryTxt || retryRes.status}`);
+      }
+    } else {
+      throw new Error(`Error guardando cotizacion: ${errText || quoteRes.status}`);
+    }
   }
 
   const quoteId = payload.quote.id;
@@ -4377,7 +4526,7 @@ function construirTextoReporteCotizacionesWhatsApp(quotes = []) {
       lines.push(
         "",
         `${index + 1}. ${q.store_name || "Sin cliente"} · ${codigo}`,
-        `RUT: ${q.client_rut || "Sin RUT"}`,
+        `RUT: ${q.client_rut || "Sin RUT"}${q.client_phone ? ` · Teléfono: ${q.client_phone}` : ""}`,
         `Estado: ${q.is_ready ? "Lista" : "No lista / caída"}`,
         `Prendas: ${q.total_items || 0}${monto ? ` · Monto: ${formatearPrecioCLP(monto)}` : ""}`,
         ...construirBloqueDetalleReporte(q, detalles)
@@ -4427,6 +4576,7 @@ function construirVistaReporteCotizaciones(quotes = [], itemsMap = new Map()) {
         </div>
         <div class="quotes-report-preview-meta">
           <div><span>RUT</span><strong>${escapeHtmlExcel(q.client_rut || "Sin RUT")}</strong></div>
+          ${q.client_phone ? `<div><span>Teléfono</span><strong>${escapeHtmlExcel(q.client_phone)}</strong></div>` : ""}
           <div><span>Estado</span><strong>${escapeHtmlExcel(q.is_ready ? "Lista" : "No lista / caída")}</strong></div>
           <div><span>Fecha</span><strong>${escapeHtmlExcel(fecha)}</strong></div>
           <div><span>Prendas</span><strong>${escapeHtmlExcel(q.total_items || 0)}</strong></div>
@@ -4511,7 +4661,7 @@ function renderReporteCotizacionesAdmin(quotes = []) {
               <div class="quotes-report-detail-head">
                 <div>
                   <div class="quotes-report-detail-client">${q.store_name || "Sin cliente"}</div>
-                  <div class="quotes-report-detail-sub">RUT: ${q.client_rut || "Sin RUT"} · ${codigo}</div>
+                  <div class="quotes-report-detail-sub">RUT: ${q.client_rut || "Sin RUT"}${q.client_phone ? ` · Teléfono: ${q.client_phone}` : ""} · ${codigo}</div>
                 </div>
                 <div class="quotes-report-detail-side">
                   <strong>${q.total_items || 0} prendas</strong>
@@ -4568,6 +4718,7 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
             <div class="quote-card-title-row">
               <div class="quote-card-title">${q.store_name || "Sin tienda"}</div>
               ${q.client_rut ? `<div class="quote-meta quote-meta-inline">RUT: ${q.client_rut}</div>` : ""}
+              ${q.client_phone ? `<div class="quote-meta quote-meta-inline">Tel: ${q.client_phone}</div>` : ""}
             </div>
             <div class="quote-code-row">
               <span class="quote-code-pill">${codigo}</span>
@@ -4653,10 +4804,23 @@ async function cargarCotizacionesAdmin() {
     Authorization: `Bearer ${quotesAccessToken}`,
   };
 
-  const quotesRes = await fetch(
-    `${SUPABASE_URL}/rest/v1/quotes?select=id,store_name,client_rut,client_rut_normalized,total_items,created_at,created_at_client,source,is_ready,ready_at&order=created_at.desc&limit=500`,
+  let quotesRes = await fetch(
+    `${SUPABASE_URL}/rest/v1/quotes?select=id,store_name,client_rut,client_rut_normalized,client_phone,total_items,created_at,created_at_client,source,is_ready,ready_at&order=created_at.desc&limit=500`,
     { headers }
   );
+
+  if (!quotesRes.ok) {
+    const errText = await quotesRes.text();
+    if ((errText || "").toLowerCase().includes("client_phone")) {
+      quotesRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/quotes?select=id,store_name,client_rut,client_rut_normalized,total_items,created_at,created_at_client,source,is_ready,ready_at&order=created_at.desc&limit=500`,
+        { headers }
+      );
+    } else {
+      const passthrough = new Response(errText, { status: quotesRes.status, statusText: quotesRes.statusText });
+      quotesRes = passthrough;
+    }
+  }
 
   if (!quotesRes.ok) {
     if (quotesRes.status === 401 || quotesRes.status === 403) {
@@ -4972,16 +5136,36 @@ function limpiarCarrito() {
   actualizarCarrito();
   const rutEl = document.getElementById("clientRut");
   const nameEl = document.getElementById("clientName");
+  const phoneEl = document.getElementById("clientPhone");
   if (rutEl) rutEl.value = "";
   if (nameEl) nameEl.value = "";
+  if (phoneEl) phoneEl.value = "";
   clienteSeleccionado = null;
+  clearCartFieldInvalidState();
   setClientLookupUI();
+  renderClientNewHelper(false);
   toggleClientNameField(false);
+  toggleClientPhoneField(false);
   document.getElementById("cartSidebar").classList.remove("open");
 }
 
+function resolverTituloErrorCotizacion(error) {
+  const message = String(error?.message || "").toLowerCase();
+  if (message.includes("rut")) return "Falta RUT válido";
+  if (message.includes("nombre") || message.includes("razón social") || message.includes("razon social")) {
+    return "Falta nombre o razón social";
+  }
+  if (message.includes("teléfono") || message.includes("telefono")) return "Falta teléfono";
+  if (message.includes("items") || message.includes("productos") || message.includes("modelos")) {
+    return "Faltan productos";
+  }
+  return "No se pudo enviar";
+}
+
 document.getElementById("sendRequest").onclick = async () => {
-  if (!pedido.length) return mostrarToastError("Hubo un error", "Intentelo nuevamente.");
+  if (!pedido.length) {
+    return mostrarToastError("Faltan productos", "Agrega al menos un modelo antes de enviar la cotización.");
+  }
 
   const btn = document.getElementById("sendRequest");
   const textoOriginal = btn.innerText;
@@ -4989,6 +5173,7 @@ document.getElementById("sendRequest").onclick = async () => {
   btn.innerText = "Guardando...";
 
   try {
+    clearCartFieldInvalidState();
     const cliente = await obtenerClienteParaCotizacion();
     btn.innerText = "Guardando cotización...";
     await guardarCotizacionSupabase(cliente);
@@ -4997,7 +5182,10 @@ document.getElementById("sendRequest").onclick = async () => {
     limpiarCarrito();
   } catch (error) {
     console.error(error);
-    mostrarToastError("No se pudo enviar", error?.message || "Inténtalo nuevamente.");
+    mostrarToastError(
+      resolverTituloErrorCotizacion(error),
+      error?.message || "Revisa los datos ingresados e inténtalo nuevamente."
+    );
   } finally {
     btn.disabled = false;
     btn.innerText = textoOriginal;
