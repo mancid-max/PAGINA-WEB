@@ -4368,8 +4368,12 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
     });
     const detalleAgrupado = agruparDetallePorModelo(detalles);
     const fecha = q.created_at ? new Date(q.created_at).toLocaleString() : "-";
+    const fechaCliente = q.created_at_client ? new Date(q.created_at_client).toLocaleString() : fecha;
+    const fechaLista = q.ready_at ? new Date(q.ready_at).toLocaleString() : "Pendiente";
     const isReady = !!q.is_ready;
     const codigo = generarCodigoCotizacionVisual(q);
+    const totalPrendas = Number(q.total_items) || 0;
+    const totalModelos = detalleAgrupado.length;
     return `
       <div class="quote-card" data-quote-id="${q.id}">
         <div class="quote-card-head">
@@ -4385,8 +4389,34 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
             </div>
           </div>
           <div class="quote-card-summary">
-            <div class="quote-card-total">Total items: ${q.total_items || 0}</div>
+            <div class="quote-card-total">Total prendas: ${totalPrendas}</div>
             <div class="quote-card-date">${fecha}</div>
+          </div>
+        </div>
+        <div class="quote-detail-meta-grid">
+          <div class="quote-detail-meta-box">
+            <span>Cliente</span>
+            <strong>${q.store_name || "Sin nombre"}</strong>
+          </div>
+          <div class="quote-detail-meta-box">
+            <span>RUT</span>
+            <strong>${q.client_rut || "Sin RUT"}</strong>
+          </div>
+          <div class="quote-detail-meta-box">
+            <span>Modelos</span>
+            <strong>${totalModelos}</strong>
+          </div>
+          <div class="quote-detail-meta-box">
+            <span>Fecha solicitud</span>
+            <strong>${fechaCliente}</strong>
+          </div>
+          <div class="quote-detail-meta-box">
+            <span>Estado</span>
+            <strong>${isReady ? "Lista" : "No lista / caída"}</strong>
+          </div>
+          <div class="quote-detail-meta-box">
+            <span>Fecha lista</span>
+            <strong>${fechaLista}</strong>
           </div>
         </div>
         <div class="quote-status">
@@ -4401,11 +4431,12 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
         <div class="quote-items-grid">
           ${detalleAgrupado.length
             ? detalleAgrupado.map((g) => {
+              const totalModelo = Object.values(g.tallas).reduce((acc, qty) => acc + (Number(qty) || 0), 0);
               const tallasTxt = Object.entries(g.tallas)
                 .sort((a, b) => String(a[0]).localeCompare(String(b[0]), undefined, { numeric: true }))
                 .map(([t, q]) => `T${t}: <strong>${q}</strong>`)
                 .join(" · ");
-              return `<div class="quote-item-line"><span class="quote-item-model">Modelo ${g.sku}</span><span class="quote-item-sizes">${tallasTxt}</span></div>`;
+              return `<div class="quote-item-line"><span class="quote-item-model">Modelo ${g.sku}</span><span class="quote-item-qty">Total: <strong>${totalModelo}</strong></span><span class="quote-item-sizes">${tallasTxt}</span></div>`;
             }).join("")
             : `<div class="quote-item-line">Sin detalle</div>`
           }
