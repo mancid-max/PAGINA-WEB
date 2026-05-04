@@ -14,6 +14,7 @@ let quotesAdminCache = { quotes: [], itemsByQuote: new Map() };
 let trazabilidadCache = [];
 let trazabilidadMeta = null;
 let adminActiveTab = "cotizaciones";
+let quotesStatusFilter = "all";
 let trazabilidadDisponibles = [];
 let clienteSeleccionado = null; // { rut, rut_normalized, razon_social }
 let clientLookupDebounce = null;
@@ -4262,9 +4263,91 @@ function agruparDetallePorModelo(items = []) {
   return [...map.entries()].map(([sku, tallas]) => ({ sku, tallas }));
 }
 
+function obtenerCotizacionesFiltradas(quotes = []) {
+  if (quotesStatusFilter === "ready") return quotes.filter((q) => !!q.is_ready);
+  if (quotesStatusFilter === "open") return quotes.filter((q) => !q.is_ready);
+  return quotes;
+}
+
+function obtenerCotizacionesMesActual(quotes = []) {
+  const now = new Date();
+  const month = now.getMonth();
+  const year = now.getFullYear();
+  return quotes.filter((q) => {
+    if (!q?.created_at) return false;
+    const date = new Date(q.created_at);
+    return !Number.isNaN(date.getTime()) && date.getMonth() === month && date.getFullYear() === year;
+  });
+}
+
+function obtenerEtiquetaMesActual() {
+  return new Date().toLocaleDateString("es-CL", { month: "long", year: "numeric" });
+}
+
+function construirTextoReporteCotizacionesWhatsApp(quotes = []) {
+  const quotesMes = obtenerCotizacionesMesActual(quotes);
+  const total = quotesMes.length;
+  const listas = quotesMes.filter((q) => !!q.is_ready).length;
+  const caidas = total - listas;
+  const pctListas = total ? Math.round((listas / total) * 100) : 0;
+  const pctCaidas = total ? Math.round((caidas / total) * 100) : 0;
+  const mesLabel = obtenerEtiquetaMesActual();
+  return [
+    `*Reporte de cotizaciones ${mesLabel}*`,
+    `Total cotizaciones: ${total}`,
+    `Cotizaciones listas: ${listas} (${pctListas}%)`,
+    `Cotizaciones no listas / caídas: ${caidas} (${pctCaidas}%)`,
+  ].join("\n");
+}
+
+function renderReporteCotizacionesAdmin(quotes = []) {
+  const panel = document.getElementById("quotesReportPanel");
+  if (!panel) return;
+  const quotesMes = obtenerCotizacionesMesActual(quotes);
+  const total = quotesMes.length;
+  const listas = quotesMes.filter((q) => !!q.is_ready).length;
+  const caidas = total - listas;
+  const mesLabel = obtenerEtiquetaMesActual();
+  const reportText = construirTextoReporteCotizacionesWhatsApp(quotes);
+
+  panel.innerHTML = `
+    <div class="quotes-report-card">
+      <div class="quotes-report-head">
+        <div>
+          <div class="quotes-report-kicker">Reporte aparte para WhatsApp</div>
+          <div class="quotes-report-title">Resumen ${mesLabel}</div>
+        </div>
+        <button type="button" class="ghost-btn quotes-report-copy-btn" data-copy-quotes-report>Copiar reporte</button>
+      </div>
+      <div class="quotes-report-metrics">
+        <div class="quotes-report-metric">
+          <span>Total</span>
+          <strong>${total}</strong>
+        </div>
+        <div class="quotes-report-metric is-ready">
+          <span>Listas</span>
+          <strong>${listas}</strong>
+        </div>
+        <div class="quotes-report-metric is-open">
+          <span>No listas / caídas</span>
+          <strong>${caidas}</strong>
+        </div>
+      </div>
+      <pre class="quotes-report-text">${reportText}</pre>
+    </div>
+    <div class="quotes-filter-row" id="quotesStatusFilters">
+      <button type="button" class="ghost-btn quotes-filter-btn ${quotesStatusFilter === "all" ? "active" : ""}" data-quotes-filter="all">Todas</button>
+      <button type="button" class="ghost-btn quotes-filter-btn ${quotesStatusFilter === "ready" ? "active" : ""}" data-quotes-filter="ready">Listas</button>
+      <button type="button" class="ghost-btn quotes-filter-btn ${quotesStatusFilter === "open" ? "active" : ""}" data-quotes-filter="open">No listas / caídas</button>
+    </div>
+  `;
+}
+
 function renderCotizacionesAdmin(quotes = [], items = []) {
   const list = document.getElementById("quotesList");
   if (!list) return;
+
+  renderReporteCotizacionesAdmin(quotes);
 
   if (!quotes.length) {
     list.innerHTML = `<div class="quote-card"><div class="quote-meta">No hay cotizaciones para mostrar.</div></div>`;
@@ -4273,7 +4356,12 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
 
   const itemsMap = agruparItemsPorQuote(items);
   quotesAdminCache = { quotes: [...quotes], itemsByQuote: itemsMap };
-  list.innerHTML = quotes.map((q) => {
+  const filteredQuotes = obtenerCotizacionesFiltradas(quotes);
+  if (!filteredQuotes.length) {
+    list.innerHTML = `<div class="quote-card"><div class="quote-meta">No hay cotizaciones en este filtro.</div></div>`;
+    return;
+  }
+  list.innerHTML = filteredQuotes.map((q) => {
     const detalles = (itemsMap.get(q.id) || []).sort((a, b) => {
       if (String(a.sku) !== String(b.sku)) return String(a.sku).localeCompare(String(b.sku));
       return String(a.size).localeCompare(String(b.size), undefined, { numeric: true });
@@ -4303,7 +4391,7 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
         </div>
         <div class="quote-status">
           <div class="quote-status-text ${isReady ? "ready" : ""}">
-            ${isReady ? "Cotización lista" : "En proceso"}
+            ${isReady ? "Cotización lista" : "Cotización no lista / caída"}
           </div>
           <label class="quote-status-toggle">
             <input type="checkbox" class="quote-ready-checkbox" data-quote-id="${q.id}" ${isReady ? "checked" : ""}>
@@ -4375,7 +4463,7 @@ async function cargarCotizacionesAdmin() {
   };
 
   const quotesRes = await fetch(
-    `${SUPABASE_URL}/rest/v1/quotes?select=id,store_name,client_rut,client_rut_normalized,total_items,created_at,created_at_client,source,is_ready,ready_at&order=created_at.desc&limit=50`,
+    `${SUPABASE_URL}/rest/v1/quotes?select=id,store_name,client_rut,client_rut_normalized,total_items,created_at,created_at_client,source,is_ready,ready_at&order=created_at.desc&limit=500`,
     { headers }
   );
 
@@ -4448,6 +4536,7 @@ function configurarPanelCotizaciones() {
   const emailEl = document.getElementById("quotesEmail");
   const passEl = document.getElementById("quotesPassword");
   const quotesListEl = document.getElementById("quotesList");
+  const quotesCotizacionesPanel = document.getElementById("quotesCotizacionesPanel");
 
   const ejecutarLogin = async () => {
     const email = emailEl?.value.trim();
@@ -4553,7 +4642,23 @@ function configurarPanelCotizaciones() {
     }
   });
 
-  quotesListEl?.addEventListener("click", (e) => {
+  quotesCotizacionesPanel?.addEventListener("click", (e) => {
+    const filterBtn = e.target.closest("[data-quotes-filter]");
+    if (filterBtn) {
+      quotesStatusFilter = filterBtn.dataset.quotesFilter || "all";
+      renderCotizacionesAdmin(quotesAdminCache.quotes, [...quotesAdminCache.itemsByQuote.values()].flat());
+      return;
+    }
+
+    const copyReportBtn = e.target.closest("[data-copy-quotes-report]");
+    if (copyReportBtn) {
+      const reportText = construirTextoReporteCotizacionesWhatsApp(quotesAdminCache.quotes);
+      navigator.clipboard?.writeText(reportText)
+        .then(() => mostrarToastExito("Reporte copiado", "Ya puedes pegarlo en WhatsApp."))
+        .catch(() => mostrarToastError("No se pudo copiar", "Copia manualmente el texto del reporte."));
+      return;
+    }
+
     const btn = e.target.closest("[data-quote-export]");
     if (btn) {
       descargarCotizacionAdmin(btn.dataset.quoteExport);

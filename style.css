@@ -1997,6 +1997,105 @@ box-shadow: 0 -10px 18px rgba(255,255,255,0.95), 0 10px 24px rgba(0,0,0,0.16);
   align-self:flex-start;
 }
 
+.quotes-report-panel{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  width:100%;
+}
+
+.quotes-report-card{
+  padding:18px;
+  border-radius:20px;
+  border:1px solid rgba(226,232,240,0.95);
+  background:linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.98));
+}
+
+.quotes-report-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+}
+
+.quotes-report-kicker{
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:#64748b;
+}
+
+.quotes-report-title{
+  margin-top:4px;
+  font-size:24px;
+  font-weight:900;
+  color:#0f172a;
+}
+
+.quotes-report-copy-btn{
+  white-space:nowrap;
+}
+
+.quotes-report-metrics{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0,1fr));
+  gap:12px;
+  margin-top:16px;
+}
+
+.quotes-report-metric{
+  padding:14px 16px;
+  border-radius:16px;
+  border:1px solid rgba(203,213,225,0.95);
+  background:rgba(255,255,255,0.88);
+}
+
+.quotes-report-metric span{
+  display:block;
+  font-size:13px;
+  color:#64748b;
+}
+
+.quotes-report-metric strong{
+  display:block;
+  margin-top:4px;
+  font-size:28px;
+  line-height:1;
+  color:#0f172a;
+}
+
+.quotes-report-metric.is-ready strong{
+  color:#047857;
+}
+
+.quotes-report-metric.is-open strong{
+  color:#b45309;
+}
+
+.quotes-report-text{
+  margin:16px 0 0;
+  padding:14px 16px;
+  border-radius:16px;
+  background:#f8fafc;
+  border:1px solid rgba(226,232,240,0.9);
+  color:#334155;
+  font:600 14px/1.55 "Inter", sans-serif;
+  white-space:pre-wrap;
+}
+
+.quotes-filter-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+.quotes-filter-btn.active{
+  background:#111827;
+  border-color:#111827;
+  color:#ffffff;
+}
+
 .quotes-list{
   flex:1;
   min-height:0;
@@ -3544,6 +3643,19 @@ box-shadow: 0 -10px 18px rgba(255,255,255,0.95), 0 10px 24px rgba(0,0,0,0.16);
     margin-top: 6px;
     padding: 14px;
     border-radius: 14px;
+  }
+
+  .quotes-report-head{
+    flex-direction:column;
+  }
+
+  .quotes-report-copy-btn{
+    width:100%;
+    justify-content:center;
+  }
+
+  .quotes-report-metrics{
+    grid-template-columns:1fr;
   }
 
   .quote-code-row{
