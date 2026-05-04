@@ -139,6 +139,11 @@ const LOCAL_CLIENT_OVERRIDES = [
     rut_normalized: "77886495-9",
     razon_social: "IMPORTADORA HIPOLIS CHRISTOPHER MORALES EIRL",
   },
+  {
+    rut: "14.905.682-3",
+    rut_normalized: "14905682-3",
+    razon_social: "CLAUDIO VIGUERAS TORRES",
+  },
 ];
 
 const ASSET_VERSION = Date.now();
