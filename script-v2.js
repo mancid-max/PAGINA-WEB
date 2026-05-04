@@ -3319,6 +3319,7 @@ function mostrarConfirmacionAccion({ titulo = "Confirmar", mensaje = "¿Estás s
 function setClientLookupUI({ tipo = "", texto = "", badge = "" } = {}) {
   const msgEl = document.getElementById("clientLookupMsg");
   const badgeEl = document.getElementById("clientLookupBadge");
+  const mostrarBadge = Boolean(badge) && tipo !== "new";
   if (msgEl) {
     msgEl.className = "client-lookup-msg" + (tipo ? ` ${tipo}` : "");
     msgEl.innerText = texto || "";
@@ -3330,7 +3331,7 @@ function setClientLookupUI({ tipo = "", texto = "", badge = "" } = {}) {
   }
   if (badgeEl) {
     badgeEl.className = "client-lookup-badge" + (tipo ? ` ${tipo}` : "");
-    if (badge) {
+    if (mostrarBadge) {
       badgeEl.hidden = false;
       badgeEl.innerText = badge;
     } else {
@@ -3343,11 +3344,15 @@ function setClientLookupUI({ tipo = "", texto = "", badge = "" } = {}) {
 function toggleClientNameField(show, { value = "", readonly = false } = {}) {
   const wrapEl = document.getElementById("clientNameWrap");
   const inputEl = document.getElementById("clientName");
+  const labelEl = document.querySelector('label[for="clientName"]');
   if (!wrapEl || !inputEl) return;
   wrapEl.hidden = !show;
   inputEl.readOnly = !!readonly;
   inputEl.value = value || "";
   inputEl.classList.toggle("is-readonly", !!readonly);
+  if (labelEl) {
+    labelEl.innerText = "Nombre o razón social";
+  }
 }
 
 function habilitarInputManual(inputEl) {
@@ -3434,8 +3439,7 @@ async function validarRutClienteEnUI({ silencioso = false } = {}) {
       const clienteNuevo = construirClienteNuevoDesdeInput(rutNormalizado);
       setClientLookupUI({
         tipo: "new",
-        texto: "Cliente nuevo. Ingresa el nombre o razón social para continuar.",
-        badge: "Cliente nuevo",
+        texto: "Cliente nuevo. Agrega su nombre o razón social y envía la cotización.",
       });
       toggleClientNameField(true, { value: clienteNuevo.razon_social, readonly: false });
       return clienteNuevo;
@@ -3483,8 +3487,9 @@ function configurarLookupCliente() {
     const nombre = String(nameInput.value || "").trim();
     setClientLookupUI({
       tipo: "new",
-      texto: nombre ? "Cliente nuevo listo para enviar." : "Completa el nombre del cliente nuevo.",
-      badge: "Cliente nuevo",
+      texto: nombre
+        ? "Cliente nuevo listo. Ya puedes enviar la cotización."
+        : "Cliente nuevo. Agrega su nombre o razón social para enviar la cotización.",
     });
   });
 }
@@ -3506,7 +3511,12 @@ async function obtenerClienteParaCotizacion() {
   const nombre = String(nameEl?.value || "").trim();
   if (!nombre) {
     toggleClientNameField(true, { value: "", readonly: false });
-    throw new Error("Completa el nombre o razón social del cliente nuevo");
+    setClientLookupUI({
+      tipo: "error",
+      texto: "Agrega el nombre o razón social del cliente nuevo para enviar la cotización.",
+    });
+    nameEl?.focus();
+    throw new Error("Agrega el nombre o razón social del cliente nuevo para enviar la cotización");
   }
 
   return {
