@@ -3815,60 +3815,35 @@ async function guardarCotizacionSupabase(cliente) {
   const payload = construirPayloadCotizacion(cliente);
   if (!payload.items.length) throw new Error("No hay items para guardar");
 
-  const headers = {
-    apikey: SUPABASE_ANON_KEY,
-    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-    "Content-Type": "application/json",
+  const rpcPayload = {
+    p_quote: payload.quote,
+    p_items: payload.items,
   };
 
-  const quoteRes = await fetch(`${SUPABASE_URL}/rest/v1/quotes`, {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/create_quote_with_stock_reservation`, {
     method: "POST",
-    headers: { ...headers, Prefer: "return=minimal" },
-    body: JSON.stringify([payload.quote]),
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(rpcPayload),
   });
 
-  if (!quoteRes.ok) {
-    const errText = await quoteRes.text();
-    if ((errText || "").toLowerCase().includes("client_phone")) {
-      const fallbackQuote = { ...payload.quote };
-      delete fallbackQuote.client_phone;
-      const retryRes = await fetch(`${SUPABASE_URL}/rest/v1/quotes`, {
-        method: "POST",
-        headers: { ...headers, Prefer: "return=minimal" },
-        body: JSON.stringify([fallbackQuote]),
-      });
-      if (retryRes.ok) {
-        payload.quote = fallbackQuote;
-      } else {
-        const retryTxt = await retryRes.text();
-        throw new Error(`Error guardando cotizacion: ${retryTxt || retryRes.status}`);
-      }
-    } else {
-      throw new Error(`Error guardando cotizacion: ${errText || quoteRes.status}`);
+  if (!res.ok) {
+    const errText = await res.text();
+    const lower = String(errText || "").toLowerCase();
+    if (lower.includes("create_quote_with_stock_reservation")) {
+      throw new Error("Falta instalar la función de reserva de stock en Supabase antes de cotizar.");
     }
+    if (lower.includes("stock insuficiente") || lower.includes("no se encontró stock")) {
+      throw new Error(errText || "No hay stock suficiente para completar la cotización.");
+    }
+    throw new Error(`Error guardando cotizacion: ${errText || res.status}`);
   }
 
-  const quoteId = payload.quote.id;
+  const quoteId = await res.json().catch(() => payload.quote.id);
   if (!quoteId) throw new Error("No se genero ID de cotizacion");
-
-  const detailRows = payload.items.map((it) => ({
-    quote_id: quoteId,
-    sku: it.sku,
-    size: String(it.talla),
-    quantity: Number(it.cantidad),
-  }));
-
-  const itemsRes = await fetch(`${SUPABASE_URL}/rest/v1/quote_items`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(detailRows),
-  });
-
-  if (!itemsRes.ok) {
-    const errText = await itemsRes.text();
-    throw new Error(`Error guardando detalle: ${errText || itemsRes.status}`);
-  }
-
   return quoteId;
 }
 
@@ -5242,6 +5217,7 @@ function resolverTituloErrorCotizacion(error) {
     return "Falta nombre o razón social";
   }
   if (message.includes("teléfono") || message.includes("telefono")) return "Falta teléfono";
+  if (message.includes("stock")) return "Stock insuficiente";
   if (message.includes("items") || message.includes("productos") || message.includes("modelos")) {
     return "Faltan productos";
   }
@@ -5261,8 +5237,9 @@ document.getElementById("sendRequest").onclick = async () => {
   try {
     clearCartFieldInvalidState();
     const cliente = await obtenerClienteParaCotizacion();
+    const clienteRegistrado = await registrarClienteNuevoSupabase(cliente);
     btn.innerText = "Guardando cotización...";
-    await guardarCotizacionSupabase(cliente);
+    await guardarCotizacionSupabase(clienteRegistrado);
 
     mostrarToastExito("Cotización enviada con éxito", "Recibimos tu solicitud correctamente.");
     limpiarCarrito();

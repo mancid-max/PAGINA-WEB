@@ -19,6 +19,7 @@ alter table public.quotes add column if not exists is_ready boolean not null def
 alter table public.quotes add column if not exists ready_at timestamptz;
 alter table public.quotes add column if not exists client_rut text;
 alter table public.quotes add column if not exists client_rut_normalized text;
+alter table public.quotes add column if not exists client_phone text;
 
 create table if not exists public.quote_items (
   id bigint generated always as identity primary key,
@@ -146,24 +147,178 @@ $$;
 revoke all on function public.lookup_client_by_rut(text) from public;
 grant execute on function public.lookup_client_by_rut(text) to anon, authenticated;
 
+create or replace function public.register_client_if_missing(
+  p_rut text,
+  p_razon_social text
+)
+returns table (
+  rut text,
+  rut_normalized text,
+  razon_social text,
+  created boolean
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_rut_normalized text := upper(regexp_replace(coalesce(p_rut, ''), '[^0-9K-]', '', 'g'));
+  v_rut text := coalesce(nullif(trim(p_rut), ''), v_rut_normalized);
+  v_razon_social text := trim(coalesce(p_razon_social, ''));
+begin
+  if v_rut_normalized = '' then
+    raise exception 'RUT inválido';
+  end if;
+
+  if v_razon_social = '' then
+    raise exception 'Razón social requerida';
+  end if;
+
+  insert into public.clients (rut, rut_normalized, razon_social, active)
+  values (v_rut, v_rut_normalized, v_razon_social, true)
+  on conflict (rut_normalized) do update
+    set rut = excluded.rut,
+        razon_social = excluded.razon_social,
+        active = true
+  returning clients.rut, clients.rut_normalized, clients.razon_social,
+    (xmax = 0) as created
+  into rut, rut_normalized, razon_social, created;
+
+  return next;
+end;
+$$;
+
+revoke all on function public.register_client_if_missing(text, text) from public;
+grant execute on function public.register_client_if_missing(text, text) to anon, authenticated;
+
+create or replace function public.create_quote_with_stock_reservation(
+  p_quote jsonb,
+  p_items jsonb
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_quote_id uuid := coalesce(nullif(p_quote->>'id', '')::uuid, gen_random_uuid());
+  v_store_name text := trim(coalesce(p_quote->>'store_name', ''));
+  v_client_rut text := nullif(trim(coalesce(p_quote->>'client_rut', '')), '');
+  v_client_rut_normalized text := nullif(trim(coalesce(p_quote->>'client_rut_normalized', '')), '');
+  v_client_phone text := nullif(trim(coalesce(p_quote->>'client_phone', '')), '');
+  v_source text := coalesce(nullif(trim(coalesce(p_quote->>'source', '')), ''), 'web');
+  v_created_at_client timestamptz := coalesce(nullif(p_quote->>'created_at_client', '')::timestamptz, now());
+  v_total_items integer := 0;
+  v_item record;
+  v_size_id bigint;
+  v_available integer;
+  v_digits text;
+  v_season text;
+begin
+  if jsonb_typeof(p_items) is distinct from 'array' or jsonb_array_length(p_items) = 0 then
+    raise exception 'No hay items para guardar';
+  end if;
+
+  if v_store_name = '' then
+    raise exception 'Razón social requerida';
+  end if;
+
+  select coalesce(sum(qty), 0)::integer
+  into v_total_items
+  from (
+    select greatest(0, coalesce(cantidad, 0)) as qty
+    from jsonb_to_recordset(p_items) as x(sku text, talla text, cantidad integer)
+  ) s;
+
+  if v_total_items <= 0 then
+    raise exception 'No hay items para guardar';
+  end if;
+
+  insert into public.quotes (
+    id,
+    store_name,
+    client_rut,
+    client_rut_normalized,
+    client_phone,
+    total_items,
+    source,
+    created_at_client
+  )
+  values (
+    v_quote_id,
+    v_store_name,
+    v_client_rut,
+    v_client_rut_normalized,
+    v_client_phone,
+    v_total_items,
+    v_source,
+    v_created_at_client
+  );
+
+  for v_item in
+    select
+      upper(trim(coalesce(sku, ''))) as sku,
+      trim(coalesce(talla, '')) as size_label,
+      sum(greatest(0, coalesce(cantidad, 0)))::integer as quantity
+    from jsonb_to_recordset(p_items) as x(sku text, talla text, cantidad integer)
+    group by 1, 2
+  loop
+    if v_item.sku = '' or v_item.size_label = '' or v_item.quantity <= 0 then
+      raise exception 'Detalle de cotización inválido';
+    end if;
+
+    v_digits := regexp_replace(v_item.sku, '[^0-9]', '', 'g');
+    v_season := case when length(v_digits) >= 2 then left(v_digits, 2) else null end;
+
+    select sis.id, sis.quantity
+    into v_size_id, v_available
+    from public.stock_items si
+    join public.stock_item_sizes sis
+      on sis.stock_item_id = si.id
+    where si.active = true
+      and upper(trim(si.sku)) = v_item.sku
+      and sis.size_label = v_item.size_label
+      and (v_season is null or si.season = v_season)
+    order by si.id
+    limit 1
+    for update of sis, si;
+
+    if v_size_id is null then
+      raise exception 'No se encontró stock para modelo % talla %', v_item.sku, v_item.size_label;
+    end if;
+
+    if coalesce(v_available, 0) < v_item.quantity then
+      raise exception 'Stock insuficiente para modelo % talla % (disponible: %, solicitado: %)',
+        v_item.sku, v_item.size_label, coalesce(v_available, 0), v_item.quantity;
+    end if;
+
+    update public.stock_item_sizes
+    set quantity = quantity - v_item.quantity
+    where id = v_size_id;
+
+    insert into public.quote_items (quote_id, sku, size, quantity)
+    values (v_quote_id, v_item.sku, v_item.size_label, v_item.quantity);
+  end loop;
+
+  return v_quote_id;
+end;
+$$;
+
+revoke all on function public.create_quote_with_stock_reservation(jsonb, jsonb) from public;
+grant execute on function public.create_quote_with_stock_reservation(jsonb, jsonb) to anon, authenticated;
+
 -- ============================================
--- STOCK INTERNO (estructura base tipo Excel)
+-- STOCK INTERNO (editable con tallas dinámicas)
 -- ============================================
 
-create table if not exists public.stock_catalog (
+create table if not exists public.stock_items (
   id bigint generated always as identity primary key,
+  season text not null default '42',
   article_code text not null,
-  sku text not null unique,
+  sku text not null,
   tiro text,
   bota text,
   color text,
-  size_36 integer not null default 0 check (size_36 >= 0),
-  size_38 integer not null default 0 check (size_38 >= 0),
-  size_40 integer not null default 0 check (size_40 >= 0),
-  size_42 integer not null default 0 check (size_42 >= 0),
-  size_44 integer not null default 0 check (size_44 >= 0),
-  size_46 integer not null default 0 check (size_46 >= 0),
-  total_units integer generated always as (size_36 + size_38 + size_40 + size_42 + size_44 + size_46) stored,
   active boolean not null default true,
   source text not null default 'admin',
   notes text,
@@ -172,11 +327,27 @@ create table if not exists public.stock_catalog (
   updated_at timestamptz not null default now()
 );
 
-create index if not exists idx_stock_catalog_sku on public.stock_catalog(sku);
-create index if not exists idx_stock_catalog_article_code on public.stock_catalog(article_code);
-create index if not exists idx_stock_catalog_active on public.stock_catalog(active);
+create table if not exists public.stock_item_sizes (
+  id bigint generated always as identity primary key,
+  stock_item_id bigint not null references public.stock_items(id) on delete cascade,
+  size_label text not null,
+  quantity integer not null default 0 check (quantity >= 0),
+  sort_order integer not null default 100,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
 
-create or replace function public.set_stock_catalog_updated_at()
+create unique index if not exists ux_stock_items_season_sku on public.stock_items(season, sku);
+create index if not exists idx_stock_items_sku on public.stock_items(sku);
+create index if not exists idx_stock_items_article_code on public.stock_items(article_code);
+create index if not exists idx_stock_items_active on public.stock_items(active);
+create index if not exists idx_stock_items_season on public.stock_items(season);
+
+create unique index if not exists ux_stock_item_sizes_item_label on public.stock_item_sizes(stock_item_id, size_label);
+create index if not exists idx_stock_item_sizes_item on public.stock_item_sizes(stock_item_id);
+create index if not exists idx_stock_item_sizes_label on public.stock_item_sizes(size_label);
+
+create or replace function public.set_row_updated_at()
 returns trigger
 language plpgsql
 as $$
@@ -186,59 +357,201 @@ begin
 end;
 $$;
 
-drop trigger if exists trg_stock_catalog_updated_at on public.stock_catalog;
-create trigger trg_stock_catalog_updated_at
-before update on public.stock_catalog
+drop trigger if exists trg_stock_items_updated_at on public.stock_items;
+create trigger trg_stock_items_updated_at
+before update on public.stock_items
 for each row
-execute function public.set_stock_catalog_updated_at();
+execute function public.set_row_updated_at();
 
-alter table public.stock_catalog enable row level security;
+drop trigger if exists trg_stock_item_sizes_updated_at on public.stock_item_sizes;
+create trigger trg_stock_item_sizes_updated_at
+before update on public.stock_item_sizes
+for each row
+execute function public.set_row_updated_at();
 
-drop policy if exists "authenticated_read_stock_catalog" on public.stock_catalog;
-create policy "authenticated_read_stock_catalog"
-on public.stock_catalog
+alter table public.stock_items enable row level security;
+alter table public.stock_item_sizes enable row level security;
+
+drop policy if exists "authenticated_read_stock_items" on public.stock_items;
+create policy "authenticated_read_stock_items"
+on public.stock_items
 for select
 to authenticated
 using (true);
 
-drop policy if exists "authenticated_insert_stock_catalog" on public.stock_catalog;
-create policy "authenticated_insert_stock_catalog"
-on public.stock_catalog
+drop policy if exists "authenticated_insert_stock_items" on public.stock_items;
+create policy "authenticated_insert_stock_items"
+on public.stock_items
 for insert
 to authenticated
 with check (true);
 
-drop policy if exists "authenticated_update_stock_catalog" on public.stock_catalog;
-create policy "authenticated_update_stock_catalog"
-on public.stock_catalog
+drop policy if exists "authenticated_update_stock_items" on public.stock_items;
+create policy "authenticated_update_stock_items"
+on public.stock_items
 for update
 to authenticated
 using (true)
 with check (true);
 
-drop policy if exists "authenticated_delete_stock_catalog" on public.stock_catalog;
-create policy "authenticated_delete_stock_catalog"
-on public.stock_catalog
+drop policy if exists "authenticated_delete_stock_items" on public.stock_items;
+create policy "authenticated_delete_stock_items"
+on public.stock_items
 for delete
 to authenticated
 using (true);
 
--- Vista simple para frontend o paneles futuros.
+drop policy if exists "authenticated_read_stock_item_sizes" on public.stock_item_sizes;
+create policy "authenticated_read_stock_item_sizes"
+on public.stock_item_sizes
+for select
+to authenticated
+using (true);
+
+drop policy if exists "authenticated_insert_stock_item_sizes" on public.stock_item_sizes;
+create policy "authenticated_insert_stock_item_sizes"
+on public.stock_item_sizes
+for insert
+to authenticated
+with check (true);
+
+drop policy if exists "authenticated_update_stock_item_sizes" on public.stock_item_sizes;
+create policy "authenticated_update_stock_item_sizes"
+on public.stock_item_sizes
+for update
+to authenticated
+using (true)
+with check (true);
+
+drop policy if exists "authenticated_delete_stock_item_sizes" on public.stock_item_sizes;
+create policy "authenticated_delete_stock_item_sizes"
+on public.stock_item_sizes
+for delete
+to authenticated
+using (true);
+
+drop policy if exists "anon_read_active_stock_items" on public.stock_items;
+create policy "anon_read_active_stock_items"
+on public.stock_items
+for select
+to anon
+using (active = true);
+
+drop policy if exists "anon_read_stock_item_sizes" on public.stock_item_sizes;
+create policy "anon_read_stock_item_sizes"
+on public.stock_item_sizes
+for select
+to anon
+using (
+  exists (
+    select 1
+    from public.stock_items si
+    where si.id = stock_item_id
+      and si.active = true
+  )
+);
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'stock_items'
+  ) then
+    execute 'alter publication supabase_realtime add table public.stock_items';
+  end if;
+
+  if not exists (
+    select 1
+    from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'stock_item_sizes'
+  ) then
+    execute 'alter publication supabase_realtime add table public.stock_item_sizes';
+  end if;
+end
+$$;
+
 create or replace view public.stock_catalog_web as
 select
-  sku,
-  article_code,
-  tiro,
-  bota,
-  color,
-  size_36,
-  size_38,
-  size_40,
-  size_42,
-  size_44,
-  size_46,
-  total_units,
-  active,
-  updated_at
-from public.stock_catalog
-where active = true;
+  si.season,
+  si.sku,
+  si.article_code,
+  si.tiro,
+  si.bota,
+  si.color,
+  coalesce(sum(case when sis.size_label = '36' then sis.quantity end), 0) as size_36,
+  coalesce(sum(case when sis.size_label = '38' then sis.quantity end), 0) as size_38,
+  coalesce(sum(case when sis.size_label = '40' then sis.quantity end), 0) as size_40,
+  coalesce(sum(case when sis.size_label = '42' then sis.quantity end), 0) as size_42,
+  coalesce(sum(case when sis.size_label = '44' then sis.quantity end), 0) as size_44,
+  coalesce(sum(case when sis.size_label = '46' then sis.quantity end), 0) as size_46,
+  coalesce(sum(sis.quantity), 0) as total_units,
+  si.active,
+  si.updated_at
+from public.stock_items si
+left join public.stock_item_sizes sis on sis.stock_item_id = si.id
+where si.active = true
+group by si.id, si.season, si.sku, si.article_code, si.tiro, si.bota, si.color, si.active, si.updated_at;
+
+-- Migración desde el esquema legacy stock_catalog si existe.
+do $$
+begin
+  if to_regclass('public.stock_catalog') is not null then
+    insert into public.stock_items (
+      season, article_code, sku, tiro, bota, color, active, source, notes
+    )
+    select
+      coalesce(sc.season, '42'),
+      sc.article_code,
+      sc.sku,
+      sc.tiro,
+      sc.bota,
+      sc.color,
+      sc.active,
+      coalesce(sc.source, 'legacy-migration'),
+      sc.notes
+    from public.stock_catalog sc
+    on conflict (season, sku) do update set
+      article_code = excluded.article_code,
+      tiro = excluded.tiro,
+      bota = excluded.bota,
+      color = excluded.color,
+      active = excluded.active,
+      source = excluded.source,
+      notes = excluded.notes;
+
+    delete from public.stock_item_sizes sis
+    using public.stock_items si
+    where sis.stock_item_id = si.id
+      and si.source in ('legacy-migration', 'excel-seed', 'admin');
+
+    insert into public.stock_item_sizes (stock_item_id, size_label, quantity, sort_order)
+    select
+      si.id,
+      v.size_label,
+      v.quantity,
+      v.sort_order
+    from public.stock_catalog sc
+    join public.stock_items si
+      on si.season = coalesce(sc.season, '42')
+     and si.sku = sc.sku
+    cross join lateral (
+      values
+        ('36', coalesce(sc.size_36, 0), 10),
+        ('38', coalesce(sc.size_38, 0), 20),
+        ('40', coalesce(sc.size_40, 0), 30),
+        ('42', coalesce(sc.size_42, 0), 40),
+        ('44', coalesce(sc.size_44, 0), 50),
+        ('46', coalesce(sc.size_46, 0), 60)
+    ) as v(size_label, quantity, sort_order)
+    where v.quantity > 0
+    on conflict (stock_item_id, size_label) do update set
+      quantity = excluded.quantity,
+      sort_order = excluded.sort_order;
+  end if;
+end
+$$;
