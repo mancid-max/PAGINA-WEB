@@ -543,6 +543,22 @@ async function cargarMapaPreciosCatalogo(source = CATALOG_SOURCE) {
   return normalizarMapaPreciosCatalogo(data?.items || {});
 }
 
+async function cargarTodosLosMapasPreciosCatalogo() {
+  const sources = Object.keys(CATALOG_PROMO_CONFIG_BY_SOURCE || {});
+  const entries = await Promise.all(
+    sources.map(async (source) => {
+      try {
+        const map = await cargarMapaPreciosCatalogo(source);
+        return [source, map];
+      } catch (err) {
+        console.warn(`No se pudo cargar precios promo para ${source}:`, err);
+        return [source, {}];
+      }
+    })
+  );
+  return Object.fromEntries(entries);
+}
+
 function obtenerPrecioListaCatalogo(value, source = CATALOG_SOURCE) {
   const priceMap = catalogPriceBySource[source] || {};
   const candidates = obtenerCandidatosSkuPrecio(value);
@@ -1614,10 +1630,7 @@ function filtrarProductosDisponiblesCole42(items = [], trazabilidadData = null) 
 async function cargarProductosCatalogo() {
   try {
     const catalogPromise = fetch(withCacheBust(CATALOG_DATA_FILE)).then((res) => res.json());
-    const priceDataPromise = cargarMapaPreciosCatalogo(CATALOG_SOURCE).catch((err) => {
-      console.warn(`No se pudo cargar precios promo para ${CATALOG_SOURCE}:`, err);
-      return {};
-    });
+    const priceDataPromise = cargarTodosLosMapasPreciosCatalogo();
     const stockPromise = INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43"
       ? cargarStockDatasetPreferido().catch((err) => {
         if (CATALOG_SOURCE === "catalogo-43") {
@@ -1664,7 +1677,7 @@ async function cargarProductosCatalogo() {
 
     catalogPriceBySource = {
       ...catalogPriceBySource,
-      [CATALOG_SOURCE]: priceData || {},
+      ...(priceData || {}),
     };
 
     if (INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43") {
