@@ -3872,7 +3872,8 @@ async function registrarClienteNuevoSupabase(cliente) {
       lower.includes("register_client_if_missing") ||
       lower.includes("pl/pgsql")
     ) {
-      throw new Error("INTERNAL_CONTACT_SUPPORT");
+      console.warn("No se pudo registrar el cliente nuevo en Supabase; se continúa con la cotización.", txt);
+      return cliente;
     }
     throw new Error(`No se pudo registrar el cliente: ${txt || res.status}`);
   }
