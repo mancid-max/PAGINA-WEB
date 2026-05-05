@@ -4556,6 +4556,33 @@ function calcularMontoCotizacion(quote = {}, items = []) {
   return hasPrice ? total : null;
 }
 
+function calcularResumenMontoCotizacion(quote = {}, items = []) {
+  if (!Array.isArray(items) || !items.length) return null;
+  const source = String(quote?.source || "").trim();
+  let totalLista = 0;
+  let totalPromo = 0;
+  let hasPrice = false;
+  items.forEach((item) => {
+    const qty = Number(item?.quantity) || 0;
+    if (qty <= 0) return;
+    const sku = normalizarSkuCatalogo(item?.sku);
+    if (!sku) return;
+    const precioLista = obtenerPrecioListaCatalogo(sku, source || CATALOG_SOURCE);
+    const precioPromo = obtenerPrecioCatalogo(sku, source || CATALOG_SOURCE);
+    if (!precioLista || !precioPromo) return;
+    totalLista += precioLista * qty;
+    totalPromo += precioPromo * qty;
+    hasPrice = true;
+  });
+  if (!hasPrice) return null;
+  return {
+    lista: totalLista,
+    promo: totalPromo,
+    ahorro: Math.max(0, totalLista - totalPromo),
+    tienePromo: totalLista > totalPromo,
+  };
+}
+
 function construirBloqueDetalleReporte(q = {}, items = []) {
   const detalleAgrupado = agruparDetallePorModelo(items);
   if (!detalleAgrupado.length) return ["Sin detalle de artículos."];
@@ -4593,13 +4620,13 @@ function construirTextoReporteCotizacionesWhatsApp(quotes = []) {
         return String(a.size).localeCompare(String(b.size), undefined, { numeric: true });
       });
       const codigo = generarCodigoCotizacionVisual(q);
-      const monto = calcularMontoCotizacion(q, detalles);
+      const resumenMonto = calcularResumenMontoCotizacion(q, detalles);
       lines.push(
         "",
         `${index + 1}. ${q.store_name || "Sin cliente"} · ${codigo}`,
         `RUT: ${q.client_rut || "Sin RUT"}${q.client_phone ? ` · Teléfono: ${q.client_phone}` : ""}`,
         `Estado: ${q.is_ready ? "Lista" : "No lista / caída"}`,
-        `Prendas: ${q.total_items || 0}${monto ? ` · Monto: ${formatearPrecioCLP(monto)}` : ""}`,
+        `Prendas: ${q.total_items || 0}${resumenMonto ? ` · Total lista: ${formatearPrecioCLP(resumenMonto.lista)}${resumenMonto.tienePromo ? ` · Total 10% Día de la Madre: ${formatearPrecioCLP(resumenMonto.promo)} · Ahorro: ${formatearPrecioCLP(resumenMonto.ahorro)}` : ` · Monto: ${formatearPrecioCLP(resumenMonto.promo)}`}` : ""}`,
         ...construirBloqueDetalleReporte(q, detalles)
       );
     });
@@ -4619,7 +4646,7 @@ function construirVistaReporteCotizaciones(quotes = [], itemsMap = new Map()) {
     });
     const detalleAgrupado = agruparDetallePorModelo(detalles);
     const codigo = generarCodigoCotizacionVisual(q);
-    const monto = calcularMontoCotizacion(q, detalles);
+    const resumenMonto = calcularResumenMontoCotizacion(q, detalles);
     const fecha = q.created_at ? new Date(q.created_at).toLocaleString() : "-";
 
     const rows = detalleAgrupado.length
@@ -4651,7 +4678,10 @@ function construirVistaReporteCotizaciones(quotes = [], itemsMap = new Map()) {
           <div><span>Estado</span><strong>${escapeHtmlExcel(q.is_ready ? "Lista" : "No lista / caída")}</strong></div>
           <div><span>Fecha</span><strong>${escapeHtmlExcel(fecha)}</strong></div>
           <div><span>Prendas</span><strong>${escapeHtmlExcel(q.total_items || 0)}</strong></div>
-          ${monto ? `<div><span>Monto</span><strong>${escapeHtmlExcel(formatearPrecioCLP(monto))}</strong></div>` : ""}
+          ${resumenMonto ? `<div><span>Total lista</span><strong>${escapeHtmlExcel(formatearPrecioCLP(resumenMonto.lista))}</strong></div>` : ""}
+          ${resumenMonto?.tienePromo ? `<div><span>Total 10% Día de la Madre</span><strong>${escapeHtmlExcel(formatearPrecioCLP(resumenMonto.promo))}</strong></div>` : ""}
+          ${resumenMonto?.tienePromo ? `<div><span>Ahorro</span><strong>${escapeHtmlExcel(formatearPrecioCLP(resumenMonto.ahorro))}</strong></div>` : ""}
+          ${resumenMonto && !resumenMonto.tienePromo ? `<div><span>Monto</span><strong>${escapeHtmlExcel(formatearPrecioCLP(resumenMonto.promo))}</strong></div>` : ""}
         </div>
         <div class="quotes-report-preview-table-wrap">
           <table class="quotes-report-preview-table">
@@ -4726,7 +4756,7 @@ function renderReporteCotizacionesAdmin(quotes = []) {
           const detalleAgrupado = agruparDetallePorModelo(detalles);
           const fecha = q.created_at ? new Date(q.created_at).toLocaleString() : "-";
           const codigo = generarCodigoCotizacionVisual(q);
-          const monto = calcularMontoCotizacion(q, detalles);
+          const resumenMonto = calcularResumenMontoCotizacion(q, detalles);
           return `
             <div class="quotes-report-detail-card">
               <div class="quotes-report-detail-head">
@@ -4737,7 +4767,10 @@ function renderReporteCotizacionesAdmin(quotes = []) {
                 <div class="quotes-report-detail-side">
                   <strong>${q.total_items || 0} prendas</strong>
                   <span>${q.is_ready ? "Lista" : "No lista / caída"} · ${fecha}</span>
-                  ${monto ? `<span>Monto: ${formatearPrecioCLP(monto)}</span>` : ""}
+                  ${resumenMonto ? `<span>Total lista: ${formatearPrecioCLP(resumenMonto.lista)}</span>` : ""}
+                  ${resumenMonto?.tienePromo ? `<span>Total 10% Día de la Madre: ${formatearPrecioCLP(resumenMonto.promo)}</span>` : ""}
+                  ${resumenMonto?.tienePromo ? `<span>Ahorro: ${formatearPrecioCLP(resumenMonto.ahorro)}</span>` : ""}
+                  ${resumenMonto && !resumenMonto.tienePromo ? `<span>Monto: ${formatearPrecioCLP(resumenMonto.promo)}</span>` : ""}
                 </div>
               </div>
               <div class="quotes-report-detail-items">
