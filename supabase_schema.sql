@@ -165,6 +165,10 @@ declare
   v_rut_normalized text := upper(regexp_replace(coalesce(p_rut, ''), '[^0-9K-]', '', 'g'));
   v_rut text := coalesce(nullif(trim(p_rut), ''), v_rut_normalized);
   v_razon_social text := trim(coalesce(p_razon_social, ''));
+  v_out_rut text;
+  v_out_rut_normalized text;
+  v_out_razon_social text;
+  v_out_created boolean;
 begin
   if v_rut_normalized = '' then
     raise exception 'RUT inválido';
@@ -182,7 +186,12 @@ begin
         active = true
   returning clients.rut, clients.rut_normalized, clients.razon_social,
     (xmax = 0) as created
-  into rut, rut_normalized, razon_social, created;
+  into v_out_rut, v_out_rut_normalized, v_out_razon_social, v_out_created;
+
+  rut := v_out_rut;
+  rut_normalized := v_out_rut_normalized;
+  razon_social := v_out_razon_social;
+  created := v_out_created;
 
   return next;
 end;

@@ -3865,6 +3865,15 @@ async function registrarClienteNuevoSupabase(cliente) {
 
   if (!res.ok) {
     const txt = await res.text();
+    const lower = String(txt || "").toLowerCase();
+    if (
+      lower.includes("\"code\":\"42702\"") ||
+      lower.includes("rut_normalized") ||
+      lower.includes("register_client_if_missing") ||
+      lower.includes("pl/pgsql")
+    ) {
+      throw new Error("INTERNAL_CONTACT_SUPPORT");
+    }
     throw new Error(`No se pudo registrar el cliente: ${txt || res.status}`);
   }
 
@@ -5212,6 +5221,7 @@ function limpiarCarrito() {
 
 function resolverTituloErrorCotizacion(error) {
   const message = String(error?.message || "").toLowerCase();
+  if (message.includes("internal_contact_support")) return "Error";
   if (message.includes("rut")) return "Falta RUT válido";
   if (message.includes("nombre") || message.includes("razón social") || message.includes("razon social")) {
     return "Falta nombre o razón social";
@@ -5222,6 +5232,14 @@ function resolverTituloErrorCotizacion(error) {
     return "Faltan productos";
   }
   return "No se pudo enviar";
+}
+
+function resolverMensajeErrorCotizacion(error) {
+  const message = String(error?.message || "");
+  if (message.toLowerCase().includes("internal_contact_support")) {
+    return "Error. Contáctanos para poder solucionarlo.";
+  }
+  return message || "Revisa los datos ingresados e inténtalo nuevamente.";
 }
 
 document.getElementById("sendRequest").onclick = async () => {
@@ -5247,7 +5265,7 @@ document.getElementById("sendRequest").onclick = async () => {
     console.error(error);
     mostrarToastError(
       resolverTituloErrorCotizacion(error),
-      error?.message || "Revisa los datos ingresados e inténtalo nuevamente."
+      resolverMensajeErrorCotizacion(error)
     );
   } finally {
     btn.disabled = false;
