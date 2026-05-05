@@ -5256,9 +5256,8 @@ document.getElementById("sendRequest").onclick = async () => {
   try {
     clearCartFieldInvalidState();
     const cliente = await obtenerClienteParaCotizacion();
-    const clienteRegistrado = await registrarClienteNuevoSupabase(cliente);
     btn.innerText = "Guardando cotización...";
-    await guardarCotizacionSupabase(clienteRegistrado);
+    await guardarCotizacionSupabase(cliente);
 
     mostrarToastExito("Cotización enviada con éxito", "Recibimos tu solicitud correctamente.");
     limpiarCarrito();
