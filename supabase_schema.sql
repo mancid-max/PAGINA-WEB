@@ -279,6 +279,12 @@ begin
     v_digits := regexp_replace(v_item.sku, '[^0-9]', '', 'g');
     v_season := case when length(v_digits) >= 2 then left(v_digits, 2) else null end;
 
+    if v_source = 'catalogo-43' then
+      insert into public.quote_items (quote_id, sku, size, quantity)
+      values (v_quote_id, v_item.sku, v_item.size_label, v_item.quantity);
+      continue;
+    end if;
+
     select sis.id, sis.quantity
     into v_size_id, v_available
     from public.stock_items si
