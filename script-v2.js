@@ -3896,6 +3896,49 @@ async function guardarCotizacionSupabase(cliente) {
   const payload = construirPayloadCotizacion(cliente);
   if (!payload.items.length) throw new Error("No hay items para guardar");
 
+  if (payload.quote?.source === "catalogo-43") {
+    const quoteRes = await fetch(`${SUPABASE_URL}/rest/v1/quotes`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify(payload.quote),
+    });
+
+    if (!quoteRes.ok) {
+      const errText = await quoteRes.text();
+      throw new Error(`Error guardando cotizacion: ${errText || quoteRes.status}`);
+    }
+
+    const quoteItemsPayload = payload.items.map((item) => ({
+      quote_id: payload.quote.id,
+      sku: String(item?.sku || "").trim(),
+      size: String(item?.talla || "").trim(),
+      quantity: Number(item?.cantidad) || 0,
+    })).filter((item) => item.sku && item.size && item.quantity > 0);
+
+    const itemsRes = await fetch(`${SUPABASE_URL}/rest/v1/quote_items`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify(quoteItemsPayload),
+    });
+
+    if (!itemsRes.ok) {
+      const errText = await itemsRes.text();
+      throw new Error(`Error guardando detalle de cotizacion: ${errText || itemsRes.status}`);
+    }
+
+    return payload.quote.id;
+  }
+
   const rpcPayload = {
     p_quote: payload.quote,
     p_items: payload.items,
