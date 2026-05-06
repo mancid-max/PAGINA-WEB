@@ -36,6 +36,7 @@ let videoActivoSrc = "";
 let catalogCoverBySku = {};
 const INVENTORY_ENABLED = true;
 const STOCK_REFRESH_INTERVAL_MS = 30000;
+const CART_STORAGE_KEY = "mohicano_cart_v1";
 const SOLD_OUT_CATALOG_ITEMS = [
   {
     family: "4208-00",
@@ -143,6 +144,70 @@ const SOLD_OUT_CATALOG_ITEMS = [
     variants: [],
   },
 ];
+
+function sanitizarPedidoPersistido(valor) {
+  if (!Array.isArray(valor)) return [];
+  return valor
+    .map((item) => {
+      const sku = normalizarSkuCatalogo(item?.sku || "");
+      const tallasRaw = item?.tallas && typeof item.tallas === "object" ? item.tallas : {};
+      const tallas = {};
+      TALLAS_DISPONIBLES.forEach((talla) => {
+        const cantidad = parseInt(tallasRaw[talla], 10);
+        if (!Number.isNaN(cantidad) && cantidad > 0) tallas[talla] = cantidad;
+      });
+      if (!sku || !Object.keys(tallas).length) return null;
+      return { sku, tallas };
+    })
+    .filter(Boolean);
+}
+
+function construirEstadoCotizacionPersistido() {
+  const rutEl = document.getElementById("clientRut");
+  const nameEl = document.getElementById("clientName");
+  return {
+    pedido: sanitizarPedidoPersistido(pedido),
+    clientRut: String(rutEl?.value || "").trim(),
+    clientName: String(nameEl?.value || "").trim(),
+  };
+}
+
+function guardarCotizacionPersistida() {
+  try {
+    const estado = construirEstadoCotizacionPersistido();
+    if (!estado.pedido.length && !estado.clientRut && !estado.clientName) {
+      localStorage.removeItem(CART_STORAGE_KEY);
+      return;
+    }
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(estado));
+  } catch (_) {
+    // Ignorar errores de almacenamiento para no bloquear la cotización.
+  }
+}
+
+function limpiarCotizacionPersistida() {
+  try {
+    localStorage.removeItem(CART_STORAGE_KEY);
+  } catch (_) {
+    // Ignorar errores de almacenamiento.
+  }
+}
+
+function restaurarCotizacionPersistida() {
+  try {
+    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    if (!raw) return;
+    const estado = JSON.parse(raw);
+    pedido = sanitizarPedidoPersistido(estado?.pedido);
+    const rutEl = document.getElementById("clientRut");
+    const nameEl = document.getElementById("clientName");
+    if (rutEl && estado?.clientRut) rutEl.value = String(estado.clientRut).trim();
+    if (nameEl && estado?.clientName) nameEl.value = String(estado.clientName).trim();
+  } catch (_) {
+    pedido = [];
+    limpiarCotizacionPersistida();
+  }
+}
 const CATALOG_COVER_OVERRIDES = {
   "4245-00": "Imagenes/4245/CRI_7845.jpg",
 };
@@ -2958,6 +3023,7 @@ function actualizarCarrito() {
     ${totalEstimado > 0 ? `<div class="cart-totals-row"><span>Total estimado</span><strong>${formatearPrecioCLP(totalEstimado)}</strong></div>` : ""}
     ${totalLista > totalEstimado ? `<div class="cart-totals-row"><span>Ahorro Día de la Madre</span><strong>${formatearPrecioCLP(totalLista - totalEstimado)}</strong></div>` : ""}
   `;
+  guardarCotizacionPersistida();
 }
 
 function eliminarItem(index) {
@@ -3692,6 +3758,7 @@ function configurarLookupCliente() {
     clientLookupDebounce = window.setTimeout(() => {
       validarRutClienteEnUI({ silencioso: true });
     }, 320);
+    guardarCotizacionPersistida();
   });
   input.addEventListener("blur", () => {
     window.clearTimeout(clientLookupDebounce);
@@ -3731,6 +3798,7 @@ function configurarLookupCliente() {
         ? "Cliente nuevo listo. Ya puedes enviar la cotización."
         : "Cliente nuevo. Agrega nombre y teléfono para enviar la cotización.",
     });
+    guardarCotizacionPersistida();
   });
 }
 
@@ -5250,7 +5318,6 @@ function configurarPanelCotizaciones() {
 
 function limpiarCarrito() {
   pedido = [];
-  actualizarCarrito();
   const rutEl = document.getElementById("clientRut");
   const nameEl = document.getElementById("clientName");
   const phoneEl = document.getElementById("clientPhone");
@@ -5264,6 +5331,8 @@ function limpiarCarrito() {
   toggleClientNameField(false);
   toggleClientPhoneField(false);
   document.getElementById("cartSidebar").classList.remove("open");
+  limpiarCotizacionPersistida();
+  actualizarCarrito();
 }
 
 function resolverTituloErrorCotizacion(error) {
@@ -5320,6 +5389,11 @@ document.getElementById("sendRequest").onclick = async () => {
 };
 configurarInputsTallas();
 configurarLookupCliente();
+restaurarCotizacionPersistida();
+actualizarCarrito();
+if (document.getElementById("clientRut")?.value) {
+  validarRutClienteEnUI({ silencioso: true });
+}
 configurarPanelCotizaciones();
 
 document.getElementById("closeCart").onclick = () => {
