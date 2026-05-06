@@ -14,6 +14,7 @@ let quotesAdminCache = { quotes: [], itemsByQuote: new Map() };
 let trazabilidadCache = [];
 let trazabilidadMeta = null;
 let adminActiveTab = "cotizaciones";
+let quotesStatusFilter = "all";
 let trazabilidadDisponibles = [];
 let clienteSeleccionado = null; // { rut, rut_normalized, razon_social }
 let clientLookupDebounce = null;
@@ -24,6 +25,7 @@ let stockBySku = {};
 let stockCatalogRows = [];
 let stockRealtimeChannel = null;
 let stockCatalogSeasonFilter = "";
+let lastRenderedStockSignature = "";
 let stockEditorState = {
   open: false,
   item: null,
@@ -215,21 +217,108 @@ const LOCAL_CLIENT_OVERRIDES = [
     rut_normalized: "77886495-9",
     razon_social: "IMPORTADORA HIPOLIS CHRISTOPHER MORALES EIRL",
   },
+  {
+    rut: "14.905.682-3",
+    rut_normalized: "14905682-3",
+    razon_social: "CLAUDIO VIGUERAS TORRES",
+  },
 ];
+
+function sanitizarPedidoPersistido(valor) {
+  if (!Array.isArray(valor)) return [];
+  return valor
+    .map((item) => {
+      const sku = normalizarSkuCatalogo(item?.sku || "");
+      const tallasRaw = item?.tallas && typeof item.tallas === "object" ? item.tallas : {};
+      const tallas = {};
+      TALLAS_DISPONIBLES.forEach((talla) => {
+        const cantidad = parseInt(tallasRaw[talla], 10);
+        if (!Number.isNaN(cantidad) && cantidad > 0) tallas[talla] = cantidad;
+      });
+      if (!sku || !Object.keys(tallas).length) return null;
+      return { sku, tallas };
+    })
+    .filter(Boolean);
+}
+
+function construirEstadoCotizacionPersistido() {
+  const rutEl = document.getElementById("clientRut");
+  const nameEl = document.getElementById("clientName");
+  const phoneEl = document.getElementById("clientPhone");
+  return {
+    pedido: sanitizarPedidoPersistido(pedido),
+    clientRut: String(rutEl?.value || "").trim(),
+    clientName: String(nameEl?.value || "").trim(),
+    clientPhone: String(phoneEl?.value || "").trim(),
+  };
+}
+
+function guardarCotizacionPersistida() {
+  try {
+    const estado = construirEstadoCotizacionPersistido();
+    if (!estado.pedido.length && !estado.clientRut && !estado.clientName && !estado.clientPhone) {
+      localStorage.removeItem(CART_STORAGE_KEY);
+      return;
+    }
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(estado));
+  } catch (_) {
+    // Ignorar errores de almacenamiento para no bloquear la cotización.
+  }
+}
+
+function limpiarCotizacionPersistida() {
+  try {
+    localStorage.removeItem(CART_STORAGE_KEY);
+  } catch (_) {
+    // Ignorar errores de almacenamiento.
+  }
+}
+
+function restaurarCotizacionPersistida() {
+  try {
+    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    if (!raw) return;
+    const estado = JSON.parse(raw);
+    pedido = sanitizarPedidoPersistido(estado?.pedido);
+    const rutEl = document.getElementById("clientRut");
+    const nameEl = document.getElementById("clientName");
+    const phoneEl = document.getElementById("clientPhone");
+    if (rutEl && estado?.clientRut) rutEl.value = String(estado.clientRut).trim();
+    if (nameEl && estado?.clientName) nameEl.value = String(estado.clientName).trim();
+    if (phoneEl && estado?.clientPhone) phoneEl.value = String(estado.clientPhone).trim();
+  } catch (_) {
+    pedido = [];
+    limpiarCotizacionPersistida();
+  }
+}
 
 const ASSET_VERSION = Date.now();
 const OPTIMIZED_IMAGE_ROOT = "Imagenes-web";
 const OPTIMIZED_IMAGE_SOURCE_ROOTS = ["Imagenes", "Imagenes2", "Imagenes3", "42", "43"];
 const TEXT_NORMALIZATION_REPLACEMENTS = [
+  [/Â·/g, "·"],
   [/Dise\?o/gi, "Diseño"],
   [/disen\?o/gi, "diseño"],
   [/recuperaci\?n/gi, "recuperación"],
   [/f\?cil/gi, "fácil"],
   [/c\?modo/gi, "cómodo"],
   [/vers\?til/gi, "versátil"],
+  [/seg\?n/gi, "según"],
+  [/adaptaci\?n/gi, "adaptación"],
+  [/peque\?a/gi, "pequeña"],
+  [/m\?s/gi, "más"],
+  [/elasti[c]?idad y recuperaci\?n/gi, "elasticidad y recuperación"],
   [/Cotizacion/g, "Cotización"],
   [/cotizacion/g, "cotización"],
 ];
+
+const CATALOG_43_DESCRIPTION_MAP = {
+  "4301-00": "Jean · Medio · Flare",
+  "4309-00": "Jean · Cintura · Flare",
+  "4314-00": "Jean · Cintura · Recto",
+  "4323-00": "Jean · Cintura · Wide leg",
+  "4329-00": "Jean · New Glue",
+};
 
 function withCacheBust(path) {
   if (!path) return path;
@@ -302,6 +391,14 @@ function obtenerRutaImagenOptimizada(path) {
   return `${OPTIMIZED_IMAGE_ROOT}/${normalized}`.replace(/\.[^./?]+$/, ".webp");
 }
 
+function obtenerRutaImagenOptimizadaJpg(path) {
+  const normalized = normalizarRutaAsset(path);
+  if (!normalized) return "";
+  const sourceRoot = OPTIMIZED_IMAGE_SOURCE_ROOTS.find((root) => normalized.startsWith(`${root}/`));
+  if (!sourceRoot) return normalized;
+  return `${OPTIMIZED_IMAGE_ROOT}/${normalized}`;
+}
+
 function restaurarImagenOriginal(img) {
   if (!img || img.dataset.fallbackApplied === "1") return;
   const originalSrc = img.dataset.originalSrc || "";
@@ -331,6 +428,7 @@ function asignarImagenCatalogo(img, path, options = {}) {
 
   img.dataset.originalSrc = normalized;
   img.dataset.optimizedSrc = obtenerRutaImagenOptimizada(normalized);
+  img.dataset.optimizedJpgSrc = obtenerRutaImagenOptimizadaJpg(normalized);
   img.dataset.fallbackApplied = "0";
   img.loading = eager ? "eager" : "lazy";
   img.decoding = "async";
@@ -341,6 +439,7 @@ function asignarImagenCatalogo(img, path, options = {}) {
   img.dataset.requestId = requestId;
 
   const optimizedSrc = buildAssetUrl(img.dataset.optimizedSrc || normalized);
+  const optimizedJpgSrc = buildAssetUrl(img.dataset.optimizedJpgSrc || normalized);
   const originalSrc = buildAssetUrl(normalized);
 
   if (preferOriginal) {
@@ -358,8 +457,17 @@ function asignarImagenCatalogo(img, path, options = {}) {
 
   loader.onerror = () => {
     if (img.dataset.requestId !== requestId) return;
-    img.dataset.fallbackApplied = "1";
-    img.src = originalSrc;
+    const jpgLoader = new Image();
+    jpgLoader.onload = () => {
+      if (img.dataset.requestId !== requestId) return;
+      img.src = optimizedJpgSrc;
+    };
+    jpgLoader.onerror = () => {
+      if (img.dataset.requestId !== requestId) return;
+      img.dataset.fallbackApplied = "1";
+      img.src = originalSrc;
+    };
+    jpgLoader.src = optimizedJpgSrc;
   };
 
   loader.src = optimizedSrc;
@@ -511,18 +619,99 @@ const STOCK_DATA_FILE_BY_SOURCE = {
   "catalogo-43": "stock-data-catalogo-43.json",
 };
 const STOCK_DATA_FILE = STOCK_DATA_FILE_BY_SOURCE[CATALOG_SOURCE] || "stock-data.json";
-const CATALOG_43_PRICE_BY_SKU = {
-  "4301-00": 26990,
-  "4309-00": 27990,
-  "4318-00": 26990,
-  "4314-00": 25990,
-  "4323-00": 26990,
+const CATALOG_PRICE_CONFIG_BY_SOURCE = {
+  "catalogo-1": {
+    priceFile: "price-data.json",
+  },
+  "catalogo-43": {
+    inlinePrices: {
+      "4301-00": 26990,
+      "4309-00": 27990,
+      "4318-00": 26990,
+      "4314-00": 25990,
+      "4323-00": 26990,
+      "4329-00": 26990,
+    },
+  },
 };
+let catalogPriceBySource = {};
 
-function obtenerPrecioCatalogo43(value) {
-  if (CATALOG_SOURCE !== "catalogo-43") return null;
+function obtenerConfiguracionPrecioCatalogo(source = CATALOG_SOURCE) {
+  return CATALOG_PRICE_CONFIG_BY_SOURCE[source] || null;
+}
+
+function normalizarMapaPreciosCatalogo(rawItems) {
+  const entries = rawItems && typeof rawItems === "object" ? Object.entries(rawItems) : [];
+  return entries.reduce((acc, [rawSku, rawPrice]) => {
+    const sku = normalizarSkuCatalogo(rawSku);
+    const price = Number(rawPrice);
+    if (!sku || !Number.isFinite(price) || price <= 0) return acc;
+    acc[sku] = price;
+    return acc;
+  }, {});
+}
+
+function obtenerCandidatosSkuPrecio(value) {
   const sku = normalizarSkuCatalogo(typeof value === "string" ? value : value?.family || value?.sku);
-  return Number(CATALOG_43_PRICE_BY_SKU[sku]) || null;
+  if (!sku) return [];
+  const candidates = [sku];
+  const familyMatch = sku.match(/^(\d{4})$/);
+  if (familyMatch) candidates.push(`${familyMatch[1]}-00`);
+  const zeroVariantMatch = sku.match(/^(\d{4})-00$/);
+  if (zeroVariantMatch) candidates.push(zeroVariantMatch[1]);
+  return [...new Set(candidates)];
+}
+
+async function cargarMapaPreciosCatalogo(source = CATALOG_SOURCE) {
+  const config = obtenerConfiguracionPrecioCatalogo(source);
+  if (!config) return {};
+  if (config.inlinePrices) return normalizarMapaPreciosCatalogo(config.inlinePrices);
+  if (!config.priceFile) return {};
+  const res = await fetch(withCacheBust(config.priceFile), { cache: "no-store" });
+  if (!res.ok) throw new Error(`status ${res.status}`);
+  const data = await res.json();
+  return normalizarMapaPreciosCatalogo(data?.items || {});
+}
+
+async function cargarTodosLosMapasPreciosCatalogo() {
+  const sources = Object.keys(CATALOG_PRICE_CONFIG_BY_SOURCE || {});
+  const entries = await Promise.all(
+    sources.map(async (source) => {
+      try {
+        const map = await cargarMapaPreciosCatalogo(source);
+        return [source, map];
+      } catch (err) {
+        console.warn(`No se pudo cargar precios para ${source}:`, err);
+        return [source, {}];
+      }
+    })
+  );
+  return Object.fromEntries(entries);
+}
+
+function obtenerPrecioListaCatalogo(value, source = CATALOG_SOURCE) {
+  const priceMap = catalogPriceBySource[source] || {};
+  const candidates = obtenerCandidatosSkuPrecio(value);
+  for (const sku of candidates) {
+    const price = Number(priceMap[sku]);
+    if (Number.isFinite(price) && price > 0) return price;
+  }
+  return null;
+}
+
+function obtenerPrecioCatalogo(value, source = CATALOG_SOURCE) {
+  return obtenerPrecioListaCatalogo(value, source);
+}
+
+function obtenerDetallePrecioCatalogo(value, source = CATALOG_SOURCE) {
+  const precioLista = obtenerPrecioListaCatalogo(value, source);
+  if (!precioLista) return null;
+  return {
+    lista: precioLista,
+    final: precioLista,
+    descuento: 0,
+    ahorro: 0,
+  };
 }
 
 function formatearPrecioCLP(value) {
@@ -532,10 +721,9 @@ function formatearPrecioCLP(value) {
 }
 
 function stockSupabaseHabilitado() {
-  // La vitrina pública debe seguir funcionando aunque Supabase esté vacío,
-  // con RLS reciente o con datos en validación. Para el storefront usamos
-  // siempre el JSON regenerado desde el Excel y dejamos Supabase para el admin.
-  return false;
+  // Solo la coleccion 42 debe leer stock en vivo desde Supabase.
+  // Si la lectura falla, el storefront vuelve al JSON regenerado desde Excel.
+  return CATALOG_SOURCE === "catalogo-1";
 }
 
 async function cargarStockJsonLocal() {
@@ -550,7 +738,7 @@ async function cargarStockSupabasePublico() {
 
   const { data, error } = await client
     .from("stock_items")
-    .select("id,season,article_code,sku,tiro,bota,color,active,updated_at,stock_item_sizes(id,size_label,quantity,sort_order)")
+    .select("id,season,article_code,sku,tiro,bota,color,active,updated_at,stock_item_sizes(id,size_label,quantity,sort_order),stock_item_reserve_sizes(size_label,reserve_quantity)")
     .eq("active", true)
     .order("sku", { ascending: true });
 
@@ -693,7 +881,8 @@ function normalizarTallasStock(rows = []) {
   });
 }
 
-function normalizarFilaStockCatalog(row = {}) {
+function normalizarFilaStockCatalog(row = {}, options = {}) {
+  const { preferReserve = false } = options;
   const sku = normalizarSkuCatalogo(row?.sku);
   const sourceSizes =
     Array.isArray(row?.stock_item_sizes) && row.stock_item_sizes.length
@@ -705,9 +894,20 @@ function normalizarFilaStockCatalog(row = {}) {
           quantity: Math.max(0, Number(row?.[`size_${size}`]) || 0),
           sort_order: (index + 1) * 10,
         }));
-  const sizes = normalizarTallasStock(
-    sourceSizes
+  const reserveMap = Object.fromEntries(
+    (Array.isArray(row?.stock_item_reserve_sizes) ? row.stock_item_reserve_sizes : [])
+      .map((sizeRow) => [
+        normalizarStockSizeLabel(sizeRow?.size_label),
+        Math.max(0, Number(sizeRow?.reserve_quantity) || 0),
+      ])
+      .filter(([label]) => !!label)
   );
+  const sizes = normalizarTallasStock(sourceSizes).map((sizeRow) => ({
+    ...sizeRow,
+    quantity: preferReserve && Object.prototype.hasOwnProperty.call(reserveMap, sizeRow.size_label)
+      ? reserveMap[sizeRow.size_label]
+      : sizeRow.quantity,
+  }));
   const total = sizes.reduce((acc, sizeRow) => acc + (Number(sizeRow?.quantity) || 0), 0);
   return {
     id: row?.id ?? null,
@@ -728,7 +928,7 @@ function normalizarFilaStockCatalog(row = {}) {
 function convertirFilasStockItemsAItems(rows = []) {
   const items = {};
   (Array.isArray(rows) ? rows : [])
-    .map((row) => normalizarFilaStockCatalog(row))
+    .map((row) => normalizarFilaStockCatalog(row, { preferReserve: true }))
     .filter((row) => row?.sku && row?.active !== false)
     .forEach((row) => {
       const sizesMap = Object.fromEntries(
@@ -761,6 +961,19 @@ function normalizarMapaAssetsPorSku(map = {}) {
     if (!normalized[key]) normalized[key] = value;
   });
   return normalized;
+}
+
+function crearFirmaStock(stockItems = {}) {
+  return Object.entries(stockItems || {})
+    .sort(([a], [b]) => String(a).localeCompare(String(b), undefined, { numeric: true }))
+    .map(([sku, payload]) => {
+      const total = Math.max(0, Number(payload?.total) || 0);
+      const sizes = TALLAS_DISPONIBLES
+        .map((size) => `${size}:${Math.max(0, Number(payload?.sizes?.[size]) || 0)}`)
+        .join(",");
+      return `${normalizarSkuCatalogo(sku)}|${total}|${sizes}`;
+    })
+    .join(";");
 }
 
 function crearCandidatosSku(value) {
@@ -970,10 +1183,6 @@ function agruparVariantesPorFamilia(items = []) {
         ];
       }
 
-      if (!target.main_image && item?.main_image) target.main_image = item.main_image;
-      if ((!target.gallery || !target.gallery.length) && Array.isArray(item?.gallery)) {
-        target.gallery = [...item.gallery];
-      }
       if ((!target.description || /^Modelo\s/i.test(target.description)) && item?.description) {
         target.description = item.description;
       }
@@ -1113,7 +1322,10 @@ function firmaEsSubconjunto(aObj, bObj) {
 }
 
 function filtrarProductosConImagenes(items = []) {
-  return items.filter((item) => tieneImagenesRenderizables(item));
+  return items.filter((item) => {
+    if (obtenerImagenesReales(item).length) return true;
+    return (item?.variants || []).some((variant) => obtenerImagenesReales(variant).length);
+  });
 }
 
 function deduplicarTarjetasPorModelo(items = []) {
@@ -1285,6 +1497,10 @@ function obtenerImagenesPropias(obj) {
   return deduplicarImagenesParaVisor(obtenerImagenesVisibles(obj, { includeCatalog: true }));
 }
 
+function obtenerImagenesReales(obj) {
+  return deduplicarImagenesParaVisor(obtenerImagenesVisibles(obj));
+}
+
 function crearFirmaGaleriaTarjeta(images = []) {
   const names = [];
   const seen = new Set();
@@ -1335,7 +1551,7 @@ function construirProductosGridPorSku(items = [], stockItems = {}) {
       const total = Math.max(0, Number(stock?.total) || 0);
       if (total <= 0) return;
 
-      const images = obtenerImagenesPropias(entry.source).filter((img) => imagenCompatibleConSku(img, entry.sku));
+      const images = obtenerImagenesReales(entry.source).filter((img) => imagenCompatibleConSku(img, entry.sku));
       const cardImage = images[0] || "";
       if (!cardImage) return;
       const imageSignature = crearFirmaGaleriaTarjeta(images);
@@ -1353,6 +1569,7 @@ function construirProductosGridPorSku(items = [], stockItems = {}) {
         _baseFamily: baseFamily,
         _preferredSku: entry.sku,
         _cardImage: cardImage,
+        _preferredImages: [...images],
         _stockTotal: total,
         isSoldOut: false,
       });
@@ -1376,7 +1593,7 @@ function construirProductosGridFallback(items = [], stockItems = {}) {
       const family = normalizarSkuCatalogo(item?.family);
       const stock = obtenerStockParaSkuDesdeItems(family, stockItems);
       const total = Math.max(0, Number(stock?.total) || 0);
-      const images = obtenerImagenesPropias(item);
+      const images = obtenerImagenesReales(item);
       const cardImage = images[0] || "";
       if (!family || total <= 0 || !cardImage) return null;
       return {
@@ -1385,6 +1602,7 @@ function construirProductosGridFallback(items = [], stockItems = {}) {
         _baseFamily: obtenerBaseFamilia(family) ? `${obtenerBaseFamilia(family)}-00` : family,
         _preferredSku: family,
         _cardImage: cardImage,
+        _preferredImages: [...images],
         _stockTotal: total,
         isSoldOut: false,
       };
@@ -1410,8 +1628,8 @@ function prepararCatalogo43Directo(items = [], stockItems = {}) {
       const stock = obtenerStockParaSkuDesdeItems(family, stockItems);
       const fallbackTotal = obtenerTotalFallbackCatalogo43(item);
       const total = Math.max(0, Number(stock?.total) || 0, fallbackTotal);
-      const images = obtenerImagenesPropias(item);
-      const mainImage = images[0] || normalizarRutaImagenCatalogo(item?.main_image) || "";
+      const images = obtenerImagenesReales(item);
+      const mainImage = images[0] || "";
       if (!family || total <= 0 || !mainImage) return null;
       return {
         ...item,
@@ -1422,6 +1640,7 @@ function prepararCatalogo43Directo(items = [], stockItems = {}) {
         _baseFamily: obtenerBaseFamilia(family) ? `${obtenerBaseFamilia(family)}-00` : family,
         _preferredSku: family,
         _cardImage: mainImage,
+        _preferredImages: [...images],
         _stockTotal: total,
         isSoldOut: false,
       };
@@ -1489,7 +1708,11 @@ function rescatarProductosConStockFaltantes(itemsBase = [], itemsActuales = [], 
   const rescates = [];
   modeloConStock.forEach((model) => {
     if (mostrados.has(model)) return;
-    const candidates = (itemsBase || []).filter((item) => obtenerBaseFamilia(item?.family) === model && tieneImagenesRenderizables(item));
+    const candidates = (itemsBase || []).filter((item) => {
+      if (obtenerBaseFamilia(item?.family) !== model) return false;
+      if (obtenerImagenesReales(item).length) return true;
+      return (item?.variants || []).some((variant) => obtenerImagenesReales(variant).length);
+    });
     if (!candidates.length) return;
     const best =
       candidates.find((item) => itemTieneStockDisponible(item, stockItems)) ||
@@ -1542,7 +1765,8 @@ function filtrarProductosDisponiblesCole42(items = [], trazabilidadData = null) 
 async function cargarProductosCatalogo() {
   try {
     const catalogPromise = fetch(withCacheBust(CATALOG_DATA_FILE)).then((res) => res.json());
-    const stockPromise = INVENTORY_ENABLED
+    const priceDataPromise = cargarTodosLosMapasPreciosCatalogo();
+    const stockPromise = INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43"
       ? cargarStockDatasetPreferido().catch((err) => {
         if (CATALOG_SOURCE === "catalogo-43") {
           console.warn(`No se pudo cargar ${STOCK_DATA_FILE}, se usa fallback de catálogo 43:`, err);
@@ -1574,8 +1798,9 @@ async function cargarProductosCatalogo() {
       })
       : Promise.resolve(null);
 
-    const [data, stockData, extraCatalogData, catalog42Data, catalog42PresenceData, catalogCoverMapData, stockOverridesData, trazabilidadData] = await Promise.all([
+    const [data, priceData, stockData, extraCatalogData, catalog42Data, catalog42PresenceData, catalogCoverMapData, stockOverridesData, trazabilidadData] = await Promise.all([
       catalogPromise,
+      priceDataPromise,
       stockPromise,
       extraCatalogPromise,
       catalog42Promise,
@@ -1585,11 +1810,20 @@ async function cargarProductosCatalogo() {
       trazabilidadPromise,
     ]);
 
-    if (INVENTORY_ENABLED) {
+    catalogPriceBySource = {
+      ...catalogPriceBySource,
+      ...(priceData || {}),
+    };
+
+    if (INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43") {
       stockBySku = {
         ...crearStockSinteticoAgotados(),
         ...normalizarMapaStockPorSku(stockData?.items || {}),
       };
+      lastRenderedStockSignature = crearFirmaStock(stockBySku);
+    } else if (CATALOG_SOURCE === "catalogo-43") {
+      stockBySku = {};
+      lastRenderedStockSignature = "";
     }
     catalogCoverBySku = normalizarMapaAssetsPorSku(catalogCoverMapData || {});
 
@@ -1648,7 +1882,7 @@ async function cargarProductosCatalogo() {
 
 cargarProductosCatalogo();
 
-if (INVENTORY_ENABLED) {
+if (INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43") {
   configurarRealtimeStock();
   cargarStockData();
   window.setInterval(cargarStockData, STOCK_REFRESH_INTERVAL_MS);
@@ -1709,6 +1943,8 @@ function renderImages(imageList) {
   uniqueImages.forEach((imgSrc, index) => {
     const thumb = document.createElement("img");
     asignarImagenCatalogo(thumb, imgSrc, { eager: index < 6, fetchPriority: index < 4 ? "high" : "low" });
+    thumb.alt = "";
+    thumb.setAttribute("aria-hidden", "true");
     if (index === 0) thumb.classList.add("active-thumb");
 
     thumb.onclick = () => {
@@ -1909,27 +2145,47 @@ function configurarRealtimeStock() {
         }
       }
     )
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "stock_item_reserve_sizes",
+      },
+      () => {
+        cargarStockData();
+        if (quotesAccessToken && adminActiveTab === "stock") {
+          cargarStockCatalogAdmin().catch((err) => console.warn("No se pudo refrescar Stock:", err));
+        }
+      }
+    )
     .subscribe();
 }
 
 function cargarStockData() {
+  if (CATALOG_SOURCE === "catalogo-43") {
+    stockBySku = {};
+    if (skuActivo) aplicarStockATallas(skuActivo);
+    const baseItems43 = Array.isArray(productosCatalogoBase) && productosCatalogoBase.length
+      ? productosCatalogoBase
+      : productos;
+    const directCatalog43 = prepararCatalogo43Directo(baseItems43, {});
+    productos = directCatalog43.productos;
+    productosGrid = directCatalog43.productosGrid;
+    renderGrid(productosGrid);
+    return Promise.resolve();
+  }
   return cargarStockDatasetPreferido()
     .then((data) => {
-      stockBySku = normalizarMapaStockPorSku(data?.items || {});
+      const nextStock = normalizarMapaStockPorSku(data?.items || {});
+      const nextSignature = crearFirmaStock(nextStock);
+      const stockChanged = nextSignature !== lastRenderedStockSignature;
+      stockBySku = nextStock;
       if (skuActivo) aplicarStockATallas(skuActivo);
-      if (CATALOG_SOURCE === "catalogo-43") {
-        const baseItems43 = Array.isArray(productosCatalogoBase) && productosCatalogoBase.length
-          ? productosCatalogoBase
-          : productos;
-        const directCatalog43 = prepararCatalogo43Directo(baseItems43, stockBySku);
-        productos = directCatalog43.productos;
-        productosGrid = directCatalog43.productosGrid;
-        renderGrid(productosGrid);
-        return;
-      }
-      if (Array.isArray(productos) && productos.length) {
+      if (stockChanged && Array.isArray(productos) && productos.length) {
         productosGrid = construirProductosGridPorSku(productos, stockBySku);
         renderGrid(productosGrid);
+        lastRenderedStockSignature = nextSignature;
       }
     })
     .catch((err) => console.warn(`No se pudo cargar ${STOCK_DATA_FILE}:`, err));
@@ -2106,14 +2362,14 @@ function actualizarEstadoCotizacionProducto(producto, sku) {
   const titleEl = document.getElementById("modalTitle");
   const quotePanelModelTitle = document.getElementById("quotePanelModelTitle");
   const descriptionEl = document.getElementById("description");
-  const precio43 = obtenerPrecioCatalogo43(sku || producto?.family);
+  const detallePrecio = obtenerDetallePrecioCatalogo(sku || producto?.family);
   if (titleEl) {
     titleEl.innerText = agotado ? `Modelo ${skuLabel} - Agotado` : "Modelo " + skuLabel;
   }
   if (quotePanelModelTitle) quotePanelModelTitle.innerText = "Modelo " + skuLabel;
-  if (descriptionEl && precio43) {
+  if (descriptionEl && detallePrecio && CATALOG_SOURCE !== "catalogo-43") {
     const textoBase = normalizarTextoVisible(producto?.description || "");
-    descriptionEl.innerText = `${textoBase}${textoBase ? " · " : ""}Precio mayor s/iva: ${formatearPrecioCLP(precio43)}`;
+    descriptionEl.innerText = `${textoBase}${textoBase ? " · " : ""}Precio mayor s/iva: ${formatearPrecioCLP(detallePrecio.final)}`;
   }
   if (imageViewerEl) {
     imageViewerEl.classList.toggle("is-sold-out", agotado);
@@ -2147,11 +2403,14 @@ function renderZoomGallery() {
   imagenesModalActual.forEach((imgSrc, index) => {
     const thumb = document.createElement("img");
     asignarImagenCatalogo(thumb, imgSrc, { eager: index < 6, fetchPriority: index < 4 ? "high" : "low" });
-    thumb.alt = `Vista ${index + 1}`;
+    thumb.alt = "";
+    thumb.setAttribute("aria-hidden", "true");
     if (index === imagenModalIndex) thumb.classList.add("active-thumb");
     thumb.onclick = () => {
       imagenModalIndex = index;
-      renderZoomGallery();
+      asignarImagenCatalogo(zoomMain, imgSrc, { eager: true, fetchPriority: "high", preferOriginal: true });
+      zoomThumbs.querySelectorAll("img").forEach((t) => t.classList.remove("active-thumb"));
+      thumb.classList.add("active-thumb");
     };
     zoomThumbs.appendChild(thumb);
   });
@@ -2284,7 +2543,7 @@ function inicializarBuscadorModelos() {
   if (!input || !panel || !btnBuscar || !btnLimpiar) return;
 
   const obtenerFuenteBusqueda = () => (
-    Array.isArray(productosGrid) && productosGrid.length ? productosGrid : productos
+    Array.isArray(productosGrid) ? productosGrid : []
   );
   const modelos = [...new Set(obtenerFuenteBusqueda().map((p) => String(p.family)).filter(Boolean))].sort();
   let sugerenciasActuales = [];
@@ -2470,12 +2729,17 @@ function inicializarBuscadorModelos() {
  * GRID
  ***********************/
 function obtenerImagenSeguraTarjeta(producto) {
-  const images = obtenerImagenesPropias(producto);
-  const candidate = images[0]
+  const preferredImages = Array.isArray(producto?._preferredImages)
+    ? producto._preferredImages.map((img) => normalizarRutaImagenCatalogo(img)).filter(Boolean)
+    : [];
+  const realImages = obtenerImagenesReales(producto).map((img) => normalizarRutaImagenCatalogo(img)).filter(Boolean);
+  const candidate = preferredImages[0]
     || normalizarRutaImagenCatalogo(producto?._cardImage)
-    || normalizarRutaImagenCatalogo(producto?.main_image)
-    || "Imagenes/Logo/app-icon.png";
-  return candidate || "Imagenes/Logo/app-icon.png";
+    || realImages[0]
+    || "";
+  const normalizedCandidate = normalizarRutaAsset(candidate);
+  if (!normalizedCandidate || normalizedCandidate === "Imagenes/Logo/app-icon.png") return "";
+  return candidate;
 }
 
 function tarjetaSinImagenCatalogo43(producto) {
@@ -2491,19 +2755,23 @@ function renderGrid(lista) {
       ...p,
       _safeCardImage: obtenerImagenSeguraTarjeta(p),
     }))
-    .filter((p) => Boolean(p?._safeCardImage));
+    .filter((p) => Boolean(p?._safeCardImage) && normalizarRutaAsset(p._safeCardImage) !== "Imagenes/Logo/app-icon.png");
   const listaOrdenada = [...listaConImagen].sort((a, b) => compararProductosPorStockDesc(a, b, stockBySku));
 
   container.innerHTML = listaOrdenada
     .map(
-      (p, index) => `
+      (p, index) => {
+        const detallePrecio = obtenerDetallePrecioCatalogo(p);
+        return `
       <div class="card ${esProductoAgotado(p) ? "card-sold-out" : ""}" data-family="${p.family}" onclick="verProductoDesdeCard('${p._baseFamily || p.family}','${p._preferredSku || p.family}')">
         <div class="card-title-row">
           <div class="card-title-block">
             <div class="card-title">Modelo ${normalizarSkuCatalogo(p.family)}</div>
             ${
-              obtenerPrecioCatalogo43(p)
-                ? `<div class="card-price">${formatearPrecioCLP(obtenerPrecioCatalogo43(p))}</div>`
+              detallePrecio
+                ? `<div class="card-price">
+                    <span class="card-price-current">${formatearPrecioCLP(detallePrecio.final)}</span>
+                  </div>`
                 : ""
             }
           </div>
@@ -2522,30 +2790,25 @@ function renderGrid(lista) {
           ${esProductoAgotado(p) ? '<span class="sold-out-ribbon sold-out-ribbon-card">AGOTADO</span>' : ""}
         </div>
       </div>
-    `
+    `;
+      }
     )
     .join("");
 
   container.querySelectorAll("img[data-image-src]").forEach((img, index) => {
     img.addEventListener("error", () => {
-      const placeholder = "Imagenes/Logo/app-icon.png";
-      const originalPath = normalizarRutaAsset(img.dataset.imageSrc || "");
-      if (originalPath === normalizarRutaAsset(placeholder)) {
-        img.onerror = null;
-        return;
+      const card = img.closest(".card");
+      if (card) {
+        card.remove();
+      } else {
+        img.remove();
       }
-      img.dataset.imageSrc = placeholder;
-      asignarImagenCatalogo(img, placeholder, {
-        eager: index < 4,
-        fetchPriority: index < 2 ? "high" : "low",
-        preferOriginal: true,
-      });
     }, { once: true });
 
     asignarImagenCatalogo(img, img.dataset.imageSrc, {
       eager: index < 4,
       fetchPriority: index < 2 ? "high" : "low",
-      preferOriginal: true,
+      preferOriginal: false,
     });
   });
 }
@@ -2577,6 +2840,10 @@ function verProducto(familyId, preferredSku = "") {
     ? p.variants.find((variant) => normalizarSkuCatalogo(variant?.sku) === preferredSkuNormalized)
     : null;
   const skuInicial = normalizarSkuCatalogo(preferredVariant?.sku || p.family);
+  const selectedGridEntry = (Array.isArray(productosGrid) ? productosGrid : []).find((item) => {
+    const itemSku = normalizarSkuCatalogo(item?._preferredSku || item?.family);
+    return itemSku === skuInicial;
+  }) || null;
 
   // Reinicia drafts para evitar re-agregar items viejos al volver a abrir el modal
   resetDraftsModal();
@@ -2589,35 +2856,70 @@ function verProducto(familyId, preferredSku = "") {
   const descriptionEl = document.getElementById("description");
   const charList = document.getElementById("characteristics");
   const hasCharacteristics = Array.isArray(p.characteristics) && p.characteristics.length;
-  const precio43 = obtenerPrecioCatalogo43(skuInicial);
+  const detallePrecio = obtenerDetallePrecioCatalogo(skuInicial);
 
-  descriptionEl.innerText = hasCharacteristics
-    ? ""
-    : normalizarTextoVisible(p.description || "") + (precio43 ? ` · Precio mayor s/iva: ${formatearPrecioCLP(precio43)}` : "");
-  descriptionEl.style.display = hasCharacteristics || !p.description ? "none" : "block";
+  if (CATALOG_SOURCE === "catalogo-43") {
+    const sku43 = normalizarSkuCatalogo(skuInicial || p.family);
+    const descripcion43Base = normalizarTextoVisible(p.description || "");
+    const texto43 = (!descripcion43Base || /^Modelo\s/i.test(descripcion43Base))
+      ? normalizarTextoVisible(CATALOG_43_DESCRIPTION_MAP[sku43] || "")
+      : descripcion43Base;
+    const partes43 = texto43
+      .split("·")
+      .map((value) => normalizarTextoVisible(value))
+      .map((value) => value.trim())
+      .filter(Boolean);
 
-  charList.innerHTML = "";
-  charList.style.display = hasCharacteristics ? "block" : "none";
-  if (hasCharacteristics) {
-    const ul = document.createElement("ul");
-    p.characteristics.forEach((char) => {
-      const li = document.createElement("li");
-      li.innerText = normalizarTextoVisible(char);
-      ul.appendChild(li);
-    });
-    if (precio43) {
-      const li = document.createElement("li");
-      li.innerText = `Precio mayor s/iva: ${formatearPrecioCLP(precio43)}`;
-      ul.appendChild(li);
+    descriptionEl.innerText = "";
+    descriptionEl.style.display = "none";
+    charList.innerHTML = "";
+    charList.style.display = partes43.length ? "block" : "none";
+
+      if (partes43.length) {
+      const ul = document.createElement("ul");
+      partes43.forEach((parte) => {
+        const li = document.createElement("li");
+        li.innerText = parte;
+        ul.appendChild(li);
+      });
+      if (detallePrecio) {
+        const liPrecio = document.createElement("li");
+        liPrecio.innerText = `Precio mayor s/iva: ${formatearPrecioCLP(detallePrecio.final)}`;
+        ul.appendChild(liPrecio);
+      }
+      charList.appendChild(ul);
     }
-    charList.appendChild(ul);
+  } else {
+    descriptionEl.innerText = hasCharacteristics
+      ? ""
+      : normalizarTextoVisible(p.description || "") + (detallePrecio ? ` · Precio mayor s/iva: ${formatearPrecioCLP(detallePrecio.final)}` : "");
+    descriptionEl.style.display = hasCharacteristics || !p.description ? "none" : "block";
+
+    charList.innerHTML = "";
+    charList.style.display = hasCharacteristics ? "block" : "none";
+    if (hasCharacteristics) {
+      const ul = document.createElement("ul");
+      p.characteristics.forEach((char) => {
+        const li = document.createElement("li");
+        li.innerText = normalizarTextoVisible(char);
+        ul.appendChild(li);
+      });
+      if (detallePrecio) {
+        const liPrecio = document.createElement("li");
+        liPrecio.innerText = `Precio mayor s/iva: ${formatearPrecioCLP(detallePrecio.final)}`;
+        ul.appendChild(liPrecio);
+      }
+      charList.appendChild(ul);
+    }
   }
 
   const variantContainer = document.getElementById("variantContainer");
   variantContainer.innerHTML = "";
   variantContainer.style.display = "none";
 
-  const ownImages = preferredVariant ? buildImageList(preferredVariant) : buildImageList(p);
+  const ownImages = Array.isArray(selectedGridEntry?._preferredImages) && selectedGridEntry._preferredImages.length
+    ? [...selectedGridEntry._preferredImages]
+    : (preferredVariant ? buildImageList(preferredVariant) : buildImageList(p));
   const firstVariantWithImages = Array.isArray(p.variants)
     ? p.variants.find((variant) => buildImageList(variant).length)
     : null;
@@ -2725,6 +3027,7 @@ function actualizarCarrito() {
   const container = document.getElementById("cartItems");
   let totalItems = 0;
   let totalEstimado = 0;
+  let totalLista = 0;
 
   if (!pedido.length) {
     container.innerHTML = `
@@ -2737,9 +3040,13 @@ function actualizarCarrito() {
     container.innerHTML = pedido
       .map((item, index) => {
         const cantidadModelo = Object.values(item.tallas).reduce((acc, qty) => acc + (Number(qty) || 0), 0);
-        const precioUnitario = obtenerPrecioCatalogo43(item.sku);
+        const detallePrecio = obtenerDetallePrecioCatalogo(item.sku);
+        const precioListaUnitario = detallePrecio?.lista || null;
+        const precioUnitario = detallePrecio?.final || null;
+        const subtotalLista = precioListaUnitario ? precioListaUnitario * cantidadModelo : 0;
         const subtotal = precioUnitario ? precioUnitario * cantidadModelo : 0;
         totalItems += cantidadModelo;
+        totalLista += subtotalLista;
         totalEstimado += subtotal;
         const tallasHtml = Object.entries(item.tallas)
           .map(([t, c]) => `<span class="cart-size-pill">T${t} <strong>${c}</strong></span>`)
@@ -2757,8 +3064,12 @@ function actualizarCarrito() {
           </div>
           <div class="cart-item-sizes">${tallasHtml}</div>
           <div class="cart-item-summary">
-            <div>Prendas: <strong>${cantidadModelo}</strong></div>
-            ${precioUnitario ? `<div>Subtotal: <strong>${formatearPrecioCLP(subtotal)}</strong></div>` : ""}
+            <div>Prendas modelo: <strong>${cantidadModelo}</strong></div>
+            ${
+              precioUnitario
+                ? `<div>Subtotal: <strong>${formatearPrecioCLP(subtotal)}</strong></div>`
+                : ""
+            }
           </div>
         </div>
       `;
@@ -2779,6 +3090,7 @@ function actualizarCarrito() {
   }
 
   totalsBox.innerHTML = `
+    <div class="cart-totals-head"><span class="cart-totals-title">Resumen total</span></div>
     <div class="cart-totals-row"><span>Total prendas</span><strong>${totalItems}</strong></div>
     ${totalEstimado > 0 ? `<div class="cart-totals-row"><span>Total estimado</span><strong>${formatearPrecioCLP(totalEstimado)}</strong></div>` : ""}
   `;
@@ -2911,6 +3223,7 @@ function generarCSVQuoteAdmin(quote, items = []) {
   rows.push(["RESUMEN COTIZACION"]);
   rows.push(["Codigo", codigo]);
   rows.push(["Tienda", quote?.store_name || ""]);
+  rows.push(["Telefono", quote?.client_phone || ""]);
   rows.push(["Estado", estado]);
   rows.push(["Fecha", fecha]);
   rows.push(["Total items", quote?.total_items || 0]);
@@ -3059,6 +3372,7 @@ async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
   sheet.cell("U1").value(codigo);
   sheet.cell("K5").value(quote?.client_rut || "");
   sheet.cell("K8").value(new Date());
+  sheet.cell("K6").value(quote?.client_phone || "");
 
   grouped.forEach((entry, index) => {
     const row = ORDER_TEMPLATE_FIRST_ROW + index;
@@ -3078,6 +3392,7 @@ function generarExcelHtmlQuoteAdmin(quote, items = []) {
   const codigo = generarCodigoCotizacionVisual(quote);
   const estado = quote?.is_ready ? "Cotización lista" : "En proceso";
   const rut = quote?.client_rut || "";
+  const telefono = quote?.client_phone || "";
 
   const ordered = [...items].sort((a, b) => {
     if (String(a.sku) !== String(b.sku)) return String(a.sku).localeCompare(String(b.sku));
@@ -3129,6 +3444,7 @@ function generarExcelHtmlQuoteAdmin(quote, items = []) {
     <tr><td class="label">Codigo</td><td class="value" colspan="2">${escapeHtmlExcel(codigo)}</td></tr>
     <tr><td class="label">Tienda</td><td class="value" colspan="2">${escapeHtmlExcel(quote?.store_name || "")}</td></tr>
     <tr><td class="label">RUT</td><td class="value" colspan="2">${escapeHtmlExcel(rut)}</td></tr>
+    <tr><td class="label">Telefono</td><td class="value" colspan="2">${escapeHtmlExcel(telefono)}</td></tr>
     <tr><td class="label">Estado</td><td class="${quote?.is_ready ? "pill" : "pill warn"}" colspan="2">${escapeHtmlExcel(estado)}</td></tr>
     <tr><td class="label">Fecha</td><td class="value" colspan="2">${escapeHtmlExcel(fecha)}</td></tr>
     <tr><td class="label">Total items</td><td class="value num" colspan="2">${escapeHtmlExcel(quote?.total_items || 0)}</td></tr>
@@ -3273,6 +3589,7 @@ function mostrarConfirmacionAccion({ titulo = "Confirmar", mensaje = "¿Estás s
 function setClientLookupUI({ tipo = "", texto = "", badge = "" } = {}) {
   const msgEl = document.getElementById("clientLookupMsg");
   const badgeEl = document.getElementById("clientLookupBadge");
+  const mostrarBadge = Boolean(badge) && tipo !== "new";
   if (msgEl) {
     msgEl.className = "client-lookup-msg" + (tipo ? ` ${tipo}` : "");
     msgEl.innerText = texto || "";
@@ -3284,7 +3601,7 @@ function setClientLookupUI({ tipo = "", texto = "", badge = "" } = {}) {
   }
   if (badgeEl) {
     badgeEl.className = "client-lookup-badge" + (tipo ? ` ${tipo}` : "");
-    if (badge) {
+    if (mostrarBadge) {
       badgeEl.hidden = false;
       badgeEl.innerText = badge;
     } else {
@@ -3294,14 +3611,84 @@ function setClientLookupUI({ tipo = "", texto = "", badge = "" } = {}) {
   }
 }
 
+function setCartFieldInvalid(inputEl, message = "") {
+  if (!inputEl) return;
+  inputEl.classList.add("cart-field-invalid");
+  if (message) {
+    inputEl.setCustomValidity(message);
+  }
+  const labelEl = inputEl.id ? document.querySelector(`label[for="${inputEl.id}"]`) : null;
+  labelEl?.classList.add("is-invalid");
+}
+
+function clearCartFieldInvalid(inputEl) {
+  if (!inputEl) return;
+  inputEl.classList.remove("cart-field-invalid");
+  inputEl.setCustomValidity("");
+  const labelEl = inputEl.id ? document.querySelector(`label[for="${inputEl.id}"]`) : null;
+  labelEl?.classList.remove("is-invalid");
+}
+
+function clearCartFieldInvalidState() {
+  clearCartFieldInvalid(document.getElementById("clientRut"));
+  clearCartFieldInvalid(document.getElementById("clientName"));
+  clearCartFieldInvalid(document.getElementById("clientPhone"));
+}
+
+function renderClientNewHelper(show, text = "Completa nombre y teléfono para enviar la cotización del cliente nuevo.") {
+  const panelEl = document.querySelector(".cart-client-panel");
+  if (!panelEl) return;
+  let helpEl = document.getElementById("clientNewHelper");
+  if (!helpEl) {
+    helpEl = document.createElement("div");
+    helpEl.id = "clientNewHelper";
+    helpEl.className = "cart-client-help";
+    panelEl.appendChild(helpEl);
+  }
+  panelEl.classList.toggle("has-new-client", !!show);
+  helpEl.hidden = !show;
+  helpEl.innerText = show ? text : "";
+}
+
 function toggleClientNameField(show, { value = "", readonly = false } = {}) {
   const wrapEl = document.getElementById("clientNameWrap");
   const inputEl = document.getElementById("clientName");
+  const labelEl = document.querySelector('label[for="clientName"]');
   if (!wrapEl || !inputEl) return;
   wrapEl.hidden = !show;
   inputEl.readOnly = !!readonly;
   inputEl.value = value || "";
   inputEl.classList.toggle("is-readonly", !!readonly);
+  wrapEl.classList.toggle("is-highlighted", !!show && !readonly);
+  if (labelEl) {
+    labelEl.innerText = "Nombre o razón social";
+  }
+}
+
+function toggleClientPhoneField(show, { value = "", readonly = false } = {}) {
+  const wrapEl = document.getElementById("clientPhoneWrap");
+  const inputEl = document.getElementById("clientPhone");
+  const labelEl = document.querySelector('label[for="clientPhone"]');
+  if (!wrapEl || !inputEl) return;
+  wrapEl.hidden = !show;
+  inputEl.readOnly = !!readonly;
+  inputEl.value = value || "";
+  inputEl.classList.toggle("is-readonly", !!readonly);
+  wrapEl.classList.toggle("is-highlighted", !!show && !readonly);
+  if (labelEl) {
+    labelEl.innerText = "Teléfono del cliente";
+  }
+}
+
+function normalizarTelefonoCliente(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const cleaned = raw.replace(/[^\d+]/g, "");
+  if (!cleaned) return "";
+  if (cleaned.startsWith("+")) {
+    return `+${cleaned.slice(1).replace(/\+/g, "")}`;
+  }
+  return cleaned;
 }
 
 function habilitarInputManual(inputEl) {
@@ -3322,11 +3709,14 @@ function habilitarInputManual(inputEl) {
 
 function construirClienteNuevoDesdeInput(rutNormalizado) {
   const nameEl = document.getElementById("clientName");
+  const phoneEl = document.getElementById("clientPhone");
   const nombre = String(nameEl?.value || "").trim();
+  const telefono = normalizarTelefonoCliente(phoneEl?.value || "");
   return {
     rut: formatearRutVisual(rutNormalizado),
     rut_normalized: rutNormalizado,
     razon_social: nombre,
+    client_phone: telefono,
     is_new: true,
   };
 }
@@ -3369,13 +3759,17 @@ async function validarRutClienteEnUI({ silencioso = false } = {}) {
   clienteSeleccionado = null;
 
   if (!rutNormalizado) {
+    renderClientNewHelper(false);
     setClientLookupUI();
     toggleClientNameField(false);
+    toggleClientPhoneField(false);
     return null;
   }
 
   if (!/^[0-9]+-[0-9K]$/i.test(rutNormalizado) || !esRutValido(rutNormalizado)) {
+    renderClientNewHelper(false);
     toggleClientNameField(false);
+    toggleClientPhoneField(false);
     if (!silencioso) setClientLookupUI({ tipo: "error", texto: "Formato de RUT inválido" });
     return null;
   }
@@ -3388,24 +3782,31 @@ async function validarRutClienteEnUI({ silencioso = false } = {}) {
       const clienteNuevo = construirClienteNuevoDesdeInput(rutNormalizado);
       setClientLookupUI({
         tipo: "new",
-        texto: "Cliente nuevo. Ingresa el nombre o razón social para continuar.",
-        badge: "Cliente nuevo",
+        texto: "Cliente nuevo detectado.",
       });
-      toggleClientNameField(true, { value: clienteNuevo.razon_social, readonly: false });
-      return clienteNuevo;
-    }
-    clienteSeleccionado = cliente;
+    renderClientNewHelper(true, "Completa nombre y teléfono del cliente nuevo para enviar la cotización.");
+    toggleClientNameField(true, { value: clienteNuevo.razon_social, readonly: false });
+    toggleClientPhoneField(true, { value: clienteNuevo.client_phone, readonly: false });
+    guardarCotizacionPersistida();
+    return clienteNuevo;
+  }
+  clienteSeleccionado = cliente;
     input.value = formatearRutVisual(cliente.rut || cliente.rut_normalized);
     setClientLookupUI({
       tipo: "ok",
       texto: "Cliente encontrado",
       badge: cliente.razon_social,
     });
+    renderClientNewHelper(false);
     toggleClientNameField(false);
+    toggleClientPhoneField(false);
+    guardarCotizacionPersistida();
     return cliente;
   } catch (err) {
+    renderClientNewHelper(false);
     setClientLookupUI({ tipo: "error", texto: err.message || "No se pudo validar RUT" });
     toggleClientNameField(false);
+    toggleClientPhoneField(false);
     return null;
   }
 }
@@ -3413,14 +3814,19 @@ async function validarRutClienteEnUI({ silencioso = false } = {}) {
 function configurarLookupCliente() {
   const input = document.getElementById("clientRut");
   const nameInput = document.getElementById("clientName");
+  const phoneInput = document.getElementById("clientPhone");
   if (!input) return;
   habilitarInputManual(input);
   habilitarInputManual(nameInput);
+  habilitarInputManual(phoneInput);
   input.addEventListener("input", () => {
     input.value = formatearRutVisual(input.value);
     clienteSeleccionado = null;
+    clearCartFieldInvalid(input);
     setClientLookupUI();
+    renderClientNewHelper(false);
     toggleClientNameField(false);
+    toggleClientPhoneField(false);
     window.clearTimeout(clientLookupDebounce);
     clientLookupDebounce = window.setTimeout(() => {
       validarRutClienteEnUI({ silencioso: true });
@@ -3433,13 +3839,38 @@ function configurarLookupCliente() {
   });
   nameInput?.addEventListener("input", () => {
     if (clienteSeleccionado) return;
+    clearCartFieldInvalid(nameInput);
     const rutNormalizado = normalizarRut(input.value);
     if (!rutNormalizado || !esRutValido(rutNormalizado)) return;
     const nombre = String(nameInput.value || "").trim();
+    const telefono = normalizarTelefonoCliente(phoneInput?.value || "");
+    renderClientNewHelper(true, nombre && telefono
+      ? "Cliente nuevo listo. Ya puedes enviar la cotización."
+      : "Completa nombre y teléfono del cliente nuevo para enviar la cotización.");
     setClientLookupUI({
       tipo: "new",
-      texto: nombre ? "Cliente nuevo listo para enviar." : "Completa el nombre del cliente nuevo.",
-      badge: "Cliente nuevo",
+      texto: nombre && telefono
+        ? "Cliente nuevo listo. Ya puedes enviar la cotización."
+        : "Cliente nuevo. Agrega nombre y teléfono para enviar la cotización.",
+    });
+    guardarCotizacionPersistida();
+  });
+  phoneInput?.addEventListener("input", () => {
+    if (clienteSeleccionado) return;
+    phoneInput.value = normalizarTelefonoCliente(phoneInput.value);
+    clearCartFieldInvalid(phoneInput);
+    const rutNormalizado = normalizarRut(input.value);
+    if (!rutNormalizado || !esRutValido(rutNormalizado)) return;
+    const nombre = String(nameInput?.value || "").trim();
+    const telefono = normalizarTelefonoCliente(phoneInput.value || "");
+    renderClientNewHelper(true, nombre && telefono
+      ? "Cliente nuevo listo. Ya puedes enviar la cotización."
+      : "Completa nombre y teléfono del cliente nuevo para enviar la cotización.");
+    setClientLookupUI({
+      tipo: "new",
+      texto: nombre && telefono
+        ? "Cliente nuevo listo. Ya puedes enviar la cotización."
+        : "Cliente nuevo. Agrega nombre y teléfono para enviar la cotización.",
     });
     guardarCotizacionPersistida();
   });
@@ -3448,10 +3879,14 @@ function configurarLookupCliente() {
 async function obtenerClienteParaCotizacion() {
   const rutEl = document.getElementById("clientRut");
   const nameEl = document.getElementById("clientName");
+  const phoneEl = document.getElementById("clientPhone");
+  clearCartFieldInvalidState();
   const clienteValidado = clienteSeleccionado || await validarRutClienteEnUI();
   const rutNormalizado = normalizarRut(rutEl?.value || "");
 
   if (!rutNormalizado || !esRutValido(rutNormalizado)) {
+    setCartFieldInvalid(rutEl, "Ingresa un RUT válido");
+    rutEl?.focus();
     throw new Error("Ingresa un RUT válido");
   }
 
@@ -3460,15 +3895,37 @@ async function obtenerClienteParaCotizacion() {
   }
 
   const nombre = String(nameEl?.value || "").trim();
+  const telefono = normalizarTelefonoCliente(phoneEl?.value || "");
   if (!nombre) {
     toggleClientNameField(true, { value: "", readonly: false });
-    throw new Error("Completa el nombre o razón social del cliente nuevo");
+    toggleClientPhoneField(true, { value: telefono, readonly: false });
+    renderClientNewHelper(true, "Completa nombre y teléfono del cliente nuevo para enviar la cotización.");
+    setCartFieldInvalid(nameEl, "Completa el nombre o razón social");
+    setClientLookupUI({
+      tipo: "error",
+      texto: "Agrega nombre y teléfono del cliente nuevo para enviar la cotización.",
+    });
+    nameEl?.focus();
+    throw new Error("Agrega el nombre o razón social del cliente nuevo para enviar la cotización");
+  }
+  if (!telefono) {
+    toggleClientNameField(true, { value: nombre, readonly: false });
+    toggleClientPhoneField(true, { value: "", readonly: false });
+    renderClientNewHelper(true, "Completa nombre y teléfono del cliente nuevo para enviar la cotización.");
+    setCartFieldInvalid(phoneEl, "Completa el teléfono del cliente");
+    setClientLookupUI({
+      tipo: "error",
+      texto: "Agrega el teléfono del cliente nuevo para enviar la cotización.",
+    });
+    phoneEl?.focus();
+    throw new Error("Agrega el teléfono del cliente nuevo para enviar la cotización");
   }
 
   return {
     rut: formatearRutVisual(rutNormalizado),
     rut_normalized: rutNormalizado,
     razon_social: nombre,
+    client_phone: telefono,
     is_new: true,
   };
 }
@@ -3496,6 +3953,7 @@ function construirPayloadCotizacion(cliente) {
       store_name: cliente?.razon_social || "",
       client_rut: cliente?.rut || cliente?.rut_normalized || null,
       client_rut_normalized: cliente?.rut_normalized || normalizarRut(cliente?.rut || ""),
+      client_phone: cliente?.client_phone || null,
       total_items: totalItems,
       created_at_client: createdAtIso,
       source: CATALOG_SOURCE,
@@ -3512,44 +3970,35 @@ async function guardarCotizacionSupabase(cliente) {
   const payload = construirPayloadCotizacion(cliente);
   if (!payload.items.length) throw new Error("No hay items para guardar");
 
-  const headers = {
-    apikey: SUPABASE_ANON_KEY,
-    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-    "Content-Type": "application/json",
+  const rpcPayload = {
+    p_quote: payload.quote,
+    p_items: payload.items,
   };
 
-  const quoteRes = await fetch(`${SUPABASE_URL}/rest/v1/quotes`, {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/create_quote_with_stock_reservation`, {
     method: "POST",
-    headers: { ...headers, Prefer: "return=minimal" },
-    body: JSON.stringify([payload.quote]),
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(rpcPayload),
   });
 
-  if (!quoteRes.ok) {
-    const errText = await quoteRes.text();
-    throw new Error(`Error guardando cotizacion: ${errText || quoteRes.status}`);
+  if (!res.ok) {
+    const errText = await res.text();
+    const lower = String(errText || "").toLowerCase();
+    if (lower.includes("create_quote_with_stock_reservation")) {
+      throw new Error("Falta instalar la función de reserva de stock en Supabase antes de cotizar.");
+    }
+    if (lower.includes("stock insuficiente") || lower.includes("no se encontró stock")) {
+      throw new Error(errText || "No hay stock suficiente para completar la cotización.");
+    }
+    throw new Error(`Error guardando cotizacion: ${errText || res.status}`);
   }
 
-  const quoteId = payload.quote.id;
+  const quoteId = await res.json().catch(() => payload.quote.id);
   if (!quoteId) throw new Error("No se genero ID de cotizacion");
-
-  const detailRows = payload.items.map((it) => ({
-    quote_id: quoteId,
-    sku: it.sku,
-    size: String(it.talla),
-    quantity: Number(it.cantidad),
-  }));
-
-  const itemsRes = await fetch(`${SUPABASE_URL}/rest/v1/quote_items`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(detailRows),
-  });
-
-  if (!itemsRes.ok) {
-    const errText = await itemsRes.text();
-    throw new Error(`Error guardando detalle: ${errText || itemsRes.status}`);
-  }
-
   return quoteId;
 }
 
@@ -3571,6 +4020,16 @@ async function registrarClienteNuevoSupabase(cliente) {
 
   if (!res.ok) {
     const txt = await res.text();
+    const lower = String(txt || "").toLowerCase();
+    if (
+      lower.includes("\"code\":\"42702\"") ||
+      lower.includes("rut_normalized") ||
+      lower.includes("register_client_if_missing") ||
+      lower.includes("pl/pgsql")
+    ) {
+      console.warn("No se pudo registrar el cliente nuevo en Supabase; se continúa con la cotización.", txt);
+      return cliente;
+    }
     throw new Error(`No se pudo registrar el cliente: ${txt || res.status}`);
   }
 
@@ -4088,7 +4547,7 @@ async function cargarStockCatalogAdmin() {
   if (!quotesAccessToken) throw new Error("Debes iniciar sesion");
 
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/stock_items?select=id,season,article_code,sku,tiro,bota,color,active,updated_at,stock_item_sizes(id,size_label,quantity,sort_order)&order=season.asc,sku.asc`,
+    `${SUPABASE_URL}/rest/v1/stock_items?select=id,season,article_code,sku,tiro,bota,color,active,updated_at,stock_item_sizes(id,size_label,quantity,sort_order),stock_item_reserve_sizes(size_label,reserve_quantity)&order=season.asc,sku.asc`,
     {
       headers: {
         apikey: SUPABASE_ANON_KEY,
@@ -4126,22 +4585,27 @@ function normalizarBusquedaModelo(value) {
 }
 
 function activarTabAdmin(tab = "cotizaciones", { cargar = true } = {}) {
-  adminActiveTab = ["cotizaciones", "stock"].includes(tab) ? tab : "cotizaciones";
+  adminActiveTab = ["cotizaciones", "reporte", "stock"].includes(tab) ? tab : "cotizaciones";
 
   const btnCot = document.getElementById("quotesTabCotizaciones");
+  const btnRep = document.getElementById("quotesTabReporte");
   const btnStock = document.getElementById("quotesTabStock");
   const panelCot = document.getElementById("quotesCotizacionesPanel");
+  const panelRep = document.getElementById("quotesReportePanel");
   const panelStock = document.getElementById("quotesStockPanel");
 
   const isCot = adminActiveTab === "cotizaciones";
+  const isRep = adminActiveTab === "reporte";
   const isStock = adminActiveTab === "stock";
   btnCot?.classList.toggle("active", isCot);
+  btnRep?.classList.toggle("active", isRep);
   btnStock?.classList.toggle("active", isStock);
   if (panelCot) panelCot.style.display = isCot ? "flex" : "none";
+  if (panelRep) panelRep.style.display = isRep ? "flex" : "none";
   if (panelStock) panelStock.style.display = isStock ? "flex" : "none";
 
   if (!quotesAccessToken || !cargar) return;
-  if (isCot) {
+  if (isCot || isRep) {
     cargarCotizacionesAdmin().catch((err) => {
       actualizarEstadoQuotesUI("");
       if ((err?.message || "").toLowerCase().includes("iniciar sesion")) {
@@ -4208,6 +4672,280 @@ function agruparDetallePorModelo(items = []) {
   return [...map.entries()].map(([sku, tallas]) => ({ sku, tallas }));
 }
 
+function obtenerCotizacionesFiltradas(quotes = []) {
+  if (quotesStatusFilter === "ready") return quotes.filter((q) => !!q.is_ready);
+  if (quotesStatusFilter === "open") return quotes.filter((q) => !q.is_ready);
+  return quotes;
+}
+
+function obtenerCotizacionesMesActual(quotes = []) {
+  const now = new Date();
+  const month = now.getMonth();
+  const year = now.getFullYear();
+  return quotes.filter((q) => {
+    if (!q?.created_at) return false;
+    const date = new Date(q.created_at);
+    return !Number.isNaN(date.getTime()) && date.getMonth() === month && date.getFullYear() === year;
+  });
+}
+
+function obtenerEtiquetaMesActual() {
+  return new Date().toLocaleDateString("es-CL", { month: "long", year: "numeric" });
+}
+
+function calcularMontoCotizacion(quote = {}, items = []) {
+  if (!Array.isArray(items) || !items.length) return null;
+  const source = String(quote?.source || "").trim();
+  let total = 0;
+  let hasPrice = false;
+  items.forEach((item) => {
+    const qty = Number(item?.quantity) || 0;
+    if (qty <= 0) return;
+    const sku = normalizarSkuCatalogo(item?.sku);
+    if (!sku) return;
+    const precioUnitario = obtenerPrecioCatalogo(sku, source || CATALOG_SOURCE);
+    if (!precioUnitario) return;
+    total += precioUnitario * qty;
+    hasPrice = true;
+  });
+  return hasPrice ? total : null;
+}
+
+function calcularResumenMontoCotizacion(quote = {}, items = []) {
+  if (!Array.isArray(items) || !items.length) return null;
+  const source = String(quote?.source || "").trim();
+  let totalLista = 0;
+  let totalPromo = 0;
+  let hasPrice = false;
+  items.forEach((item) => {
+    const qty = Number(item?.quantity) || 0;
+    if (qty <= 0) return;
+    const sku = normalizarSkuCatalogo(item?.sku);
+    if (!sku) return;
+    const precioLista = obtenerPrecioListaCatalogo(sku, source || CATALOG_SOURCE);
+    const precioPromo = obtenerPrecioCatalogo(sku, source || CATALOG_SOURCE);
+    if (!precioLista || !precioPromo) return;
+    totalLista += precioLista * qty;
+    totalPromo += precioPromo * qty;
+    hasPrice = true;
+  });
+  if (!hasPrice) return null;
+  return {
+    lista: totalLista,
+    promo: totalPromo,
+    ahorro: 0,
+    tienePromo: false,
+  };
+}
+
+function construirBloqueDetalleReporte(q = {}, items = []) {
+  const detalleAgrupado = agruparDetallePorModelo(items);
+  if (!detalleAgrupado.length) return ["Sin detalle de artículos."];
+  return detalleAgrupado.map((g) => {
+    const tallasTxt = Object.entries(g.tallas)
+      .sort((a, b) => String(a[0]).localeCompare(String(b[0]), undefined, { numeric: true }))
+      .map(([t, qty]) => `T${t}: ${qty}`)
+      .join(" · ");
+    return `Artículo ${g.sku}: ${tallasTxt}`;
+  });
+}
+
+function construirTextoReporteCotizacionesWhatsApp(quotes = []) {
+  const quotesMes = obtenerCotizacionesFiltradas(obtenerCotizacionesMesActual(quotes));
+  const total = quotesMes.length;
+  const listas = quotesMes.filter((q) => !!q.is_ready).length;
+  const caidas = total - listas;
+  const pctListas = total ? Math.round((listas / total) * 100) : 0;
+  const pctCaidas = total ? Math.round((caidas / total) * 100) : 0;
+  const mesLabel = obtenerEtiquetaMesActual();
+  const itemsMap = quotesAdminCache.itemsByQuote instanceof Map ? quotesAdminCache.itemsByQuote : new Map();
+  const lines = [
+    `*Reporte de cotizaciones ${mesLabel}*`,
+    `Total cotizaciones: ${total}`,
+    `Cotizaciones listas: ${listas} (${pctListas}%)`,
+  ];
+  if (caidas > 0) {
+    lines.push(`Cotizaciones no listas / caídas: ${caidas} (${pctCaidas}%)`);
+  }
+  if (quotesMes.length) {
+    lines.push("", "*Detalle por cotización*");
+    quotesMes.forEach((q, index) => {
+      const detalles = (itemsMap.get(q.id) || []).sort((a, b) => {
+        if (String(a.sku) !== String(b.sku)) return String(a.sku).localeCompare(String(b.sku));
+        return String(a.size).localeCompare(String(b.size), undefined, { numeric: true });
+      });
+      const codigo = generarCodigoCotizacionVisual(q);
+      const resumenMonto = calcularResumenMontoCotizacion(q, detalles);
+      lines.push(
+        "",
+        `${index + 1}. ${q.store_name || "Sin cliente"} · ${codigo}`,
+        `RUT: ${q.client_rut || "Sin RUT"}${q.client_phone ? ` · Teléfono: ${q.client_phone}` : ""}`,
+        `Estado: ${q.is_ready ? "Lista" : "No lista / caída"}`,
+        `Prendas: ${q.total_items || 0}${resumenMonto ? ` · Monto: ${formatearPrecioCLP(resumenMonto.promo)}` : ""}`,
+        ...construirBloqueDetalleReporte(q, detalles)
+      );
+    });
+  }
+  return lines.join("\n");
+}
+
+function construirVistaReporteCotizaciones(quotes = [], itemsMap = new Map()) {
+  if (!quotes.length) {
+    return `<div class="quotes-report-preview-empty">No hay cotizaciones de mayo en este filtro.</div>`;
+  }
+
+  return quotes.map((q, index) => {
+    const detalles = (itemsMap.get(q.id) || []).sort((a, b) => {
+      if (String(a.sku) !== String(b.sku)) return String(a.sku).localeCompare(String(b.sku));
+      return String(a.size).localeCompare(String(b.size), undefined, { numeric: true });
+    });
+    const detalleAgrupado = agruparDetallePorModelo(detalles);
+    const codigo = generarCodigoCotizacionVisual(q);
+    const resumenMonto = calcularResumenMontoCotizacion(q, detalles);
+    const fecha = q.created_at ? new Date(q.created_at).toLocaleString() : "-";
+
+    const rows = detalleAgrupado.length
+      ? detalleAgrupado.map((g) => {
+        const totalModelo = Object.values(g.tallas).reduce((acc, qty) => acc + (Number(qty) || 0), 0);
+        const tallasTxt = Object.entries(g.tallas)
+          .sort((a, b) => String(a[0]).localeCompare(String(b[0]), undefined, { numeric: true }))
+          .map(([t, qty]) => `T${t}: ${qty}`)
+          .join(" · ");
+        return `
+          <tr>
+            <td>${escapeHtmlExcel(g.sku)}</td>
+            <td>${escapeHtmlExcel(tallasTxt)}</td>
+            <td class="is-num">${escapeHtmlExcel(totalModelo)}</td>
+          </tr>
+        `;
+      }).join("")
+      : `<tr><td colspan="3">Sin detalle</td></tr>`;
+
+    return `
+      <div class="quotes-report-preview-card">
+        <div class="quotes-report-preview-head">
+          <strong>${index + 1}. ${escapeHtmlExcel(q.store_name || "Sin cliente")}</strong>
+          <span>${escapeHtmlExcel(codigo)}</span>
+        </div>
+        <div class="quotes-report-preview-meta quotes-report-preview-meta-primary">
+          <div class="quotes-report-preview-chip"><span>RUT</span><strong>${escapeHtmlExcel(q.client_rut || "Sin RUT")}</strong></div>
+          <div class="quotes-report-preview-chip"><span>Estado</span><strong>${escapeHtmlExcel(q.is_ready ? "Lista" : "No lista / caída")}</strong></div>
+          <div class="quotes-report-preview-chip quotes-report-preview-chip-date"><span>Fecha</span><strong>${escapeHtmlExcel(fecha)}</strong></div>
+          <div class="quotes-report-preview-chip"><span>Prendas</span><strong>${escapeHtmlExcel(q.total_items || 0)}</strong></div>
+          ${q.client_phone ? `<div class="quotes-report-preview-chip quotes-report-preview-chip-phone"><span>Teléfono</span><strong>${escapeHtmlExcel(q.client_phone)}</strong></div>` : ""}
+        </div>
+        <div class="quotes-report-preview-meta quotes-report-preview-meta-finance">
+          ${resumenMonto ? `<div class="quotes-report-preview-chip quotes-report-preview-chip-money is-highlight"><span>Monto</span><strong>${escapeHtmlExcel(formatearPrecioCLP(resumenMonto.promo))}</strong></div>` : ""}
+        </div>
+        <div class="quotes-report-preview-table-wrap">
+          <table class="quotes-report-preview-table">
+            <thead>
+              <tr>
+                <th>Artículo</th>
+                <th>Tallas</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderReporteCotizacionesAdmin(quotes = []) {
+  const panel = document.getElementById("quotesReportPanel");
+  if (!panel) return;
+  const quotesMes = obtenerCotizacionesFiltradas(obtenerCotizacionesMesActual(quotes));
+  const total = quotesMes.length;
+  const listas = quotesMes.filter((q) => !!q.is_ready).length;
+  const caidas = total - listas;
+  const mesLabel = obtenerEtiquetaMesActual();
+  const reportText = construirTextoReporteCotizacionesWhatsApp(quotes);
+  const itemsMap = quotesAdminCache.itemsByQuote instanceof Map ? quotesAdminCache.itemsByQuote : new Map();
+  const reportPreview = construirVistaReporteCotizaciones(quotesMes, itemsMap);
+
+  panel.innerHTML = `
+    <div class="quotes-report-card">
+      <div class="quotes-report-head">
+        <div>
+          <div class="quotes-report-kicker">Reporte aparte para WhatsApp</div>
+          <div class="quotes-report-title">Resumen ${mesLabel}</div>
+        </div>
+        <button type="button" class="ghost-btn quotes-report-copy-btn" data-copy-quotes-report>Copiar reporte</button>
+      </div>
+      <div class="quotes-report-metrics">
+        <div class="quotes-report-metric">
+          <span>Total</span>
+          <strong>${total}</strong>
+        </div>
+        <div class="quotes-report-metric is-ready">
+          <span>Listas</span>
+          <strong>${listas}</strong>
+        </div>
+        ${caidas > 0 ? `
+        <div class="quotes-report-metric is-open">
+          <span>No listas / caídas</span>
+          <strong>${caidas}</strong>
+        </div>` : ""}
+      </div>
+      <div class="quotes-report-text">
+        <div class="quotes-report-text-head">Vista previa ordenada</div>
+        <div class="quotes-report-preview-list">${reportPreview}</div>
+      </div>
+    </div>
+    <div class="quotes-filter-row" id="quotesStatusFilters">
+      <button type="button" class="ghost-btn quotes-filter-btn ${quotesStatusFilter === "all" ? "active" : ""}" data-quotes-filter="all">Todas</button>
+      <button type="button" class="ghost-btn quotes-filter-btn ${quotesStatusFilter === "ready" ? "active" : ""}" data-quotes-filter="ready">Listas</button>
+      <button type="button" class="ghost-btn quotes-filter-btn ${quotesStatusFilter === "open" ? "active" : ""}" data-quotes-filter="open">No listas / caídas</button>
+    </div>
+    <div class="quotes-report-detail-list">
+      ${quotesMes.length
+        ? quotesMes.map((q) => {
+          const detalles = (itemsMap.get(q.id) || []).sort((a, b) => {
+            if (String(a.sku) !== String(b.sku)) return String(a.sku).localeCompare(String(b.sku));
+            return String(a.size).localeCompare(String(b.size), undefined, { numeric: true });
+          });
+          const detalleAgrupado = agruparDetallePorModelo(detalles);
+          const fecha = q.created_at ? new Date(q.created_at).toLocaleString() : "-";
+          const codigo = generarCodigoCotizacionVisual(q);
+          const resumenMonto = calcularResumenMontoCotizacion(q, detalles);
+          return `
+            <div class="quotes-report-detail-card">
+              <div class="quotes-report-detail-head">
+                <div>
+                  <div class="quotes-report-detail-client">${q.store_name || "Sin cliente"}</div>
+                  <div class="quotes-report-detail-sub">RUT: ${q.client_rut || "Sin RUT"}${q.client_phone ? ` · Teléfono: ${q.client_phone}` : ""} · ${codigo}</div>
+                </div>
+                <div class="quotes-report-detail-side">
+                  <strong>${q.total_items || 0} prendas</strong>
+                  <span>${q.is_ready ? "Lista" : "No lista / caída"} · ${fecha}</span>
+                  ${resumenMonto ? `<span>Monto: ${formatearPrecioCLP(resumenMonto.promo)}</span>` : ""}
+                </div>
+              </div>
+              <div class="quotes-report-detail-items">
+                ${detalleAgrupado.length
+                  ? detalleAgrupado.map((g) => {
+                    const totalModelo = Object.values(g.tallas).reduce((acc, qty) => acc + (Number(qty) || 0), 0);
+                    const tallasTxt = Object.entries(g.tallas)
+                      .sort((a, b) => String(a[0]).localeCompare(String(b[0]), undefined, { numeric: true }))
+                      .map(([t, qty]) => `T${t}: ${qty}`)
+                      .join(" · ");
+                    return `<div class="quotes-report-detail-item"><strong>Artículo ${g.sku}</strong><span>Total: ${totalModelo}</span><span>${tallasTxt}</span></div>`;
+                  }).join("")
+                  : `<div class="quotes-report-detail-item"><span>Sin detalle</span></div>`
+                }
+              </div>
+            </div>
+          `;
+        }).join("")
+        : `<div class="quote-card"><div class="quote-meta">No hay cotizaciones de mayo en este filtro.</div></div>`
+      }
+    </div>
+  `;
+}
+
 function renderCotizacionesAdmin(quotes = [], items = []) {
   const list = document.getElementById("quotesList");
   if (!list) return;
@@ -4235,6 +4973,7 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
             <div class="quote-card-title-row">
               <div class="quote-card-title">${q.store_name || "Sin tienda"}</div>
               ${q.client_rut ? `<div class="quote-meta quote-meta-inline">RUT: ${q.client_rut}</div>` : ""}
+              ${q.client_phone ? `<div class="quote-meta quote-meta-inline">Tel: ${q.client_phone}</div>` : ""}
             </div>
             <div class="quote-code-row">
               <span class="quote-code-pill">${codigo}</span>
@@ -4320,10 +5059,23 @@ async function cargarCotizacionesAdmin() {
     Authorization: `Bearer ${quotesAccessToken}`,
   };
 
-  const quotesRes = await fetch(
-    `${SUPABASE_URL}/rest/v1/quotes?select=id,store_name,client_rut,client_rut_normalized,total_items,created_at,created_at_client,source,is_ready,ready_at&order=created_at.desc&limit=50`,
+  let quotesRes = await fetch(
+    `${SUPABASE_URL}/rest/v1/quotes?select=id,store_name,client_rut,client_rut_normalized,client_phone,total_items,created_at,created_at_client,source,is_ready,ready_at&order=created_at.desc&limit=500`,
     { headers }
   );
+
+  if (!quotesRes.ok) {
+    const errText = await quotesRes.text();
+    if ((errText || "").toLowerCase().includes("client_phone")) {
+      quotesRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/quotes?select=id,store_name,client_rut,client_rut_normalized,total_items,created_at,created_at_client,source,is_ready,ready_at&order=created_at.desc&limit=500`,
+        { headers }
+      );
+    } else {
+      const passthrough = new Response(errText, { status: quotesRes.status, statusText: quotesRes.statusText });
+      quotesRes = passthrough;
+    }
+  }
 
   if (!quotesRes.ok) {
     if (quotesRes.status === 401 || quotesRes.status === 403) {
@@ -4337,6 +5089,7 @@ async function cargarCotizacionesAdmin() {
   const quotes = await quotesRes.json();
   if (!quotes.length) {
     renderCotizacionesAdmin([], []);
+    renderReporteCotizacionesAdmin([]);
     return;
   }
 
@@ -4356,6 +5109,7 @@ async function cargarCotizacionesAdmin() {
   }
 
   renderCotizacionesAdmin(quotes, items);
+  renderReporteCotizacionesAdmin(quotes);
 }
 
 function abrirQuotesModal() {
@@ -4380,6 +5134,7 @@ function configurarPanelCotizaciones() {
   const btnRefresh = document.getElementById("refreshQuotesBtn");
   const btnLogout = document.getElementById("logoutQuotesBtn");
   const btnTabCotizaciones = document.getElementById("quotesTabCotizaciones");
+  const btnTabReporte = document.getElementById("quotesTabReporte");
   const btnTabStock = document.getElementById("quotesTabStock");
   const stockSearchInput = document.getElementById("stockCatalogSearchInput");
   const stockSearchClear = document.getElementById("stockCatalogSearchClear");
@@ -4394,6 +5149,7 @@ function configurarPanelCotizaciones() {
   const emailEl = document.getElementById("quotesEmail");
   const passEl = document.getElementById("quotesPassword");
   const quotesListEl = document.getElementById("quotesList");
+  const quotesReportePanel = document.getElementById("quotesReportePanel");
 
   const ejecutarLogin = async () => {
     const email = emailEl?.value.trim();
@@ -4454,6 +5210,7 @@ function configurarPanelCotizaciones() {
   });
 
   btnTabCotizaciones?.addEventListener("click", () => activarTabAdmin("cotizaciones", { cargar: true }));
+  btnTabReporte?.addEventListener("click", () => activarTabAdmin("reporte", { cargar: true }));
   btnTabStock?.addEventListener("click", () => activarTabAdmin("stock", { cargar: true }));
   stockSearchInput?.addEventListener("input", aplicarFiltroStockCatalogAdmin);
   stockSeasonTabs?.addEventListener("click", (e) => {
@@ -4496,6 +5253,24 @@ function configurarPanelCotizaciones() {
       actualizarEstadoQuotesUI(err.message || "No se pudo actualizar estado");
     } finally {
       checkbox.disabled = false;
+    }
+  });
+
+  quotesReportePanel?.addEventListener("click", (e) => {
+    const filterBtn = e.target.closest("[data-quotes-filter]");
+    if (filterBtn) {
+      quotesStatusFilter = filterBtn.dataset.quotesFilter || "all";
+      renderReporteCotizacionesAdmin(quotesAdminCache.quotes);
+      return;
+    }
+
+    const copyReportBtn = e.target.closest("[data-copy-quotes-report]");
+    if (copyReportBtn) {
+      const reportText = construirTextoReporteCotizacionesWhatsApp(quotesAdminCache.quotes);
+      navigator.clipboard?.writeText(reportText)
+        .then(() => mostrarToastExito("Reporte copiado", "Ya puedes pegarlo en WhatsApp."))
+        .catch(() => mostrarToastError("No se pudo copiar", "Copia manualmente el texto del reporte."));
+      return;
     }
   });
 
@@ -4615,18 +5390,48 @@ function limpiarCarrito() {
   pedido = [];
   const rutEl = document.getElementById("clientRut");
   const nameEl = document.getElementById("clientName");
+  const phoneEl = document.getElementById("clientPhone");
   if (rutEl) rutEl.value = "";
   if (nameEl) nameEl.value = "";
+  if (phoneEl) phoneEl.value = "";
   clienteSeleccionado = null;
+  clearCartFieldInvalidState();
   setClientLookupUI();
+  renderClientNewHelper(false);
   toggleClientNameField(false);
+  toggleClientPhoneField(false);
   document.getElementById("cartSidebar").classList.remove("open");
   limpiarCotizacionPersistida();
   actualizarCarrito();
 }
 
+function resolverTituloErrorCotizacion(error) {
+  const message = String(error?.message || "").toLowerCase();
+  if (message.includes("internal_contact_support")) return "Error";
+  if (message.includes("rut")) return "Falta RUT válido";
+  if (message.includes("nombre") || message.includes("razón social") || message.includes("razon social")) {
+    return "Falta nombre o razón social";
+  }
+  if (message.includes("teléfono") || message.includes("telefono")) return "Falta teléfono";
+  if (message.includes("stock")) return "Stock insuficiente";
+  if (message.includes("items") || message.includes("productos") || message.includes("modelos")) {
+    return "Faltan productos";
+  }
+  return "No se pudo enviar";
+}
+
+function resolverMensajeErrorCotizacion(error) {
+  const message = String(error?.message || "");
+  if (message.toLowerCase().includes("internal_contact_support")) {
+    return "Error. Contáctanos para poder solucionarlo.";
+  }
+  return message || "Revisa los datos ingresados e inténtalo nuevamente.";
+}
+
 document.getElementById("sendRequest").onclick = async () => {
-  if (!pedido.length) return mostrarToastError("Hubo un error", "Intentelo nuevamente.");
+  if (!pedido.length) {
+    return mostrarToastError("Faltan productos", "Agrega al menos un modelo antes de enviar la cotización.");
+  }
 
   const btn = document.getElementById("sendRequest");
   const textoOriginal = btn.innerText;
@@ -4634,13 +5439,8 @@ document.getElementById("sendRequest").onclick = async () => {
   btn.innerText = "Guardando...";
 
   try {
-    let cliente = await obtenerClienteParaCotizacion();
-    if (cliente?.is_new) {
-      btn.innerText = "Creando cliente...";
-      cliente = await registrarClienteNuevoSupabase(cliente);
-      clienteSeleccionado = cliente;
-    }
-
+    clearCartFieldInvalidState();
+    const cliente = await obtenerClienteParaCotizacion();
     btn.innerText = "Guardando cotización...";
     await guardarCotizacionSupabase(cliente);
 
@@ -4648,7 +5448,10 @@ document.getElementById("sendRequest").onclick = async () => {
     limpiarCarrito();
   } catch (error) {
     console.error(error);
-    mostrarToastError("No se pudo enviar", error?.message || "Inténtalo nuevamente.");
+    mostrarToastError(
+      resolverTituloErrorCotizacion(error),
+      resolverMensajeErrorCotizacion(error)
+    );
   } finally {
     btn.disabled = false;
     btn.innerText = textoOriginal;
