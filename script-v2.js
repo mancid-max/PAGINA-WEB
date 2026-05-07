@@ -3251,6 +3251,31 @@ function normalizarSkuParaPlantilla(sku, source) {
   return raw;
 }
 
+function obtenerMetadataManualPlantilla(sku, source) {
+  if (source !== "catalogo-43") return null;
+  const normalizedSku = normalizarSkuCatalogo(sku);
+  if (!normalizedSku) return null;
+
+  const descripcionBase = String(CATALOG_43_DESCRIPTION_MAP?.[normalizedSku] || "").trim();
+  const partes = descripcionBase
+    .split("·")
+    .map((part) => normalizarTextoVisible(part).trim())
+    .filter(Boolean);
+
+  const articleCode = normalizedSku.replace(/[^0-9]/g, "");
+  const article = partes[0] || `Modelo ${normalizedSku}`;
+  const detalle = partes.slice(1).join(" · ");
+  const precio = obtenerPrecioListaCatalogo(normalizedSku, source);
+
+  return {
+    lookup: "",
+    articleCode,
+    article,
+    detail: detalle,
+    price: Number.isFinite(Number(precio)) ? Number(precio) : "",
+  };
+}
+
 function agruparItemsParaPlantilla(quote, items = []) {
   const grouped = new Map();
   const ordered = [...items].sort((a, b) => {
@@ -3310,12 +3335,25 @@ async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
 
   grouped.forEach((entry, index) => {
     const row = ORDER_TEMPLATE_FIRST_ROW + index;
-    sheet.cell(`A${row}`).value(entry.sku);
+    const metadataManual = obtenerMetadataManualPlantilla(entry.sku, quote?.source);
+    if (metadataManual) {
+      sheet.cell(`A${row}`).value(metadataManual.lookup || "");
+      sheet.cell(`B${row}`).value(metadataManual.articleCode || "");
+      sheet.cell(`C${row}`).value(metadataManual.article || "");
+      sheet.cell(`D${row}`).value(metadataManual.detail || "");
+      sheet.cell(`R${row}`).value(metadataManual.price || "");
+    } else {
+      sheet.cell(`A${row}`).value(entry.sku);
+    }
     Object.entries(entry.sizes).forEach(([size, qty]) => {
       const col = ORDER_TEMPLATE_SIZE_COLUMNS[size];
       if (!col) return;
       sheet.cell(`${col}${row}`).value(qty);
     });
+    if (metadataManual) {
+      sheet.cell(`P${row}`).formula(`SUM($E${row}:$O${row})`);
+      sheet.cell(`S${row}`).formula(`IFERROR(P${row}*R${row},"")`);
+    }
   });
 
   return workbook.outputAsync();
