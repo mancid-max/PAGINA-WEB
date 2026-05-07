@@ -5098,6 +5098,16 @@ function cerrarQuotesModal() {
   document.getElementById("quotesModal")?.classList.remove("active");
 }
 
+function obtenerAccesoAdminPorLink() {
+  try {
+    const params = new URLSearchParams(window.location.search || "");
+    const hash = String(window.location.hash || "").toLowerCase();
+    return params.get("admin") === "1" || params.get("admin") === "true" || hash === "#admin";
+  } catch (_) {
+    return false;
+  }
+}
+
 function configurarPanelCotizaciones() {
   const btnOpen = document.getElementById("quotesAdminBtn");
   const btnClose = document.getElementById("closeQuotesModal");
@@ -5122,6 +5132,11 @@ function configurarPanelCotizaciones() {
   const passEl = document.getElementById("quotesPassword");
   const quotesListEl = document.getElementById("quotesList");
   const quotesReportePanel = document.getElementById("quotesReportePanel");
+  const adminPorLink = obtenerAccesoAdminPorLink();
+
+  if (btnOpen) {
+    btnOpen.hidden = !adminPorLink;
+  }
 
   const ejecutarLogin = async () => {
     const email = emailEl?.value.trim();
@@ -5356,6 +5371,10 @@ function configurarPanelCotizaciones() {
       mostrarToastError("No se pudo eliminar", err.message || "Error eliminando artículo");
     }
   });
+
+  if (adminPorLink) {
+    window.setTimeout(() => abrirQuotesModal(), 60);
+  }
 }
 
 function limpiarCarrito() {
