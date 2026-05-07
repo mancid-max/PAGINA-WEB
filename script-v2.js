@@ -2447,7 +2447,7 @@ function inicializarBuscadorModelos() {
   if (!input || !panel || !btnBuscar || !btnLimpiar) return;
 
   const obtenerFuenteBusqueda = () => (
-    Array.isArray(productosGrid) ? productosGrid : []
+    obtenerProductosConImagenVisible(Array.isArray(productosGrid) ? productosGrid : [])
   );
   const modelos = [...new Set(obtenerFuenteBusqueda().map((p) => String(p.family)).filter(Boolean))].sort();
   let sugerenciasActuales = [];
@@ -2652,14 +2652,18 @@ function tarjetaSinImagenCatalogo43(producto) {
   return imagePath === "Imagenes/Logo/app-icon.png";
 }
 
-function renderGrid(lista) {
-  const container = document.getElementById("grid");
-  const listaConImagen = (Array.isArray(lista) ? lista : [])
+function obtenerProductosConImagenVisible(lista = []) {
+  return (Array.isArray(lista) ? lista : [])
     .map((p) => ({
       ...p,
       _safeCardImage: obtenerImagenSeguraTarjeta(p),
     }))
     .filter((p) => Boolean(p?._safeCardImage) && normalizarRutaAsset(p._safeCardImage) !== "Imagenes/Logo/app-icon.png");
+}
+
+function renderGrid(lista) {
+  const container = document.getElementById("grid");
+  const listaConImagen = obtenerProductosConImagenVisible(lista);
   const listaOrdenada = [...listaConImagen].sort((a, b) => compararProductosPorStockDesc(a, b, stockBySku));
 
   container.innerHTML = listaOrdenada
