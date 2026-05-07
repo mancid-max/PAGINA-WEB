@@ -3942,6 +3942,56 @@ async function guardarCotizacionSupabase(cliente) {
   const payload = construirPayloadCotizacion(cliente);
   if (!payload.items.length) throw new Error("No hay items para guardar");
 
+  if (payload.quote.source === "catalogo-43") {
+    const headers = {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      "Content-Type": "application/json",
+    };
+
+    const quoteRes = await fetch(`${SUPABASE_URL}/rest/v1/quotes`, {
+      method: "POST",
+      headers: {
+        ...headers,
+        Prefer: "return=representation",
+      },
+      body: JSON.stringify([payload.quote]),
+    });
+
+    if (!quoteRes.ok) {
+      const errText = await quoteRes.text();
+      throw new Error(`Error guardando cotizacion: ${errText || quoteRes.status}`);
+    }
+
+    const quoteData = await quoteRes.json().catch(() => []);
+    const savedQuote = Array.isArray(quoteData) ? quoteData[0] : quoteData;
+    const quoteId = savedQuote?.id || payload.quote.id;
+    if (!quoteId) throw new Error("No se genero ID de cotizacion");
+
+    const quoteItemsPayload = payload.items.map((item) => ({
+      quote_id: quoteId,
+      sku: item.sku,
+      size: item.talla,
+      quantity: item.cantidad,
+    }));
+
+    const itemsRes = await fetch(`${SUPABASE_URL}/rest/v1/quote_items`, {
+      method: "POST",
+      headers: {
+        ...headers,
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify(quoteItemsPayload),
+    });
+
+    if (!itemsRes.ok) {
+      const errText = await itemsRes.text();
+      throw new Error(`Error guardando detalle de cotizacion: ${errText || itemsRes.status}`);
+    }
+
+    return quoteId;
+  }
+
   const rpcPayload = {
     p_quote: payload.quote,
     p_items: payload.items,
