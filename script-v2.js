@@ -551,13 +551,11 @@ const STOCK_DATA_FILE_BY_SOURCE = {
   "catalogo-43": "stock-data-catalogo-43.json",
 };
 const STOCK_DATA_FILE = STOCK_DATA_FILE_BY_SOURCE[CATALOG_SOURCE] || "stock-data.json";
-const CATALOG_PROMO_CONFIG_BY_SOURCE = {
+const CATALOG_PRICE_CONFIG_BY_SOURCE = {
   "catalogo-1": {
-    discount: 0.10,
     priceFile: "price-data.json",
   },
   "catalogo-43": {
-    discount: 0.10,
     inlinePrices: {
       "4301-00": 26990,
       "4309-00": 27990,
@@ -568,11 +566,10 @@ const CATALOG_PROMO_CONFIG_BY_SOURCE = {
     },
   },
 };
-const CATALOG_PROMO_BADGE = "-10%";
 let catalogPriceBySource = {};
 
 function obtenerConfiguracionPrecioCatalogo(source = CATALOG_SOURCE) {
-  return CATALOG_PROMO_CONFIG_BY_SOURCE[source] || null;
+  return CATALOG_PRICE_CONFIG_BY_SOURCE[source] || null;
 }
 
 function normalizarMapaPreciosCatalogo(rawItems) {
@@ -609,14 +606,14 @@ async function cargarMapaPreciosCatalogo(source = CATALOG_SOURCE) {
 }
 
 async function cargarTodosLosMapasPreciosCatalogo() {
-  const sources = Object.keys(CATALOG_PROMO_CONFIG_BY_SOURCE || {});
+  const sources = Object.keys(CATALOG_PRICE_CONFIG_BY_SOURCE || {});
   const entries = await Promise.all(
     sources.map(async (source) => {
       try {
         const map = await cargarMapaPreciosCatalogo(source);
         return [source, map];
       } catch (err) {
-        console.warn(`No se pudo cargar precios promo para ${source}:`, err);
+        console.warn(`No se pudo cargar precios para ${source}:`, err);
         return [source, {}];
       }
     })
@@ -635,24 +632,15 @@ function obtenerPrecioListaCatalogo(value, source = CATALOG_SOURCE) {
 }
 
 function obtenerPrecioCatalogo(value, source = CATALOG_SOURCE) {
-  const config = obtenerConfiguracionPrecioCatalogo(source);
-  if (!config) return null;
-  const precioLista = obtenerPrecioListaCatalogo(value, source);
-  if (!precioLista) return null;
-  return Math.round(precioLista * (1 - Number(config.discount || 0)));
+  return obtenerPrecioListaCatalogo(value, source);
 }
 
 function obtenerDetallePrecioCatalogo(value, source = CATALOG_SOURCE) {
-  const config = obtenerConfiguracionPrecioCatalogo(source);
-  if (!config) return null;
   const precioLista = obtenerPrecioListaCatalogo(value, source);
-  const precioFinal = obtenerPrecioCatalogo(value, source);
-  if (!precioLista || !precioFinal) return null;
+  if (!precioLista) return null;
   return {
     lista: precioLista,
-    final: precioFinal,
-    descuento: Number(config.discount || 0),
-    ahorro: Math.max(0, precioLista - precioFinal),
+    final: precioLista,
   };
 }
 
@@ -2285,7 +2273,7 @@ function actualizarEstadoCotizacionProducto(producto, sku) {
   if (quotePanelModelTitle) quotePanelModelTitle.innerText = "Modelo " + skuLabel;
   if (descriptionEl && detallePrecio && CATALOG_SOURCE !== "catalogo-43") {
     const textoBase = normalizarTextoVisible(producto?.description || "");
-    descriptionEl.innerText = `${textoBase}${textoBase ? " · " : ""}Precio oferta mayor s/iva: ${formatearPrecioCLP(detallePrecio.final)}`;
+    descriptionEl.innerText = `${textoBase}${textoBase ? " · " : ""}Precio mayor s/iva: ${formatearPrecioCLP(detallePrecio.final)}`;
   }
   if (imageViewerEl) {
     imageViewerEl.classList.toggle("is-sold-out", agotado);
@@ -2687,8 +2675,6 @@ function renderGrid(lista) {
               detallePrecio
                 ? `<div class="card-price">
                     <span class="card-price-current">${formatearPrecioCLP(detallePrecio.final)}</span>
-                    <span class="card-price-original">${formatearPrecioCLP(detallePrecio.lista)}</span>
-                    <span class="card-price-badge">${CATALOG_PROMO_BADGE}</span>
                   </div>`
                 : ""
             }
@@ -2801,20 +2787,16 @@ function verProducto(familyId, preferredSku = "") {
         ul.appendChild(li);
       });
       if (detallePrecio) {
-        const liPromo = document.createElement("li");
-        liPromo.innerText = `Precio oferta Día de la Madre: ${formatearPrecioCLP(detallePrecio.final)}`;
-        ul.appendChild(liPromo);
-
-        const liLista = document.createElement("li");
-        liLista.innerText = `Precio lista: ${formatearPrecioCLP(detallePrecio.lista)} · Descuento: 10%`;
-        ul.appendChild(liLista);
+        const liPrecio = document.createElement("li");
+        liPrecio.innerText = `Precio mayor s/iva: ${formatearPrecioCLP(detallePrecio.final)}`;
+        ul.appendChild(liPrecio);
       }
       charList.appendChild(ul);
     }
   } else {
     descriptionEl.innerText = hasCharacteristics
       ? ""
-      : normalizarTextoVisible(p.description || "") + (detallePrecio ? ` · Precio oferta mayor s/iva: ${formatearPrecioCLP(detallePrecio.final)}` : "");
+      : normalizarTextoVisible(p.description || "") + (detallePrecio ? ` · Precio mayor s/iva: ${formatearPrecioCLP(detallePrecio.final)}` : "");
     descriptionEl.style.display = hasCharacteristics || !p.description ? "none" : "block";
 
     charList.innerHTML = "";
@@ -2827,13 +2809,9 @@ function verProducto(familyId, preferredSku = "") {
         ul.appendChild(li);
       });
       if (detallePrecio) {
-        const liPromo = document.createElement("li");
-        liPromo.innerText = `Precio oferta mayor s/iva: ${formatearPrecioCLP(detallePrecio.final)}`;
-        ul.appendChild(liPromo);
-
-        const liLista = document.createElement("li");
-        liLista.innerText = `Precio lista: ${formatearPrecioCLP(detallePrecio.lista)} · Descuento: 10%`;
-        ul.appendChild(liLista);
+        const liPrecio = document.createElement("li");
+        liPrecio.innerText = `Precio mayor s/iva: ${formatearPrecioCLP(detallePrecio.final)}`;
+        ul.appendChild(liPrecio);
       }
       charList.appendChild(ul);
     }
@@ -2953,7 +2931,6 @@ function actualizarCarrito() {
   const container = document.getElementById("cartItems");
   let totalItems = 0;
   let totalEstimado = 0;
-  let totalLista = 0;
 
   if (!pedido.length) {
     container.innerHTML = `
@@ -2967,12 +2944,9 @@ function actualizarCarrito() {
       .map((item, index) => {
         const cantidadModelo = Object.values(item.tallas).reduce((acc, qty) => acc + (Number(qty) || 0), 0);
         const detallePrecio = obtenerDetallePrecioCatalogo(item.sku);
-        const precioListaUnitario = detallePrecio?.lista || null;
         const precioUnitario = detallePrecio?.final || null;
-        const subtotalLista = precioListaUnitario ? precioListaUnitario * cantidadModelo : 0;
         const subtotal = precioUnitario ? precioUnitario * cantidadModelo : 0;
         totalItems += cantidadModelo;
-        totalLista += subtotalLista;
         totalEstimado += subtotal;
         const tallasHtml = Object.entries(item.tallas)
           .map(([t, c]) => `<span class="cart-size-pill">T${t} <strong>${c}</strong></span>`)
@@ -2993,8 +2967,7 @@ function actualizarCarrito() {
             <div>Prendas modelo: <strong>${cantidadModelo}</strong></div>
             ${
               precioUnitario
-                ? `<div>Subtotal oferta: <strong>${formatearPrecioCLP(subtotal)}</strong></div>
-                   ${subtotalLista ? `<div>Precio lista: <s>${formatearPrecioCLP(subtotalLista)}</s></div>` : ""}`
+                ? `<div>Subtotal: <strong>${formatearPrecioCLP(subtotal)}</strong></div>`
                 : ""
             }
           </div>
@@ -3019,9 +2992,7 @@ function actualizarCarrito() {
   totalsBox.innerHTML = `
     <div class="cart-totals-head"><span class="cart-totals-title">Resumen total</span></div>
     <div class="cart-totals-row"><span>Total prendas</span><strong>${totalItems}</strong></div>
-    ${totalLista > 0 ? `<div class="cart-totals-row"><span>Total lista</span><strong><s>${formatearPrecioCLP(totalLista)}</s></strong></div>` : ""}
     ${totalEstimado > 0 ? `<div class="cart-totals-row"><span>Total estimado</span><strong>${formatearPrecioCLP(totalEstimado)}</strong></div>` : ""}
-    ${totalLista > totalEstimado ? `<div class="cart-totals-row"><span>Ahorro Día de la Madre</span><strong>${formatearPrecioCLP(totalLista - totalEstimado)}</strong></div>` : ""}
   `;
   guardarCotizacionPersistida();
 }
@@ -4700,10 +4671,7 @@ function calcularResumenMontoCotizacion(quote = {}, items = []) {
   });
   if (!hasPrice) return null;
   return {
-    lista: totalLista,
-    promo: totalPromo,
-    ahorro: Math.max(0, totalLista - totalPromo),
-    tienePromo: totalLista > totalPromo,
+    monto: totalPromo,
   };
 }
 
@@ -4750,7 +4718,7 @@ function construirTextoReporteCotizacionesWhatsApp(quotes = []) {
         `${index + 1}. ${q.store_name || "Sin cliente"} · ${codigo}`,
         `RUT: ${q.client_rut || "Sin RUT"}${q.client_phone ? ` · Teléfono: ${q.client_phone}` : ""}`,
         `Estado: ${q.is_ready ? "Lista" : "No lista / caída"}`,
-        `Prendas: ${q.total_items || 0}${resumenMonto ? ` · Total lista: ${formatearPrecioCLP(resumenMonto.lista)}${resumenMonto.tienePromo ? ` · Total 10% Día de la Madre: ${formatearPrecioCLP(resumenMonto.promo)} · Ahorro: ${formatearPrecioCLP(resumenMonto.ahorro)}` : ` · Monto: ${formatearPrecioCLP(resumenMonto.promo)}`}` : ""}`,
+        `Prendas: ${q.total_items || 0}${resumenMonto ? ` · Monto: ${formatearPrecioCLP(resumenMonto.monto)}` : ""}`,
         ...construirBloqueDetalleReporte(q, detalles)
       );
     });
@@ -4802,10 +4770,7 @@ function construirVistaReporteCotizaciones(quotes = [], itemsMap = new Map()) {
           <div><span>Estado</span><strong>${escapeHtmlExcel(q.is_ready ? "Lista" : "No lista / caída")}</strong></div>
           <div><span>Fecha</span><strong>${escapeHtmlExcel(fecha)}</strong></div>
           <div><span>Prendas</span><strong>${escapeHtmlExcel(q.total_items || 0)}</strong></div>
-          ${resumenMonto ? `<div><span>Total lista</span><strong>${escapeHtmlExcel(formatearPrecioCLP(resumenMonto.lista))}</strong></div>` : ""}
-          ${resumenMonto?.tienePromo ? `<div><span>Total 10% Día de la Madre</span><strong>${escapeHtmlExcel(formatearPrecioCLP(resumenMonto.promo))}</strong></div>` : ""}
-          ${resumenMonto?.tienePromo ? `<div><span>Ahorro</span><strong>${escapeHtmlExcel(formatearPrecioCLP(resumenMonto.ahorro))}</strong></div>` : ""}
-          ${resumenMonto && !resumenMonto.tienePromo ? `<div><span>Monto</span><strong>${escapeHtmlExcel(formatearPrecioCLP(resumenMonto.promo))}</strong></div>` : ""}
+          ${resumenMonto ? `<div><span>Monto</span><strong>${escapeHtmlExcel(formatearPrecioCLP(resumenMonto.monto))}</strong></div>` : ""}
         </div>
         <div class="quotes-report-preview-table-wrap">
           <table class="quotes-report-preview-table">
@@ -4891,10 +4856,7 @@ function renderReporteCotizacionesAdmin(quotes = []) {
                 <div class="quotes-report-detail-side">
                   <strong>${q.total_items || 0} prendas</strong>
                   <span>${q.is_ready ? "Lista" : "No lista / caída"} · ${fecha}</span>
-                  ${resumenMonto ? `<span>Total lista: ${formatearPrecioCLP(resumenMonto.lista)}</span>` : ""}
-                  ${resumenMonto?.tienePromo ? `<span>Total 10% Día de la Madre: ${formatearPrecioCLP(resumenMonto.promo)}</span>` : ""}
-                  ${resumenMonto?.tienePromo ? `<span>Ahorro: ${formatearPrecioCLP(resumenMonto.ahorro)}</span>` : ""}
-                  ${resumenMonto && !resumenMonto.tienePromo ? `<span>Monto: ${formatearPrecioCLP(resumenMonto.promo)}</span>` : ""}
+                  ${resumenMonto ? `<span>Monto: ${formatearPrecioCLP(resumenMonto.monto)}</span>` : ""}
                 </div>
               </div>
               <div class="quotes-report-detail-items">
