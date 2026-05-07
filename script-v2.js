@@ -4690,6 +4690,7 @@ function construirBloqueDetalleReporte(q = {}, items = []) {
 function construirTextoReporteCotizacionesWhatsApp(quotes = []) {
   const quotesMes = obtenerCotizacionesFiltradas(obtenerCotizacionesMesActual(quotes));
   const total = quotesMes.length;
+  const totalPrendas = quotesMes.reduce((acc, q) => acc + (Number(q?.total_items) || 0), 0);
   const listas = quotesMes.filter((q) => !!q.is_ready).length;
   const caidas = total - listas;
   const pctListas = total ? Math.round((listas / total) * 100) : 0;
@@ -4699,6 +4700,7 @@ function construirTextoReporteCotizacionesWhatsApp(quotes = []) {
   const lines = [
     `*Reporte de cotizaciones ${mesLabel}*`,
     `Total cotizaciones: ${total}`,
+    `Total prendas: ${totalPrendas}`,
     `Cotizaciones listas: ${listas} (${pctListas}%)`,
   ];
   if (caidas > 0) {
@@ -4794,6 +4796,7 @@ function renderReporteCotizacionesAdmin(quotes = []) {
   if (!panel) return;
   const quotesMes = obtenerCotizacionesFiltradas(obtenerCotizacionesMesActual(quotes));
   const total = quotesMes.length;
+  const totalPrendas = quotesMes.reduce((acc, q) => acc + (Number(q?.total_items) || 0), 0);
   const listas = quotesMes.filter((q) => !!q.is_ready).length;
   const caidas = total - listas;
   const mesLabel = obtenerEtiquetaMesActual();
@@ -4814,6 +4817,10 @@ function renderReporteCotizacionesAdmin(quotes = []) {
         <div class="quotes-report-metric">
           <span>Total</span>
           <strong>${total}</strong>
+        </div>
+        <div class="quotes-report-metric">
+          <span>Prendas</span>
+          <strong>${totalPrendas}</strong>
         </div>
         <div class="quotes-report-metric is-ready">
           <span>Listas</span>
