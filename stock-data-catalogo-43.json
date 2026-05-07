@@ -2,9 +2,9 @@
   "source_file": "DATA Trazabilidad/SALDOS-SECCI 43.TXT",
   "sheet_name": "SALDOS-SECCI 43",
   "items": {
-    "4323-00": {
+    "4323-01": {
       "article": "01432300",
-      "sku": "4323-00",
+      "sku": "4323-01",
       "description": "Coleccion 43 / Cortes 11582",
       "sizes": {
         "36": 0,

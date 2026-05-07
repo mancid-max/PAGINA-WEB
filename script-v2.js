@@ -144,6 +144,26 @@ const SOLD_OUT_CATALOG_ITEMS = [
     variants: [],
   },
 ];
+const CATALOG_COVER_OVERRIDES = {
+  "4245-00": "Imagenes/4245/CRI_7845.jpg",
+};
+const LOCAL_CLIENT_OVERRIDES = [
+  {
+    rut: "77.886.495-9",
+    rut_normalized: "77886495-9",
+    razon_social: "IMPORTADORA HIPOLIS CHRISTOPHER MORALES EIRL",
+  },
+  {
+    rut: "14.905.682-3",
+    rut_normalized: "14905682-3",
+    razon_social: "CLAUDIO VIGUERAS TORRES",
+  },
+  {
+    rut: "21.423.987-6",
+    rut_normalized: "21423987-6",
+    razon_social: "THAI TUCKI PAOA",
+  },
+];
 
 function sanitizarPedidoPersistido(valor) {
   if (!Array.isArray(valor)) return [];
@@ -165,17 +185,19 @@ function sanitizarPedidoPersistido(valor) {
 function construirEstadoCotizacionPersistido() {
   const rutEl = document.getElementById("clientRut");
   const nameEl = document.getElementById("clientName");
+  const phoneEl = document.getElementById("clientPhone");
   return {
     pedido: sanitizarPedidoPersistido(pedido),
     clientRut: String(rutEl?.value || "").trim(),
     clientName: String(nameEl?.value || "").trim(),
+    clientPhone: String(phoneEl?.value || "").trim(),
   };
 }
 
 function guardarCotizacionPersistida() {
   try {
     const estado = construirEstadoCotizacionPersistido();
-    if (!estado.pedido.length && !estado.clientRut && !estado.clientName) {
+    if (!estado.pedido.length && !estado.clientRut && !estado.clientName && !estado.clientPhone) {
       localStorage.removeItem(CART_STORAGE_KEY);
       return;
     }
@@ -201,28 +223,15 @@ function restaurarCotizacionPersistida() {
     pedido = sanitizarPedidoPersistido(estado?.pedido);
     const rutEl = document.getElementById("clientRut");
     const nameEl = document.getElementById("clientName");
+    const phoneEl = document.getElementById("clientPhone");
     if (rutEl && estado?.clientRut) rutEl.value = String(estado.clientRut).trim();
     if (nameEl && estado?.clientName) nameEl.value = String(estado.clientName).trim();
+    if (phoneEl && estado?.clientPhone) phoneEl.value = String(estado.clientPhone).trim();
   } catch (_) {
     pedido = [];
     limpiarCotizacionPersistida();
   }
 }
-const CATALOG_COVER_OVERRIDES = {
-  "4245-00": "Imagenes/4245/CRI_7845.jpg",
-};
-const LOCAL_CLIENT_OVERRIDES = [
-  {
-    rut: "77.886.495-9",
-    rut_normalized: "77886495-9",
-    razon_social: "IMPORTADORA HIPOLIS CHRISTOPHER MORALES EIRL",
-  },
-  {
-    rut: "14.905.682-3",
-    rut_normalized: "14905682-3",
-    razon_social: "CLAUDIO VIGUERAS TORRES",
-  },
-];
 
 const ASSET_VERSION = Date.now();
 const OPTIMIZED_IMAGE_ROOT = "Imagenes-web";
@@ -248,7 +257,7 @@ const CATALOG_43_DESCRIPTION_MAP = {
   "4301-00": "Jean · Medio · Flare",
   "4309-00": "Jean · Cintura · Flare",
   "4314-00": "Jean · Cintura · Recto",
-  "4323-00": "Jean · Cintura · Wide leg",
+  "4323-01": "Jean · Cintura · Wide leg",
   "4329-00": "Jean · New Glue",
 };
 
@@ -556,14 +565,7 @@ const CATALOG_PRICE_CONFIG_BY_SOURCE = {
     priceFile: "price-data.json",
   },
   "catalogo-43": {
-    inlinePrices: {
-      "4301-00": 26990,
-      "4309-00": 27990,
-      "4318-00": 26990,
-      "4314-00": 25990,
-      "4323-00": 26990,
-      "4329-00": 26990,
-    },
+    priceFile: "price-data-catalogo-43.json",
   },
 };
 let catalogPriceBySource = {};
@@ -641,6 +643,8 @@ function obtenerDetallePrecioCatalogo(value, source = CATALOG_SOURCE) {
   return {
     lista: precioLista,
     final: precioLista,
+    descuento: 0,
+    ahorro: 0,
   };
 }
 
@@ -668,7 +672,7 @@ async function cargarStockSupabasePublico() {
 
   const { data, error } = await client
     .from("stock_items")
-    .select("id,season,article_code,sku,tiro,bota,color,active,updated_at,stock_item_sizes(id,size_label,quantity,sort_order)")
+    .select("id,season,article_code,sku,tiro,bota,color,active,updated_at,stock_item_sizes(id,size_label,quantity,sort_order),stock_item_reserve_sizes(size_label,reserve_quantity)")
     .eq("active", true)
     .order("sku", { ascending: true });
 
@@ -811,7 +815,8 @@ function normalizarTallasStock(rows = []) {
   });
 }
 
-function normalizarFilaStockCatalog(row = {}) {
+function normalizarFilaStockCatalog(row = {}, options = {}) {
+  const { preferReserve = false } = options;
   const sku = normalizarSkuCatalogo(row?.sku);
   const sourceSizes =
     Array.isArray(row?.stock_item_sizes) && row.stock_item_sizes.length
@@ -823,9 +828,20 @@ function normalizarFilaStockCatalog(row = {}) {
           quantity: Math.max(0, Number(row?.[`size_${size}`]) || 0),
           sort_order: (index + 1) * 10,
         }));
-  const sizes = normalizarTallasStock(
-    sourceSizes
+  const reserveMap = Object.fromEntries(
+    (Array.isArray(row?.stock_item_reserve_sizes) ? row.stock_item_reserve_sizes : [])
+      .map((sizeRow) => [
+        normalizarStockSizeLabel(sizeRow?.size_label),
+        Math.max(0, Number(sizeRow?.reserve_quantity) || 0),
+      ])
+      .filter(([label]) => !!label)
   );
+  const sizes = normalizarTallasStock(sourceSizes).map((sizeRow) => ({
+    ...sizeRow,
+    quantity: preferReserve && Object.prototype.hasOwnProperty.call(reserveMap, sizeRow.size_label)
+      ? reserveMap[sizeRow.size_label]
+      : sizeRow.quantity,
+  }));
   const total = sizes.reduce((acc, sizeRow) => acc + (Number(sizeRow?.quantity) || 0), 0);
   return {
     id: row?.id ?? null,
@@ -846,7 +862,7 @@ function normalizarFilaStockCatalog(row = {}) {
 function convertirFilasStockItemsAItems(rows = []) {
   const items = {};
   (Array.isArray(rows) ? rows : [])
-    .map((row) => normalizarFilaStockCatalog(row))
+    .map((row) => normalizarFilaStockCatalog(row, { preferReserve: true }))
     .filter((row) => row?.sku && row?.active !== false)
     .forEach((row) => {
       const sizesMap = Object.fromEntries(
@@ -2063,6 +2079,20 @@ function configurarRealtimeStock() {
         }
       }
     )
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "stock_item_reserve_sizes",
+      },
+      () => {
+        cargarStockData();
+        if (quotesAccessToken && adminActiveTab === "stock") {
+          cargarStockCatalogAdmin().catch((err) => console.warn("No se pudo refrescar Stock:", err));
+        }
+      }
+    )
     .subscribe();
 }
 
@@ -2447,7 +2477,7 @@ function inicializarBuscadorModelos() {
   if (!input || !panel || !btnBuscar || !btnLimpiar) return;
 
   const obtenerFuenteBusqueda = () => (
-    obtenerProductosConImagenVisible(Array.isArray(productosGrid) ? productosGrid : [])
+    Array.isArray(productosGrid) ? productosGrid : []
   );
   const modelos = [...new Set(obtenerFuenteBusqueda().map((p) => String(p.family)).filter(Boolean))].sort();
   let sugerenciasActuales = [];
@@ -2652,18 +2682,14 @@ function tarjetaSinImagenCatalogo43(producto) {
   return imagePath === "Imagenes/Logo/app-icon.png";
 }
 
-function obtenerProductosConImagenVisible(lista = []) {
-  return (Array.isArray(lista) ? lista : [])
+function renderGrid(lista) {
+  const container = document.getElementById("grid");
+  const listaConImagen = (Array.isArray(lista) ? lista : [])
     .map((p) => ({
       ...p,
       _safeCardImage: obtenerImagenSeguraTarjeta(p),
     }))
     .filter((p) => Boolean(p?._safeCardImage) && normalizarRutaAsset(p._safeCardImage) !== "Imagenes/Logo/app-icon.png");
-}
-
-function renderGrid(lista) {
-  const container = document.getElementById("grid");
-  const listaConImagen = obtenerProductosConImagenVisible(lista);
   const listaOrdenada = [...listaConImagen].sort((a, b) => compararProductosPorStockDesc(a, b, stockBySku));
 
   container.innerHTML = listaOrdenada
@@ -2783,7 +2809,7 @@ function verProducto(familyId, preferredSku = "") {
     charList.innerHTML = "";
     charList.style.display = partes43.length ? "block" : "none";
 
-    if (partes43.length) {
+      if (partes43.length) {
       const ul = document.createElement("ul");
       partes43.forEach((parte) => {
         const li = document.createElement("li");
@@ -2935,6 +2961,7 @@ function actualizarCarrito() {
   const container = document.getElementById("cartItems");
   let totalItems = 0;
   let totalEstimado = 0;
+  let totalLista = 0;
 
   if (!pedido.length) {
     container.innerHTML = `
@@ -2948,9 +2975,12 @@ function actualizarCarrito() {
       .map((item, index) => {
         const cantidadModelo = Object.values(item.tallas).reduce((acc, qty) => acc + (Number(qty) || 0), 0);
         const detallePrecio = obtenerDetallePrecioCatalogo(item.sku);
+        const precioListaUnitario = detallePrecio?.lista || null;
         const precioUnitario = detallePrecio?.final || null;
+        const subtotalLista = precioListaUnitario ? precioListaUnitario * cantidadModelo : 0;
         const subtotal = precioUnitario ? precioUnitario * cantidadModelo : 0;
         totalItems += cantidadModelo;
+        totalLista += subtotalLista;
         totalEstimado += subtotal;
         const tallasHtml = Object.entries(item.tallas)
           .map(([t, c]) => `<span class="cart-size-pill">T${t} <strong>${c}</strong></span>`)
@@ -3688,12 +3718,13 @@ async function validarRutClienteEnUI({ silencioso = false } = {}) {
         tipo: "new",
         texto: "Cliente nuevo detectado.",
       });
-      renderClientNewHelper(true, "Completa nombre y teléfono del cliente nuevo para enviar la cotización.");
-      toggleClientNameField(true, { value: clienteNuevo.razon_social, readonly: false });
-      toggleClientPhoneField(true, { value: clienteNuevo.client_phone, readonly: false });
-      return clienteNuevo;
-    }
-    clienteSeleccionado = cliente;
+    renderClientNewHelper(true, "Completa nombre y teléfono del cliente nuevo para enviar la cotización.");
+    toggleClientNameField(true, { value: clienteNuevo.razon_social, readonly: false });
+    toggleClientPhoneField(true, { value: clienteNuevo.client_phone, readonly: false });
+    guardarCotizacionPersistida();
+    return clienteNuevo;
+  }
+  clienteSeleccionado = cliente;
     input.value = formatearRutVisual(cliente.rut || cliente.rut_normalized);
     setClientLookupUI({
       tipo: "ok",
@@ -3703,6 +3734,7 @@ async function validarRutClienteEnUI({ silencioso = false } = {}) {
     renderClientNewHelper(false);
     toggleClientNameField(false);
     toggleClientPhoneField(false);
+    guardarCotizacionPersistida();
     return cliente;
   } catch (err) {
     renderClientNewHelper(false);
@@ -3755,6 +3787,7 @@ function configurarLookupCliente() {
         ? "Cliente nuevo listo. Ya puedes enviar la cotización."
         : "Cliente nuevo. Agrega nombre y teléfono para enviar la cotización.",
     });
+    guardarCotizacionPersistida();
   });
   phoneInput?.addEventListener("input", () => {
     if (clienteSeleccionado) return;
@@ -3870,49 +3903,6 @@ async function guardarCotizacionSupabase(cliente) {
 
   const payload = construirPayloadCotizacion(cliente);
   if (!payload.items.length) throw new Error("No hay items para guardar");
-
-  if (payload.quote?.source === "catalogo-43") {
-    const quoteRes = await fetch(`${SUPABASE_URL}/rest/v1/quotes`, {
-      method: "POST",
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        "Content-Type": "application/json",
-        Prefer: "return=minimal",
-      },
-      body: JSON.stringify(payload.quote),
-    });
-
-    if (!quoteRes.ok) {
-      const errText = await quoteRes.text();
-      throw new Error(`Error guardando cotizacion: ${errText || quoteRes.status}`);
-    }
-
-    const quoteItemsPayload = payload.items.map((item) => ({
-      quote_id: payload.quote.id,
-      sku: String(item?.sku || "").trim(),
-      size: String(item?.talla || "").trim(),
-      quantity: Number(item?.cantidad) || 0,
-    })).filter((item) => item.sku && item.size && item.quantity > 0);
-
-    const itemsRes = await fetch(`${SUPABASE_URL}/rest/v1/quote_items`, {
-      method: "POST",
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        "Content-Type": "application/json",
-        Prefer: "return=minimal",
-      },
-      body: JSON.stringify(quoteItemsPayload),
-    });
-
-    if (!itemsRes.ok) {
-      const errText = await itemsRes.text();
-      throw new Error(`Error guardando detalle de cotizacion: ${errText || itemsRes.status}`);
-    }
-
-    return payload.quote.id;
-  }
 
   const rpcPayload = {
     p_quote: payload.quote,
@@ -4491,7 +4481,7 @@ async function cargarStockCatalogAdmin() {
   if (!quotesAccessToken) throw new Error("Debes iniciar sesion");
 
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/stock_items?select=id,season,article_code,sku,tiro,bota,color,active,updated_at,stock_item_sizes(id,size_label,quantity,sort_order)&order=season.asc,sku.asc`,
+    `${SUPABASE_URL}/rest/v1/stock_items?select=id,season,article_code,sku,tiro,bota,color,active,updated_at,stock_item_sizes(id,size_label,quantity,sort_order),stock_item_reserve_sizes(size_label,reserve_quantity)&order=season.asc,sku.asc`,
     {
       headers: {
         apikey: SUPABASE_ANON_KEY,
@@ -4675,7 +4665,10 @@ function calcularResumenMontoCotizacion(quote = {}, items = []) {
   });
   if (!hasPrice) return null;
   return {
-    monto: totalPromo,
+    lista: totalLista,
+    promo: totalPromo,
+    ahorro: 0,
+    tienePromo: false,
   };
 }
 
@@ -4694,7 +4687,6 @@ function construirBloqueDetalleReporte(q = {}, items = []) {
 function construirTextoReporteCotizacionesWhatsApp(quotes = []) {
   const quotesMes = obtenerCotizacionesFiltradas(obtenerCotizacionesMesActual(quotes));
   const total = quotesMes.length;
-  const totalPrendas = quotesMes.reduce((acc, q) => acc + (Number(q?.total_items) || 0), 0);
   const listas = quotesMes.filter((q) => !!q.is_ready).length;
   const caidas = total - listas;
   const pctListas = total ? Math.round((listas / total) * 100) : 0;
@@ -4704,7 +4696,6 @@ function construirTextoReporteCotizacionesWhatsApp(quotes = []) {
   const lines = [
     `*Reporte de cotizaciones ${mesLabel}*`,
     `Total cotizaciones: ${total}`,
-    `Total prendas: ${totalPrendas}`,
     `Cotizaciones listas: ${listas} (${pctListas}%)`,
   ];
   if (caidas > 0) {
@@ -4724,7 +4715,7 @@ function construirTextoReporteCotizacionesWhatsApp(quotes = []) {
         `${index + 1}. ${q.store_name || "Sin cliente"} · ${codigo}`,
         `RUT: ${q.client_rut || "Sin RUT"}${q.client_phone ? ` · Teléfono: ${q.client_phone}` : ""}`,
         `Estado: ${q.is_ready ? "Lista" : "No lista / caída"}`,
-        `Prendas: ${q.total_items || 0}${resumenMonto ? ` · Monto: ${formatearPrecioCLP(resumenMonto.monto)}` : ""}`,
+        `Prendas: ${q.total_items || 0}${resumenMonto ? ` · Monto: ${formatearPrecioCLP(resumenMonto.promo)}` : ""}`,
         ...construirBloqueDetalleReporte(q, detalles)
       );
     });
@@ -4770,13 +4761,15 @@ function construirVistaReporteCotizaciones(quotes = [], itemsMap = new Map()) {
           <strong>${index + 1}. ${escapeHtmlExcel(q.store_name || "Sin cliente")}</strong>
           <span>${escapeHtmlExcel(codigo)}</span>
         </div>
-        <div class="quotes-report-preview-meta">
-          <div><span>RUT</span><strong>${escapeHtmlExcel(q.client_rut || "Sin RUT")}</strong></div>
-          ${q.client_phone ? `<div><span>Teléfono</span><strong>${escapeHtmlExcel(q.client_phone)}</strong></div>` : ""}
-          <div><span>Estado</span><strong>${escapeHtmlExcel(q.is_ready ? "Lista" : "No lista / caída")}</strong></div>
-          <div><span>Fecha</span><strong>${escapeHtmlExcel(fecha)}</strong></div>
-          <div><span>Prendas</span><strong>${escapeHtmlExcel(q.total_items || 0)}</strong></div>
-          ${resumenMonto ? `<div><span>Monto</span><strong>${escapeHtmlExcel(formatearPrecioCLP(resumenMonto.monto))}</strong></div>` : ""}
+        <div class="quotes-report-preview-meta quotes-report-preview-meta-primary">
+          <div class="quotes-report-preview-chip"><span>RUT</span><strong>${escapeHtmlExcel(q.client_rut || "Sin RUT")}</strong></div>
+          <div class="quotes-report-preview-chip"><span>Estado</span><strong>${escapeHtmlExcel(q.is_ready ? "Lista" : "No lista / caída")}</strong></div>
+          <div class="quotes-report-preview-chip quotes-report-preview-chip-date"><span>Fecha</span><strong>${escapeHtmlExcel(fecha)}</strong></div>
+          <div class="quotes-report-preview-chip"><span>Prendas</span><strong>${escapeHtmlExcel(q.total_items || 0)}</strong></div>
+          ${q.client_phone ? `<div class="quotes-report-preview-chip quotes-report-preview-chip-phone"><span>Teléfono</span><strong>${escapeHtmlExcel(q.client_phone)}</strong></div>` : ""}
+        </div>
+        <div class="quotes-report-preview-meta quotes-report-preview-meta-finance">
+          ${resumenMonto ? `<div class="quotes-report-preview-chip quotes-report-preview-chip-money is-highlight"><span>Monto</span><strong>${escapeHtmlExcel(formatearPrecioCLP(resumenMonto.promo))}</strong></div>` : ""}
         </div>
         <div class="quotes-report-preview-table-wrap">
           <table class="quotes-report-preview-table">
@@ -4800,7 +4793,6 @@ function renderReporteCotizacionesAdmin(quotes = []) {
   if (!panel) return;
   const quotesMes = obtenerCotizacionesFiltradas(obtenerCotizacionesMesActual(quotes));
   const total = quotesMes.length;
-  const totalPrendas = quotesMes.reduce((acc, q) => acc + (Number(q?.total_items) || 0), 0);
   const listas = quotesMes.filter((q) => !!q.is_ready).length;
   const caidas = total - listas;
   const mesLabel = obtenerEtiquetaMesActual();
@@ -4821,10 +4813,6 @@ function renderReporteCotizacionesAdmin(quotes = []) {
         <div class="quotes-report-metric">
           <span>Total</span>
           <strong>${total}</strong>
-        </div>
-        <div class="quotes-report-metric">
-          <span>Prendas</span>
-          <strong>${totalPrendas}</strong>
         </div>
         <div class="quotes-report-metric is-ready">
           <span>Listas</span>
@@ -4867,7 +4855,7 @@ function renderReporteCotizacionesAdmin(quotes = []) {
                 <div class="quotes-report-detail-side">
                   <strong>${q.total_items || 0} prendas</strong>
                   <span>${q.is_ready ? "Lista" : "No lista / caída"} · ${fecha}</span>
-                  ${resumenMonto ? `<span>Monto: ${formatearPrecioCLP(resumenMonto.monto)}</span>` : ""}
+                  ${resumenMonto ? `<span>Monto: ${formatearPrecioCLP(resumenMonto.promo)}</span>` : ""}
                 </div>
               </div>
               <div class="quotes-report-detail-items">
