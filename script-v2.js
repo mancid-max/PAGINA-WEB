@@ -3936,7 +3936,47 @@ async function guardarCotizacionSupabase(cliente) {
 
   const quoteId = await res.json().catch(() => payload.quote.id);
   if (!quoteId) throw new Error("No se genero ID de cotizacion");
-  return quoteId;
+  return {
+    quoteId,
+    payload,
+  };
+}
+
+async function enviarAlertaCorreoCotizacion(quoteResult, cliente) {
+  const quoteId = quoteResult?.quoteId || quoteResult?.payload?.quote?.id || null;
+  const payload = quoteResult?.payload || null;
+  if (!quoteId || !payload?.quote || !Array.isArray(payload?.items) || !payload.items.length) return false;
+
+  try {
+    const res = await fetch("/.netlify/functions/quote-notify-email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        quote_id: quoteId,
+        quote: payload.quote,
+        items: payload.items,
+        client: {
+          rut: cliente?.rut || payload.quote?.client_rut || "",
+          rut_normalized: cliente?.rut_normalized || payload.quote?.client_rut_normalized || "",
+          razon_social: cliente?.razon_social || payload.quote?.store_name || "",
+          client_phone: cliente?.client_phone || payload.quote?.client_phone || "",
+        },
+      }),
+    });
+
+    if (!res.ok) {
+      const txt = await res.text().catch(() => "");
+      console.warn("No se pudo enviar alerta por correo", txt || res.status);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.warn("No se pudo enviar alerta por correo", err);
+    return false;
+  }
 }
 
 async function registrarClienteNuevoSupabase(cliente) {
@@ -5398,7 +5438,8 @@ document.getElementById("sendRequest").onclick = async () => {
     clearCartFieldInvalidState();
     const cliente = await obtenerClienteParaCotizacion();
     btn.innerText = "Guardando cotización...";
-    await guardarCotizacionSupabase(cliente);
+    const quoteResult = await guardarCotizacionSupabase(cliente);
+    void enviarAlertaCorreoCotizacion(quoteResult, cliente);
 
     mostrarToastExito("Cotización enviada con éxito", "Recibimos tu solicitud correctamente.");
     limpiarCarrito();
