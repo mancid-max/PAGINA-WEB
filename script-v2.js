@@ -3248,6 +3248,9 @@ function normalizarSkuParaPlantilla(sku, source) {
   if (/^\d{4}$/.test(raw) && source === "catalogo-1") {
     return `${raw}-00`;
   }
+  if (source === "catalogo-43" && /^\d{4}-\d{2}$/.test(raw)) {
+    return raw.replace("-", "");
+  }
   return raw;
 }
 
