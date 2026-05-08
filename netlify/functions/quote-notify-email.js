@@ -1,4 +1,9 @@
 exports.handler = async (event) => {
+  console.log("quote-notify-email invoked", {
+    method: event.httpMethod,
+    hasBody: Boolean(event.body),
+  });
+
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
@@ -12,6 +17,11 @@ exports.handler = async (event) => {
   const replyTo = process.env.QUOTE_NOTIFY_REPLY_TO || "";
 
   if (!resendApiKey || !from || !toRaw) {
+    console.warn("quote-notify-email skipped: missing env", {
+      hasApiKey: Boolean(resendApiKey),
+      hasFrom: Boolean(from),
+      hasTo: Boolean(toRaw),
+    });
     return {
       statusCode: 202,
       body: JSON.stringify({ skipped: true, reason: "missing_email_env" }),
@@ -38,6 +48,11 @@ exports.handler = async (event) => {
     .filter(Boolean);
 
   if (!quoteId || !items.length || !recipients.length) {
+    console.warn("quote-notify-email skipped: missing quote data", {
+      quoteId,
+      items: items.length,
+      recipients: recipients.length,
+    });
     return {
       statusCode: 400,
       body: JSON.stringify({ error: "missing_quote_data" }),
@@ -127,6 +142,10 @@ exports.handler = async (event) => {
 
   if (!resendRes.ok) {
     const errorText = await resendRes.text().catch(() => "");
+    console.error("quote-notify-email resend error", {
+      status: resendRes.status,
+      details: errorText,
+    });
     return {
       statusCode: resendRes.status,
       body: JSON.stringify({ error: "email_send_failed", details: errorText }),
@@ -134,6 +153,11 @@ exports.handler = async (event) => {
   }
 
   const data = await resendRes.json().catch(() => ({}));
+  console.log("quote-notify-email sent", {
+    resendId: data?.id || null,
+    quoteId,
+    recipients,
+  });
   return {
     statusCode: 200,
     body: JSON.stringify({ ok: true, id: data?.id || null }),

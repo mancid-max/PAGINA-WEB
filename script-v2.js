@@ -3950,6 +3950,7 @@ async function enviarAlertaCorreoCotizacion(quoteResult, cliente) {
   try {
     const res = await fetch("/.netlify/functions/quote-notify-email", {
       method: "POST",
+      keepalive: true,
       headers: {
         "Content-Type": "application/json",
       },
@@ -5439,7 +5440,7 @@ document.getElementById("sendRequest").onclick = async () => {
     const cliente = await obtenerClienteParaCotizacion();
     btn.innerText = "Guardando cotización...";
     const quoteResult = await guardarCotizacionSupabase(cliente);
-    void enviarAlertaCorreoCotizacion(quoteResult, cliente);
+    await enviarAlertaCorreoCotizacion(quoteResult, cliente);
 
     mostrarToastExito("Cotización enviada con éxito", "Recibimos tu solicitud correctamente.");
     limpiarCarrito();
