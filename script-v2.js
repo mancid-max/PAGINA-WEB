@@ -2188,12 +2188,12 @@ function renderImages(imageList, sku = "") {
 
   const uniqueImages = obtenerImagenesCuradasParaVisor(sku, imageList, 4);
   thumbContainer.innerHTML = "";
+  viewer.removeAttribute("src");
   imagenesModalActual = Array.isArray(uniqueImages) ? [...uniqueImages] : [];
   imagenModalIndex = 0;
   if (galleryBtn) galleryBtn.hidden = !imagenesModalActual.length;
 
   if (!uniqueImages.length) {
-    viewer.removeAttribute("src");
     return;
   }
 
@@ -3136,9 +3136,11 @@ function renderizarHantanModal(producto = {}) {
   const badges = obtenerHantanesModelo(producto);
   if (!badges.length) {
     stack.innerHTML = "";
+    stack.removeAttribute("data-count");
     stack.hidden = true;
     return;
   }
+  stack.dataset.count = String(badges.length);
   stack.innerHTML = badges
     .map(
       (badge) => `<img class="modal-hantan-badge" src="${badge.src}" alt="${escapeHtmlExcel(badge.label)}" loading="lazy">`
