@@ -8,6 +8,8 @@ let pedido = [];
 let skuActivo = "";
 let draftTallasPorSku = {}; // legacy (borradores desactivados)
 const TALLAS_DISPONIBLES = ["36", "38", "40", "42", "44", "46"];
+const WEB_DISCOUNT_RATE = 0.05;
+const WEB_DISCOUNT_PERCENT = Math.round(WEB_DISCOUNT_RATE * 100);
 let quotesAccessToken = sessionStorage.getItem("quotes_access_token") || "";
 let quotesUserEmail = sessionStorage.getItem("quotes_user_email") || "";
 let quotesAdminCache = { quotes: [], itemsByQuote: new Map() };
@@ -36,7 +38,7 @@ let videoActivoSrc = "";
 let catalogCoverBySku = {};
 const INVENTORY_ENABLED = true;
 const STOCK_REFRESH_INTERVAL_MS = 30000;
-const CART_STORAGE_KEY = "mohicano_cart_v1";
+const CART_STORAGE_KEY = "mohicano_cart_shared_v3";
 const SOLD_OUT_CATALOG_ITEMS = [
   {
     family: "4208-00",
@@ -144,8 +146,112 @@ const SOLD_OUT_CATALOG_ITEMS = [
     variants: [],
   },
 ];
+
+function sanitizarPedidoPersistido(valor) {
+  if (!Array.isArray(valor)) return [];
+  return valor
+    .map((item) => {
+      const sku = normalizarSkuCatalogo(item?.sku || "");
+      const tallasRaw = item?.tallas && typeof item.tallas === "object" ? item.tallas : {};
+      const tallas = {};
+      TALLAS_DISPONIBLES.forEach((talla) => {
+        const cantidad = parseInt(tallasRaw[talla], 10);
+        if (!Number.isNaN(cantidad) && cantidad > 0) tallas[talla] = cantidad;
+      });
+      if (!sku || !Object.keys(tallas).length) return null;
+      return { sku, tallas };
+    })
+    .filter(Boolean);
+}
+
+function construirEstadoCotizacionPersistido() {
+  const rutEl = document.getElementById("clientRut");
+  const nameEl = document.getElementById("clientName");
+  return {
+    pedido: sanitizarPedidoPersistido(pedido),
+    clientRut: String(rutEl?.value || "").trim(),
+    clientName: String(nameEl?.value || "").trim(),
+  };
+}
+
+function guardarCotizacionPersistida() {
+  try {
+    const estado = construirEstadoCotizacionPersistido();
+    if (!estado.pedido.length && !estado.clientRut && !estado.clientName) {
+      localStorage.removeItem(CART_STORAGE_KEY);
+      return;
+    }
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(estado));
+  } catch (_) {
+    // Ignorar errores de almacenamiento para no bloquear la cotización.
+  }
+}
+
+function limpiarCotizacionPersistida() {
+  try {
+    localStorage.removeItem(CART_STORAGE_KEY);
+  } catch (_) {
+    // Ignorar errores de almacenamiento.
+  }
+}
+
+function restaurarCotizacionPersistida() {
+  try {
+    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    if (!raw) return;
+    const estado = JSON.parse(raw);
+    pedido = sanitizarPedidoPersistido(estado?.pedido);
+    const rutEl = document.getElementById("clientRut");
+    const nameEl = document.getElementById("clientName");
+    if (rutEl && estado?.clientRut) rutEl.value = String(estado.clientRut).trim();
+    if (nameEl && estado?.clientName) nameEl.value = String(estado.clientName).trim();
+  } catch (_) {
+    pedido = [];
+    limpiarCotizacionPersistida();
+  }
+}
 const CATALOG_COVER_OVERRIDES = {
   "4245-00": "Imagenes/4245/CRI_7845.jpg",
+};
+const HANTAN_BY_SKU = {
+  "4249-00": ["power strech.png"],
+  "4301-00": ["power strech.png"],
+  "4309-00": ["power strech.png"],
+  "4310-00": ["power strech.png"],
+  "4311-00": ["power strech.png"],
+  "4313-00": ["power strech.png", "push in push up.png"],
+  "4314-00": ["power strech.png"],
+  "4318-00": ["power strech.png"],
+  "4319-00": [],
+  "4321-00": ["power strech.png", "push in push up.png"],
+  "4322-00": ["power strech.png"],
+  "4322-01": ["power strech.png"],
+  "4323-00": ["power strech.png", "push in push up.png"],
+  "4325-00": ["power strech.png"],
+  "4327-00": ["power strech.png", "smart denim.png"],
+  "4329-00": ["power strech.png"],
+  "4330-00": ["power strech.png"],
+  "4333-00": ["power strech.png"],
+  "4335-00": ["power strech.png"],
+  "4336-00": ["power strech.png"],
+  "4337-00": ["power strech.png"],
+  "4339-00": ["power strech.png"],
+  "4340-00": ["power strech.png", "push in push up.png"],
+  "4341-00": ["power strech.png"],
+  "4347-00": ["power strech.png"],
+  "4353-00": ["power strech.png"],
+  "4355-00": ["power strech.png"],
+  "4356-00": ["power strech.png"],
+  "4356-01": ["power strech.png"],
+  "4361-00": ["perfect.png"],
+  "4362-00": ["perfect.png"],
+  "4365-00": ["perfect.png"],
+  "4366-00": ["perfect.png"],
+  "4370-00": ["universal.png"],
+  "4371-00": ["power strech.png"],
+  "4374-00": ["power strech.png"],
+  "4377-00": ["universal.png"],
+  "4377-01": ["universal.png"],
 };
 const LOCAL_CLIENT_OVERRIDES = [
   {
@@ -165,11 +271,22 @@ const LOCAL_CLIENT_OVERRIDES = [
   },
 ];
 
+function inferirCatalogoDesdeSku(value) {
+  const sku = normalizarSkuCatalogo(value || "");
+  if (/^43\d{2}(?:-\d{2})?$/i.test(sku)) return "catalogo-43";
+  return "catalogo-1";
+}
+
+function resolverSourceItemPedido(item = {}, fallbackSource = CATALOG_SOURCE) {
+  return String(item?.source || inferirCatalogoDesdeSku(item?.sku) || fallbackSource).trim() || fallbackSource;
+}
+
 function sanitizarPedidoPersistido(valor) {
   if (!Array.isArray(valor)) return [];
   return valor
     .map((item) => {
       const sku = normalizarSkuCatalogo(item?.sku || "");
+      const source = String(item?.source || inferirCatalogoDesdeSku(sku) || CATALOG_SOURCE).trim() || CATALOG_SOURCE;
       const tallasRaw = item?.tallas && typeof item.tallas === "object" ? item.tallas : {};
       const tallas = {};
       TALLAS_DISPONIBLES.forEach((talla) => {
@@ -177,7 +294,7 @@ function sanitizarPedidoPersistido(valor) {
         if (!Number.isNaN(cantidad) && cantidad > 0) tallas[talla] = cantidad;
       });
       if (!sku || !Object.keys(tallas).length) return null;
-      return { sku, tallas };
+      return { sku, tallas, source };
     })
     .filter(Boolean);
 }
@@ -236,6 +353,7 @@ function restaurarCotizacionPersistida() {
 const ASSET_VERSION = Date.now();
 const OPTIMIZED_IMAGE_ROOT = "Imagenes-web";
 const OPTIMIZED_IMAGE_SOURCE_ROOTS = ["Imagenes", "Imagenes2", "Imagenes3", "42", "43"];
+const IS_LOCAL_FILE_PROTOCOL = typeof window !== "undefined" && window.location?.protocol === "file:";
 const TEXT_NORMALIZATION_REPLACEMENTS = [
   [/Â·/g, "·"],
   [/Dise\?o/gi, "Diseño"],
@@ -256,9 +374,17 @@ const TEXT_NORMALIZATION_REPLACEMENTS = [
 const CATALOG_43_DESCRIPTION_MAP = {
   "4301-00": "Jean · Medio · Flare",
   "4309-00": "Jean · Cintura · Flare",
+  "4310-00": "Jean · Cintura · Tobillero",
+  "4313-00": "Jean · Cintura · Flare",
   "4314-00": "Jean · Cintura · Recto",
+  "4318-00": "Jean · Cintura · Wide Leg",
+  "4319-00": "Jean · Medio · Flare",
   "4323-01": "Jean · Cintura · Wide leg",
+  "4325-00": "Jean · Cintura · Wide Leg",
   "4329-00": "Jean · New Glue",
+  "4333-00": "Jean · Cintura · Wide Leg",
+  "4337-00": "Jean · Cintura · Flare",
+  "4341-00": "Jean · Cintura · Flare",
 };
 
 function withCacheBust(path) {
@@ -310,8 +436,6 @@ function normalizarRutaImagenCatalogo(path) {
     return `Imagenes/${model}/${rest}`;
   }
 
-  if (mapped.startsWith("Imagenes3/")) mapped = `Imagenes/${mapped.slice("Imagenes3/".length)}`;
-
   // Imagenes/####-##/archivo -> Imagenes/####/(####-##/)?archivo
   const fromImgVariant = mapped.match(/^Imagenes\/(\d{4})-(\d{2})\/(.+)$/i);
   if (fromImgVariant) {
@@ -322,6 +446,31 @@ function normalizarRutaImagenCatalogo(path) {
   }
 
   return mapped;
+}
+
+function obtenerRutasAlternativasCatalogo43(path) {
+  const normalized = normalizarRutaAsset(path);
+  if (!normalized) return [];
+  if (CATALOG_SOURCE !== "catalogo-43") return [normalized];
+
+  const candidates = [normalized];
+  const nestedMatch = normalized.match(/^43\/43\/([^/]+)\/(.+)$/i);
+  if (nestedMatch) {
+    candidates.push(`43/${nestedMatch[1]}/${nestedMatch[2]}`);
+  } else {
+    const directMatch = normalized.match(/^43\/([^/]+)\/(.+)$/i);
+    if (directMatch && directMatch[1].toLowerCase() !== "43") {
+      candidates.push(`43/43/${directMatch[1]}/${directMatch[2]}`);
+    }
+  }
+
+  const seen = new Set();
+  return candidates.filter((candidate) => {
+    const key = normalizarRutaAsset(candidate).toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 function obtenerRutaImagenOptimizada(path) {
@@ -367,9 +516,10 @@ function asignarImagenCatalogo(img, path, options = {}) {
     preferOriginal = false,
   } = options;
 
-  img.dataset.originalSrc = normalized;
-  img.dataset.optimizedSrc = obtenerRutaImagenOptimizada(normalized);
-  img.dataset.optimizedJpgSrc = obtenerRutaImagenOptimizadaJpg(normalized);
+  const sourceCandidates = obtenerRutasAlternativasCatalogo43(normalized);
+  img.dataset.originalSrc = sourceCandidates[0] || normalized;
+  img.dataset.optimizedSrc = obtenerRutaImagenOptimizada(img.dataset.originalSrc || normalized);
+  img.dataset.optimizedJpgSrc = obtenerRutaImagenOptimizadaJpg(img.dataset.originalSrc || normalized);
   img.dataset.fallbackApplied = "0";
   img.loading = eager ? "eager" : "lazy";
   img.decoding = "async";
@@ -379,39 +529,72 @@ function asignarImagenCatalogo(img, path, options = {}) {
   const requestId = String(++imageLoadRequestId);
   img.dataset.requestId = requestId;
 
-  const optimizedSrc = buildAssetUrl(img.dataset.optimizedSrc || normalized);
-  const optimizedJpgSrc = buildAssetUrl(img.dataset.optimizedJpgSrc || normalized);
-  const originalSrc = buildAssetUrl(normalized);
-
-  if (preferOriginal) {
-    img.dataset.fallbackApplied = "1";
-    img.src = originalSrc;
-    return;
-  }
-
-  const loader = new Image();
-
-  loader.onload = () => {
+  const probarCandidato = (candidateIndex) => {
     if (img.dataset.requestId !== requestId) return;
-    img.src = optimizedSrc;
-  };
-
-  loader.onerror = () => {
-    if (img.dataset.requestId !== requestId) return;
-    const jpgLoader = new Image();
-    jpgLoader.onload = () => {
-      if (img.dataset.requestId !== requestId) return;
-      img.src = optimizedJpgSrc;
-    };
-    jpgLoader.onerror = () => {
-      if (img.dataset.requestId !== requestId) return;
+    const candidate = sourceCandidates[candidateIndex] || "";
+    if (!candidate) {
       img.dataset.fallbackApplied = "1";
-      img.src = originalSrc;
+      img.src = buildAssetUrl("Imagenes/Logo/app-icon.png");
+      return;
+    }
+
+    img.dataset.originalSrc = candidate;
+    img.dataset.optimizedSrc = obtenerRutaImagenOptimizada(candidate);
+    img.dataset.optimizedJpgSrc = obtenerRutaImagenOptimizadaJpg(candidate);
+
+    const optimizedSrc = buildAssetUrl(img.dataset.optimizedSrc || candidate);
+    const optimizedJpgSrc = buildAssetUrl(img.dataset.optimizedJpgSrc || candidate);
+    const originalSrc = buildAssetUrl(candidate);
+
+    if (preferOriginal) {
+      const originalLoader = new Image();
+      originalLoader.onload = () => {
+        if (img.dataset.requestId !== requestId) return;
+        img.dataset.fallbackApplied = "1";
+        img.src = originalSrc;
+      };
+      originalLoader.onerror = () => {
+        if (img.dataset.requestId !== requestId) return;
+        probarCandidato(candidateIndex + 1);
+      };
+      originalLoader.src = originalSrc;
+      return;
+    }
+
+    const loader = new Image();
+    loader.onload = () => {
+      if (img.dataset.requestId !== requestId) return;
+      img.src = optimizedSrc;
     };
-    jpgLoader.src = optimizedJpgSrc;
+
+    loader.onerror = () => {
+      if (img.dataset.requestId !== requestId) return;
+      const jpgLoader = new Image();
+      jpgLoader.onload = () => {
+        if (img.dataset.requestId !== requestId) return;
+        img.src = optimizedJpgSrc;
+      };
+      jpgLoader.onerror = () => {
+        if (img.dataset.requestId !== requestId) return;
+        const originalLoader = new Image();
+        originalLoader.onload = () => {
+          if (img.dataset.requestId !== requestId) return;
+          img.dataset.fallbackApplied = "1";
+          img.src = originalSrc;
+        };
+        originalLoader.onerror = () => {
+          if (img.dataset.requestId !== requestId) return;
+          probarCandidato(candidateIndex + 1);
+        };
+        originalLoader.src = originalSrc;
+      };
+      jpgLoader.src = optimizedJpgSrc;
+    };
+
+    loader.src = optimizedSrc;
   };
 
-  loader.src = optimizedSrc;
+  probarCandidato(0);
 }
 
 const EMAIL_DESTINO = "man.cid@mohicanojeans.cl"; // <-- cambia si quieres
@@ -585,12 +768,45 @@ function normalizarMapaPreciosCatalogo(rawItems) {
   }, {});
 }
 
+function leerJsonEmbebido(id) {
+  const el = document.getElementById(id);
+  if (!el) return null;
+  const raw = (el.textContent || "").trim();
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch (err) {
+    console.warn(`No se pudo parsear JSON embebido ${id}:`, err);
+    return null;
+  }
+}
+
+function obtenerCatalogoEmbebidoLocal() {
+  if (!IS_LOCAL_FILE_PROTOCOL) return null;
+  if (CATALOG_SOURCE === "catalogo-43") return leerJsonEmbebido("catalogo43-inline-data");
+  return null;
+}
+
+function obtenerMapaPreciosEmbebidoLocal(source = CATALOG_SOURCE) {
+  if (!IS_LOCAL_FILE_PROTOCOL) return null;
+  if (source === "catalogo-43") {
+    const data = leerJsonEmbebido("catalogo43-inline-prices");
+    return normalizarMapaPreciosCatalogo(data?.items || data || {});
+  }
+  return null;
+}
+
 function obtenerCandidatosSkuPrecio(value) {
   const sku = normalizarSkuCatalogo(typeof value === "string" ? value : value?.family || value?.sku);
   if (!sku) return [];
   const candidates = [sku];
   const familyMatch = sku.match(/^(\d{4})$/);
   if (familyMatch) candidates.push(`${familyMatch[1]}-00`);
+  const variantMatch = sku.match(/^(\d{4})-(\d{2})$/);
+  if (variantMatch) {
+    candidates.push(variantMatch[1]);
+    if (variantMatch[2] !== "00") candidates.push(`${variantMatch[1]}-00`);
+  }
   const zeroVariantMatch = sku.match(/^(\d{4})-00$/);
   if (zeroVariantMatch) candidates.push(zeroVariantMatch[1]);
   return [...new Set(candidates)];
@@ -600,6 +816,8 @@ async function cargarMapaPreciosCatalogo(source = CATALOG_SOURCE) {
   const config = obtenerConfiguracionPrecioCatalogo(source);
   if (!config) return {};
   if (config.inlinePrices) return normalizarMapaPreciosCatalogo(config.inlinePrices);
+  const embeddedPrices = obtenerMapaPreciosEmbebidoLocal(source);
+  if (embeddedPrices) return embeddedPrices;
   if (!config.priceFile) return {};
   const res = await fetch(withCacheBust(config.priceFile), { cache: "no-store" });
   if (!res.ok) throw new Error(`status ${res.status}`);
@@ -633,19 +851,42 @@ function obtenerPrecioListaCatalogo(value, source = CATALOG_SOURCE) {
   return null;
 }
 
+function calcularPrecioWebConDescuento(precioLista) {
+  const value = Number(precioLista);
+  if (!Number.isFinite(value) || value <= 0) return null;
+  return Math.round(value * (1 - WEB_DISCOUNT_RATE));
+}
+
 function obtenerPrecioCatalogo(value, source = CATALOG_SOURCE) {
-  return obtenerPrecioListaCatalogo(value, source);
+  const precioLista = obtenerPrecioListaCatalogo(value, source);
+  return calcularPrecioWebConDescuento(precioLista);
 }
 
 function obtenerDetallePrecioCatalogo(value, source = CATALOG_SOURCE) {
   const precioLista = obtenerPrecioListaCatalogo(value, source);
   if (!precioLista) return null;
+  const precioFinal = calcularPrecioWebConDescuento(precioLista);
+  const ahorro = Math.max(0, precioLista - (precioFinal || 0));
   return {
     lista: precioLista,
-    final: precioLista,
-    descuento: 0,
-    ahorro: 0,
+    final: precioFinal,
+    descuento: WEB_DISCOUNT_PERCENT,
+    ahorro,
   };
+}
+
+function obtenerDetallePrecioCatalogoCruzado(value, preferredSource = CATALOG_SOURCE) {
+  const preferred = obtenerDetallePrecioCatalogo(value, preferredSource);
+  if (preferred) return preferred;
+
+  const sources = Object.keys(catalogPriceBySource || {}).filter(Boolean);
+  for (const source of sources) {
+    if (source === preferredSource) continue;
+    const detail = obtenerDetallePrecioCatalogo(value, source);
+    if (detail) return detail;
+  }
+
+  return null;
 }
 
 function formatearPrecioCLP(value) {
@@ -1180,6 +1421,71 @@ function deduplicarImagenesParaVisor(images = []) {
   return out;
 }
 
+function seleccionarImagenesParaVisor(images = [], maxCount = 4) {
+  const unique = deduplicarImagenesParaVisor(images);
+  if (unique.length <= maxCount) return unique;
+
+  const selected = [];
+  const used = new Set();
+  for (let i = 0; i < maxCount; i++) {
+    const index = Math.round((i * (unique.length - 1)) / (maxCount - 1));
+    const img = unique[index];
+    if (img && !used.has(img)) {
+      selected.push(img);
+      used.add(img);
+    }
+  }
+
+  if (selected.length < maxCount) {
+    unique.forEach((img) => {
+      if (selected.length >= maxCount || used.has(img)) return;
+      selected.push(img);
+      used.add(img);
+    });
+  }
+
+  return selected;
+}
+
+const IMAGENES_CURADAS_VISOR_POR_SKU = {
+  "4301-00": [
+    "43/43/4301/Mohicano-102.jpg",
+    "43/43/4301/Mohicano-103.jpg",
+    "43/43/4301/editar/Mohicano-105.jpg",
+    "43/43/4301/Mohicano-111.jpg",
+  ],
+};
+
+function obtenerImagenesCuradasParaVisor(sku, imageList = [], maxCount = 4) {
+  const unique = deduplicarImagenesParaVisor(imageList);
+  const normalizedSku = normalizarSkuCatalogo(sku);
+  const curated = IMAGENES_CURADAS_VISOR_POR_SKU[normalizedSku];
+
+  if (!curated?.length) {
+    return seleccionarImagenesParaVisor(unique, maxCount);
+  }
+
+  const available = new Set(unique.map((img) => normalizarRutaAsset(img)));
+  const selected = [];
+  const used = new Set();
+
+  curated.forEach((img) => {
+    const normalized = normalizarRutaAsset(img);
+    if (!normalized || !available.has(normalized) || used.has(normalized)) return;
+    selected.push(normalized);
+    used.add(normalized);
+  });
+
+  unique.forEach((img) => {
+    const normalized = normalizarRutaAsset(img);
+    if (selected.length >= maxCount || used.has(normalized)) return;
+    selected.push(normalized);
+    used.add(normalized);
+  });
+
+  return selected.slice(0, maxCount);
+}
+
 function tieneImagenesDeFuente(obj, prefix = "42/") {
   const prefixes = Array.isArray(prefix) ? prefix : [prefix];
   return obtenerImagenesVisibles(obj, { includeCatalog: true }).some((img) => prefixes.some((p) => img.startsWith(p)));
@@ -1555,6 +1861,21 @@ function obtenerTotalFallbackCatalogo43(item) {
   return 0;
 }
 
+function priorizarImagenesEditarCole43(images = []) {
+  const unique = deduplicarImagenesParaVisor(images);
+  const edited = unique.filter((img) => /\/editar\//i.test(normalizarRutaAsset(img)));
+  if (!edited.length) return unique;
+  const rest = unique.filter((img) => !/\/editar\//i.test(normalizarRutaAsset(img)));
+  return [...edited, ...rest];
+}
+
+function priorizarPortadaConPersonaCole43(images = []) {
+  const ordered = priorizarImagenesEditarCole43(images);
+  const heroImage = ordered.find((img) => !/\/editar\//i.test(normalizarRutaAsset(img))) || ordered[0] || "";
+  if (!heroImage) return ordered;
+  return [heroImage, ...ordered.filter((img) => normalizarRutaAsset(img) !== normalizarRutaAsset(heroImage))];
+}
+
 function prepararCatalogo43Directo(items = [], stockItems = {}) {
   const directItems = (Array.isArray(items) ? items : [])
     .map((item) => {
@@ -1562,9 +1883,9 @@ function prepararCatalogo43Directo(items = [], stockItems = {}) {
       const stock = obtenerStockParaSkuDesdeItems(family, stockItems);
       const fallbackTotal = obtenerTotalFallbackCatalogo43(item);
       const total = Math.max(0, Number(stock?.total) || 0, fallbackTotal);
-      const images = obtenerImagenesReales(item);
+      const images = priorizarPortadaConPersonaCole43(obtenerImagenesReales(item));
       const mainImage = images[0] || "";
-      if (!family || total <= 0 || !mainImage) return null;
+      if (!family || !mainImage) return null;
       return {
         ...item,
         family,
@@ -1698,7 +2019,10 @@ function filtrarProductosDisponiblesCole42(items = [], trazabilidadData = null) 
 
 async function cargarProductosCatalogo() {
   try {
-    const catalogPromise = fetch(withCacheBust(CATALOG_DATA_FILE)).then((res) => res.json());
+    const embeddedCatalog = obtenerCatalogoEmbebidoLocal();
+    const catalogPromise = embeddedCatalog
+      ? Promise.resolve(embeddedCatalog)
+      : fetch(withCacheBust(CATALOG_DATA_FILE)).then((res) => res.json());
     const priceDataPromise = cargarTodosLosMapasPreciosCatalogo();
     const stockPromise = INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43"
       ? cargarStockDatasetPreferido().catch((err) => {
@@ -1748,6 +2072,7 @@ async function cargarProductosCatalogo() {
       ...catalogPriceBySource,
       ...(priceData || {}),
     };
+    actualizarCarrito();
 
     if (INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43") {
       stockBySku = {
@@ -1856,12 +2181,12 @@ function buildImageList(obj) {
   return [];
 }
 
-function renderImages(imageList) {
+function renderImages(imageList, sku = "") {
   const viewer = document.getElementById("viewerImg");
   const thumbContainer = document.getElementById("thumbContainer");
   const galleryBtn = document.getElementById("openImageGalleryBtn");
 
-  const uniqueImages = deduplicarImagenesParaVisor(imageList);
+  const uniqueImages = obtenerImagenesCuradasParaVisor(sku, imageList, 4);
   thumbContainer.innerHTML = "";
   imagenesModalActual = Array.isArray(uniqueImages) ? [...uniqueImages] : [];
   imagenModalIndex = 0;
@@ -1876,7 +2201,7 @@ function renderImages(imageList) {
 
   uniqueImages.forEach((imgSrc, index) => {
     const thumb = document.createElement("img");
-    asignarImagenCatalogo(thumb, imgSrc, { eager: index < 6, fetchPriority: index < 4 ? "high" : "low" });
+    asignarImagenCatalogo(thumb, imgSrc, { eager: true, fetchPriority: "high", preferOriginal: true });
     thumb.alt = "";
     thumb.setAttribute("aria-hidden", "true");
     if (index === 0) thumb.classList.add("active-thumb");
@@ -2336,7 +2661,7 @@ function renderZoomGallery() {
 
   imagenesModalActual.forEach((imgSrc, index) => {
     const thumb = document.createElement("img");
-    asignarImagenCatalogo(thumb, imgSrc, { eager: index < 6, fetchPriority: index < 4 ? "high" : "low" });
+    asignarImagenCatalogo(thumb, imgSrc, { eager: true, fetchPriority: "high", preferOriginal: true });
     thumb.alt = "";
     thumb.setAttribute("aria-hidden", "true");
     if (index === imagenModalIndex) thumb.classList.add("active-thumb");
@@ -2477,9 +2802,8 @@ function inicializarBuscadorModelos() {
   if (!input || !panel || !btnBuscar || !btnLimpiar) return;
 
   const obtenerFuenteBusqueda = () => (
-    Array.isArray(productosGrid) ? productosGrid : []
+    Array.isArray(productosGrid) ? productosGrid.filter((p) => !productoTarjetaSinImagen(p)) : []
   );
-  const modelos = [...new Set(obtenerFuenteBusqueda().map((p) => String(p.family)).filter(Boolean))].sort();
   let sugerenciasActuales = [];
   let activeIndex = -1;
 
@@ -2536,6 +2860,7 @@ function inicializarBuscadorModelos() {
       return;
     }
 
+    const modelos = [...new Set(obtenerFuenteBusqueda().map((p) => String(p.family)).filter(Boolean))].sort();
     sugerenciasActuales = modelos.filter((m) => coincideBusquedaModelo(m, query)).slice(0, 8);
     activeIndex = -1;
 
@@ -2682,6 +3007,22 @@ function tarjetaSinImagenCatalogo43(producto) {
   return imagePath === "Imagenes/Logo/app-icon.png";
 }
 
+function obtenerMetaCatalogo43(producto = {}) {
+  const fromCharacteristics = (prefix) => {
+    const row = (Array.isArray(producto?.characteristics) ? producto.characteristics : [])
+      .find((value) => String(value || "").toLowerCase().startsWith(`${prefix.toLowerCase()}:`));
+    return row ? normalizarTextoVisible(String(row).split(":").slice(1).join(":").trim()) : "";
+  };
+
+  const tela = normalizarTextoVisible(producto?.fabric || fromCharacteristics("Tela"));
+  const fit = normalizarTextoVisible(producto?.fit || fromCharacteristics("Fit"));
+  const tiro = normalizarTextoVisible(producto?.tiro || fromCharacteristics("Tiro"));
+  const bota = normalizarTextoVisible(producto?.bota || fromCharacteristics("Bota"));
+
+  if (!tela && !tiro && !bota && !fit) return null;
+  return { tela, fit, tiro, bota };
+}
+
 function renderGrid(lista) {
   const container = document.getElementById("grid");
   const listaConImagen = (Array.isArray(lista) ? lista : [])
@@ -2696,6 +3037,7 @@ function renderGrid(lista) {
     .map(
       (p, index) => {
         const detallePrecio = obtenerDetallePrecioCatalogo(p);
+        const hantanBadges = obtenerHantanesModelo(p);
         return `
       <div class="card ${esProductoAgotado(p) ? "card-sold-out" : ""}" data-family="${p.family}" onclick="verProductoDesdeCard('${p._baseFamily || p.family}','${p._preferredSku || p.family}')">
         <div class="card-title-row">
@@ -2704,7 +3046,9 @@ function renderGrid(lista) {
             ${
               detallePrecio
                 ? `<div class="card-price">
+                    <span class="card-price-original">${formatearPrecioCLP(detallePrecio.lista)}</span>
                     <span class="card-price-current">${formatearPrecioCLP(detallePrecio.final)}</span>
+                    <span class="card-price-badge">-${detallePrecio.descuento}% web</span>
                   </div>`
                 : ""
             }
@@ -2720,6 +3064,17 @@ function renderGrid(lista) {
                   <p>Este modelo aún no tiene fotos cargadas.</p>
                 </div>`
               : `<img data-image-src="${p._safeCardImage}" alt="Modelo ${p.family}">`
+          }
+          ${
+            hantanBadges.length
+              ? `<div class="card-hantan-stack" aria-label="Hantan del modelo">
+                  ${hantanBadges
+                    .map(
+                      (badge) => `<img class="card-hantan-badge" src="${badge.src}" alt="${escapeHtmlExcel(badge.label)}" loading="lazy">`
+                    )
+                    .join("")}
+                </div>`
+              : ""
           }
           ${esProductoAgotado(p) ? '<span class="sold-out-ribbon sold-out-ribbon-card">AGOTADO</span>' : ""}
         </div>
@@ -2742,7 +3097,7 @@ function renderGrid(lista) {
     asignarImagenCatalogo(img, img.dataset.imageSrc, {
       eager: index < 4,
       fetchPriority: index < 2 ? "high" : "low",
-      preferOriginal: false,
+      preferOriginal: IS_LOCAL_FILE_PROTOCOL || CATALOG_SOURCE === "catalogo-43",
     });
   });
 }
@@ -2751,6 +3106,67 @@ function formatearModeloTarjeta(value) {
   const sku = normalizarSkuCatalogo(value);
   const match = sku.match(/^(\d{4})-\d{2}$/);
   return match ? match[1] : sku;
+}
+
+function obtenerHantanesModelo(producto = {}) {
+  const exactSku = normalizarSkuCatalogo(producto?._preferredSku || producto?.family || "");
+  const baseSku = /^\d{4}$/.test(exactSku) ? `${exactSku}-00` : exactSku;
+  const badges = HANTAN_BY_SKU[exactSku] || HANTAN_BY_SKU[baseSku] || [];
+  return [...new Set((Array.isArray(badges) ? badges : []).filter(Boolean))].map((filename) => ({
+    filename,
+    src: `Hantan/png/${encodeURIComponent(filename).replace(/%2F/g, "/")}`,
+    label: filename.replace(/\.png$/i, ""),
+  }));
+}
+
+function renderizarHantanModal(producto = {}) {
+  const stack = document.getElementById("modalHantanStack");
+  if (!stack) return;
+  const badges = obtenerHantanesModelo(producto);
+  if (!badges.length) {
+    stack.innerHTML = "";
+    stack.hidden = true;
+    return;
+  }
+  stack.innerHTML = badges
+    .map(
+      (badge) => `<img class="modal-hantan-badge" src="${badge.src}" alt="${escapeHtmlExcel(badge.label)}" loading="lazy">`
+    )
+    .join("");
+  stack.hidden = false;
+}
+
+function esTextoSensitivoTela(value) {
+  const text = String(value || "").trim().toLowerCase();
+  if (!text) return false;
+  const sensitivePatterns = [
+    "tela",
+    "stretch",
+    "denim",
+    "premium",
+    "perfect",
+    "universal",
+    "smart denim",
+    "soft denim",
+    "power stretch",
+    "power strech",
+    "mohicano eco",
+    "absolut fit",
+    "push in push up",
+  ];
+  return sensitivePatterns.some((pattern) => text.includes(pattern));
+}
+
+function filtrarCaracteristicasPublicas(characteristics = []) {
+  return Array.isArray(characteristics)
+    ? characteristics.filter((char) => !esTextoSensitivoTela(char))
+    : [];
+}
+
+function limpiarDescripcionPublica(value) {
+  const text = normalizarTextoVisible(value || "").trim();
+  if (!text) return "";
+  return esTextoSensitivoTela(text) ? "" : text;
 }
 
 /***********************
@@ -2789,58 +3205,68 @@ function verProducto(familyId, preferredSku = "") {
   // Mostrar descripción y características
   const descriptionEl = document.getElementById("description");
   const charList = document.getElementById("characteristics");
-  const hasCharacteristics = Array.isArray(p.characteristics) && p.characteristics.length;
+  const visibleCharacteristics = filtrarCaracteristicasPublicas(p.characteristics);
+  const hasCharacteristics = visibleCharacteristics.length > 0;
   const detallePrecio = obtenerDetallePrecioCatalogo(skuInicial);
 
   if (CATALOG_SOURCE === "catalogo-43") {
     const sku43 = normalizarSkuCatalogo(skuInicial || p.family);
-    const descripcion43Base = normalizarTextoVisible(p.description || "");
-    const texto43 = (!descripcion43Base || /^Modelo\s/i.test(descripcion43Base))
-      ? normalizarTextoVisible(CATALOG_43_DESCRIPTION_MAP[sku43] || "")
-      : descripcion43Base;
-    const partes43 = texto43
-      .split("·")
-      .map((value) => normalizarTextoVisible(value))
-      .map((value) => value.trim())
-      .filter(Boolean);
+    const meta43 = obtenerMetaCatalogo43(p);
 
     descriptionEl.innerText = "";
     descriptionEl.style.display = "none";
     charList.innerHTML = "";
-    charList.style.display = partes43.length ? "block" : "none";
+    charList.style.display = meta43 ? "block" : "none";
 
-      if (partes43.length) {
-      const ul = document.createElement("ul");
-      partes43.forEach((parte) => {
-        const li = document.createElement("li");
-        li.innerText = parte;
-        ul.appendChild(li);
-      });
+    if (meta43) {
+      charList.style.display = detallePrecio ? "block" : "none";
       if (detallePrecio) {
+        const ul = document.createElement("ul");
         const liPrecio = document.createElement("li");
-        liPrecio.innerText = `Precio mayor s/iva: ${formatearPrecioCLP(detallePrecio.final)}`;
+        liPrecio.className = "feature-price";
+        liPrecio.innerHTML = `<span class="feature-label">Precio web</span><strong>${escapeHtmlExcel(formatearPrecioCLP(detallePrecio.final))}</strong><em>Lista ${escapeHtmlExcel(formatearPrecioCLP(detallePrecio.lista))} · -${escapeHtmlExcel(detallePrecio.descuento)}% web</em>`;
         ul.appendChild(liPrecio);
+        charList.appendChild(ul);
       }
-      charList.appendChild(ul);
+    } else {
+      const descripcion43Base = normalizarTextoVisible(p.description || "");
+      const texto43 = (!descripcion43Base || /^Modelo\s/i.test(descripcion43Base))
+        ? normalizarTextoVisible(CATALOG_43_DESCRIPTION_MAP[sku43] || "")
+        : descripcion43Base;
+      const partes43 = texto43
+        .split("·")
+        .map((value) => normalizarTextoVisible(value))
+        .map((value) => value.trim())
+        .filter(Boolean);
+      charList.style.display = detallePrecio ? "block" : "none";
+      if (detallePrecio) {
+        const ul = document.createElement("ul");
+        const liPrecio = document.createElement("li");
+        liPrecio.className = "feature-price";
+        liPrecio.innerHTML = `<span class="feature-label">Precio web</span><strong>${escapeHtmlExcel(formatearPrecioCLP(detallePrecio.final))}</strong><em>Lista ${escapeHtmlExcel(formatearPrecioCLP(detallePrecio.lista))} · -${escapeHtmlExcel(detallePrecio.descuento)}% web</em>`;
+        ul.appendChild(liPrecio);
+        charList.appendChild(ul);
+      }
     }
   } else {
+    const publicDescription = limpiarDescripcionPublica(p.description || "");
     descriptionEl.innerText = hasCharacteristics
       ? ""
-      : normalizarTextoVisible(p.description || "") + (detallePrecio ? ` · Precio mayor s/iva: ${formatearPrecioCLP(detallePrecio.final)}` : "");
-    descriptionEl.style.display = hasCharacteristics || !p.description ? "none" : "block";
+      : publicDescription + (detallePrecio ? ` · Precio lista: ${formatearPrecioCLP(detallePrecio.lista)} · Web ${detallePrecio.descuento}%: ${formatearPrecioCLP(detallePrecio.final)}` : "");
+    descriptionEl.style.display = hasCharacteristics || !publicDescription ? "none" : "block";
 
     charList.innerHTML = "";
     charList.style.display = hasCharacteristics ? "block" : "none";
     if (hasCharacteristics) {
       const ul = document.createElement("ul");
-      p.characteristics.forEach((char) => {
+      visibleCharacteristics.forEach((char) => {
         const li = document.createElement("li");
         li.innerText = normalizarTextoVisible(char);
         ul.appendChild(li);
       });
       if (detallePrecio) {
         const liPrecio = document.createElement("li");
-        liPrecio.innerText = `Precio mayor s/iva: ${formatearPrecioCLP(detallePrecio.final)}`;
+        liPrecio.innerText = `Precio lista: ${formatearPrecioCLP(detallePrecio.lista)} · Web ${detallePrecio.descuento}%: ${formatearPrecioCLP(detallePrecio.final)}`;
         ul.appendChild(liPrecio);
       }
       charList.appendChild(ul);
@@ -2862,7 +3288,8 @@ function verProducto(familyId, preferredSku = "") {
     : (firstVariantWithImages ? buildImageList(firstVariantWithImages) : []);
 
   skuActivo = skuInicial;
-  renderImages(initialImages);
+  renderImages(initialImages, skuInicial);
+  renderizarHantanModal(selectedGridEntry || p);
   actualizarVideoModal(skuActivo);
   cargarDraftDelSku(skuActivo);
   aplicarStockATallas(skuActivo);
@@ -2925,7 +3352,7 @@ document.getElementById("addBtn").onclick = () => {
   let agregoAlgo = false;
 
   if (skuActivo && total > 0) {
-    const existente = pedido.find((item) => item.sku === skuActivo);
+    const existente = pedido.find((item) => item.sku === skuActivo && String(item.source || "") === CATALOG_SOURCE);
     if (existente) {
       Object.entries(tallas).forEach(([talla, cantidad]) => {
         const qty = Number(cantidad) || 0;
@@ -2933,7 +3360,7 @@ document.getElementById("addBtn").onclick = () => {
         existente.tallas[talla] = (Number(existente.tallas[talla]) || 0) + qty;
       });
     } else {
-      pedido.push({ sku: skuActivo, tallas: { ...tallas } });
+      pedido.push({ sku: skuActivo, tallas: { ...tallas }, source: CATALOG_SOURCE });
     }
     agregoAlgo = true;
   }
@@ -2962,6 +3389,7 @@ function actualizarCarrito() {
   let totalItems = 0;
   let totalEstimado = 0;
   let totalLista = 0;
+  let totalAhorro = 0;
 
   if (!pedido.length) {
     container.innerHTML = `
@@ -2974,22 +3402,26 @@ function actualizarCarrito() {
     container.innerHTML = pedido
       .map((item, index) => {
         const cantidadModelo = Object.values(item.tallas).reduce((acc, qty) => acc + (Number(qty) || 0), 0);
-        const detallePrecio = obtenerDetallePrecioCatalogo(item.sku);
+        const detallePrecio = obtenerDetallePrecioCatalogoCruzado(item.sku);
         const precioListaUnitario = detallePrecio?.lista || null;
         const precioUnitario = detallePrecio?.final || null;
-        const subtotalLista = precioListaUnitario ? precioListaUnitario * cantidadModelo : 0;
-        const subtotal = precioUnitario ? precioUnitario * cantidadModelo : 0;
-        totalItems += cantidadModelo;
-        totalLista += subtotalLista;
-        totalEstimado += subtotal;
-        const tallasHtml = Object.entries(item.tallas)
-          .map(([t, c]) => `<span class="cart-size-pill">T${t} <strong>${c}</strong></span>`)
-          .join("");
+          const subtotalLista = precioListaUnitario ? precioListaUnitario * cantidadModelo : 0;
+          const subtotal = precioUnitario ? precioUnitario * cantidadModelo : 0;
+          totalItems += cantidadModelo;
+          totalLista += subtotalLista;
+          totalEstimado += subtotal;
+          totalAhorro += Math.max(0, subtotalLista - subtotal);
+          const tallasHtml = Object.entries(item.tallas)
+            .map(([t, c]) => `<span class="cart-size-pill">T${t} <strong>${c}</strong></span>`)
+            .join("");
 
         return `
         <div class="cart-item">
           <div class="cart-item-top">
-            <div class="cart-item-title">Modelo ${item.sku}</div>
+            <div>
+              <div class="cart-item-title">Modelo ${item.sku}</div>
+              <div class="cart-item-collection">${item.source === "catalogo-43" ? "Cole 43" : "Cole 42"}</div>
+            </div>
             <button class="cart-trash" type="button" aria-label="Eliminar modelo ${item.sku}" onclick="eliminarItem(${index})">
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h2v9H7V9Zm4 0h2v9h-2V9Zm4 0h2v9h-2V9ZM6 7h12l-1 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Z"/>
@@ -3023,13 +3455,16 @@ function actualizarCarrito() {
     container.insertAdjacentElement("afterend", totalsBox);
   }
 
-  totalsBox.innerHTML = `
-    <div class="cart-totals-head"><span class="cart-totals-title">Resumen total</span></div>
-    <div class="cart-totals-row"><span>Total prendas</span><strong>${totalItems}</strong></div>
-    ${totalEstimado > 0 ? `<div class="cart-totals-row"><span>Total estimado</span><strong>${formatearPrecioCLP(totalEstimado)}</strong></div>` : ""}
-  `;
-  guardarCotizacionPersistida();
-}
+    totalsBox.innerHTML = `
+      <div class="cart-totals-head"><span class="cart-totals-title">Resumen total</span></div>
+      <div class="cart-totals-row"><span>Total prendas</span><strong>${totalItems}</strong></div>
+      ${totalLista > 0 ? `<div class="cart-totals-row"><span>Total lista</span><strong>${formatearPrecioCLP(totalLista)}</strong></div>` : ""}
+      ${totalAhorro > 0 ? `<div class="cart-totals-row cart-totals-row-accent"><span>Descuento web ${WEB_DISCOUNT_PERCENT}%</span><strong>- ${formatearPrecioCLP(totalAhorro)}</strong></div>` : ""}
+      ${totalEstimado > 0 ? `<div class="cart-totals-row cart-totals-row-final"><span>Total con descuento</span><strong>${formatearPrecioCLP(totalEstimado)}</strong></div>` : ""}
+      ${totalAhorro > 0 ? `<div class="cart-totals-row cart-totals-row-saving"><span>Ahorro</span><strong>${formatearPrecioCLP(totalAhorro)}</strong></div>` : ""}
+    `;
+    guardarCotizacionPersistida();
+  }
 
 function eliminarItem(index) {
   pedido.splice(index, 1);
@@ -3262,7 +3697,8 @@ function agruparItemsParaPlantilla(quote, items = []) {
   });
 
   ordered.forEach((it) => {
-    const sku = normalizarSkuParaPlantilla(it.sku, quote?.source);
+    const itemSource = String(it?.source || inferirCatalogoDesdeSku(it?.sku) || quote?.source || CATALOG_SOURCE).trim() || CATALOG_SOURCE;
+    const sku = normalizarSkuParaPlantilla(it.sku, itemSource);
     const size = String(it.size || "").trim().toUpperCase();
     if (!ORDER_TEMPLATE_SIZE_COLUMNS[size]) return;
     const qty = Number(it.quantity) || 0;
@@ -3867,7 +4303,7 @@ async function obtenerClienteParaCotizacion() {
   };
 }
 
-function construirPayloadCotizacion(cliente) {
+function construirPayloadCotizacion(cliente, itemsGroup = [], source = CATALOG_SOURCE) {
   const createdAtIso = new Date().toISOString();
   const quoteId = (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function")
     ? globalThis.crypto.randomUUID()
@@ -3875,14 +4311,18 @@ function construirPayloadCotizacion(cliente) {
   let totalItems = 0;
   const lineas = [];
 
-  pedido.forEach((item) => {
+  (Array.isArray(itemsGroup) ? itemsGroup : []).forEach((item) => {
+    const itemSource = resolverSourceItemPedido(item, source);
     Object.entries(item.tallas).forEach(([talla, cantidad]) => {
       const qty = Number(cantidad) || 0;
       if (qty <= 0) return;
       totalItems += qty;
-      lineas.push({ sku: item.sku, talla, cantidad: qty });
+      lineas.push({ sku: item.sku, talla, cantidad: qty, source: itemSource });
     });
   });
+
+  const distinctSources = [...new Set((Array.isArray(itemsGroup) ? itemsGroup : []).map((item) => resolverSourceItemPedido(item, source)).filter(Boolean))];
+  const quoteSource = distinctSources.length > 1 ? "catalogo-mixto" : (distinctSources[0] || source || CATALOG_SOURCE);
 
   return {
     quote: {
@@ -3893,18 +4333,16 @@ function construirPayloadCotizacion(cliente) {
       client_phone: cliente?.client_phone || null,
       total_items: totalItems,
       created_at_client: createdAtIso,
-      source: CATALOG_SOURCE,
+      source: quoteSource,
     },
     items: lineas,
   };
 }
 
-async function guardarCotizacionSupabase(cliente) {
+async function enviarPayloadCotizacionSupabase(payload) {
   if (!supabaseConfigurado()) {
     throw new Error("Configura SUPABASE_URL y SUPABASE_ANON_KEY en script-v2.js");
   }
-
-  const payload = construirPayloadCotizacion(cliente);
   if (!payload.items.length) throw new Error("No hay items para guardar");
 
   const rpcPayload = {
@@ -3936,48 +4374,12 @@ async function guardarCotizacionSupabase(cliente) {
 
   const quoteId = await res.json().catch(() => payload.quote.id);
   if (!quoteId) throw new Error("No se genero ID de cotizacion");
-  return {
-    quoteId,
-    payload,
-  };
+  return quoteId;
 }
 
-async function enviarAlertaCorreoCotizacion(quoteResult, cliente) {
-  const quoteId = quoteResult?.quoteId || quoteResult?.payload?.quote?.id || null;
-  const payload = quoteResult?.payload || null;
-  if (!quoteId || !payload?.quote || !Array.isArray(payload?.items) || !payload.items.length) return false;
-
-  try {
-    const res = await fetch("/.netlify/functions/quote-notify-email", {
-      method: "POST",
-      keepalive: true,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        quote_id: quoteId,
-        quote: payload.quote,
-        items: payload.items,
-        client: {
-          rut: cliente?.rut || payload.quote?.client_rut || "",
-          rut_normalized: cliente?.rut_normalized || payload.quote?.client_rut_normalized || "",
-          razon_social: cliente?.razon_social || payload.quote?.store_name || "",
-          client_phone: cliente?.client_phone || payload.quote?.client_phone || "",
-        },
-      }),
-    });
-
-    if (!res.ok) {
-      const txt = await res.text().catch(() => "");
-      console.warn("No se pudo enviar alerta por correo", txt || res.status);
-      return false;
-    }
-
-    return true;
-  } catch (err) {
-    console.warn("No se pudo enviar alerta por correo", err);
-    return false;
-  }
+async function guardarCotizacionSupabase(cliente) {
+  const payload = construirPayloadCotizacion(cliente, pedido, CATALOG_SOURCE);
+  return enviarPayloadCotizacionSupabase(payload);
 }
 
 async function registrarClienteNuevoSupabase(cliente) {
@@ -4673,7 +5075,6 @@ function obtenerEtiquetaMesActual() {
 
 function calcularMontoCotizacion(quote = {}, items = []) {
   if (!Array.isArray(items) || !items.length) return null;
-  const source = String(quote?.source || "").trim();
   let total = 0;
   let hasPrice = false;
   items.forEach((item) => {
@@ -4681,7 +5082,8 @@ function calcularMontoCotizacion(quote = {}, items = []) {
     if (qty <= 0) return;
     const sku = normalizarSkuCatalogo(item?.sku);
     if (!sku) return;
-    const precioUnitario = obtenerPrecioCatalogo(sku, source || CATALOG_SOURCE);
+    const source = String(item?.source || inferirCatalogoDesdeSku(sku) || quote?.source || CATALOG_SOURCE).trim() || CATALOG_SOURCE;
+    const precioUnitario = obtenerPrecioCatalogo(sku, source);
     if (!precioUnitario) return;
     total += precioUnitario * qty;
     hasPrice = true;
@@ -4691,7 +5093,6 @@ function calcularMontoCotizacion(quote = {}, items = []) {
 
 function calcularResumenMontoCotizacion(quote = {}, items = []) {
   if (!Array.isArray(items) || !items.length) return null;
-  const source = String(quote?.source || "").trim();
   let totalLista = 0;
   let totalPromo = 0;
   let hasPrice = false;
@@ -4700,8 +5101,9 @@ function calcularResumenMontoCotizacion(quote = {}, items = []) {
     if (qty <= 0) return;
     const sku = normalizarSkuCatalogo(item?.sku);
     if (!sku) return;
-    const precioLista = obtenerPrecioListaCatalogo(sku, source || CATALOG_SOURCE);
-    const precioPromo = obtenerPrecioCatalogo(sku, source || CATALOG_SOURCE);
+    const source = String(item?.source || inferirCatalogoDesdeSku(sku) || quote?.source || CATALOG_SOURCE).trim() || CATALOG_SOURCE;
+    const precioLista = obtenerPrecioListaCatalogo(sku, source);
+    const precioPromo = obtenerPrecioCatalogo(sku, source);
     if (!precioLista || !precioPromo) return;
     totalLista += precioLista * qty;
     totalPromo += precioPromo * qty;
@@ -4711,8 +5113,8 @@ function calcularResumenMontoCotizacion(quote = {}, items = []) {
   return {
     lista: totalLista,
     promo: totalPromo,
-    ahorro: 0,
-    tienePromo: false,
+    ahorro: Math.max(0, totalLista - totalPromo),
+    tienePromo: totalPromo < totalLista,
   };
 }
 
@@ -4754,15 +5156,15 @@ function construirTextoReporteCotizacionesWhatsApp(quotes = []) {
       });
       const codigo = generarCodigoCotizacionVisual(q);
       const resumenMonto = calcularResumenMontoCotizacion(q, detalles);
-      lines.push(
-        "",
-        `${index + 1}. ${q.store_name || "Sin cliente"} · ${codigo}`,
-        `RUT: ${q.client_rut || "Sin RUT"}${q.client_phone ? ` · Teléfono: ${q.client_phone}` : ""}`,
-        `Estado: ${q.is_ready ? "Lista" : "No lista / caída"}`,
-        `Prendas: ${q.total_items || 0}${resumenMonto ? ` · Monto: ${formatearPrecioCLP(resumenMonto.promo)}` : ""}`,
-        ...construirBloqueDetalleReporte(q, detalles)
-      );
-    });
+        lines.push(
+          "",
+          `${index + 1}. ${q.store_name || "Sin cliente"} · ${codigo}`,
+          `RUT: ${q.client_rut || "Sin RUT"}${q.client_phone ? ` · Teléfono: ${q.client_phone}` : ""}`,
+          `Estado: ${q.is_ready ? "Lista" : "No lista / caída"}`,
+          `Prendas: ${q.total_items || 0}${resumenMonto ? ` · Total web: ${formatearPrecioCLP(resumenMonto.promo)}` : ""}${resumenMonto?.ahorro ? ` · Ahorro: ${formatearPrecioCLP(resumenMonto.ahorro)}` : ""}`,
+          ...construirBloqueDetalleReporte(q, detalles)
+        );
+      });
   }
   return lines.join("\n");
 }
@@ -4813,8 +5215,10 @@ function construirVistaReporteCotizaciones(quotes = [], itemsMap = new Map()) {
           ${q.client_phone ? `<div class="quotes-report-preview-chip quotes-report-preview-chip-phone"><span>Teléfono</span><strong>${escapeHtmlExcel(q.client_phone)}</strong></div>` : ""}
         </div>
         <div class="quotes-report-preview-meta quotes-report-preview-meta-finance">
-          ${resumenMonto ? `<div class="quotes-report-preview-chip quotes-report-preview-chip-money is-highlight"><span>Monto</span><strong>${escapeHtmlExcel(formatearPrecioCLP(resumenMonto.promo))}</strong></div>` : ""}
-        </div>
+          ${resumenMonto ? `<div class="quotes-report-preview-chip quotes-report-preview-chip-money"><span>Total lista</span><strong>${escapeHtmlExcel(formatearPrecioCLP(resumenMonto.lista))}</strong></div>` : ""}
+          ${resumenMonto ? `<div class="quotes-report-preview-chip quotes-report-preview-chip-money is-highlight"><span>Total web ${WEB_DISCOUNT_PERCENT}%</span><strong>${escapeHtmlExcel(formatearPrecioCLP(resumenMonto.promo))}</strong></div>` : ""}
+          ${resumenMonto?.ahorro ? `<div class="quotes-report-preview-chip quotes-report-preview-chip-money is-saving"><span>Ahorro</span><strong>${escapeHtmlExcel(formatearPrecioCLP(resumenMonto.ahorro))}</strong></div>` : ""}
+          </div>
         <div class="quotes-report-preview-table-wrap">
           <table class="quotes-report-preview-table">
             <thead>
@@ -4899,7 +5303,8 @@ function renderReporteCotizacionesAdmin(quotes = []) {
                 <div class="quotes-report-detail-side">
                   <strong>${q.total_items || 0} prendas</strong>
                   <span>${q.is_ready ? "Lista" : "No lista / caída"} · ${fecha}</span>
-                  ${resumenMonto ? `<span>Monto: ${formatearPrecioCLP(resumenMonto.promo)}</span>` : ""}
+                  ${resumenMonto ? `<span>Total web: ${formatearPrecioCLP(resumenMonto.promo)}</span>` : ""}
+                  ${resumenMonto?.ahorro ? `<span>Ahorro: ${formatearPrecioCLP(resumenMonto.ahorro)}</span>` : ""}
                 </div>
               </div>
               <div class="quotes-report-detail-items">
@@ -5104,16 +5509,6 @@ function cerrarQuotesModal() {
   document.getElementById("quotesModal")?.classList.remove("active");
 }
 
-function obtenerAccesoAdminPorLink() {
-  try {
-    const params = new URLSearchParams(window.location.search || "");
-    const hash = String(window.location.hash || "").toLowerCase();
-    return params.get("admin") === "1" || params.get("admin") === "true" || hash === "#admin";
-  } catch (_) {
-    return false;
-  }
-}
-
 function configurarPanelCotizaciones() {
   const btnOpen = document.getElementById("quotesAdminBtn");
   const btnClose = document.getElementById("closeQuotesModal");
@@ -5138,11 +5533,6 @@ function configurarPanelCotizaciones() {
   const passEl = document.getElementById("quotesPassword");
   const quotesListEl = document.getElementById("quotesList");
   const quotesReportePanel = document.getElementById("quotesReportePanel");
-  const adminPorLink = obtenerAccesoAdminPorLink();
-
-  if (btnOpen) {
-    btnOpen.hidden = !adminPorLink;
-  }
 
   const ejecutarLogin = async () => {
     const email = emailEl?.value.trim();
@@ -5377,10 +5767,6 @@ function configurarPanelCotizaciones() {
       mostrarToastError("No se pudo eliminar", err.message || "Error eliminando artículo");
     }
   });
-
-  if (adminPorLink) {
-    window.setTimeout(() => abrirQuotesModal(), 60);
-  }
 }
 
 function limpiarCarrito() {
@@ -5439,8 +5825,7 @@ document.getElementById("sendRequest").onclick = async () => {
     clearCartFieldInvalidState();
     const cliente = await obtenerClienteParaCotizacion();
     btn.innerText = "Guardando cotización...";
-    const quoteResult = await guardarCotizacionSupabase(cliente);
-    await enviarAlertaCorreoCotizacion(quoteResult, cliente);
+    await guardarCotizacionSupabase(cliente);
 
     mostrarToastExito("Cotización enviada con éxito", "Recibimos tu solicitud correctamente.");
     limpiarCarrito();

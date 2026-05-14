@@ -858,8 +858,8 @@ async function cargarProductosCatalogo() {
 
     if (INVENTORY_ENABLED) {
       stockBySku = {
-        ...(stockData?.items || {}),
         ...crearStockSinteticoAgotados(),
+        ...(stockData?.items || {}),
       };
     }
     catalogCoverBySku = catalogCoverMapData || {};

@@ -39,6 +39,9 @@ create unique index if not exists ux_stock_item_sizes_item_label on public.stock
 create index if not exists idx_stock_item_sizes_item on public.stock_item_sizes(stock_item_id);
 create index if not exists idx_stock_item_sizes_label on public.stock_item_sizes(size_label);
 
+alter table public.stock_items enable row level security;
+alter table public.stock_item_sizes enable row level security;
+
 create or replace function public.set_row_updated_at()
 returns trigger
 language plpgsql
@@ -71,6 +74,149 @@ begin
     before update on public.stock_item_sizes
     for each row
     execute function public.set_row_updated_at();
+  end if;
+end
+$$;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'stock_items'
+      and policyname = 'authenticated_read_stock_items'
+  ) then
+    create policy authenticated_read_stock_items
+    on public.stock_items
+    for select
+    to authenticated
+    using (true);
+  end if;
+
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'stock_items'
+      and policyname = 'authenticated_insert_stock_items'
+  ) then
+    create policy authenticated_insert_stock_items
+    on public.stock_items
+    for insert
+    to authenticated
+    with check (true);
+  end if;
+
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'stock_items'
+      and policyname = 'authenticated_update_stock_items'
+  ) then
+    create policy authenticated_update_stock_items
+    on public.stock_items
+    for update
+    to authenticated
+    using (true)
+    with check (true);
+  end if;
+
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'stock_items'
+      and policyname = 'authenticated_delete_stock_items'
+  ) then
+    create policy authenticated_delete_stock_items
+    on public.stock_items
+    for delete
+    to authenticated
+    using (true);
+  end if;
+
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'stock_items'
+      and policyname = 'anon_read_active_stock_items'
+  ) then
+    create policy anon_read_active_stock_items
+    on public.stock_items
+    for select
+    to anon
+    using (active = true);
+  end if;
+
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'stock_item_sizes'
+      and policyname = 'authenticated_read_stock_item_sizes'
+  ) then
+    create policy authenticated_read_stock_item_sizes
+    on public.stock_item_sizes
+    for select
+    to authenticated
+    using (true);
+  end if;
+
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'stock_item_sizes'
+      and policyname = 'authenticated_insert_stock_item_sizes'
+  ) then
+    create policy authenticated_insert_stock_item_sizes
+    on public.stock_item_sizes
+    for insert
+    to authenticated
+    with check (true);
+  end if;
+
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'stock_item_sizes'
+      and policyname = 'authenticated_update_stock_item_sizes'
+  ) then
+    create policy authenticated_update_stock_item_sizes
+    on public.stock_item_sizes
+    for update
+    to authenticated
+    using (true)
+    with check (true);
+  end if;
+
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'stock_item_sizes'
+      and policyname = 'authenticated_delete_stock_item_sizes'
+  ) then
+    create policy authenticated_delete_stock_item_sizes
+    on public.stock_item_sizes
+    for delete
+    to authenticated
+    using (true);
+  end if;
+
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'stock_item_sizes'
+      and policyname = 'anon_read_stock_item_sizes'
+  ) then
+    create policy anon_read_stock_item_sizes
+    on public.stock_item_sizes
+    for select
+    to anon
+    using (
+      exists (
+        select 1
+        from public.stock_items si
+        where si.id = stock_item_id
+          and si.active = true
+      )
+    );
   end if;
 end
 $$;
