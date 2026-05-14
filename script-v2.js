@@ -5495,6 +5495,28 @@ async function cargarCotizacionesAdmin() {
   renderReporteCotizacionesAdmin(quotes);
 }
 
+function paginaEnModoAdmin() {
+  try {
+    const params = new URLSearchParams(window.location.search || "");
+    const adminParam = String(params.get("admin") || params.get("quotesAdmin") || "").trim().toLowerCase();
+    const hash = String(window.location.hash || "").trim().toLowerCase();
+    return ["1", "true", "si", "yes", "open"].includes(adminParam) || hash === "#admin";
+  } catch (_) {
+    return false;
+  }
+}
+
+function adminDebeAbrirAlCargar() {
+  try {
+    const params = new URLSearchParams(window.location.search || "");
+    const openParam = String(params.get("openAdmin") || params.get("adminOpen") || "").trim().toLowerCase();
+    const hash = String(window.location.hash || "").trim().toLowerCase();
+    return hash === "#admin" || ["1", "true", "si", "yes", "open"].includes(openParam);
+  } catch (_) {
+    return false;
+  }
+}
+
 function abrirQuotesModal() {
   document.getElementById("quotesModal")?.classList.add("active");
   actualizarEstadoQuotesUI("");
@@ -5533,6 +5555,12 @@ function configurarPanelCotizaciones() {
   const passEl = document.getElementById("quotesPassword");
   const quotesListEl = document.getElementById("quotesList");
   const quotesReportePanel = document.getElementById("quotesReportePanel");
+  const adminVisible = paginaEnModoAdmin();
+
+  if (btnOpen) {
+    btnOpen.hidden = !adminVisible;
+    btnOpen.setAttribute("aria-hidden", adminVisible ? "false" : "true");
+  }
 
   const ejecutarLogin = async () => {
     const email = emailEl?.value.trim();
@@ -5566,6 +5594,9 @@ function configurarPanelCotizaciones() {
   modal?.addEventListener("click", (e) => {
     if (e.target?.id === "quotesModal") cerrarQuotesModal();
   });
+  if (adminVisible && adminDebeAbrirAlCargar()) {
+    abrirQuotesModal();
+  }
 
   btnLogin?.addEventListener("click", ejecutarLogin);
 
