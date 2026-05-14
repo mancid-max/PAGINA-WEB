@@ -212,10 +212,10 @@
     "variants": [
       {
         "sku": "4247-01",
-        "main_image": "Imagenes/4247/1.jpg-2.jpeg",
+        "main_image": "Imagenes/4247/2.jpg-2.jpeg",
         "gallery": [
-          "Imagenes/4247/1.jpg-2.jpeg",
-          "Imagenes/4247/2.jpg-2.jpeg"
+          "Imagenes/4247/2.jpg-2.jpeg",
+          "Imagenes/4247/1.jpg-2.jpeg"
         ]
       }
     ]

@@ -7,11 +7,44 @@
 <link rel="icon" type="image/png" href="Imagenes/Logo/app-icon.png">
 <link rel="apple-touch-icon" href="Imagenes/Logo/app-icon.png">
 <meta name="theme-color" content="#131316">
+<meta name="description" content="Mohicano Jeans. Explora la colección disponible y cotiza por talla directamente desde la web.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Mohicano">
+<meta property="og:url" content="https://mohicanojeans.netlify.app/">
+<meta property="og:title" content="Mohicano | Cole 42">
+<meta property="og:description" content="Explora la colección disponible y cotiza por talla directamente desde la web.">
+<meta property="og:image" content="https://mohicanojeans.netlify.app/Imagenes/Logo/app-icon.png?v=3">
+<meta property="og:image:url" content="https://mohicanojeans.netlify.app/Imagenes/Logo/app-icon.png?v=3">
+<meta property="og:image:secure_url" content="https://mohicanojeans.netlify.app/Imagenes/Logo/app-icon.png?v=3">
+<meta property="og:image:alt" content="Colección Mohicano">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Mohicano | Cole 42">
+<meta name="twitter:description" content="Explora la colección disponible y cotiza por talla directamente desde la web.">
+<meta name="twitter:image" content="https://mohicanojeans.netlify.app/Imagenes/Logo/app-icon.png?v=3">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20260417m">
+<link rel="stylesheet" href="style.css?v=20260513web6local3">
 </head>
 <body data-catalog-file="data.json" data-catalog-source="catalogo-1">
+<section class="top-marquee" aria-label="Promoci&oacute;n web">
+  <div class="top-marquee-track">
+    <div class="top-marquee-group">
+      <span>REALIZA TU PEDIDO POR LA PAGINA Y OBTEN 5% DE DESCUENTO</span>
+      <span>REALIZA TU PEDIDO POR LA PAGINA Y OBTEN 5% DE DESCUENTO</span>
+      <span>REALIZA TU PEDIDO POR LA PAGINA Y OBTEN 5% DE DESCUENTO</span>
+      <span>REALIZA TU PEDIDO POR LA PAGINA Y OBTEN 5% DE DESCUENTO</span>
+    </div>
+    <div class="top-marquee-group" aria-hidden="true">
+      <span>REALIZA TU PEDIDO POR LA PAGINA Y OBTEN 5% DE DESCUENTO</span>
+      <span>REALIZA TU PEDIDO POR LA PAGINA Y OBTEN 5% DE DESCUENTO</span>
+      <span>REALIZA TU PEDIDO POR LA PAGINA Y OBTEN 5% DE DESCUENTO</span>
+      <span>REALIZA TU PEDIDO POR LA PAGINA Y OBTEN 5% DE DESCUENTO</span>
+    </div>
+  </div>
+</section>
 
 <header class="header">
     <div class="logo">
@@ -30,9 +63,52 @@
 </header>
 
 <section class="hero">
-  <h1 class="hero-title">Nueva Colecci&oacute;n</h1>
-  <p class="hero-sub">Dise&ntilde;o moderno. Calidad premium.</p>
-  <div class="model-search">
+  <div class="collection-switch-row">
+    <span class="collection-switch-label">Colección</span>
+    <div class="collection-switch" aria-label="Colecciones">
+      <a class="collection-switch-link active" href="index.html">42</a>
+      <a class="collection-switch-link" href="cole-43.html">43</a>
+    </div>
+  </div>
+  <h1 class="hero-title">Cole 42</h1>
+</section>
+
+<section class="promo-banner" aria-label="Descuento web">
+  <div class="promo-banner-copy">
+    <span class="promo-banner-kicker">Exclusivo web</span>
+    <h2>5% de descuento al realizar tu pedido por la página</h2>
+    <p>La cotización online ya considera un <strong>5% de descuento</strong> sobre precio lista para quienes hacen su pedido directamente en la web.</p>
+  </div>
+  <div class="promo-banner-gallery promo-banner-gallery-rich">
+    <figure class="promo-banner-visual">
+      <img src="Imagenes/banners/promo-web-5-mid-adapted.png?v=20260512mid1" alt="Campaña Mohicano Jeans colección denim" loading="eager" decoding="sync" fetchpriority="high">
+      <figcaption>
+        <span>Compra online</span>
+        <strong>5% web directo</strong>
+      </figcaption>
+    </figure>
+    <div class="promo-banner-card">
+      <span class="promo-banner-card-label">Descuento activo</span>
+      <strong>5% OFF</strong>
+      <p>Se refleja en el resumen, el ahorro total y el monto final de tu cotización.</p>
+    </div>
+    <div class="promo-banner-card promo-banner-card-dark">
+      <span class="promo-banner-card-label">Beneficio inmediato</span>
+      <strong>Pide online</strong>
+      <p>Mientras más prendas agregues en la web, más claro verás el ahorro aplicado.</p>
+    </div>
+  </div>
+</section>
+
+<section class="catalog-explorer" aria-label="Sección de modelos">
+  <div class="catalog-section-divider">
+    <div class="catalog-section-divider-copy">
+      <span class="catalog-section-divider-kicker">Colección 42</span>
+      <h2>Modelos Disponibles</h2>
+      <p>Explora la vitrina y abre cada modelo para cotizar por talla.</p>
+    </div>
+  </div>
+  <div class="model-search model-search-section">
     <div class="model-search-box">
       <input id="modelSearchInput" type="text" inputmode="numeric" autocomplete="off" placeholder="Buscar modelo (ej: 4206)">
       <div id="modelSuggestionsPanel" class="model-suggestions-panel" hidden></div>
@@ -46,27 +122,52 @@
 
 <div id="cartSidebar" class="cart-sidebar">
     <button id="closeCart" class="cart-close">X</button>
-    <h2>Tu Cotizaci&oacute;n</h2>
-    <div id="cartItems"></div>
-
-    <label for="clientRut" class="cart-field-label">RUT cliente</label>
-    <input
-      type="text"
-      id="clientRut"
-      name="client_rut"
-      placeholder="Ej: 76.454.354-8"
-      inputmode="numeric"
-      enterkeyhint="done"
-      autocomplete="new-password"
-      autocorrect="off"
-      autocapitalize="off"
-      spellcheck="false"
-      data-lpignore="true"
-      data-form-type="other"
-    >
-    <div id="clientLookupBadge" class="client-lookup-badge" hidden></div>
-    <div id="clientLookupMsg" class="client-lookup-msg" aria-live="polite"></div>
-    <button id="sendRequest">Enviar Cotizaci&oacute;n</button>
+    <div class="cart-header">
+      <h2>Tu Cotizaci&oacute;n</h2>
+    </div>
+    <div class="cart-layout">
+      <div class="cart-summary-column">
+        <div id="cartItems"></div>
+      </div>
+      <div class="cart-form-column">
+        <div class="cart-client-panel">
+          <div class="cart-autofill-trap" aria-hidden="true">
+            <input type="text" tabindex="-1" autocomplete="username">
+            <input type="password" tabindex="-1" autocomplete="current-password">
+          </div>
+          <label for="clientRut" class="cart-field-label">RUT cliente</label>
+          <input
+            type="search"
+            id="clientRut"
+            name="rut_lookup_off"
+            placeholder="Ej: 76.454.354-8"
+            inputmode="numeric"
+            enterkeyhint="done"
+            autocomplete="chrome-off"
+            autocorrect="off"
+            autocapitalize="none"
+            spellcheck="false"
+            readonly
+            data-lpignore="true"
+            data-1p-ignore="true"
+            data-bwignore="true"
+            data-dashlane-rid="off"
+            data-form-type="other"
+          >
+          <div id="clientLookupBadge" class="client-lookup-badge" hidden></div>
+          <div id="clientLookupMsg" class="client-lookup-msg" aria-live="polite"></div>
+          <div id="clientNameWrap" class="client-name-wrap" hidden>
+            <label for="clientName" class="cart-field-label">Nombre o razón social</label>
+            <input type="search" id="clientName" name="client_name_lookup_off" placeholder="" autocomplete="chrome-off" readonly data-lpignore="true" data-1p-ignore="true" data-bwignore="true">
+          </div>
+          <div id="clientPhoneWrap" class="client-name-wrap" hidden>
+            <label for="clientPhone" class="cart-field-label">Teléfono del cliente</label>
+            <input type="tel" id="clientPhone" name="client_phone_lookup_off" placeholder="Ej: +56912345678" inputmode="tel" autocomplete="chrome-off" readonly data-lpignore="true" data-1p-ignore="true" data-bwignore="true">
+          </div>
+        </div>
+        <button id="sendRequest">Enviar Cotizaci&oacute;n</button>
+      </div>
+    </div>
 </div>
 
 <div id="modal" class="modal">
@@ -78,6 +179,7 @@
             <button id="openImageGalleryBtn" class="image-gallery-btn" type="button">Ver im&aacute;genes</button>
             <button id="openVideoGalleryBtn" class="image-gallery-btn image-video-btn" type="button" hidden>Ver video</button>
             <div id="imageSoldOutOverlay" class="image-sold-out-overlay" hidden>AGOTADO</div>
+            <div id="modalHantanStack" class="modal-hantan-stack" hidden></div>
             <img id="viewerImg">
         </div>
         <div id="thumbContainer" class="thumbnails"></div>
@@ -150,12 +252,17 @@
       <div id="quotesPanel" class="quotes-panel" style="display:none;">
         <div id="quotesAdminTabs" class="quotes-admin-tabs" style="display:none;">
           <button id="quotesTabCotizaciones" type="button" class="ghost-btn quotes-tab-btn active">Cotizaciones</button>
+          <button id="quotesTabReporte" type="button" class="ghost-btn quotes-tab-btn">Reporte</button>
           <button id="quotesTabStock" type="button" class="ghost-btn quotes-tab-btn">Stock</button>
         </div>
 
         <div id="quotesCotizacionesPanel" class="quotes-tab-panel">
           <div id="quotesUserBadge" class="quotes-user-badge"></div>
           <div id="quotesList" class="quotes-list"></div>
+        </div>
+
+        <div id="quotesReportePanel" class="quotes-tab-panel" style="display:none;">
+          <div id="quotesReportPanel" class="quotes-report-panel"></div>
         </div>
 
         <div id="quotesStockPanel" class="quotes-tab-panel" style="display:none;">
@@ -194,7 +301,7 @@
             <button id="stockEditorDeleteBtn" type="button" class="ghost-btn stock-editor-delete">Eliminar artículo</button>
             <div class="stock-editor-actions-right">
               <button id="stockEditorCancelBtn" type="button" class="ghost-btn">Cancelar</button>
-              <button id="stockEditorSaveBtn" type="button">Guardar cambios</button>
+              <button id="stockEditorSaveBtn" type="button" class="ghost-btn stock-editor-save">Guardar cambios</button>
             </div>
           </div>
         </div>
@@ -220,39 +327,9 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="script-v2.js?v=20260506cartpersist1"></script>
+<script src="script-v2.js?v=20260513web6local6"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

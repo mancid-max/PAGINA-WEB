@@ -22,6 +22,16 @@
   status = 301
 
 [[redirects]]
+  from = "/cole-43"
+  to = "/cole-43.html"
+  status = 200
+
+[[redirects]]
+  from = "/cole-43.html"
+  to = "/cole-43"
+  status = 301
+
+[[redirects]]
   from = "/catalogo-3"
   to = "/index.html"
   status = 301

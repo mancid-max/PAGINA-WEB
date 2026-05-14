@@ -1,10 +1,15 @@
 import json
+import os
 from pathlib import Path
 
 from openpyxl import load_workbook
 
 
-DEFAULT_SOURCE = Path(r"C:\Users\manuh\OneDrive - Mohicano Jeans\INVENTARIO 01-04 COMPLETO.xlsx")
+DEFAULT_SOURCE_CANDIDATES = [
+    Path(os.environ.get("MOHICANO_STOCK_XLSX", "")).expanduser() if os.environ.get("MOHICANO_STOCK_XLSX") else None,
+    Path.home() / "OneDrive - Mohicano Jeans" / "INVENTARIO 01-04 COMPLETO.xlsx",
+    Path(r"C:\Users\manuh\OneDrive - Mohicano Jeans\INVENTARIO 01-04 COMPLETO.xlsx"),
+]
 DEFAULT_OUTPUT = Path("stock-data.json")
 DEFAULT_OUTPUT_CATALOGO_2 = Path("stock-data-catalogo-2.json")
 DEFAULT_SHEET = "principal 42"
@@ -17,6 +22,16 @@ SIZE_COLUMNS = {
     "44": 9,
     "46": 10,
 }
+
+
+def resolve_default_source() -> Path:
+    for candidate in DEFAULT_SOURCE_CANDIDATES:
+        if candidate and candidate.exists():
+            return candidate
+    return Path.home() / "OneDrive - Mohicano Jeans" / "INVENTARIO 01-04 COMPLETO.xlsx"
+
+
+DEFAULT_SOURCE = resolve_default_source()
 
 
 def normalize_article_code(value) -> str:
