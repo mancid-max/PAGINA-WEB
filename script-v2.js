@@ -3094,11 +3094,7 @@ function renderGrid(lista) {
       }
     }, { once: true });
 
-    asignarImagenCatalogo(img, img.dataset.imageSrc, {
-      eager: index < 4,
-      fetchPriority: index < 2 ? "high" : "low",
-      preferOriginal: IS_LOCAL_FILE_PROTOCOL || CATALOG_SOURCE === "catalogo-43",
-    });
+    asignarImagenCatalogo(img, img.dataset.imageSrc, obtenerPreferenciasCargaTarjeta(index));
   });
 }
 
@@ -3117,6 +3113,21 @@ function obtenerHantanesModelo(producto = {}) {
     src: `Hantan/png/${encodeURIComponent(filename).replace(/%2F/g, "/")}`,
     label: filename.replace(/\.png$/i, ""),
   }));
+}
+
+function obtenerPreferenciasCargaTarjeta(index = 0) {
+  if (CATALOG_SOURCE === "catalogo-43") {
+    return {
+      eager: index < 1,
+      fetchPriority: index === 0 ? "high" : "low",
+      preferOriginal: IS_LOCAL_FILE_PROTOCOL,
+    };
+  }
+  return {
+    eager: index < 4,
+    fetchPriority: index < 2 ? "high" : "low",
+    preferOriginal: IS_LOCAL_FILE_PROTOCOL,
+  };
 }
 
 function renderizarHantanModal(producto = {}) {
