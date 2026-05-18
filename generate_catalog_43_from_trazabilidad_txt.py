@@ -51,23 +51,29 @@ def folder_candidates(model_code: str) -> list[Path]:
     if not raw:
         return []
     normalized_digits = digits_only(raw)
-    base = raw.split("-")[0]
+    parts = raw.split("-", 1)
+    base = parts[0].strip()
+    variant = (parts[1].strip() if len(parts) > 1 else "00") or "00"
     base_digits = digits_only(base)
-    target_codes = [code for code in [normalized_digits, base_digits] if code]
 
     dirs: list[Path] = []
     for root in IMAGE_ROOTS:
         if not root.exists():
             continue
+        exact_dir = root / raw
+        if exact_dir.is_dir() and exact_dir not in dirs:
+            dirs.append(exact_dir)
         for path in root.iterdir():
-            if not path.is_dir():
+            if not path.is_dir() or path in dirs:
                 continue
             folder_digits = digits_only(path.name)
             if not folder_digits:
                 continue
-            if any(folder_digits == code for code in target_codes):
-                if path not in dirs:
-                    dirs.append(path)
+            if folder_digits == normalized_digits:
+                dirs.append(path)
+                continue
+            if variant == "00" and folder_digits == base_digits:
+                dirs.append(path)
     return dirs
 
 
