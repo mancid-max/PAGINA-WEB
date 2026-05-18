@@ -7,12 +7,12 @@
 <link rel="icon" type="image/png" href="Imagenes/Logo/app-icon.png">
 <link rel="apple-touch-icon" href="Imagenes/Logo/app-icon.png">
 <meta name="theme-color" content="#131316">
-<meta name="description" content="Mohicano Jeans. Explora la colección disponible y cotiza por talla directamente desde la web.">
+<meta name="description" content="Mohicano Jeans. Explora la colección disponible y realiza tu pedido por talla directamente desde la web.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Mohicano">
 <meta property="og:url" content="https://mohicanojeans.netlify.app/">
 <meta property="og:title" content="Mohicano | Cole 42">
-<meta property="og:description" content="Explora la colección disponible y cotiza por talla directamente desde la web.">
+<meta property="og:description" content="Explora la colección disponible y realiza tu pedido por talla directamente desde la web.">
 <meta property="og:image" content="https://mohicanojeans.netlify.app/Imagenes/Logo/app-icon.png?v=3">
 <meta property="og:image:url" content="https://mohicanojeans.netlify.app/Imagenes/Logo/app-icon.png?v=3">
 <meta property="og:image:secure_url" content="https://mohicanojeans.netlify.app/Imagenes/Logo/app-icon.png?v=3">
@@ -22,7 +22,7 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Mohicano | Cole 42">
-<meta name="twitter:description" content="Explora la colección disponible y cotiza por talla directamente desde la web.">
+<meta name="twitter:description" content="Explora la colección disponible y realiza tu pedido por talla directamente desde la web.">
 <meta name="twitter:image" content="https://mohicanojeans.netlify.app/Imagenes/Logo/app-icon.png?v=3">
 <link rel="canonical" href="https://mohicanojeans.netlify.app/">
 
@@ -53,8 +53,8 @@
     </div>
     <div class="header-actions">
         <button id="quotesAdminBtn" class="ghost-btn admin-btn" type="button">ADMIN</button>
-        <div id="cartToggle" class="cart-btn" aria-label="Abrir tu cotizaci&oacute;n">
-            <span class="cart-btn-caption">Tu cotizaci&oacute;n</span>
+        <div id="cartToggle" class="cart-btn" aria-label="Abrir tu pedido">
+            <span class="cart-btn-caption">Tu pedido</span>
             <span class="cart-btn-main">
               <span class="cart-btn-icon" aria-hidden="true">&#128722;</span>
               <span id="cartCount">0</span>
@@ -78,7 +78,7 @@
   <div class="promo-banner-copy">
     <span class="promo-banner-kicker">Exclusivo web</span>
     <h2>5% de descuento al realizar tu pedido por la página</h2>
-    <p>La cotización online ya considera un <strong>5% de descuento</strong> sobre precio lista para quienes hacen su pedido directamente en la web.</p>
+    <p>Tu pedido online ya considera un <strong>5% de descuento</strong> sobre precio lista para quienes hacen su pedido directamente en la web.</p>
   </div>
   <div class="promo-banner-gallery promo-banner-gallery-rich">
     <figure class="promo-banner-visual">
@@ -91,7 +91,7 @@
     <div class="promo-banner-card">
       <span class="promo-banner-card-label">Descuento activo</span>
       <strong>5% OFF</strong>
-      <p>Se refleja en el resumen, el ahorro total y el monto final de tu cotización.</p>
+      <p>Se refleja en el resumen, el ahorro total y el monto final de tu pedido.</p>
     </div>
     <div class="promo-banner-card promo-banner-card-dark">
       <span class="promo-banner-card-label">Beneficio inmediato</span>
@@ -106,7 +106,7 @@
     <div class="catalog-section-divider-copy">
       <span class="catalog-section-divider-kicker">Colección 42</span>
       <h2>Modelos Disponibles</h2>
-      <p>Explora la vitrina y abre cada modelo para cotizar por talla.</p>
+      <p>Explora la vitrina y abre cada modelo para pedir por talla.</p>
     </div>
   </div>
   <div class="model-search model-search-section">
@@ -124,7 +124,7 @@
 <div id="cartSidebar" class="cart-sidebar">
     <button id="closeCart" class="cart-close">X</button>
     <div class="cart-header">
-      <h2>Tu Cotizaci&oacute;n</h2>
+      <h2>Tu Pedido</h2>
     </div>
     <div class="cart-layout">
       <div class="cart-summary-column">
@@ -166,7 +166,7 @@
             <input type="tel" id="clientPhone" name="client_phone_lookup_off" placeholder="Ej: +56912345678" inputmode="tel" autocomplete="chrome-off" readonly data-lpignore="true" data-1p-ignore="true" data-bwignore="true">
           </div>
         </div>
-        <button id="sendRequest">Enviar Cotizaci&oacute;n</button>
+        <button id="sendRequest">Enviar Pedido</button>
       </div>
     </div>
 </div>
@@ -203,7 +203,7 @@
         </div>
         </div>
 
-        <button id="addBtn">Agregar cotizaci&oacute;n</button>
+        <button id="addBtn">Agregar al pedido</button>
     </div>
   </div>
 </div>
@@ -235,7 +235,7 @@
 
     <div class="quotes-admin">
       <div class="quotes-admin-head">
-        <h2>Cotizaciones</h2>
+        <h2>Pedidos</h2>
         <div class="quotes-admin-actions">
           <button id="refreshQuotesBtn" type="button" class="ghost-btn">Actualizar</button>
           <button id="logoutQuotesBtn" type="button" class="ghost-btn">Cerrar sesi&oacute;n</button>
@@ -252,7 +252,7 @@
 
       <div id="quotesPanel" class="quotes-panel" style="display:none;">
         <div id="quotesAdminTabs" class="quotes-admin-tabs" style="display:none;">
-          <button id="quotesTabCotizaciones" type="button" class="ghost-btn quotes-tab-btn active">Cotizaciones</button>
+          <button id="quotesTabCotizaciones" type="button" class="ghost-btn quotes-tab-btn active">Pedidos</button>
           <button id="quotesTabReporte" type="button" class="ghost-btn quotes-tab-btn">Reporte</button>
           <button id="quotesTabStock" type="button" class="ghost-btn quotes-tab-btn">Stock</button>
         </div>
@@ -314,7 +314,7 @@
 <div id="successToast" class="success-toast" aria-live="polite" hidden>
   <div class="success-toast-icon">&#10003;</div>
   <div class="success-toast-text">
-    <strong>Cotizaci&oacute;n enviada con &eacute;xito</strong>
+    <strong>Pedido enviado con &eacute;xito</strong>
     <span>Recibimos tu solicitud correctamente.</span>
   </div>
 </div>
@@ -328,7 +328,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="script-v2.js?v=20260514hantan2local1"></script>
+<script src="script-v2.js?v=20260518pedido1"></script>
 </body>
 </html>
 

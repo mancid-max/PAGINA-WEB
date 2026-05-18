@@ -324,20 +324,6 @@
       },
       "total": 0
     },
-    "4361-06": {
-      "article": "4361-06",
-      "sku": "4361-06",
-      "description": "JEAN · CINTURA · FLARE",
-      "sizes": {
-        "36": 0,
-        "38": 0,
-        "40": 0,
-        "42": 0,
-        "44": 0,
-        "46": 0
-      },
-      "total": 0
-    },
     "4361-08": {
       "article": "4361-08",
       "sku": "4361-08",
@@ -355,20 +341,6 @@
     "4361-16": {
       "article": "4361-16",
       "sku": "4361-16",
-      "description": "JEAN · CINTURA · FLARE",
-      "sizes": {
-        "36": 0,
-        "38": 0,
-        "40": 0,
-        "42": 0,
-        "44": 0,
-        "46": 0
-      },
-      "total": 0
-    },
-    "4361-48": {
-      "article": "4361-48",
-      "sku": "4361-48",
       "description": "JEAN · CINTURA · FLARE",
       "sizes": {
         "36": 0,
@@ -450,79 +422,9 @@
       },
       "total": 0
     },
-    "4366-04": {
-      "article": "4366-04",
-      "sku": "4366-04",
-      "description": "JEAN · CINTURA · Recto",
-      "sizes": {
-        "36": 0,
-        "38": 0,
-        "40": 0,
-        "42": 0,
-        "44": 0,
-        "46": 0
-      },
-      "total": 0
-    },
-    "4366-08": {
-      "article": "4366-08",
-      "sku": "4366-08",
-      "description": "JEAN · CINTURA · Recto",
-      "sizes": {
-        "36": 0,
-        "38": 0,
-        "40": 0,
-        "42": 0,
-        "44": 0,
-        "46": 0
-      },
-      "total": 0
-    },
-    "4366-16": {
-      "article": "4366-16",
-      "sku": "4366-16",
-      "description": "JEAN · CINMTURA · Recto",
-      "sizes": {
-        "36": 0,
-        "38": 0,
-        "40": 0,
-        "42": 0,
-        "44": 0,
-        "46": 0
-      },
-      "total": 0
-    },
-    "4366-48": {
-      "article": "4366-48",
-      "sku": "4366-48",
-      "description": "JEAN · CINTURA · Recto",
-      "sizes": {
-        "36": 0,
-        "38": 0,
-        "40": 0,
-        "42": 0,
-        "44": 0,
-        "46": 0
-      },
-      "total": 0
-    },
     "4371-00": {
       "article": "4371-00",
       "sku": "4371-00",
-      "description": "JEAN · CINTURA · wide leg",
-      "sizes": {
-        "36": 0,
-        "38": 0,
-        "40": 0,
-        "42": 0,
-        "44": 0,
-        "46": 0
-      },
-      "total": 0
-    },
-    "4371-01": {
-      "article": "4371-01",
-      "sku": "4371-01",
       "description": "JEAN · CINTURA · wide leg",
       "sizes": {
         "36": 0,

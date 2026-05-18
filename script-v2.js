@@ -385,8 +385,8 @@ const TEXT_NORMALIZATION_REPLACEMENTS = [
   [/peque\?a/gi, "pequeña"],
   [/m\?s/gi, "más"],
   [/elasti[c]?idad y recuperaci\?n/gi, "elasticidad y recuperación"],
-  [/Cotizacion/g, "Cotización"],
-  [/cotizacion/g, "cotización"],
+  [/Cotizacion/g, "Pedido"],
+  [/cotizacion/g, "pedido"],
 ];
 
 const CATALOG_43_DESCRIPTION_MAP = {
@@ -2633,7 +2633,7 @@ function actualizarEstadoCotizacionProducto(producto, sku) {
 
   if (addBtn) {
     addBtn.disabled = agotado;
-    addBtn.innerText = agotado ? "Agotado" : "Agregar cotización";
+    addBtn.innerText = agotado ? "Agotado" : "Agregar al pedido";
   }
 
   const titleEl = document.getElementById("modalTitle");
@@ -2722,7 +2722,7 @@ function inicializarPanelCotizacionModal() {
   trigger.id = "openQuotePanelBtn";
   trigger.className = "quote-panel-trigger";
   trigger.type = "button";
-  trigger.innerText = "Cotizar este modelo";
+  trigger.innerText = "Pedir este modelo";
 
   const panel = document.createElement("div");
   panel.id = "quotePanel";
@@ -2733,10 +2733,10 @@ function inicializarPanelCotizacionModal() {
     <div class="quote-panel-card">
       <div class="quote-panel-head">
         <div>
-          <div class="quote-panel-kicker">Cotización</div>
+          <div class="quote-panel-kicker">Pedido</div>
           <div id="quotePanelModelTitle" class="quote-panel-title">Modelo</div>
         </div>
-        <button id="closeQuotePanelBtn" type="button" class="quote-panel-close" aria-label="Cerrar panel de cotizacion">×</button>
+        <button id="closeQuotePanelBtn" type="button" class="quote-panel-close" aria-label="Cerrar panel de pedido">×</button>
       </div>
     </div>
   `;
@@ -3374,7 +3374,7 @@ document.addEventListener("keydown", (e) => {
  ***********************/
 document.getElementById("addBtn").onclick = () => {
   if (skuEstaAgotado(skuActivo)) {
-    mostrarToastError("Modelo agotado", "Este modelo no tiene stock disponible y no se puede agregar a la cotizacion.");
+    mostrarToastError("Modelo agotado", "Este modelo no tiene stock disponible y no se puede agregar al pedido.");
     return;
   }
   // Tomar solo lo visible en pantalla para el SKU activo (sin borradores)
@@ -3397,7 +3397,7 @@ document.getElementById("addBtn").onclick = () => {
   }
 
   if (!agregoAlgo) {
-    mostrarToastError("Ingresa una cantidad", "Debes ingresar al menos una cantidad para agregar a la cotizacion.");
+    mostrarToastError("Ingresa una cantidad", "Debes ingresar al menos una cantidad para agregar al pedido.");
     return;
   }
 
@@ -3405,7 +3405,7 @@ document.getElementById("addBtn").onclick = () => {
   resetDraftsModal();
 
   actualizarCarrito();
-  mostrarToastExito("Cotización agregada", "Puedes verla en Tu cotización.");
+  mostrarToastExito("Producto agregado", "Puedes verlo en Tu pedido.");
   cerrarPanelCotizacionModal();
   document.getElementById("modal").classList.remove("active");
 };
@@ -3426,7 +3426,7 @@ function actualizarCarrito() {
     container.innerHTML = `
       <div class="cart-empty-state">
         <div class="cart-empty-title">Aún no agregas modelos</div>
-        <div class="cart-empty-text">Selecciona tallas y cantidades para armar tu cotización.</div>
+        <div class="cart-empty-text">Selecciona tallas y cantidades para armar tu pedido.</div>
       </div>
     `;
   } else {
@@ -3617,7 +3617,7 @@ function generarCSVQuoteAdmin(quote, items = []) {
   const BOM = "\uFEFF";
   const fecha = quote?.created_at ? new Date(quote.created_at).toLocaleString() : "";
   const codigo = generarCodigoCotizacionVisual(quote);
-  const estado = quote?.is_ready ? "Cotización lista" : "En proceso";
+  const estado = quote?.is_ready ? "Pedido listo" : "En proceso";
   const rows = [];
 
   rows.push(["RESUMEN COTIZACION"]);
@@ -3762,7 +3762,7 @@ async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
   const codigo = generarCodigoCotizacionVisual(quote);
   const capacity = ORDER_TEMPLATE_LAST_ROW - ORDER_TEMPLATE_FIRST_ROW + 1;
   if (grouped.length > capacity) {
-    throw new Error(`La cotizacion tiene ${grouped.length} modelos y la plantilla soporta ${capacity}`);
+    throw new Error(`El pedido tiene ${grouped.length} modelos y la plantilla soporta ${capacity}`);
   }
 
   for (let row = ORDER_TEMPLATE_FIRST_ROW; row <= ORDER_TEMPLATE_LAST_ROW; row++) {
@@ -3794,7 +3794,7 @@ async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
 function generarExcelHtmlQuoteAdmin(quote, items = []) {
   const fecha = quote?.created_at ? new Date(quote.created_at).toLocaleString() : "-";
   const codigo = generarCodigoCotizacionVisual(quote);
-  const estado = quote?.is_ready ? "Cotización lista" : "En proceso";
+  const estado = quote?.is_ready ? "Pedido listo" : "En proceso";
   const rut = quote?.client_rut || "";
   const telefono = quote?.client_phone || "";
 
@@ -3868,11 +3868,11 @@ async function descargarCotizacionAdmin(quoteId) {
   const quote = quotesAdminCache.quotes.find((q) => q.id === quoteId);
   const items = quotesAdminCache.itemsByQuote.get(quoteId) || [];
   if (!quote) {
-    actualizarEstadoQuotesUI("No se encontro la cotizacion para descargar");
+    actualizarEstadoQuotesUI("No se encontró el pedido para descargar");
     return;
   }
   const clienteNombre = sanitizeFileNamePart(quote.store_name, "cliente");
-  const nombreBase = `Cotización ${clienteNombre}`;
+  const nombreBase = `Pedido ${clienteNombre}`;
   try {
     const excelBlob = await Promise.race([
       generarExcelPlantillaQuoteAdmin(quote, items),
@@ -4039,7 +4039,7 @@ function clearCartFieldInvalidState() {
   clearCartFieldInvalid(document.getElementById("clientPhone"));
 }
 
-function renderClientNewHelper(show, text = "Completa nombre y teléfono para enviar la cotización del cliente nuevo.") {
+function renderClientNewHelper(show, text = "Completa nombre y teléfono para enviar el pedido del cliente nuevo.") {
   const panelEl = document.querySelector(".cart-client-panel");
   if (!panelEl) return;
   let helpEl = document.getElementById("clientNewHelper");
@@ -4188,7 +4188,7 @@ async function validarRutClienteEnUI({ silencioso = false } = {}) {
         tipo: "new",
         texto: "Cliente nuevo detectado.",
       });
-    renderClientNewHelper(true, "Completa nombre y teléfono del cliente nuevo para enviar la cotización.");
+    renderClientNewHelper(true, "Completa nombre y teléfono del cliente nuevo para enviar el pedido.");
     toggleClientNameField(true, { value: clienteNuevo.razon_social, readonly: false });
     toggleClientPhoneField(true, { value: clienteNuevo.client_phone, readonly: false });
     guardarCotizacionPersistida();
@@ -4249,13 +4249,13 @@ function configurarLookupCliente() {
     const nombre = String(nameInput.value || "").trim();
     const telefono = normalizarTelefonoCliente(phoneInput?.value || "");
     renderClientNewHelper(true, nombre && telefono
-      ? "Cliente nuevo listo. Ya puedes enviar la cotización."
-      : "Completa nombre y teléfono del cliente nuevo para enviar la cotización.");
+      ? "Cliente nuevo listo. Ya puedes enviar el pedido."
+      : "Completa nombre y teléfono del cliente nuevo para enviar el pedido.");
     setClientLookupUI({
       tipo: "new",
       texto: nombre && telefono
-        ? "Cliente nuevo listo. Ya puedes enviar la cotización."
-        : "Cliente nuevo. Agrega nombre y teléfono para enviar la cotización.",
+        ? "Cliente nuevo listo. Ya puedes enviar el pedido."
+        : "Cliente nuevo. Agrega nombre y teléfono para enviar el pedido.",
     });
     guardarCotizacionPersistida();
   });
@@ -4268,13 +4268,13 @@ function configurarLookupCliente() {
     const nombre = String(nameInput?.value || "").trim();
     const telefono = normalizarTelefonoCliente(phoneInput.value || "");
     renderClientNewHelper(true, nombre && telefono
-      ? "Cliente nuevo listo. Ya puedes enviar la cotización."
-      : "Completa nombre y teléfono del cliente nuevo para enviar la cotización.");
+      ? "Cliente nuevo listo. Ya puedes enviar el pedido."
+      : "Completa nombre y teléfono del cliente nuevo para enviar el pedido.");
     setClientLookupUI({
       tipo: "new",
       texto: nombre && telefono
-        ? "Cliente nuevo listo. Ya puedes enviar la cotización."
-        : "Cliente nuevo. Agrega nombre y teléfono para enviar la cotización.",
+        ? "Cliente nuevo listo. Ya puedes enviar el pedido."
+        : "Cliente nuevo. Agrega nombre y teléfono para enviar el pedido.",
     });
     guardarCotizacionPersistida();
   });
@@ -4303,26 +4303,26 @@ async function obtenerClienteParaCotizacion() {
   if (!nombre) {
     toggleClientNameField(true, { value: "", readonly: false });
     toggleClientPhoneField(true, { value: telefono, readonly: false });
-    renderClientNewHelper(true, "Completa nombre y teléfono del cliente nuevo para enviar la cotización.");
+    renderClientNewHelper(true, "Completa nombre y teléfono del cliente nuevo para enviar el pedido.");
     setCartFieldInvalid(nameEl, "Completa el nombre o razón social");
     setClientLookupUI({
       tipo: "error",
-      texto: "Agrega nombre y teléfono del cliente nuevo para enviar la cotización.",
+      texto: "Agrega nombre y teléfono del cliente nuevo para enviar el pedido.",
     });
     nameEl?.focus();
-    throw new Error("Agrega el nombre o razón social del cliente nuevo para enviar la cotización");
+    throw new Error("Agrega el nombre o razón social del cliente nuevo para enviar el pedido");
   }
   if (!telefono) {
     toggleClientNameField(true, { value: nombre, readonly: false });
     toggleClientPhoneField(true, { value: "", readonly: false });
-    renderClientNewHelper(true, "Completa nombre y teléfono del cliente nuevo para enviar la cotización.");
+    renderClientNewHelper(true, "Completa nombre y teléfono del cliente nuevo para enviar el pedido.");
     setCartFieldInvalid(phoneEl, "Completa el teléfono del cliente");
     setClientLookupUI({
       tipo: "error",
-      texto: "Agrega el teléfono del cliente nuevo para enviar la cotización.",
+      texto: "Agrega el teléfono del cliente nuevo para enviar el pedido.",
     });
     phoneEl?.focus();
-    throw new Error("Agrega el teléfono del cliente nuevo para enviar la cotización");
+    throw new Error("Agrega el teléfono del cliente nuevo para enviar el pedido");
   }
 
   return {
@@ -4395,16 +4395,16 @@ async function enviarPayloadCotizacionSupabase(payload) {
     const errText = await res.text();
     const lower = String(errText || "").toLowerCase();
     if (lower.includes("create_quote_with_stock_reservation")) {
-      throw new Error("Falta instalar la función de reserva de stock en Supabase antes de cotizar.");
+      throw new Error("Falta instalar la función de reserva de stock en Supabase antes de enviar pedidos.");
     }
     if (lower.includes("stock insuficiente") || lower.includes("no se encontró stock")) {
-      throw new Error(errText || "No hay stock suficiente para completar la cotización.");
+      throw new Error(errText || "No hay stock suficiente para completar el pedido.");
     }
-    throw new Error(`Error guardando cotizacion: ${errText || res.status}`);
+    throw new Error(`Error guardando pedido: ${errText || res.status}`);
   }
 
   const quoteId = await res.json().catch(() => payload.quote.id);
-  if (!quoteId) throw new Error("No se genero ID de cotizacion");
+  if (!quoteId) throw new Error("No se generó ID de pedido");
   return quoteId;
 }
 
@@ -4438,7 +4438,7 @@ async function registrarClienteNuevoSupabase(cliente) {
       lower.includes("register_client_if_missing") ||
       lower.includes("pl/pgsql")
     ) {
-      console.warn("No se pudo registrar el cliente nuevo en Supabase; se continúa con la cotización.", txt);
+      console.warn("No se pudo registrar el cliente nuevo en Supabase; se continúa con el pedido.", txt);
       return cliente;
     }
     throw new Error(`No se pudo registrar el cliente: ${txt || res.status}`);
@@ -5022,7 +5022,7 @@ function activarTabAdmin(tab = "cotizaciones", { cargar = true } = {}) {
       if ((err?.message || "").toLowerCase().includes("iniciar sesion")) {
         mostrarToastError("No se pudo iniciar sesion", "Vuelve a ingresar tus credenciales.");
       } else {
-        mostrarToastError("No se pudo cargar", err?.message || "Error cargando cotizaciones.");
+        mostrarToastError("No se pudo cargar", err?.message || "Error cargando pedidos.");
       }
     });
     return;
@@ -5171,15 +5171,15 @@ function construirTextoReporteCotizacionesWhatsApp(quotes = []) {
   const mesLabel = obtenerEtiquetaMesActual();
   const itemsMap = quotesAdminCache.itemsByQuote instanceof Map ? quotesAdminCache.itemsByQuote : new Map();
   const lines = [
-    `*Reporte de cotizaciones ${mesLabel}*`,
-    `Total cotizaciones: ${total}`,
-    `Cotizaciones listas: ${listas} (${pctListas}%)`,
+    `*Reporte de pedidos ${mesLabel}*`,
+    `Total pedidos: ${total}`,
+    `Pedidos listos: ${listas} (${pctListas}%)`,
   ];
   if (caidas > 0) {
-    lines.push(`Cotizaciones no listas / caídas: ${caidas} (${pctCaidas}%)`);
+    lines.push(`Pedidos no listos / caídos: ${caidas} (${pctCaidas}%)`);
   }
   if (quotesMes.length) {
-    lines.push("", "*Detalle por cotización*");
+    lines.push("", "*Detalle por pedido*");
     quotesMes.forEach((q, index) => {
       const detalles = (itemsMap.get(q.id) || []).sort((a, b) => {
         if (String(a.sku) !== String(b.sku)) return String(a.sku).localeCompare(String(b.sku));
@@ -5202,7 +5202,7 @@ function construirTextoReporteCotizacionesWhatsApp(quotes = []) {
 
 function construirVistaReporteCotizaciones(quotes = [], itemsMap = new Map()) {
   if (!quotes.length) {
-    return `<div class="quotes-report-preview-empty">No hay cotizaciones de mayo en este filtro.</div>`;
+    return `<div class="quotes-report-preview-empty">No hay pedidos de mayo en este filtro.</div>`;
   }
 
   return quotes.map((q, index) => {
@@ -5354,7 +5354,7 @@ function renderReporteCotizacionesAdmin(quotes = []) {
             </div>
           `;
         }).join("")
-        : `<div class="quote-card"><div class="quote-meta">No hay cotizaciones de mayo en este filtro.</div></div>`
+        : `<div class="quote-card"><div class="quote-meta">No hay pedidos de mayo en este filtro.</div></div>`
       }
     </div>
   `;
@@ -5365,7 +5365,7 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
   if (!list) return;
 
   if (!quotes.length) {
-    list.innerHTML = `<div class="quote-card"><div class="quote-meta">No hay cotizaciones para mostrar.</div></div>`;
+    list.innerHTML = `<div class="quote-card"><div class="quote-meta">No hay pedidos para mostrar.</div></div>`;
     return;
   }
 
@@ -5392,7 +5392,7 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
             <div class="quote-code-row">
               <span class="quote-code-pill">${codigo}</span>
               <button type="button" class="ghost-btn quote-export-btn" data-quote-export="${q.id}">Descargar pedido</button>
-              <button type="button" class="ghost-btn quote-delete-btn" data-quote-delete="${q.id}">Eliminar cotización</button>
+              <button type="button" class="ghost-btn quote-delete-btn" data-quote-delete="${q.id}">Eliminar pedido</button>
             </div>
           </div>
           <div class="quote-card-summary">
@@ -5402,11 +5402,11 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
         </div>
         <div class="quote-status">
           <div class="quote-status-text ${isReady ? "ready" : ""}">
-            ${isReady ? "Cotización lista" : "En proceso"}
+            ${isReady ? "Pedido listo" : "En proceso"}
           </div>
           <label class="quote-status-toggle">
             <input type="checkbox" class="quote-ready-checkbox" data-quote-id="${q.id}" ${isReady ? "checked" : ""}>
-            Cotización lista
+            Pedido listo
           </label>
         </div>
         <div class="quote-items-grid">
@@ -5461,7 +5461,7 @@ async function eliminarCotizacionAdmin(quoteId) {
 
   if (!res.ok) {
     const txt = await res.text();
-    throw new Error(`No se pudo eliminar cotizacion: ${txt || res.status}`);
+    throw new Error(`No se pudo eliminar el pedido: ${txt || res.status}`);
   }
 }
 
@@ -5497,7 +5497,7 @@ async function cargarCotizacionesAdmin() {
       throw new Error("No se pudo iniciar sesion");
     }
     const errText = await quotesRes.text();
-    throw new Error(`No se pudieron cargar cotizaciones: ${errText || quotesRes.status}`);
+    throw new Error(`No se pudieron cargar pedidos: ${errText || quotesRes.status}`);
   }
 
   const quotes = await quotesRes.json();
@@ -5735,7 +5735,7 @@ function configurarPanelCotizaciones() {
 
     (async () => {
       const confirmar = await mostrarConfirmacionAccion({
-        titulo: "Eliminar cotización",
+        titulo: "Eliminar pedido",
         mensaje: `Se eliminará ${codigo}${quote?.store_name ? ` (${quote.store_name})` : ""}. Esta acción no se puede deshacer.`,
         confirmarTexto: "Sí, eliminar",
       });
@@ -5746,10 +5746,10 @@ function configurarPanelCotizaciones() {
       deleteBtn.innerText = "Eliminando...";
       try {
         await eliminarCotizacionAdmin(quoteId);
-        mostrarToastExito("Cotización eliminada", "La cotización se eliminó correctamente.");
+        mostrarToastExito("Pedido eliminado", "El pedido se eliminó correctamente.");
         await cargarCotizacionesAdmin();
       } catch (err) {
-        mostrarToastError("No se pudo eliminar", err.message || "Error eliminando cotización");
+        mostrarToastError("No se pudo eliminar", err.message || "Error eliminando pedido");
       } finally {
         deleteBtn.disabled = false;
         deleteBtn.innerText = textoOriginal;
@@ -5875,7 +5875,7 @@ function resolverMensajeErrorCotizacion(error) {
 
 document.getElementById("sendRequest").onclick = async () => {
   if (!pedido.length) {
-    return mostrarToastError("Faltan productos", "Agrega al menos un modelo antes de enviar la cotización.");
+    return mostrarToastError("Faltan productos", "Agrega al menos un modelo antes de enviar el pedido.");
   }
 
   const btn = document.getElementById("sendRequest");
@@ -5886,10 +5886,10 @@ document.getElementById("sendRequest").onclick = async () => {
   try {
     clearCartFieldInvalidState();
     const cliente = await obtenerClienteParaCotizacion();
-    btn.innerText = "Guardando cotización...";
+    btn.innerText = "Enviando pedido...";
     await guardarCotizacionSupabase(cliente);
 
-    mostrarToastExito("Cotización enviada con éxito", "Recibimos tu solicitud correctamente.");
+    mostrarToastExito("Pedido enviado con éxito", "Recibimos tu solicitud correctamente.");
     limpiarCarrito();
   } catch (error) {
     console.error(error);
