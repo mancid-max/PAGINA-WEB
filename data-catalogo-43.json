@@ -21,17 +21,24 @@
       "43/43/4301/Mohicano-113.jpg",
       "43/43/4301/Mohicano-115.jpg"
     ],
-    "description": "JEAN · MEDIO · FLARE",
+    "description": "JEAN ? MEDIO ? FLARE",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: MEDIO",
+      "Bota: FLARE",
       "Tela: Missy Plus",
       "Tecnología: Power Stretch",
       "Disponible: 652 unidades",
       "Cortes: 11585"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "MEDIO",
+    "bota": "FLARE",
+    "fabric": "Missy Plus"
   },
   {
-    "family": "4303-00",
+    "family": "4303",
     "main_image": "43/43/4303/editar/Mohicano-236.jpg",
     "gallery": [
       "43/43/4303/editar/Mohicano-236.jpg",
@@ -48,14 +55,21 @@
       "43/43/4303/Mohicano-246.jpg",
       "43/43/4303/Mohicano-248.jpg"
     ],
-    "description": "JEAN · CINTURA · oxford",
+    "description": "JEAN ? CINTURA ? oxford",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: oxford",
       "Tela: PATRICIA DARK",
       "Tecnología: Power Stretch",
       "Disponible: 5 unidades",
       "Cortes: 961297"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "oxford",
+    "fabric": "PATRICIA DARK"
   },
   {
     "family": "4309-00",
@@ -79,14 +93,21 @@
       "43/43/4309/Mohicano-98.jpg",
       "43/43/4309/Mohicano-99.jpg"
     ],
-    "description": "JEAN · CINTURA · FLARE",
+    "description": "JEAN ? CINTURA ? FLARE",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: FLARE",
       "Tela: Missy Plus",
       "Tecnología: Power Stretch",
       "Disponible: 647 unidades",
       "Cortes: 11584"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "FLARE",
+    "fabric": "Missy Plus"
   },
   {
     "family": "4310-00",
@@ -107,14 +128,21 @@
       "43/43/4310/Mohicano-152.jpg",
       "43/43/4310/Mohicano-154.jpg"
     ],
-    "description": "JEAN · CINTURA · Tobillero",
+    "description": "JEAN ? CINTURA ? Tobillero",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: Tobillero",
       "Tela: PATRICIA DARK",
       "Tecnología: Power Stretch",
       "Disponible: 600 unidades",
       "Cortes: 11589"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "Tobillero",
+    "fabric": "PATRICIA DARK"
   },
   {
     "family": "4313-00",
@@ -136,14 +164,21 @@
       "43/43/4313/Mohicano-168.jpg",
       "43/43/4313/Mohicano-170.jpg"
     ],
-    "description": "JEAN · CINTURA · FLARE",
+    "description": "JEAN ? CINTURA ? FLARE",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: FLARE",
       "Tela: New Glue",
       "Tecnología: Power Stretch",
       "Disponible: 500 unidades",
       "Cortes: 11594"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "FLARE",
+    "fabric": "New Glue"
   },
   {
     "family": "4314-00",
@@ -160,14 +195,21 @@
       "43/4314/Mohicano-174.jpg",
       "43/4314/Mohicano-175.jpg"
     ],
-    "description": "JEAN · CINTURA · Recto",
+    "description": "JEAN ? CINTURA ? Recto",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: Recto",
       "Tela: PATRICIA DARK",
       "Tecnología: Power Stretch",
       "Disponible: 600 unidades",
       "Cortes: 11590"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "Recto",
+    "fabric": "PATRICIA DARK"
   },
   {
     "family": "4318-00",
@@ -190,14 +232,21 @@
       "43/43/4318/Mohicano-154.jpg",
       "43/43/4318/Mohicano-155.jpg"
     ],
-    "description": "JEAN · CINTURA · wide leg",
+    "description": "JEAN ? CINTURA ? wide leg",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: wide leg",
       "Tela: Missy Plus",
       "Tecnología: Power Stretch",
       "Disponible: 600 unidades",
       "Cortes: 11568"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "wide leg",
+    "fabric": "Missy Plus"
   },
   {
     "family": "4319-00",
@@ -223,14 +272,21 @@
       "43/43/4319/Mohicano-62.jpg",
       "43/43/4319/Mohicano-63.jpg"
     ],
-    "description": "JEAN · MEDIO · FLARE",
+    "description": "JEAN ? MEDIO ? FLARE",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: MEDIO",
+      "Bota: FLARE",
       "Tela: New Glue",
       "Tecnología: Power Stretch",
       "Disponible: 5 unidades",
       "Cortes: 961320"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "MEDIO",
+    "bota": "FLARE",
+    "fabric": "New Glue"
   },
   {
     "family": "4321-00",
@@ -247,14 +303,21 @@
       "43/4321/Mohicano-196.jpg",
       "43/4321/Mohicano-197.jpg"
     ],
-    "description": "JEAN · CINTURA · oxford",
+    "description": "JEAN ? CINTURA ? oxford",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: oxford",
       "Tela: New Glue",
       "Tecnología: Power Stretch",
       "Disponible: 652 unidades",
       "Cortes: 11583"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "oxford",
+    "fabric": "New Glue"
   },
   {
     "family": "4322-00",
@@ -274,14 +337,21 @@
       "43/4322/Mohicano-60.jpg",
       "43/4322/Mohicano-61.jpg"
     ],
-    "description": "JEAN · CINTURA · FLARE",
+    "description": "JEAN ? CINTURA ? FLARE",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: FLARE",
       "Tela: B2868V-3",
       "Tecnología: Power Stretch",
       "Disponible: 1 unidades",
       "Cortes: 961250"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "FLARE",
+    "fabric": "B2868V-3"
   },
   {
     "family": "4322-01",
@@ -301,12 +371,19 @@
       "43/4322-01/Mohicano-72.jpg",
       "43/4322-01/Mohicano-73.jpg"
     ],
-    "description": "JEAN · CINTURA · FLARE",
+    "description": "JEAN ? CINTURA ? FLARE",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: FLARE",
       "Tela: B2868V-3",
       "Tecnología: Power Stretch"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "FLARE",
+    "fabric": "B2868V-3"
   },
   {
     "family": "4322-02",
@@ -343,17 +420,24 @@
       "43/43/4323/Mohicano-220.jpg",
       "43/43/4323/Mohicano-221.jpg"
     ],
-    "description": "JEAN · CINTURA · Wide leg",
+    "description": "JEAN ? CINTURA ? FLARE",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: FLARE",
       "Tela: Ayla",
       "Tecnología: Perfect Fit",
       "Disponible: 452 unidades",
       "Cortes: 11582"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "FLARE",
+    "fabric": "Ayla"
   },
   {
-    "family": "4325-00",
+    "family": "4325-01",
     "main_image": "43/43/4325/editar/Mohicano-172.jpg",
     "gallery": [
       "43/43/4325/editar/Mohicano-172.jpg",
@@ -370,14 +454,21 @@
       "43/43/4325/Mohicano-182.jpg",
       "43/43/4325/Mohicano-183.jpg"
     ],
-    "description": "JEAN · CINTURA · wide leg",
+    "description": "JEAN ? CINTURA ? wide leg",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: wide leg",
       "Tela: B2868V-3",
       "Tecnología: Power Stretch",
       "Disponible: 1 unidades",
       "Cortes: 961272"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "wide leg",
+    "fabric": "B2868V-3"
   },
   {
     "family": "4329-00",
@@ -397,14 +488,21 @@
       "43/43/4329/Mohicano-207.jpg",
       "43/43/4329/Mohicano-209.jpg"
     ],
-    "description": "JEAN · MEDIO · OXFORD",
+    "description": "JEAN ? MEDIO ? OXFORD",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: MEDIO",
+      "Bota: OXFORD",
       "Tela: New Glue",
       "Tecnología: Power Stretch",
       "Disponible: 600 unidades",
       "Cortes: 11587"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "MEDIO",
+    "bota": "OXFORD",
+    "fabric": "New Glue"
   },
   {
     "family": "4333-00",
@@ -424,14 +522,21 @@
       "43/43/4333/Mohicano-194.jpg",
       "43/43/4333/Mohicano-196.jpg"
     ],
-    "description": "JEAN · CINTURA · wide leg",
+    "description": "JEAN ? CINTURA ? wide leg",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: wide leg",
       "Tela: Missy Plus",
       "Tecnología: Power Stretch",
       "Disponible: 600 unidades",
       "Cortes: 11593"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "wide leg",
+    "fabric": "Missy Plus"
   },
   {
     "family": "4335-00",
@@ -451,14 +556,21 @@
       "43/4335/Mohicano-142.jpg",
       "43/4335/Mohicano-143.jpg"
     ],
-    "description": "JEAN · CINTURA · Pitillo",
+    "description": "JEAN ? CINTURA ? Pitillo",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: Pitillo",
       "Tela: B2868V-3",
       "Tecnología: Power Stretch",
       "Disponible: 1 unidades",
       "Cortes: 961291"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "Pitillo",
+    "fabric": "B2868V-3"
   },
   {
     "family": "4337-00",
@@ -476,14 +588,21 @@
       "43/43/4337/Mohicano-138.jpg",
       "43/43/4337/Mohicano-139.jpg"
     ],
-    "description": "JEAN · CINTURA · FLARE",
+    "description": "JEAN ? CINTURA ? FLARE",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: FLARE",
       "Tela: Opaque",
       "Tecnología: Power Stretch",
       "Disponible: 1 unidades",
       "Cortes: 961283"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "FLARE",
+    "fabric": "Opaque"
   },
   {
     "family": "4341-00",
@@ -503,41 +622,21 @@
       "43/43/4341/Mohicano-233.jpg",
       "43/43/4341/Mohicano-235.jpg"
     ],
-    "description": "JEAN · CINTURA · FLARE",
+    "description": "JEAN ? CINTURA ? FLARE",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: FLARE",
       "Tela: New Glue",
       "Tecnología: Power Stretch",
       "Disponible: 600 unidades",
       "Cortes: 11588"
     ],
-    "variants": []
-  },
-  {
-    "family": "4348-00",
-    "main_image": "43/4348/editar/Mohicano-75.jpg",
-    "gallery": [
-      "43/4348/editar/Mohicano-75.jpg",
-      "43/4348/editar/Mohicano-79.jpg",
-      "43/4348/editar/Mohicano-81.jpg",
-      "43/4348/editar/Mohicano-86.jpg",
-      "43/4348/Mohicano-76.jpg",
-      "43/4348/Mohicano-77.jpg",
-      "43/4348/Mohicano-78.jpg",
-      "43/4348/Mohicano-80.jpg",
-      "43/4348/Mohicano-82.jpg",
-      "43/4348/Mohicano-83.jpg",
-      "43/4348/Mohicano-84.jpg",
-      "43/4348/Mohicano-85.jpg",
-      "43/4348/Mohicano-87.jpg"
-    ],
-    "description": "JEAN · CINTURA · Pitillo",
-    "characteristics": [
-      "Tela: B2868V-3",
-      "Tecnología: Power Stretch",
-      "Disponible: 5 unidades",
-      "Cortes: 961333"
-    ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "FLARE",
+    "fabric": "New Glue"
   },
   {
     "family": "4355-00",
@@ -558,14 +657,21 @@
       "43/4355/Mohicano-46.jpg",
       "43/4355/Mohicano-47.jpg"
     ],
-    "description": "JEAN · CINTURA · FLARE",
+    "description": "JEAN ? CINTURA ? FLARE",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: FLARE",
       "Tela: B2868V-3",
       "Tecnología: Power Stretch",
       "Disponible: 5 unidades",
       "Cortes: 961334"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "FLARE",
+    "fabric": "B2868V-3"
   },
   {
     "family": "4356-00",
@@ -585,14 +691,21 @@
       "43/4356/Mohicano-118.jpg",
       "43/4356/Mohicano-120.jpg"
     ],
-    "description": "JEAN · CINTURA · FLARE",
+    "description": "JEAN ? CINTURA ? FLARE",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: FLARE",
       "Tela: B2868V-3",
       "Tecnología: Power Stretch",
       "Disponible: 5 unidades",
       "Cortes: 961332"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "FLARE",
+    "fabric": "B2868V-3"
   },
   {
     "family": "4361-04",
@@ -601,12 +714,19 @@
       "43/4361 04 CAFE/Copia de CRI_8303.jpg",
       "43/4361 04 CAFE/Copia de CRI_8309.jpg"
     ],
-    "description": "JEAN · CINTURA · FLARE",
+    "description": "JEAN ? CINTURA ? FLARE",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: FLARE",
       "Tela: YASMIN",
       "Tecnología: Perfect Fit"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "FLARE",
+    "fabric": "YASMIN"
   },
   {
     "family": "4361-08",
@@ -617,12 +737,19 @@
       "43/4361 08 OCRE/Copia de CRI_8281.jpg",
       "43/4361 08 OCRE/Copia de CRI_8290.jpg"
     ],
-    "description": "JEAN · CINTURA · FLARE",
+    "description": "JEAN ? CINTURA ? FLARE",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: FLARE",
       "Tela: YASMIN",
       "Tecnología: Perfect Fit"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "FLARE",
+    "fabric": "YASMIN"
   },
   {
     "family": "4361-16",
@@ -633,12 +760,19 @@
       "43/4361 16 VERDE OLIVA/Copia de CRI_8342.jpg",
       "43/4361 16 VERDE OLIVA/Copia de CRI_8350.jpg"
     ],
-    "description": "JEAN · CINTURA · FLARE",
+    "description": "JEAN ? CINTURA ? FLARE",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: FLARE",
       "Tela: YASMIN",
       "Tecnología: Perfect Fit"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "FLARE",
+    "fabric": "YASMIN"
   },
   {
     "family": "4362-08",
@@ -650,12 +784,19 @@
       "43/4362 08 OCRE/Copia de CRI_8465.jpg",
       "43/4362 08 OCRE/Copia de CRI_8474.jpg"
     ],
-    "description": "JEAN · CINTURA · Pitillo",
+    "description": "JEAN ? CINTURA ? Pitillo",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: Pitillo",
       "Tela: YASMIN",
       "Tecnología: Perfect Fit"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "Pitillo",
+    "fabric": "YASMIN"
   },
   {
     "family": "4362-16",
@@ -666,12 +807,19 @@
       "43/4362 16 VERDE OLIVA/Copia de CRI_8406.jpg",
       "43/4362 16 VERDE OLIVA/Copia de CRI_8411.jpg"
     ],
-    "description": "JEAN · CINTURA · Pitillo",
+    "description": "JEAN ? CINTURA ? Pitillo",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: Pitillo",
       "Tela: YASMIN",
       "Tecnología: Perfect Fit"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "Pitillo",
+    "fabric": "YASMIN"
   },
   {
     "family": "4362-48",
@@ -682,12 +830,19 @@
       "43/4362 48 BURDEO/Copia de CRI_8438.jpg",
       "43/4362 48 BURDEO/Copia de CRI_8440.jpg"
     ],
-    "description": "JEAN · CINTURA · Pitillo",
+    "description": "JEAN ? CINTURA ? Pitillo",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: Pitillo",
       "Tela: YASMIN",
       "Tecnología: Perfect Fit"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "Pitillo",
+    "fabric": "YASMIN"
   },
   {
     "family": "4363-00",
@@ -706,12 +861,19 @@
       "43/4363/Mohicano-187.jpg",
       "43/4363/Mohicano-188.jpg"
     ],
-    "description": "JEAN · CINTURA · Pitillo",
+    "description": "JEAN ? CINTURA ? Pitillo",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: Pitillo",
       "Tela: AYLA",
       "Tecnología: Perfect Fit"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "Pitillo",
+    "fabric": "AYLA"
   },
   {
     "family": "4365-00",
@@ -725,15 +887,22 @@
       "43/4365/CRI_7591.jpg",
       "43/4365/CRI_7595.jpg"
     ],
-    "description": "JEAN · CINTURA · Recto",
+    "description": "JEAN ? CINTURA ? Recto",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: Recto",
       "Tela: Ayla/New glue",
       "Tecnología: Power Stretch"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "Recto",
+    "fabric": "Ayla/New glue"
   },
   {
-    "family": "4371-00",
+    "family": "4371-01",
     "main_image": "43/4371/editar/Mohicano-234.jpg",
     "gallery": [
       "43/4371/editar/Mohicano-234.jpg",
@@ -751,12 +920,19 @@
       "43/4371/Mohicano-245.jpg",
       "43/4371/Mohicano-246.jpg"
     ],
-    "description": "JEAN · CINTURA · wide leg",
+    "description": "JEAN ? CINTURA ? PALAZZO",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: PALAZZO",
       "Tela: X206-B1",
       "Tecnología: Universal"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "PALAZZO",
+    "fabric": "X206-B1"
   },
   {
     "family": "4377-00",
@@ -773,12 +949,19 @@
       "43/4377/Mohicano-164.jpg",
       "43/4377/Mohicano-165.jpg"
     ],
-    "description": "JEAN · CINTURA · PALAZZO",
+    "description": "JEAN ? CINTURA ? PALAZZO",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: PALAZZO",
       "Tela: OUTLANDER",
       "Tecnología: Universal"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "PALAZZO",
+    "fabric": "OUTLANDER"
   },
   {
     "family": "4378-00",
@@ -790,11 +973,18 @@
       "43/4378/Copia de CRI_8244.jpg",
       "43/4378/Copia de CRI_8249.jpg"
     ],
-    "description": "JEAN · CINTURA · TOBILLERO",
+    "description": "JEAN ? CINTURA ? Recto",
     "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: Recto",
       "Tela: B2868V-3",
       "Tecnología: Power Stretch"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "Recto",
+    "fabric": "B2868V-3"
   }
 ]

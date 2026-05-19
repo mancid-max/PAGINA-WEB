@@ -16,9 +16,9 @@
       },
       "total": 652
     },
-    "4303-00": {
+    "4303": {
       "article": "4303",
-      "sku": "4303-00",
+      "sku": "4303",
       "description": "JEAN · CINTURA · oxford",
       "sizes": {
         "36": 0,
@@ -184,9 +184,9 @@
       },
       "total": 452
     },
-    "4325-00": {
-      "article": "4325-00",
-      "sku": "4325-00",
+    "4325-01": {
+      "article": "4325-01",
+      "sku": "4325-01",
       "description": "JEAN · CINTURA · wide leg",
       "sizes": {
         "36": 0,
@@ -267,20 +267,6 @@
         "46": 0
       },
       "total": 600
-    },
-    "4348-00": {
-      "article": "4348",
-      "sku": "4348-00",
-      "description": "JEAN · CINTURA · Pitillo",
-      "sizes": {
-        "36": 0,
-        "38": 0,
-        "40": 0,
-        "42": 0,
-        "44": 0,
-        "46": 0
-      },
-      "total": 5
     },
     "4355-00": {
       "article": "4355",
@@ -422,9 +408,9 @@
       },
       "total": 0
     },
-    "4371-00": {
-      "article": "4371-00",
-      "sku": "4371-00",
+    "4371-01": {
+      "article": "4371-01",
+      "sku": "4371-01",
       "description": "JEAN · CINTURA · wide leg",
       "sizes": {
         "36": 0,

@@ -3033,12 +3033,46 @@ function obtenerMetaCatalogo43(producto = {}) {
   };
 
   const tela = normalizarTextoVisible(producto?.fabric || fromCharacteristics("Tela"));
+  const tipo = normalizarTextoVisible(producto?.tipo || producto?.type || fromCharacteristics("Tipo"));
   const fit = normalizarTextoVisible(producto?.fit || fromCharacteristics("Fit"));
   const tiro = normalizarTextoVisible(producto?.tiro || fromCharacteristics("Tiro"));
   const bota = normalizarTextoVisible(producto?.bota || fromCharacteristics("Bota"));
 
-  if (!tela && !tiro && !bota && !fit) return null;
-  return { tela, fit, tiro, bota };
+  if (!tela && !tipo && !tiro && !bota && !fit) return null;
+  return { tela, tipo, fit, tiro, bota };
+}
+
+function crearItemInfoCatalogo43(label, value, className = "") {
+  const normalized = normalizarTextoVisible(value || "");
+  if (!normalized) return null;
+  const li = document.createElement("li");
+  if (className) li.className = className;
+  li.innerHTML = `<span class="feature-label">${escapeHtmlExcel(label)}</span><strong>${escapeHtmlExcel(normalized)}</strong>`;
+  return li;
+}
+
+function renderizarInfoProductoCatalogo43(charList, producto, detallePrecio) {
+  const meta43 = obtenerMetaCatalogo43(producto);
+  charList.innerHTML = "";
+  charList.style.display = meta43 || detallePrecio ? "block" : "none";
+  if (!meta43 && !detallePrecio) return;
+
+  const ul = document.createElement("ul");
+  [
+    crearItemInfoCatalogo43("Tipo", meta43?.tipo),
+    crearItemInfoCatalogo43("Tiro", meta43?.tiro),
+    crearItemInfoCatalogo43("Bota", meta43?.bota),
+    crearItemInfoCatalogo43("Tela", meta43?.tela, "feature-fabric"),
+  ].filter(Boolean).forEach((li) => ul.appendChild(li));
+
+  if (detallePrecio) {
+    const liPrecio = document.createElement("li");
+    liPrecio.className = "feature-price";
+    liPrecio.innerHTML = `<span class="feature-label">Precio web</span><strong>${escapeHtmlExcel(formatearPrecioCLP(detallePrecio.final))}</strong><em>Lista ${escapeHtmlExcel(formatearPrecioCLP(detallePrecio.lista))} · -${escapeHtmlExcel(detallePrecio.descuento)}% web</em>`;
+    ul.appendChild(liPrecio);
+  }
+
+  charList.appendChild(ul);
 }
 
 function renderGrid(lista) {
@@ -3241,44 +3275,9 @@ function verProducto(familyId, preferredSku = "") {
   const detallePrecio = obtenerDetallePrecioCatalogo(skuInicial);
 
   if (CATALOG_SOURCE === "catalogo-43") {
-    const sku43 = normalizarSkuCatalogo(skuInicial || p.family);
-    const meta43 = obtenerMetaCatalogo43(p);
-
     descriptionEl.innerText = "";
     descriptionEl.style.display = "none";
-    charList.innerHTML = "";
-    charList.style.display = meta43 ? "block" : "none";
-
-    if (meta43) {
-      charList.style.display = detallePrecio ? "block" : "none";
-      if (detallePrecio) {
-        const ul = document.createElement("ul");
-        const liPrecio = document.createElement("li");
-        liPrecio.className = "feature-price";
-        liPrecio.innerHTML = `<span class="feature-label">Precio web</span><strong>${escapeHtmlExcel(formatearPrecioCLP(detallePrecio.final))}</strong><em>Lista ${escapeHtmlExcel(formatearPrecioCLP(detallePrecio.lista))} · -${escapeHtmlExcel(detallePrecio.descuento)}% web</em>`;
-        ul.appendChild(liPrecio);
-        charList.appendChild(ul);
-      }
-    } else {
-      const descripcion43Base = normalizarTextoVisible(p.description || "");
-      const texto43 = (!descripcion43Base || /^Modelo\s/i.test(descripcion43Base))
-        ? normalizarTextoVisible(CATALOG_43_DESCRIPTION_MAP[sku43] || "")
-        : descripcion43Base;
-      const partes43 = texto43
-        .split("·")
-        .map((value) => normalizarTextoVisible(value))
-        .map((value) => value.trim())
-        .filter(Boolean);
-      charList.style.display = detallePrecio ? "block" : "none";
-      if (detallePrecio) {
-        const ul = document.createElement("ul");
-        const liPrecio = document.createElement("li");
-        liPrecio.className = "feature-price";
-        liPrecio.innerHTML = `<span class="feature-label">Precio web</span><strong>${escapeHtmlExcel(formatearPrecioCLP(detallePrecio.final))}</strong><em>Lista ${escapeHtmlExcel(formatearPrecioCLP(detallePrecio.lista))} · -${escapeHtmlExcel(detallePrecio.descuento)}% web</em>`;
-        ul.appendChild(liPrecio);
-        charList.appendChild(ul);
-      }
-    }
+    renderizarInfoProductoCatalogo43(charList, p, detallePrecio);
   } else {
     const publicDescription = limpiarDescripcionPublica(p.description || "");
     descriptionEl.innerText = hasCharacteristics
