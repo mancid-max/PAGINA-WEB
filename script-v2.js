@@ -2820,7 +2820,7 @@ function inicializarBuscadorModelos() {
   if (!input || !panel || !btnBuscar || !btnLimpiar) return;
 
   const obtenerFuenteBusqueda = () => (
-    Array.isArray(productosGrid) ? productosGrid.filter((p) => !productoTarjetaSinImagen(p)) : []
+    Array.isArray(productosGrid) ? productosGrid.filter((p) => !tarjetaSinImagenCatalogo43(p)) : []
   );
   let sugerenciasActuales = [];
   let activeIndex = -1;
@@ -2829,7 +2829,25 @@ function inicializarBuscadorModelos() {
     const raw = String(value || "").trim().toUpperCase();
     const sku = normalizarSkuCatalogo(raw);
     const digits = raw.replace(/\D/g, "");
-    return { raw, sku, digits };
+    const base = sku ? obtenerBaseFamilia(sku) : (digits.length >= 4 ? digits.slice(0, 4) : "");
+    return { raw, sku, digits, base };
+  };
+
+  const obtenerClavesBusquedaModelo = (producto = {}) => {
+    const values = [
+      producto?.family,
+      producto?._preferredSku,
+      producto?._baseFamily,
+    ];
+    const keys = new Set();
+    values.forEach((value) => {
+      const parsed = normalizarBusquedaModelo(value);
+      if (parsed.raw) keys.add(parsed.raw);
+      if (parsed.sku) keys.add(parsed.sku);
+      if (parsed.digits) keys.add(parsed.digits);
+      if (parsed.base) keys.add(parsed.base);
+    });
+    return [...keys].filter(Boolean);
   };
 
   const coincideBusquedaModelo = (modelValue, termValue) => {
@@ -2839,7 +2857,28 @@ function inicializarBuscadorModelos() {
     if (model.raw.includes(term.raw)) return true;
     if (term.sku && model.sku.includes(term.sku)) return true;
     if (term.digits && model.digits.includes(term.digits)) return true;
+    if (term.base && model.base === term.base) return true;
     return false;
+  };
+
+  const productoCoincideBusqueda = (producto, termValue) => {
+    const term = normalizarBusquedaModelo(termValue);
+    if (!term.raw) return true;
+    return obtenerClavesBusquedaModelo(producto).some((key) => coincideBusquedaModelo(key, termValue));
+  };
+
+  const productoCoincideExactoBusqueda = (producto, termValue) => {
+    const term = normalizarBusquedaModelo(termValue);
+    if (!term.raw) return false;
+    return obtenerClavesBusquedaModelo(producto).some((key) => {
+      const model = normalizarBusquedaModelo(key);
+      return (
+        model.raw === term.raw ||
+        (term.sku && model.sku === term.sku) ||
+        (term.digits && model.digits === term.digits) ||
+        (term.base && model.base === term.base)
+      );
+    });
   };
 
   const actualizarEstadoBusqueda = (term, resultados) => {
@@ -2907,7 +2946,7 @@ function inicializarBuscadorModelos() {
       actualizarEstadoBusqueda("", fuente);
       return;
     }
-    const filtrados = obtenerFuenteBusqueda().filter((p) => coincideBusquedaModelo(String(p.family), term));
+    const filtrados = obtenerFuenteBusqueda().filter((p) => productoCoincideBusqueda(p, term));
     renderGrid(filtrados);
     actualizarEstadoBusqueda(term, filtrados);
   };
@@ -2922,14 +2961,7 @@ function inicializarBuscadorModelos() {
       return;
     }
 
-    const exacto = obtenerFuenteBusqueda().find((p) => {
-      const family = String(p.family || "");
-      const familyNorm = normalizarSkuCatalogo(family);
-      const termNorm = normalizarSkuCatalogo(term);
-      const termDigits = String(term || "").replace(/\D/g, "");
-      const familyDigits = family.replace(/\D/g, "");
-      return family === term || (termNorm && familyNorm === termNorm) || (termDigits && familyDigits === termDigits);
-    });
+    const exacto = obtenerFuenteBusqueda().find((p) => productoCoincideExactoBusqueda(p, term));
     if (exacto) {
       const fuente = obtenerFuenteBusqueda();
       renderGrid(fuente);
@@ -3658,26 +3690,67 @@ function escapeHtmlExcel(value) {
     .replace(/>/g, "&gt;");
 }
 
-const ORDER_TEMPLATE_FILE = "plantilla-toma-pedidos.xlsx";
 const ORDER_TEMPLATE_SHEET = "TOMA DE PEDIDOS";
-const ORDER_TEMPLATE_FIRST_ROW = 15;
-const ORDER_TEMPLATE_LAST_ROW = 61;
-const ORDER_TEMPLATE_SIZE_COLUMNS = {
-  "36": "E",
-  "38": "F",
-  "40": "G",
-  "42": "H",
-  "44": "I",
-  "46": "J",
-  "48": "K",
-  "50": "L",
-  "S": "M",
-  "M": "N",
-  "L": "O",
+const ORDER_TEMPLATE_CONFIGS = {
+  default: {
+    file: "plantilla-toma-pedidos.xlsx",
+    version: "20260319a",
+    sheet: ORDER_TEMPLATE_SHEET,
+    firstRow: 15,
+    lastRow: 61,
+    skuColumn: "A",
+    clearSkuColumns: ["A"],
+    rutCell: "K5",
+    phoneCell: "K6",
+    dateCell: "K8",
+    idLabelCell: "T1",
+    idValueCell: "U1",
+    sizeColumns: {
+      "36": "E",
+      "38": "F",
+      "40": "G",
+      "42": "H",
+      "44": "I",
+      "46": "J",
+      "48": "K",
+      "50": "L",
+      "S": "M",
+      "M": "N",
+      "L": "O",
+    },
+  },
+  "catalogo-43": {
+    file: "PLANILLA 43 LISTA PRECIO FINAL.xlsx",
+    version: "20260520cole43",
+    sheet: ORDER_TEMPLATE_SHEET,
+    firstRow: 15,
+    lastRow: 60,
+    skuColumn: "B",
+    clearSkuColumns: ["A", "B"],
+    rutCell: "L5",
+    phoneCell: "L7",
+    dateCell: "L8",
+    idLabelCell: "U1",
+    idValueCell: "V1",
+    sizeColumns: {
+      "36": "F",
+      "38": "G",
+      "40": "H",
+      "42": "I",
+      "44": "J",
+      "46": "K",
+      "48": "L",
+      "50": "M",
+      "S": "N",
+      "M": "O",
+      "L": "P",
+    },
+    skuFormatter: "numeric43",
+  },
 };
 
 let xlsxPopulateLoaderPromise = null;
-let orderTemplateBufferPromise = null;
+const orderTemplateBufferPromises = {};
 
 function loadXlsxPopulate() {
   if (window.XlsxPopulate) return Promise.resolve(window.XlsxPopulate);
@@ -3698,18 +3771,61 @@ function loadXlsxPopulate() {
   return xlsxPopulateLoaderPromise;
 }
 
-function loadOrderTemplateBuffer() {
-  if (orderTemplateBufferPromise) return orderTemplateBufferPromise;
-  orderTemplateBufferPromise = fetch(`${ORDER_TEMPLATE_FILE}?v=20260319a`, { cache: "force-cache" })
+function obtenerSourcePlantillaPedido(quote = {}, items = []) {
+  const quoteSource = String(quote?.source || "").trim();
+  if (quoteSource) return quoteSource;
+  const sources = [...new Set((Array.isArray(items) ? items : [])
+    .map((item) => String(item?.source || inferirCatalogoDesdeSku(item?.sku) || "").trim())
+    .filter(Boolean))];
+  if (sources.length === 1) return sources[0];
+  if (sources.includes("catalogo-43")) return "catalogo-43";
+  return CATALOG_SOURCE;
+}
+
+function obtenerConfigPlantillaPedido(quote = {}, items = []) {
+  const source = obtenerSourcePlantillaPedido(quote, items);
+  return ORDER_TEMPLATE_CONFIGS[source] || ORDER_TEMPLATE_CONFIGS.default;
+}
+
+function obtenerGrupoPlantillaItem(item = {}, quote = {}) {
+  const source = String(item?.source || inferirCatalogoDesdeSku(item?.sku) || quote?.source || CATALOG_SOURCE).trim() || CATALOG_SOURCE;
+  return ORDER_TEMPLATE_CONFIGS[source] ? source : "default";
+}
+
+function agruparItemsPorPlantillaPedido(quote = {}, items = []) {
+  const groups = new Map();
+  (Array.isArray(items) ? items : []).forEach((item) => {
+    const groupKey = obtenerGrupoPlantillaItem(item, quote);
+    if (!groups.has(groupKey)) groups.set(groupKey, []);
+    groups.get(groupKey).push(item);
+  });
+  return [...groups.entries()].map(([source, groupItems]) => ({ source, items: groupItems }));
+}
+
+function obtenerSufijoArchivoPlantilla(source = "default") {
+  if (source === "catalogo-43") return "Cole 43";
+  return "Cole general";
+}
+
+function loadOrderTemplateBuffer(config = ORDER_TEMPLATE_CONFIGS.default) {
+  const key = `${config.file}?v=${config.version}`;
+  if (orderTemplateBufferPromises[key]) return orderTemplateBufferPromises[key];
+  orderTemplateBufferPromises[key] = fetch(key, { cache: "force-cache" })
     .then((response) => {
       if (!response.ok) throw new Error("No se pudo cargar la plantilla de TOMA DE PEDIDOS");
       return response.arrayBuffer();
     });
-  return orderTemplateBufferPromise;
+  return orderTemplateBufferPromises[key];
 }
 
-function normalizarSkuParaPlantilla(sku, source) {
+function normalizarSkuParaPlantilla(sku, source, config = ORDER_TEMPLATE_CONFIGS.default) {
   const raw = String(sku || "").trim().toUpperCase();
+  if (config.skuFormatter === "numeric43") {
+    const normalized = normalizarSkuCatalogo(raw);
+    if (/^\d{4}$/.test(normalized)) return `${normalized}00`;
+    if (/^\d{4}-\d{2}$/.test(normalized)) return normalized.replace("-", "");
+    return raw.replace("-", "");
+  }
   if (/^\d{4}$/.test(raw) && source === "catalogo-1") {
     return `${raw}-00`;
   }
@@ -3719,7 +3835,7 @@ function normalizarSkuParaPlantilla(sku, source) {
   return raw;
 }
 
-function agruparItemsParaPlantilla(quote, items = []) {
+function agruparItemsParaPlantilla(quote, items = [], config = ORDER_TEMPLATE_CONFIGS.default) {
   const grouped = new Map();
   const ordered = [...items].sort((a, b) => {
     if (String(a.sku) !== String(b.sku)) return String(a.sku).localeCompare(String(b.sku));
@@ -3728,9 +3844,9 @@ function agruparItemsParaPlantilla(quote, items = []) {
 
   ordered.forEach((it) => {
     const itemSource = String(it?.source || inferirCatalogoDesdeSku(it?.sku) || quote?.source || CATALOG_SOURCE).trim() || CATALOG_SOURCE;
-    const sku = normalizarSkuParaPlantilla(it.sku, itemSource);
+    const sku = normalizarSkuParaPlantilla(it.sku, itemSource, config);
     const size = String(it.size || "").trim().toUpperCase();
-    if (!ORDER_TEMPLATE_SIZE_COLUMNS[size]) return;
+    if (!config.sizeColumns[size]) return;
     const qty = Number(it.quantity) || 0;
     if (qty <= 0) return;
 
@@ -3746,42 +3862,45 @@ function agruparItemsParaPlantilla(quote, items = []) {
 }
 
 async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
+  const config = obtenerConfigPlantillaPedido(quote, items);
   const XlsxPopulate = await loadXlsxPopulate();
-  const workbook = await XlsxPopulate.fromDataAsync(await loadOrderTemplateBuffer());
-  const sheet = workbook.sheet(ORDER_TEMPLATE_SHEET);
+  const workbook = await XlsxPopulate.fromDataAsync(await loadOrderTemplateBuffer(config));
+  const sheet = workbook.sheet(config.sheet);
   if (!sheet) throw new Error("No se encontro la hoja TOMA DE PEDIDOS en la plantilla");
 
   // Mantener todas las hojas de la plantilla, pero dejar visible solo "TOMA DE PEDIDOS".
   workbook.sheets().forEach((ws) => {
-    ws.hidden(ws.name() !== ORDER_TEMPLATE_SHEET);
+    ws.hidden(ws.name() !== config.sheet);
   });
   workbook.activeSheet(sheet);
 
-  const grouped = agruparItemsParaPlantilla(quote, items);
+  const grouped = agruparItemsParaPlantilla(quote, items, config);
   const codigo = generarCodigoCotizacionVisual(quote);
-  const capacity = ORDER_TEMPLATE_LAST_ROW - ORDER_TEMPLATE_FIRST_ROW + 1;
+  const capacity = config.lastRow - config.firstRow + 1;
   if (grouped.length > capacity) {
     throw new Error(`El pedido tiene ${grouped.length} modelos y la plantilla soporta ${capacity}`);
   }
 
-  for (let row = ORDER_TEMPLATE_FIRST_ROW; row <= ORDER_TEMPLATE_LAST_ROW; row++) {
-    sheet.cell(`A${row}`).value("");
-    Object.values(ORDER_TEMPLATE_SIZE_COLUMNS).forEach((col) => {
+  for (let row = config.firstRow; row <= config.lastRow; row++) {
+    (config.clearSkuColumns || [config.skuColumn]).forEach((col) => {
+      sheet.cell(`${col}${row}`).value("");
+    });
+    Object.values(config.sizeColumns).forEach((col) => {
       sheet.cell(`${col}${row}`).value("");
     });
   }
 
-  sheet.cell("T1").value("ID");
-  sheet.cell("U1").value(codigo);
-  sheet.cell("K5").value(quote?.client_rut || "");
-  sheet.cell("K8").value(new Date());
-  sheet.cell("K6").value(quote?.client_phone || "");
+  sheet.cell(config.idLabelCell).value("ID");
+  sheet.cell(config.idValueCell).value(codigo);
+  sheet.cell(config.rutCell).value(quote?.client_rut || "");
+  sheet.cell(config.dateCell).value(new Date());
+  sheet.cell(config.phoneCell).value(quote?.client_phone || "");
 
   grouped.forEach((entry, index) => {
-    const row = ORDER_TEMPLATE_FIRST_ROW + index;
-    sheet.cell(`A${row}`).value(entry.sku);
+    const row = config.firstRow + index;
+    sheet.cell(`${config.skuColumn}${row}`).value(entry.sku);
     Object.entries(entry.sizes).forEach(([size, qty]) => {
-      const col = ORDER_TEMPLATE_SIZE_COLUMNS[size];
+      const col = config.sizeColumns[size];
       if (!col) return;
       sheet.cell(`${col}${row}`).value(qty);
     });
@@ -3872,12 +3991,17 @@ async function descargarCotizacionAdmin(quoteId) {
   }
   const clienteNombre = sanitizeFileNamePart(quote.store_name, "cliente");
   const nombreBase = `Pedido ${clienteNombre}`;
+  const gruposPlantilla = agruparItemsPorPlantillaPedido(quote, items);
   try {
-    const excelBlob = await Promise.race([
-      generarExcelPlantillaQuoteAdmin(quote, items),
-      new Promise((_, reject) => window.setTimeout(() => reject(new Error("Tiempo de espera agotado al preparar Excel")), 5000)),
-    ]);
-    descargarBlob(`${nombreBase}.xlsx`, excelBlob);
+    for (const group of gruposPlantilla) {
+      const quoteGrupo = { ...quote, source: group.source === "default" ? "" : group.source };
+      const excelBlob = await Promise.race([
+        generarExcelPlantillaQuoteAdmin(quoteGrupo, group.items),
+        new Promise((_, reject) => window.setTimeout(() => reject(new Error("Tiempo de espera agotado al preparar Excel")), 5000)),
+      ]);
+      const suffix = gruposPlantilla.length > 1 ? ` - ${obtenerSufijoArchivoPlantilla(group.source)}` : "";
+      descargarBlob(`${nombreBase}${suffix}.xlsx`, excelBlob);
+    }
   } catch (err) {
     console.error("Fallo exportacion xlsx, usando respaldo xls", err);
     const excelHtml = generarExcelHtmlQuoteAdmin(quote, items);
