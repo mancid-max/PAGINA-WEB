@@ -3094,7 +3094,6 @@ function renderizarInfoProductoCatalogo43(charList, producto, detallePrecio) {
     crearItemInfoCatalogo43("Tipo", meta43?.tipo),
     crearItemInfoCatalogo43("Tiro", meta43?.tiro),
     crearItemInfoCatalogo43("Bota", meta43?.bota),
-    crearItemInfoCatalogo43("Tela", meta43?.tela, "feature-fabric"),
   ].filter(Boolean).forEach((li) => ul.appendChild(li));
 
   if (detallePrecio) {
