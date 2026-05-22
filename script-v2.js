@@ -230,6 +230,7 @@ const HANTAN_BY_SKU = {
   "4322-02": ["power strech.png"],
   "4323-00": ["power strech.png", "push in push up.png"],
   "4325-00": ["power strech.png"],
+  "4325-01": ["power strech.png"],
   "4327-00": ["power strech.png", "smart denim.png"],
   "4329-00": ["power strech.png"],
   "4330-00": ["power strech.png"],
@@ -3691,6 +3692,33 @@ function escapeHtmlExcel(value) {
 
 const ORDER_TEMPLATE_SHEET = "TOMA DE PEDIDOS";
 const ORDER_TEMPLATE_CONFIGS = {
+  unified: {
+    file: "PLANILLA PEDIDOS COLE 42 43.xlsx",
+    version: "20260522unificada",
+    sheet: ORDER_TEMPLATE_SHEET,
+    firstRow: 15,
+    lastRow: 60,
+    skuColumn: "B",
+    clearSkuColumns: ["A", "B"],
+    rutCell: "L5",
+    phoneCell: "L7",
+    dateCell: "L8",
+    idLabelCell: "U1",
+    idValueCell: "V1",
+    sizeColumns: {
+      "36": "F",
+      "38": "G",
+      "40": "H",
+      "42": "I",
+      "44": "J",
+      "46": "K",
+      "48": "L",
+      "50": "M",
+      "S": "N",
+      "M": "O",
+      "L": "P",
+    },
+  },
   default: {
     file: "plantilla-toma-pedidos.xlsx",
     version: "20260319a",
@@ -3782,8 +3810,7 @@ function obtenerSourcePlantillaPedido(quote = {}, items = []) {
 }
 
 function obtenerConfigPlantillaPedido(quote = {}, items = []) {
-  const source = obtenerSourcePlantillaPedido(quote, items);
-  return ORDER_TEMPLATE_CONFIGS[source] || ORDER_TEMPLATE_CONFIGS.default;
+  return ORDER_TEMPLATE_CONFIGS.unified;
 }
 
 function obtenerGrupoPlantillaItem(item = {}, quote = {}) {
@@ -3819,6 +3846,9 @@ function loadOrderTemplateBuffer(config = ORDER_TEMPLATE_CONFIGS.default) {
 
 function normalizarSkuParaPlantilla(sku, source, config = ORDER_TEMPLATE_CONFIGS.default) {
   const raw = String(sku || "").trim().toUpperCase();
+  if (config === ORDER_TEMPLATE_CONFIGS.unified) {
+    return normalizarSkuCatalogo(raw);
+  }
   if (config.skuFormatter === "numeric43") {
     const normalized = normalizarSkuCatalogo(raw);
     if (/^\d{4}$/.test(normalized)) return `${normalized}00`;
@@ -3990,17 +4020,12 @@ async function descargarCotizacionAdmin(quoteId) {
   }
   const clienteNombre = sanitizeFileNamePart(quote.store_name, "cliente");
   const nombreBase = `Pedido ${clienteNombre}`;
-  const gruposPlantilla = agruparItemsPorPlantillaPedido(quote, items);
   try {
-    for (const group of gruposPlantilla) {
-      const quoteGrupo = { ...quote, source: group.source === "default" ? "" : group.source };
-      const excelBlob = await Promise.race([
-        generarExcelPlantillaQuoteAdmin(quoteGrupo, group.items),
-        new Promise((_, reject) => window.setTimeout(() => reject(new Error("Tiempo de espera agotado al preparar Excel")), 5000)),
-      ]);
-      const suffix = gruposPlantilla.length > 1 ? ` - ${obtenerSufijoArchivoPlantilla(group.source)}` : "";
-      descargarBlob(`${nombreBase}${suffix}.xlsx`, excelBlob);
-    }
+    const excelBlob = await Promise.race([
+      generarExcelPlantillaQuoteAdmin(quote, items),
+      new Promise((_, reject) => window.setTimeout(() => reject(new Error("Tiempo de espera agotado al preparar Excel")), 5000)),
+    ]);
+    descargarBlob(`${nombreBase}.xlsx`, excelBlob);
   } catch (err) {
     console.error("Fallo exportacion xlsx, usando respaldo xls", err);
     const excelHtml = generarExcelHtmlQuoteAdmin(quote, items);
