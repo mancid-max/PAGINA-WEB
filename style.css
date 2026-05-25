@@ -5516,6 +5516,224 @@ body{
   }
 }
 
+/* Admin pedidos: lectura y acciones comodas en celular */
+@media (max-width: 760px){
+  #quotesModal{
+    align-items:stretch;
+    justify-content:stretch;
+    padding:0;
+  }
+
+  .quotes-modal-content{
+    width:100vw;
+    max-width:none;
+    height:100dvh;
+    max-height:none;
+    border-radius:0;
+  }
+
+  .quotes-modal-content.login-only{
+    width:100vw;
+    max-width:none;
+    min-height:100dvh;
+    border-radius:0;
+  }
+
+  .quotes-modal-content .close-modal{
+    top:12px;
+    right:14px;
+    width:40px;
+    height:40px;
+    display:grid;
+    place-items:center;
+    border-radius:999px;
+    background:rgba(15,23,42,0.08);
+    font-size:24px;
+  }
+
+  .quotes-admin{
+    padding:16px 12px 12px;
+    gap:10px;
+  }
+
+  .quotes-admin-head{
+    padding-right:48px;
+    gap:8px;
+  }
+
+  .quotes-admin-head h2{
+    font-size:22px;
+  }
+
+  .quotes-admin-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+
+  .quotes-admin-actions .ghost-btn,
+  .quotes-tab-btn,
+  .quotes-filter-btn{
+    min-height:40px;
+    justify-content:center;
+  }
+
+  .quotes-panel{
+    border-radius:14px;
+    padding:8px;
+    gap:8px;
+  }
+
+  .quotes-admin-tabs{
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    padding-bottom:2px;
+    scrollbar-width:none;
+  }
+
+  .quotes-admin-tabs::-webkit-scrollbar{
+    display:none;
+  }
+
+  .quotes-tab-btn{
+    flex:0 0 auto;
+    white-space:nowrap;
+  }
+
+  .quotes-user-badge{
+    font-size:12px;
+    line-height:1.35;
+    overflow-wrap:anywhere;
+  }
+
+  .quotes-list{
+    gap:10px;
+    padding-right:0;
+    overscroll-behavior:contain;
+  }
+
+  .quote-card{
+    padding:14px;
+    border-radius:16px;
+    box-shadow:0 10px 24px rgba(15,23,42,0.07);
+  }
+
+  .quote-card-head{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:12px;
+    margin-bottom:12px;
+  }
+
+  .quote-card-main{
+    min-width:0;
+    gap:8px;
+  }
+
+  .quote-card-title-row{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:4px;
+  }
+
+  .quote-card-title{
+    font-size:19px;
+    line-height:1.15;
+    overflow-wrap:anywhere;
+  }
+
+  .quote-meta-inline{
+    font-size:13px;
+    overflow-wrap:anywhere;
+  }
+
+  .quote-code-row{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:8px;
+  }
+
+  .quote-code-pill,
+  .quote-export-btn,
+  .quote-delete-btn{
+    width:100%;
+    justify-content:center;
+    min-height:42px;
+  }
+
+  .quote-card-summary{
+    width:100%;
+    min-width:0;
+    align-items:flex-start;
+    border-radius:14px;
+    padding:10px 12px;
+  }
+
+  .quote-card-total{
+    font-size:16px;
+  }
+
+  .quote-card-date{
+    text-align:left;
+    font-size:13px;
+  }
+
+  .quote-status{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+    margin:12px 0;
+    padding:12px;
+    border-radius:14px;
+  }
+
+  .quote-status-toggle{
+    justify-content:space-between;
+    width:100%;
+    min-height:38px;
+  }
+
+  .quote-status-toggle input{
+    width:24px;
+    height:24px;
+  }
+
+  .quote-items-grid{
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+
+  .quote-item-line{
+    border-radius:14px;
+    padding:12px;
+    gap:6px;
+  }
+
+  .quote-item-model{
+    font-size:16px;
+  }
+
+  .quote-item-sizes{
+    font-size:14px;
+    overflow-wrap:anywhere;
+  }
+}
+
+@media (max-width: 420px){
+  .quotes-admin{
+    padding-inline:10px;
+  }
+
+  .quotes-admin-actions{
+    grid-template-columns:1fr;
+  }
+
+  .quotes-login{
+    padding:12px;
+    border-radius:12px;
+  }
+}
+
 @media (max-width: 480px){
   .cart-sidebar{
     padding:14px 12px 12px;
