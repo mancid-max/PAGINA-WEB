@@ -2216,17 +2216,17 @@ function renderImages(imageList, sku = "") {
     return;
   }
 
-  asignarImagenCatalogo(viewer, uniqueImages[0], { eager: true, fetchPriority: "high", preferOriginal: true });
+  asignarImagenCatalogo(viewer, uniqueImages[0], { eager: true, fetchPriority: "high" });
 
   uniqueImages.forEach((imgSrc, index) => {
     const thumb = document.createElement("img");
-    asignarImagenCatalogo(thumb, imgSrc, { eager: true, fetchPriority: "high", preferOriginal: true });
+    asignarImagenCatalogo(thumb, imgSrc, { eager: index === 0, fetchPriority: "low" });
     thumb.alt = "";
     thumb.setAttribute("aria-hidden", "true");
     if (index === 0) thumb.classList.add("active-thumb");
 
     thumb.onclick = () => {
-      asignarImagenCatalogo(viewer, imgSrc, { eager: true, fetchPriority: "high", preferOriginal: true });
+      asignarImagenCatalogo(viewer, imgSrc, { eager: true, fetchPriority: "high" });
       imagenModalIndex = index;
       // limpia active
       thumbContainer.querySelectorAll("img").forEach((t) => t.classList.remove("active-thumb"));
@@ -2676,17 +2676,17 @@ function renderZoomGallery() {
     imagenModalIndex = 0;
   }
 
-  asignarImagenCatalogo(zoomMain, imagenesModalActual[imagenModalIndex], { eager: true, fetchPriority: "high", preferOriginal: true });
+  asignarImagenCatalogo(zoomMain, imagenesModalActual[imagenModalIndex], { eager: true, fetchPriority: "high" });
 
   imagenesModalActual.forEach((imgSrc, index) => {
     const thumb = document.createElement("img");
-    asignarImagenCatalogo(thumb, imgSrc, { eager: true, fetchPriority: "high", preferOriginal: true });
+    asignarImagenCatalogo(thumb, imgSrc, { eager: index === imagenModalIndex, fetchPriority: "low" });
     thumb.alt = "";
     thumb.setAttribute("aria-hidden", "true");
     if (index === imagenModalIndex) thumb.classList.add("active-thumb");
     thumb.onclick = () => {
       imagenModalIndex = index;
-      asignarImagenCatalogo(zoomMain, imgSrc, { eager: true, fetchPriority: "high", preferOriginal: true });
+      asignarImagenCatalogo(zoomMain, imgSrc, { eager: true, fetchPriority: "high" });
       zoomThumbs.querySelectorAll("img").forEach((t) => t.classList.remove("active-thumb"));
       thumb.classList.add("active-thumb");
     };
