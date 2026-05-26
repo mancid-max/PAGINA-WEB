@@ -3705,6 +3705,7 @@ const ORDER_TEMPLATE_CONFIGS = {
     dateCell: "L8",
     idLabelCell: "U1",
     idValueCell: "V1",
+    clearUnusedFormulaColumns: ["C", "D", "E", "S", "T"],
     sizeColumns: {
       "36": "F",
       "38": "G",
@@ -3998,6 +3999,13 @@ async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
       sheet.cell(`${col}${row}`).value(qty);
     });
   });
+
+  const firstUnusedRow = config.firstRow + grouped.length;
+  for (let row = firstUnusedRow; row <= config.lastRow; row++) {
+    (config.clearUnusedFormulaColumns || []).forEach((col) => {
+      sheet.cell(`${col}${row}`).value("");
+    });
+  }
 
   return workbook.outputAsync();
 }
