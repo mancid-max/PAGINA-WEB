@@ -3693,11 +3693,11 @@ function escapeHtmlExcel(value) {
 const ORDER_TEMPLATE_SHEET = "TOMA DE PEDIDOS";
 const ORDER_TEMPLATE_CONFIGS = {
   unified: {
-    file: "PLANILLA PEDIDOS COLE 42 43.xlsx",
-    version: "20260522unificada",
+    file: "PLANILLA 43 LISTA PRECIO FINAL.xlsx",
+    version: "20260526precio-final",
     sheet: ORDER_TEMPLATE_SHEET,
     firstRow: 15,
-    lastRow: 60,
+    lastRow: 59,
     skuColumn: "B",
     clearSkuColumns: ["A", "B"],
     rutCell: "L5",
@@ -3847,7 +3847,14 @@ function loadOrderTemplateBuffer(config = ORDER_TEMPLATE_CONFIGS.default) {
 function normalizarSkuParaPlantilla(sku, source, config = ORDER_TEMPLATE_CONFIGS.default) {
   const raw = String(sku || "").trim().toUpperCase();
   if (config === ORDER_TEMPLATE_CONFIGS.unified) {
-    return normalizarSkuCatalogo(raw);
+    const normalized = normalizarSkuCatalogo(raw);
+    if (source === "catalogo-43") {
+      if (normalized === "4371-01") return "437100";
+      if (/^\d{4}$/.test(normalized)) return `${normalized}00`;
+      if (/^\d{4}-\d{2}$/.test(normalized)) return normalized.replace("-", "");
+      return raw.replace("-", "");
+    }
+    return normalized;
   }
   if (config.skuFormatter === "numeric43") {
     const normalized = normalizarSkuCatalogo(raw);
