@@ -3897,6 +3897,14 @@ function agruparItemsParaPlantilla(quote, items = [], config = ORDER_TEMPLATE_CO
   return [...grouped.values()];
 }
 
+function obtenerValorSkuCeldaPlantilla(sku, config = ORDER_TEMPLATE_CONFIGS.default) {
+  const raw = String(sku || "").trim();
+  if (config === ORDER_TEMPLATE_CONFIGS.unified && /^\d+$/.test(raw)) {
+    return Number(raw);
+  }
+  return raw;
+}
+
 async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
   const config = obtenerConfigPlantillaPedido(quote, items);
   const XlsxPopulate = await loadXlsxPopulate();
@@ -3934,7 +3942,7 @@ async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
 
   grouped.forEach((entry, index) => {
     const row = config.firstRow + index;
-    sheet.cell(`${config.skuColumn}${row}`).value(entry.sku);
+    sheet.cell(`${config.skuColumn}${row}`).value(obtenerValorSkuCeldaPlantilla(entry.sku, config));
     Object.entries(entry.sizes).forEach(([size, qty]) => {
       const col = config.sizeColumns[size];
       if (!col) return;
