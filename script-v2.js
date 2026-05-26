@@ -3905,6 +3905,55 @@ function obtenerValorSkuCeldaPlantilla(sku, config = ORDER_TEMPLATE_CONFIGS.defa
   return raw;
 }
 
+async function cargarCotizacionAdminPorId(quoteId) {
+  if (!quotesAccessToken) throw new Error("Debes iniciar sesion");
+  const cleanId = String(quoteId || "").trim();
+  if (!cleanId) throw new Error("No se encontro el ID del pedido");
+
+  const headers = {
+    apikey: SUPABASE_ANON_KEY,
+    Authorization: `Bearer ${quotesAccessToken}`,
+  };
+
+  let quoteRes = await fetch(
+    `${SUPABASE_URL}/rest/v1/quotes?select=id,store_name,client_rut,client_rut_normalized,client_phone,total_items,created_at,created_at_client,source,is_ready,ready_at&id=eq.${encodeURIComponent(cleanId)}&limit=1`,
+    { headers }
+  );
+
+  if (!quoteRes.ok) {
+    const errText = await quoteRes.text();
+    if ((errText || "").toLowerCase().includes("client_phone")) {
+      quoteRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/quotes?select=id,store_name,client_rut,client_rut_normalized,total_items,created_at,created_at_client,source,is_ready,ready_at&id=eq.${encodeURIComponent(cleanId)}&limit=1`,
+        { headers }
+      );
+    } else {
+      throw new Error(`No se pudo cargar pedido: ${errText || quoteRes.status}`);
+    }
+  }
+
+  if (!quoteRes.ok) {
+    const errText = await quoteRes.text();
+    throw new Error(`No se pudo cargar pedido: ${errText || quoteRes.status}`);
+  }
+
+  const quoteRows = await quoteRes.json();
+  const quote = quoteRows?.[0] || null;
+  if (!quote) throw new Error("No se encontro el pedido seleccionado");
+
+  const itemsRes = await fetch(
+    `${SUPABASE_URL}/rest/v1/quote_items?select=quote_id,sku,size,quantity&quote_id=eq.${encodeURIComponent(cleanId)}&order=id.desc`,
+    { headers }
+  );
+  if (!itemsRes.ok) {
+    const errText = await itemsRes.text();
+    throw new Error(`No se pudieron cargar items: ${errText || itemsRes.status}`);
+  }
+
+  const items = await itemsRes.json();
+  return { quote, items: Array.isArray(items) ? items : [] };
+}
+
 async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
   const config = obtenerConfigPlantillaPedido(quote, items);
   const XlsxPopulate = await loadXlsxPopulate();
@@ -4027,14 +4076,10 @@ function generarExcelHtmlQuoteAdmin(quote, items = []) {
 }
 
 async function descargarCotizacionAdmin(quoteId) {
-  const quote = quotesAdminCache.quotes.find((q) => q.id === quoteId);
-  const items = quotesAdminCache.itemsByQuote.get(quoteId) || [];
-  if (!quote) {
-    actualizarEstadoQuotesUI("No se encontró el pedido para descargar");
-    return;
-  }
+  const { quote, items } = await cargarCotizacionAdminPorId(quoteId);
   const clienteNombre = sanitizeFileNamePart(quote.store_name, "cliente");
-  const nombreBase = `Pedido ${clienteNombre}`;
+  const codigo = generarCodigoCotizacionVisual(quote);
+  const nombreBase = `Pedido ${codigo} ${clienteNombre}`;
   try {
     const excelBlob = await Promise.race([
       generarExcelPlantillaQuoteAdmin(quote, items),
@@ -5884,7 +5929,18 @@ function configurarPanelCotizaciones() {
   quotesListEl?.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-quote-export]");
     if (btn) {
-      descargarCotizacionAdmin(btn.dataset.quoteExport);
+      btn.disabled = true;
+      const originalText = btn.innerText;
+      btn.innerText = "Preparando...";
+      descargarCotizacionAdmin(btn.dataset.quoteExport)
+        .catch((err) => {
+          console.error("No se pudo descargar pedido", err);
+          mostrarToastError("No se pudo descargar", err?.message || "Error preparando el pedido.");
+        })
+        .finally(() => {
+          btn.disabled = false;
+          btn.innerText = originalText;
+        });
       return;
     }
 
