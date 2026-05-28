@@ -520,12 +520,25 @@ window.restaurarImagenOriginal = restaurarImagenOriginal;
 
 let imageLoadRequestId = 0;
 
+function iniciarCargaVisualImagen(img) {
+  if (!img) return;
+  img.classList.add("catalog-image-loading");
+  img.removeAttribute("src");
+}
+
+function finalizarCargaVisualImagen(img, src) {
+  if (!img) return;
+  img.src = src;
+  img.classList.remove("catalog-image-loading");
+}
+
 function asignarImagenCatalogo(img, path, options = {}) {
   if (!img) return;
 
   const normalized = normalizarRutaAsset(path);
   if (!normalized) {
     img.removeAttribute("src");
+    img.classList.remove("catalog-image-loading");
     return;
   }
 
@@ -547,13 +560,14 @@ function asignarImagenCatalogo(img, path, options = {}) {
 
   const requestId = String(++imageLoadRequestId);
   img.dataset.requestId = requestId;
+  iniciarCargaVisualImagen(img);
 
   const probarCandidato = (candidateIndex) => {
     if (img.dataset.requestId !== requestId) return;
     const candidate = sourceCandidates[candidateIndex] || "";
     if (!candidate) {
       img.dataset.fallbackApplied = "1";
-      img.src = buildAssetUrl("Imagenes/Logo/app-icon.png");
+      finalizarCargaVisualImagen(img, buildAssetUrl("Imagenes/Logo/app-icon.png"));
       return;
     }
 
@@ -570,7 +584,7 @@ function asignarImagenCatalogo(img, path, options = {}) {
       originalLoader.onload = () => {
         if (img.dataset.requestId !== requestId) return;
         img.dataset.fallbackApplied = "1";
-        img.src = originalSrc;
+        finalizarCargaVisualImagen(img, originalSrc);
       };
       originalLoader.onerror = () => {
         if (img.dataset.requestId !== requestId) return;
@@ -583,7 +597,7 @@ function asignarImagenCatalogo(img, path, options = {}) {
     const loader = new Image();
     loader.onload = () => {
       if (img.dataset.requestId !== requestId) return;
-      img.src = optimizedSrc;
+      finalizarCargaVisualImagen(img, optimizedSrc);
     };
 
     loader.onerror = () => {
@@ -591,7 +605,7 @@ function asignarImagenCatalogo(img, path, options = {}) {
       const jpgLoader = new Image();
       jpgLoader.onload = () => {
         if (img.dataset.requestId !== requestId) return;
-        img.src = optimizedJpgSrc;
+        finalizarCargaVisualImagen(img, optimizedJpgSrc);
       };
       jpgLoader.onerror = () => {
         if (img.dataset.requestId !== requestId) return;
@@ -599,7 +613,7 @@ function asignarImagenCatalogo(img, path, options = {}) {
         originalLoader.onload = () => {
           if (img.dataset.requestId !== requestId) return;
           img.dataset.fallbackApplied = "1";
-          img.src = originalSrc;
+          finalizarCargaVisualImagen(img, originalSrc);
         };
         originalLoader.onerror = () => {
           if (img.dataset.requestId !== requestId) return;
@@ -2817,11 +2831,10 @@ function inicializarBuscadorModelos() {
   const panel = document.getElementById("modelSuggestionsPanel");
   const btnBuscar = document.getElementById("modelSearchBtn");
   const btnLimpiar = document.getElementById("modelSearchClear");
-  const status = document.getElementById("modelSearchStatus");
   if (!input || !panel || !btnBuscar || !btnLimpiar) return;
 
   const obtenerFuenteBusqueda = () => (
-    Array.isArray(productosGrid) ? productosGrid.filter((p) => !tarjetaSinImagenCatalogo43(p)) : []
+    filtrarProductosPorVisibilidad(Array.isArray(productosGrid) ? productosGrid : []).filter((p) => !tarjetaSinImagenCatalogo43(p))
   );
   let sugerenciasActuales = [];
   let activeIndex = -1;
@@ -2883,25 +2896,7 @@ function inicializarBuscadorModelos() {
   };
 
   const actualizarEstadoBusqueda = (term, resultados) => {
-    if (!status) return;
-
-    const total = Array.isArray(obtenerFuenteBusqueda()) ? obtenerFuenteBusqueda().length : 0;
-    const cantidad = Array.isArray(resultados) ? resultados.length : 0;
-    const termino = String(term || "").trim();
-
-    status.classList.toggle("is-empty", Boolean(termino) && cantidad === 0);
-
-    if (!termino) {
-      status.textContent = total ? `Mostrando todos los modelos (${total})` : "No hay modelos cargados";
-      return;
-    }
-
-    if (!cantidad) {
-      status.textContent = `No encontramos modelos para "${termino}"`;
-      return;
-    }
-
-    status.textContent = `Mostrando ${cantidad} ${cantidad === 1 ? "modelo" : "modelos"} para "${termino}"`;
+    return resultados;
   };
 
   const hideSuggestions = () => {
@@ -3107,9 +3102,32 @@ function renderizarInfoProductoCatalogo43(charList, producto, detallePrecio) {
   charList.appendChild(ul);
 }
 
+const CATALOGO_43_MODELOS_DISPONIBLES = new Set([
+  "4310",
+  "4311",
+  "4313",
+  "4333",
+  "4339",
+  "4340",
+  "4341",
+  "4356",
+  "4361",
+]);
+
+function obtenerEstadoVisibilidadCatalogo43(producto = {}) {
+  const family = normalizarSkuCatalogo(producto?._baseFamily || producto?.family || "");
+  const model = obtenerBaseFamilia(family);
+  if (!model) return "production";
+  return CATALOGO_43_MODELOS_DISPONIBLES.has(model) ? "available" : "production";
+}
+
+function filtrarProductosPorVisibilidad(lista = []) {
+  return Array.isArray(lista) ? lista : [];
+}
+
 function renderGrid(lista) {
   const container = document.getElementById("grid");
-  const listaConImagen = (Array.isArray(lista) ? lista : [])
+  const listaConImagen = filtrarProductosPorVisibilidad(Array.isArray(lista) ? lista : [])
     .map((p) => ({
       ...p,
       _safeCardImage: obtenerImagenSeguraTarjeta(p),
@@ -3148,6 +3166,11 @@ function renderGrid(lista) {
                   <p>Este modelo aún no tiene fotos cargadas.</p>
                 </div>`
               : `<img data-image-src="${p._safeCardImage}" alt="Modelo ${p.family}">`
+          }
+          ${
+            CATALOG_SOURCE === "catalogo-43"
+              ? `<span class="catalog-visibility-badge ${obtenerEstadoVisibilidadCatalogo43(p) === "available" ? "is-available" : "is-production"}">${obtenerEstadoVisibilidadCatalogo43(p) === "available" ? "Disponible" : "Producción"}</span>`
+              : ""
           }
           ${
             hantanBadges.length
