@@ -28,6 +28,8 @@ let stockCatalogRows = [];
 let stockRealtimeChannel = null;
 let stockCatalogSeasonFilter = "";
 let lastRenderedStockSignature = "";
+let vendorCoverageRows = [];
+let vendorCoverageWorkbookName = "";
 let stockEditorState = {
   open: false,
   item: null,
@@ -5342,6 +5344,201 @@ function obtenerEtiquetaMesActual() {
   return new Date().toLocaleDateString("es-CL", { month: "long", year: "numeric" });
 }
 
+function normalizarTextoCeldaExcel(value) {
+  return String(value ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function buscarIndicesBaseVendedores(row = []) {
+  const normalized = row.map((value) => normalizarTextoCeldaExcel(value).toUpperCase());
+  const rutIndex = normalized.findIndex((value) => value === "RUT");
+  const razonSocialIndex = normalized.findIndex((value) => value === "RAZON SOCIAL");
+  const vendedorIndex = normalized.findIndex((value) => value === "VENDEDOR");
+  if (rutIndex === -1 || vendedorIndex === -1) return null;
+  return { rutIndex, razonSocialIndex, vendedorIndex };
+}
+
+async function cargarBaseVendedoresDesdeExcel(file) {
+  const XlsxPopulate = await loadXlsxPopulate();
+  const workbook = await XlsxPopulate.fromDataAsync(await file.arrayBuffer());
+  const sheet = workbook.sheet("BASE DE DATOS OFICIAL") || workbook.sheets()[0];
+  if (!sheet) throw new Error("No se encontró la hoja BASE DE DATOS OFICIAL");
+  const usedRange = sheet.usedRange();
+  const values = usedRange ? usedRange.value() : [];
+  const rows = Array.isArray(values?.[0]) ? values : [];
+  if (!rows.length) throw new Error("La hoja BASE DE DATOS OFICIAL viene vacía");
+
+  let indices = null;
+  let headerRowIndex = -1;
+  rows.some((row, index) => {
+    const found = buscarIndicesBaseVendedores(Array.isArray(row) ? row : []);
+    if (!found) return false;
+    indices = found;
+    headerRowIndex = index;
+    return true;
+  });
+
+  if (!indices) throw new Error("No pude ubicar las columnas RUT y VENDEDOR en la base");
+
+  const result = [];
+  const seenRuts = new Set();
+  for (let i = headerRowIndex + 1; i < rows.length; i += 1) {
+    const row = Array.isArray(rows[i]) ? rows[i] : [];
+    const rutRaw = row[indices.rutIndex];
+    const vendedorRaw = row[indices.vendedorIndex];
+    const razonSocialRaw = indices.razonSocialIndex >= 0 ? row[indices.razonSocialIndex] : "";
+    const rutNormalized = normalizarRut(rutRaw);
+    const vendedor = normalizarTextoCeldaExcel(vendedorRaw);
+    const razonSocial = normalizarTextoCeldaExcel(razonSocialRaw);
+    if (!rutNormalized || !vendedor) continue;
+    if (seenRuts.has(rutNormalized)) continue;
+    seenRuts.add(rutNormalized);
+    result.push({
+      rut: normalizarTextoCeldaExcel(rutRaw),
+      rut_normalized: rutNormalized,
+      razon_social: razonSocial,
+      vendedor,
+    });
+  }
+
+  if (!result.length) throw new Error("La base no trajo filas válidas de clientes con vendedor");
+
+  vendorCoverageRows = result;
+  vendorCoverageWorkbookName = file.name || "base-vendedores.xlsx";
+}
+
+function construirResumenCoberturaVendedores(quotes = []) {
+  if (!Array.isArray(vendorCoverageRows) || !vendorCoverageRows.length) return null;
+
+  const quotesMes = obtenerCotizacionesMesActual(quotes);
+  const vendorMap = new Map();
+  const landingRutSet = new Set();
+  const unmatchedQuotes = [];
+
+  quotesMes.forEach((quote) => {
+    const rutNormalized = normalizarRut(quote?.client_rut_normalized || quote?.client_rut || "");
+    if (rutNormalized) landingRutSet.add(rutNormalized);
+  });
+
+  vendorCoverageRows.forEach((row) => {
+    const vendedor = row.vendedor || "Sin vendedor";
+    if (!vendorMap.has(vendedor)) {
+      vendorMap.set(vendedor, {
+        vendedor,
+        total_clientes: 0,
+        clientes_landing: 0,
+        clientes_fuera: 0,
+      });
+    }
+    const entry = vendorMap.get(vendedor);
+    entry.total_clientes += 1;
+    if (landingRutSet.has(row.rut_normalized)) entry.clientes_landing += 1;
+  });
+
+  const baseRutSet = new Set(vendorCoverageRows.map((row) => row.rut_normalized).filter(Boolean));
+  quotesMes.forEach((quote) => {
+    const rutNormalized = normalizarRut(quote?.client_rut_normalized || quote?.client_rut || "");
+    if (!rutNormalized || baseRutSet.has(rutNormalized)) return;
+    unmatchedQuotes.push(quote);
+  });
+
+  const vendors = [...vendorMap.values()]
+    .map((entry) => ({
+      ...entry,
+      clientes_fuera: Math.max(0, entry.total_clientes - entry.clientes_landing),
+      porcentaje_landing: entry.total_clientes ? (entry.clientes_landing / entry.total_clientes) * 100 : 0,
+    }))
+    .sort((a, b) => b.total_clientes - a.total_clientes || a.vendedor.localeCompare(b.vendedor));
+
+  const totalClientes = vendors.reduce((acc, entry) => acc + entry.total_clientes, 0);
+  const totalLanding = vendors.reduce((acc, entry) => acc + entry.clientes_landing, 0);
+
+  return {
+    workbookName: vendorCoverageWorkbookName,
+    vendors,
+    totalClientes,
+    totalLanding,
+    unmatchedQuotes,
+  };
+}
+
+function renderCoberturaVendedoresAdmin(quotes = []) {
+  const resumen = construirResumenCoberturaVendedores(quotes);
+  const uploader = `
+    <div class="quotes-vendor-upload">
+      <div>
+        <div class="quotes-report-kicker">Cruce clientes vs landing</div>
+        <div class="quotes-report-title">Cobertura por vendedor</div>
+        <p class="quotes-vendor-upload-copy">Carga la hoja <strong>BASE DE DATOS OFICIAL</strong> de la planilla para cruzar RUT cliente con vendedor y medir qué porcentaje pasó por la landing durante el mes actual.</p>
+      </div>
+      <label class="quotes-vendor-upload-btn">
+        <input id="vendorCoverageFileInput" type="file" accept=".xlsx,.xlsm,.xltx,.xltm" hidden>
+        <span>Cargar base vendedores</span>
+      </label>
+    </div>
+  `;
+
+  if (!resumen) {
+    return `
+      <div class="quotes-report-card quotes-vendor-report-card">
+        ${uploader}
+        <div class="quotes-vendor-empty">Aún no cargas la base de vendedores. Cuando la subas, aquí aparecerá el porcentaje por vendedor dentro de Admin.</div>
+      </div>
+    `;
+  }
+
+  const rows = resumen.vendors.map((entry) => `
+    <tr>
+      <td>${escapeHtmlExcel(entry.vendedor)}</td>
+      <td class="is-num">${escapeHtmlExcel(entry.total_clientes)}</td>
+      <td class="is-num">${escapeHtmlExcel(entry.clientes_landing)}</td>
+      <td class="is-num">${escapeHtmlExcel(entry.clientes_fuera)}</td>
+      <td class="is-num">${escapeHtmlExcel(`${entry.porcentaje_landing.toFixed(1)}%`)}</td>
+    </tr>
+  `).join("");
+
+  return `
+    <div class="quotes-report-card quotes-vendor-report-card">
+      ${uploader}
+      <div class="quotes-vendor-summary">
+        <div class="quotes-report-metric">
+          <span>Base cargada</span>
+          <strong>${escapeHtmlExcel(resumen.workbookName)}</strong>
+        </div>
+        <div class="quotes-report-metric">
+          <span>Total clientes base</span>
+          <strong>${escapeHtmlExcel(resumen.totalClientes)}</strong>
+        </div>
+        <div class="quotes-report-metric is-ready">
+          <span>Con pedido landing</span>
+          <strong>${escapeHtmlExcel(resumen.totalLanding)}</strong>
+        </div>
+        <div class="quotes-report-metric is-open">
+          <span>Sin pedido landing</span>
+          <strong>${escapeHtmlExcel(Math.max(0, resumen.totalClientes - resumen.totalLanding))}</strong>
+        </div>
+      </div>
+      <div class="quotes-vendor-table-wrap">
+        <table class="quotes-report-preview-table quotes-vendor-table">
+          <thead>
+            <tr>
+              <th>Vendedor</th>
+              <th>Total clientes</th>
+              <th>Con landing</th>
+              <th>Sin landing</th>
+              <th>% landing</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <div class="quotes-vendor-note">Este cruce cuenta clientes únicos por RUT y toma todos los pedidos landing del mes actual, sin importar si están listos o no.</div>
+      ${resumen.unmatchedQuotes.length ? `<div class="quotes-vendor-note">Hay ${escapeHtmlExcel(resumen.unmatchedQuotes.length)} pedidos landing del mes actual cuyo RUT no apareció en la base cargada.</div>` : ""}
+    </div>
+  `;
+}
+
 function calcularMontoCotizacion(quote = {}, items = []) {
   if (!Array.isArray(items) || !items.length) return null;
   let total = 0;
@@ -5518,6 +5715,7 @@ function renderReporteCotizacionesAdmin(quotes = []) {
   const reportPreview = construirVistaReporteCotizaciones(quotesMes, itemsMap);
 
   panel.innerHTML = `
+    ${renderCoberturaVendedoresAdmin(quotes)}
     <div class="quotes-report-card">
       <div class="quotes-report-head">
         <div>
@@ -5954,6 +6152,23 @@ function configurarPanelCotizaciones() {
         .then(() => mostrarToastExito("Reporte copiado", "Ya puedes pegarlo en WhatsApp."))
         .catch(() => mostrarToastError("No se pudo copiar", "Copia manualmente el texto del reporte."));
       return;
+    }
+  });
+
+  quotesReportePanel?.addEventListener("change", async (e) => {
+    const input = e.target.closest("#vendorCoverageFileInput");
+    if (!input) return;
+    const file = input.files?.[0];
+    if (!file) return;
+    try {
+      await cargarBaseVendedoresDesdeExcel(file);
+      renderReporteCotizacionesAdmin(quotesAdminCache.quotes);
+      mostrarToastExito("Base cargada", "Ya puedes revisar la cobertura por vendedor dentro del reporte.");
+    } catch (err) {
+      console.error("No se pudo cargar base de vendedores", err);
+      mostrarToastError("No se pudo cargar base", err?.message || "Error leyendo la planilla.");
+    } finally {
+      input.value = "";
     }
   });
 
