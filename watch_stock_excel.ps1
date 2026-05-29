@@ -1,5 +1,6 @@
-$sourcePath = "C:\Users\manuh\OneDrive - Mohicano Jeans\INVENTARIO 01-04 COMPLETO.xlsx"
-$projectPath = "C:\Users\manuh\Desktop\Backup\PAGINA WEB"
+$scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+$projectPath = $scriptRoot
+$sourcePath = if ($env:MOHICANO_STOCK_XLSX) { $env:MOHICANO_STOCK_XLSX } else { Join-Path $HOME "OneDrive - Mohicano Jeans\INVENTARIO 01-04 COMPLETO.xlsx" }
 $logPath = Join-Path $projectPath ".watch-stock.out.log"
 $errPath = Join-Path $projectPath ".watch-stock.err.log"
 $stockFiles = @("stock-data.json", "stock-data-catalogo-2.json")
@@ -47,7 +48,7 @@ try {
     }
   }
 
-  python parse_stock_excel.py | Tee-Object -FilePath $logPath -Append
+  python generate_catalog_stock_json_from_excel.py | Tee-Object -FilePath $logPath -Append
   Publish-StockIfChanged
   $lastWrite = (Get-Item -LiteralPath $sourcePath).LastWriteTimeUtc
 
@@ -58,7 +59,7 @@ try {
       $lastWrite = $currentWrite
       Write-Log "Cambio detectado en Excel, regenerando stock-data.json..."
       try {
-        python parse_stock_excel.py | Tee-Object -FilePath $logPath -Append
+        python generate_catalog_stock_json_from_excel.py | Tee-Object -FilePath $logPath -Append
         Publish-StockIfChanged
       } catch {
         $_ | Out-String | Write-ErrLog

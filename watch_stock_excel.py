@@ -1,7 +1,7 @@
 import time
 from pathlib import Path
 
-from parse_stock_excel import DEFAULT_SOURCE, main as export_stock
+from generate_catalog_stock_json_from_excel import SOURCE_XLSX, main as export_stock
 
 
 def wait_for_changes(source_path: Path, interval_seconds: int = 10) -> None:
@@ -32,4 +32,4 @@ def wait_for_changes(source_path: Path, interval_seconds: int = 10) -> None:
 
 
 if __name__ == "__main__":
-    wait_for_changes(DEFAULT_SOURCE)
+    wait_for_changes(SOURCE_XLSX)
