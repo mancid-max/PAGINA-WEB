@@ -5539,6 +5539,196 @@ function renderCoberturaVendedoresAdmin(quotes = []) {
   `;
 }
 
+function obtenerEtiquetaFiltroCotizaciones() {
+  if (quotesStatusFilter === "ready") return "Listas";
+  if (quotesStatusFilter === "open") return "No listas / caidas";
+  return "Todas";
+}
+
+function construirResumenVentasColecciones(quotes = [], itemsMap = new Map()) {
+  const quotesMes = obtenerCotizacionesFiltradas(obtenerCotizacionesMesActual(quotes));
+  const collections = {
+    "catalogo-42": {
+      key: "catalogo-42",
+      label: "Cole 42",
+      totalPrendas: 0,
+      totalDinero: 0,
+      totalPedidos: 0,
+      sizes: {},
+      models: new Map(),
+    },
+    "catalogo-43": {
+      key: "catalogo-43",
+      label: "Cole 43",
+      totalPrendas: 0,
+      totalDinero: 0,
+      totalPedidos: 0,
+      sizes: {},
+      models: new Map(),
+    },
+  };
+
+  quotesMes.forEach((quote) => {
+    const detalles = Array.isArray(itemsMap.get(quote.id)) ? itemsMap.get(quote.id) : [];
+    const touchedCollections = new Set();
+    detalles.forEach((item) => {
+      const qty = Number(item?.quantity) || 0;
+      if (qty <= 0) return;
+      const sku = normalizarSkuCatalogo(item?.sku);
+      if (!sku) return;
+      const source = String(item?.source || inferirCatalogoDesdeSku(sku) || quote?.source || CATALOG_SOURCE).trim() || CATALOG_SOURCE;
+      const collectionKey = source === "catalogo-43" ? "catalogo-43" : "catalogo-42";
+      const collection = collections[collectionKey];
+      const size = String(item?.size || "").trim().toUpperCase() || "SIN TALLA";
+      const precioUnitario = Number(obtenerPrecioCatalogo(sku, source)) || 0;
+      const totalLinea = precioUnitario * qty;
+
+      touchedCollections.add(collectionKey);
+      collection.totalPrendas += qty;
+      collection.totalDinero += totalLinea;
+      collection.sizes[size] = (Number(collection.sizes[size]) || 0) + qty;
+
+      if (!collection.models.has(sku)) {
+        collection.models.set(sku, {
+          sku,
+          prendas: 0,
+          dinero: 0,
+          sizes: {},
+        });
+      }
+      const modelEntry = collection.models.get(sku);
+      modelEntry.prendas += qty;
+      modelEntry.dinero += totalLinea;
+      modelEntry.sizes[size] = (Number(modelEntry.sizes[size]) || 0) + qty;
+    });
+
+    touchedCollections.forEach((key) => {
+      collections[key].totalPedidos += 1;
+    });
+  });
+
+  const collectionList = Object.values(collections).map((collection) => ({
+    ...collection,
+    sizesList: Object.entries(collection.sizes)
+      .map(([size, prendas]) => ({ size, prendas: Number(prendas) || 0 }))
+      .sort((a, b) => String(a.size).localeCompare(String(b.size), undefined, { numeric: true })),
+    modelsList: [...collection.models.values()]
+      .map((model) => ({
+        ...model,
+        sizesText: Object.entries(model.sizes)
+          .sort((a, b) => String(a[0]).localeCompare(String(b[0]), undefined, { numeric: true }))
+          .map(([size, prendas]) => `T${size}: ${prendas}`)
+          .join(" · "),
+      }))
+      .sort((a, b) => b.prendas - a.prendas || a.sku.localeCompare(b.sku, undefined, { numeric: true })),
+  }));
+
+  return {
+    monthLabel: obtenerEtiquetaMesActual(),
+    filterLabel: obtenerEtiquetaFiltroCotizaciones(),
+    totalPedidos: quotesMes.length,
+    totalPrendas: collectionList.reduce((acc, collection) => acc + collection.totalPrendas, 0),
+    totalDinero: collectionList.reduce((acc, collection) => acc + collection.totalDinero, 0),
+    collections: collectionList,
+  };
+}
+
+function generarExcelHtmlResumenVentasColecciones(quotes = [], itemsMap = new Map()) {
+  const resumen = construirResumenVentasColecciones(quotes, itemsMap);
+  const resumenRows = resumen.collections.map((collection) => `
+    <tr>
+      <td>${escapeHtmlExcel(collection.label)}</td>
+      <td class="num">${escapeHtmlExcel(collection.totalPedidos)}</td>
+      <td class="num">${escapeHtmlExcel(collection.totalPrendas)}</td>
+      <td class="num">${escapeHtmlExcel(formatearPrecioCLP(collection.totalDinero) || "$0")}</td>
+    </tr>
+  `).join("");
+
+  const tallasSections = resumen.collections.map((collection) => {
+    const rows = collection.sizesList.length
+      ? collection.sizesList.map((entry) => `
+        <tr>
+          <td>${escapeHtmlExcel(collection.label)}</td>
+          <td>${escapeHtmlExcel(entry.size)}</td>
+          <td class="num">${escapeHtmlExcel(entry.prendas)}</td>
+        </tr>
+      `).join("")
+      : `<tr><td>${escapeHtmlExcel(collection.label)}</td><td>-</td><td class="num">0</td></tr>`;
+    return rows;
+  }).join("");
+
+  const modelosSections = resumen.collections.map((collection) => {
+    if (!collection.modelsList.length) {
+      return `
+        <tr class="section-row"><td colspan="5">${escapeHtmlExcel(collection.label)}</td></tr>
+        <tr><td colspan="5">Sin ventas en este filtro.</td></tr>
+      `;
+    }
+    const rows = collection.modelsList.map((model) => `
+      <tr>
+        <td>${escapeHtmlExcel(collection.label)}</td>
+        <td>${escapeHtmlExcel(model.sku)}</td>
+        <td class="num">${escapeHtmlExcel(model.prendas)}</td>
+        <td class="num">${escapeHtmlExcel(formatearPrecioCLP(model.dinero) || "$0")}</td>
+        <td>${escapeHtmlExcel(model.sizesText || "-")}</td>
+      </tr>
+    `).join("");
+    return `
+      <tr class="section-row"><td colspan="5">${escapeHtmlExcel(collection.label)}</td></tr>
+      ${rows}
+    `;
+  }).join("");
+
+  return `\uFEFF<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Type" content="application/vnd.ms-excel; charset=UTF-8" />
+<style>
+  body{font-family:Calibri,Segoe UI,Arial,sans-serif;background:#fff;color:#0f172a}
+  table{border-collapse:collapse;width:100%}
+  td,th{border:1px solid #dbe2ea;padding:6px 8px;font-size:11pt;vertical-align:top}
+  .title{background:#111827;color:#fff;font-weight:700;font-size:14pt}
+  .subtitle{background:#f8fafc;color:#334155}
+  .section{background:#d71920;color:#fff;font-weight:700}
+  .section-row td{background:#e5e7eb;color:#0f172a;font-weight:700}
+  .header th{background:#111827;color:#fff;font-weight:700;text-align:left}
+  .num{text-align:right;white-space:nowrap}
+  .spacer td{border:none;height:10px;background:#fff}
+</style>
+</head>
+<body>
+  <table>
+    <tr><td class="title" colspan="4">REPORTE VENTAS COLE 42 Y COLE 43</td></tr>
+    <tr><td class="subtitle" colspan="4">Mes: ${escapeHtmlExcel(resumen.monthLabel)} · Filtro: ${escapeHtmlExcel(resumen.filterLabel)}</td></tr>
+    <tr><td>Total pedidos</td><td class="num">${escapeHtmlExcel(resumen.totalPedidos)}</td><td>Total prendas</td><td class="num">${escapeHtmlExcel(resumen.totalPrendas)}</td></tr>
+    <tr><td colspan="3">Total dinero web</td><td class="num">${escapeHtmlExcel(formatearPrecioCLP(resumen.totalDinero) || "$0")}</td></tr>
+    <tr class="spacer"><td colspan="4"></td></tr>
+    <tr><td class="section" colspan="4">RESUMEN POR COLECCION</td></tr>
+    <tr class="header"><th>Coleccion</th><th>Pedidos</th><th>Prendas</th><th>Dinero web</th></tr>
+    ${resumenRows || '<tr><td colspan="4">Sin datos</td></tr>'}
+    <tr class="spacer"><td colspan="4"></td></tr>
+    <tr><td class="section" colspan="4">TALLAS VENDIDAS</td></tr>
+    <tr class="header"><th>Coleccion</th><th>Talla</th><th>Prendas</th><th></th></tr>
+    ${tallasSections || '<tr><td colspan="4">Sin datos</td></tr>'}
+    <tr class="spacer"><td colspan="4"></td></tr>
+    <tr><td class="section" colspan="5">DETALLE POR MODELO</td></tr>
+    <tr class="header"><th>Coleccion</th><th>Modelo</th><th>Prendas</th><th>Dinero web</th><th>Tallas</th></tr>
+    ${modelosSections || '<tr><td colspan="5">Sin datos</td></tr>'}
+  </table>
+</body>
+</html>`;
+}
+
+function descargarReporteVentasColeccionesAdmin(quotes = [], itemsMap = new Map()) {
+  const resumen = construirResumenVentasColecciones(quotes, itemsMap);
+  if (!resumen.totalPedidos) throw new Error("No hay pedidos en el mes actual para este filtro.");
+  const excelHtml = generarExcelHtmlResumenVentasColecciones(quotes, itemsMap);
+  const mes = sanitizeFileNamePart(resumen.monthLabel, "mes");
+  const filtro = sanitizeFileNamePart(resumen.filterLabel, "todas");
+  descargarArchivo(`Reporte ventas cole 42 y 43 ${mes} ${filtro}.xls`, excelHtml, "application/vnd.ms-excel;charset=utf-8;");
+}
+
 function calcularMontoCotizacion(quote = {}, items = []) {
   if (!Array.isArray(items) || !items.length) return null;
   let total = 0;
@@ -5722,7 +5912,10 @@ function renderReporteCotizacionesAdmin(quotes = []) {
           <div class="quotes-report-kicker">Reporte aparte para WhatsApp</div>
           <div class="quotes-report-title">Resumen ${mesLabel}</div>
         </div>
-        <button type="button" class="ghost-btn quotes-report-copy-btn" data-copy-quotes-report>Copiar reporte</button>
+        <div class="quotes-report-actions">
+          <button type="button" class="ghost-btn quotes-report-copy-btn" data-copy-quotes-report>Copiar reporte</button>
+          <button type="button" class="ghost-btn quotes-report-copy-btn" data-export-sales-report>Descargar Excel ventas</button>
+        </div>
       </div>
       <div class="quotes-report-metrics">
         <div class="quotes-report-metric">
@@ -6151,6 +6344,19 @@ function configurarPanelCotizaciones() {
       navigator.clipboard?.writeText(reportText)
         .then(() => mostrarToastExito("Reporte copiado", "Ya puedes pegarlo en WhatsApp."))
         .catch(() => mostrarToastError("No se pudo copiar", "Copia manualmente el texto del reporte."));
+      return;
+    }
+
+    const exportSalesBtn = e.target.closest("[data-export-sales-report]");
+    if (exportSalesBtn) {
+      try {
+        const itemsMap = quotesAdminCache.itemsByQuote instanceof Map ? quotesAdminCache.itemsByQuote : new Map();
+        descargarReporteVentasColeccionesAdmin(quotesAdminCache.quotes, itemsMap);
+        mostrarToastExito("Excel generado", "Se descargó el reporte de ventas por colección.");
+      } catch (err) {
+        console.error("No se pudo generar reporte de ventas", err);
+        mostrarToastError("No se pudo generar Excel", err?.message || "Error preparando el reporte.");
+      }
       return;
     }
   });
