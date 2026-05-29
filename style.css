@@ -563,33 +563,42 @@ text-shadow:none;
 
 .catalog-visibility-badge{
   position:absolute;
-  left:0;
+  left:2px;
   top:10px;
   z-index:3;
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  min-height:28px;
-  padding:6px 10px;
+  min-height:25px;
+  padding:4px 9px;
   border-radius:999px;
-  font-size:11px;
+  font-size:9px;
   font-weight:800;
-  letter-spacing:.06em;
+  letter-spacing:.03em;
   text-transform:uppercase;
   box-shadow:0 10px 20px rgba(15,23,42,0.14);
   pointer-events:none;
+  max-width:calc(100% - 18px);
 }
 
 .catalog-visibility-badge.is-available{
   background:rgba(12,166,120,0.92);
   color:#fff;
   left:8px;
+  min-height:28px;
+  padding:5px 11px;
+  font-size:10px;
+  letter-spacing:.04em;
 }
 
 .catalog-visibility-badge.is-production{
-  background:rgba(255,255,255,0.92);
-  color:#334155;
-  border:1px solid rgba(51,65,85,0.18);
+  background:linear-gradient(135deg, rgba(15,23,42,0.96), rgba(51,65,85,0.96));
+  color:#f8fafc;
+  border:1px solid rgba(255,255,255,0.28);
+  box-shadow:0 12px 26px rgba(15,23,42,0.28);
+  text-shadow:0 1px 0 rgba(0,0,0,0.18);
+  padding:4px 9px;
+  min-height:25px;
 }
 
 @media (max-width: 1100px){
@@ -616,11 +625,11 @@ text-shadow:none;
   }
 
   .catalog-visibility-badge{
-    left:0;
+    left:2px;
     top:8px;
-    min-height:24px;
-    padding:5px 8px;
-    font-size:10px;
+    min-height:22px;
+    padding:4px 7px;
+    font-size:9px;
   }
 
   .catalog-visibility-badge.is-available{

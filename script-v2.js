@@ -3171,7 +3171,7 @@ function renderGrid(lista) {
           }
           ${
             CATALOG_SOURCE === "catalogo-43"
-              ? `<span class="catalog-visibility-badge ${obtenerEstadoVisibilidadCatalogo43(p) === "available" ? "is-available" : "is-production"}">${obtenerEstadoVisibilidadCatalogo43(p) === "available" ? "Disponible" : "Producción"}</span>`
+              ? `<span class="catalog-visibility-badge ${obtenerEstadoVisibilidadCatalogo43(p) === "available" ? "is-available" : "is-production"}">${obtenerEstadoVisibilidadCatalogo43(p) === "available" ? "Disponible" : "En producción"}</span>`
               : ""
           }
           ${
