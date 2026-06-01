@@ -17,6 +17,10 @@ let trazabilidadCache = [];
 let trazabilidadMeta = null;
 let adminActiveTab = "cotizaciones";
 let quotesStatusFilter = "all";
+let quotesMonthFilter = (() => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+})();
 let trazabilidadDisponibles = [];
 let clienteSeleccionado = null; // { rut, rut_normalized, razon_social }
 let clientLookupDebounce = null;
@@ -243,7 +247,9 @@ const HANTAN_BY_SKU = {
   "4339-00": ["power strech.png"],
   "4340-00": ["power strech.png", "push in push up.png"],
   "4341-00": ["power strech.png"],
+  "4344-01": ["universal.png"],
   "4348-00": ["power strech.png"],
+  "4348-60": ["power strech.png"],
   "4347-00": ["power strech.png"],
   "4353-00": ["power strech.png"],
   "4355-00": ["power strech.png"],
@@ -3205,12 +3211,55 @@ function renderGrid(lista) {
 
     asignarImagenCatalogo(img, img.dataset.imageSrc, obtenerPreferenciasCargaTarjeta(index));
   });
+
 }
 
 function formatearModeloTarjeta(value) {
   const sku = normalizarSkuCatalogo(value);
   const match = sku.match(/^(\d{4})-\d{2}$/);
   return match ? match[1] : sku;
+}
+
+function actualizarOffsetHeaderPromo() {
+  const header = document.querySelector(".header");
+  const urgencyBar = document.querySelector(".top-urgency-bar");
+  if (!header) return;
+  document.documentElement.style.setProperty("--header-sticky-offset", `${Math.round(header.offsetHeight)}px`);
+  if (urgencyBar) {
+    document.documentElement.style.setProperty("--promo-bar-height", `${Math.round(urgencyBar.offsetHeight)}px`);
+  }
+}
+
+function inicializarPromoReemplazoScroll() {
+  const marquee = document.querySelector(".top-marquee");
+  const urgencyBar = document.querySelector(".top-urgency-bar");
+  const header = document.querySelector(".header");
+  if (!marquee || !urgencyBar || !header) return;
+
+  const applyState = (isVisible) => {
+    document.body.classList.toggle("promo-replaced-active", !isVisible);
+  };
+
+  actualizarOffsetHeaderPromo();
+  window.addEventListener("resize", actualizarOffsetHeaderPromo, { passive: true });
+  window.addEventListener("orientationchange", actualizarOffsetHeaderPromo, { passive: true });
+
+  if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      applyState(!!entry?.isIntersecting);
+    }, {
+      threshold: 0,
+    });
+    observer.observe(marquee);
+  } else {
+    const onScroll = () => {
+      const rect = marquee.getBoundingClientRect();
+      applyState(rect.bottom > 0);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+  }
 }
 
 function obtenerHantanesModelo(producto = {}) {
@@ -5329,19 +5378,58 @@ function obtenerCotizacionesFiltradas(quotes = []) {
   return quotes;
 }
 
-function obtenerCotizacionesMesActual(quotes = []) {
-  const now = new Date();
-  const month = now.getMonth();
-  const year = now.getFullYear();
+function obtenerClaveMesDesdeFecha(value) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function obtenerEtiquetaMesDesdeClave(monthKey = "") {
+  const match = String(monthKey || "").match(/^(\d{4})-(\d{2})$/);
+  if (!match) return "";
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const date = new Date(year, month - 1, 1);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("es-CL", { month: "long", year: "numeric" });
+}
+
+function obtenerClaveMesActual() {
+  return obtenerClaveMesDesdeFecha(new Date());
+}
+
+function obtenerCotizacionesMesSeleccionado(quotes = []) {
+  const selected = quotesMonthFilter || obtenerClaveMesActual();
   return quotes.filter((q) => {
     if (!q?.created_at) return false;
-    const date = new Date(q.created_at);
-    return !Number.isNaN(date.getTime()) && date.getMonth() === month && date.getFullYear() === year;
+    return obtenerClaveMesDesdeFecha(q.created_at) === selected;
   });
 }
 
-function obtenerEtiquetaMesActual() {
-  return new Date().toLocaleDateString("es-CL", { month: "long", year: "numeric" });
+function obtenerEtiquetaMesSeleccionado() {
+  return obtenerEtiquetaMesDesdeClave(quotesMonthFilter || obtenerClaveMesActual()) || obtenerEtiquetaMesDesdeClave(obtenerClaveMesActual());
+}
+
+function obtenerOpcionesMesCotizaciones(quotes = []) {
+  const monthMap = new Map();
+  quotes.forEach((quote) => {
+    const monthKey = obtenerClaveMesDesdeFecha(quote?.created_at);
+    if (!monthKey || monthMap.has(monthKey)) return;
+    monthMap.set(monthKey, {
+      value: monthKey,
+      label: obtenerEtiquetaMesDesdeClave(monthKey) || monthKey,
+    });
+  });
+
+  const options = [...monthMap.values()].sort((a, b) => b.value.localeCompare(a.value));
+  const currentKey = obtenerClaveMesActual();
+  if (!monthMap.has(currentKey)) {
+    options.unshift({
+      value: currentKey,
+      label: obtenerEtiquetaMesDesdeClave(currentKey) || currentKey,
+    });
+  }
+  return options;
 }
 
 function normalizarTextoCeldaExcel(value) {
@@ -5411,7 +5499,7 @@ async function cargarBaseVendedoresDesdeExcel(file) {
 function construirResumenCoberturaVendedores(quotes = []) {
   if (!Array.isArray(vendorCoverageRows) || !vendorCoverageRows.length) return null;
 
-  const quotesMes = obtenerCotizacionesMesActual(quotes);
+  const quotesMes = obtenerCotizacionesMesSeleccionado(quotes);
   const vendorMap = new Map();
   const landingRutSet = new Set();
   const unmatchedQuotes = [];
@@ -5465,12 +5553,13 @@ function construirResumenCoberturaVendedores(quotes = []) {
 
 function renderCoberturaVendedoresAdmin(quotes = []) {
   const resumen = construirResumenCoberturaVendedores(quotes);
+  const mesLabel = obtenerEtiquetaMesSeleccionado();
   const uploader = `
     <div class="quotes-vendor-upload">
       <div>
         <div class="quotes-report-kicker">Cruce clientes vs landing</div>
         <div class="quotes-report-title">Cobertura por vendedor</div>
-        <p class="quotes-vendor-upload-copy">Carga la hoja <strong>BASE DE DATOS OFICIAL</strong> de la planilla para cruzar RUT cliente con vendedor y medir qué porcentaje pasó por la landing durante el mes actual.</p>
+        <p class="quotes-vendor-upload-copy">Carga la hoja <strong>BASE DE DATOS OFICIAL</strong> de la planilla para cruzar RUT cliente con vendedor y medir qué porcentaje pasó por la landing en <strong>${escapeHtmlExcel(mesLabel)}</strong>.</p>
       </div>
       <label class="quotes-vendor-upload-btn">
         <input id="vendorCoverageFileInput" type="file" accept=".xlsx,.xlsm,.xltx,.xltm" hidden>
@@ -5533,8 +5622,8 @@ function renderCoberturaVendedoresAdmin(quotes = []) {
           <tbody>${rows}</tbody>
         </table>
       </div>
-      <div class="quotes-vendor-note">Este cruce cuenta clientes únicos por RUT y toma todos los pedidos landing del mes actual, sin importar si están listos o no.</div>
-      ${resumen.unmatchedQuotes.length ? `<div class="quotes-vendor-note">Hay ${escapeHtmlExcel(resumen.unmatchedQuotes.length)} pedidos landing del mes actual cuyo RUT no apareció en la base cargada.</div>` : ""}
+      <div class="quotes-vendor-note">Este cruce cuenta clientes únicos por RUT y toma todos los pedidos landing de ${escapeHtmlExcel(mesLabel)}, sin importar si están listos o no.</div>
+      ${resumen.unmatchedQuotes.length ? `<div class="quotes-vendor-note">Hay ${escapeHtmlExcel(resumen.unmatchedQuotes.length)} pedidos landing de ${escapeHtmlExcel(mesLabel)} cuyo RUT no apareció en la base cargada.</div>` : ""}
     </div>
   `;
 }
@@ -5546,7 +5635,7 @@ function obtenerEtiquetaFiltroCotizaciones() {
 }
 
 function construirResumenVentasColecciones(quotes = [], itemsMap = new Map()) {
-  const quotesMes = obtenerCotizacionesFiltradas(obtenerCotizacionesMesActual(quotes));
+  const quotesMes = obtenerCotizacionesFiltradas(obtenerCotizacionesMesSeleccionado(quotes));
   const collections = {
     "catalogo-42": {
       key: "catalogo-42",
@@ -5624,7 +5713,7 @@ function construirResumenVentasColecciones(quotes = [], itemsMap = new Map()) {
   }));
 
   return {
-    monthLabel: obtenerEtiquetaMesActual(),
+    monthLabel: obtenerEtiquetaMesSeleccionado(),
     filterLabel: obtenerEtiquetaFiltroCotizaciones(),
     totalPedidos: quotesMes.length,
     totalPrendas: collectionList.reduce((acc, collection) => acc + collection.totalPrendas, 0),
@@ -5722,7 +5811,7 @@ function generarExcelHtmlResumenVentasColecciones(quotes = [], itemsMap = new Ma
 
 function descargarReporteVentasColeccionesAdmin(quotes = [], itemsMap = new Map()) {
   const resumen = construirResumenVentasColecciones(quotes, itemsMap);
-  if (!resumen.totalPedidos) throw new Error("No hay pedidos en el mes actual para este filtro.");
+  if (!resumen.totalPedidos) throw new Error(`No hay pedidos en ${resumen.monthLabel} para este filtro.`);
   const excelHtml = generarExcelHtmlResumenVentasColecciones(quotes, itemsMap);
   const mes = sanitizeFileNamePart(resumen.monthLabel, "mes");
   const filtro = sanitizeFileNamePart(resumen.filterLabel, "todas");
@@ -5787,13 +5876,13 @@ function construirBloqueDetalleReporte(q = {}, items = []) {
 }
 
 function construirTextoReporteCotizacionesWhatsApp(quotes = []) {
-  const quotesMes = obtenerCotizacionesFiltradas(obtenerCotizacionesMesActual(quotes));
+  const quotesMes = obtenerCotizacionesFiltradas(obtenerCotizacionesMesSeleccionado(quotes));
   const total = quotesMes.length;
   const listas = quotesMes.filter((q) => !!q.is_ready).length;
   const caidas = total - listas;
   const pctListas = total ? Math.round((listas / total) * 100) : 0;
   const pctCaidas = total ? Math.round((caidas / total) * 100) : 0;
-  const mesLabel = obtenerEtiquetaMesActual();
+  const mesLabel = obtenerEtiquetaMesSeleccionado();
   const itemsMap = quotesAdminCache.itemsByQuote instanceof Map ? quotesAdminCache.itemsByQuote : new Map();
   const lines = [
     `*Reporte de pedidos ${mesLabel}*`,
@@ -5827,7 +5916,7 @@ function construirTextoReporteCotizacionesWhatsApp(quotes = []) {
 
 function construirVistaReporteCotizaciones(quotes = [], itemsMap = new Map()) {
   if (!quotes.length) {
-    return `<div class="quotes-report-preview-empty">No hay pedidos de mayo en este filtro.</div>`;
+    return `<div class="quotes-report-preview-empty">No hay pedidos de ${escapeHtmlExcel(obtenerEtiquetaMesSeleccionado())} en este filtro.</div>`;
   }
 
   return quotes.map((q, index) => {
@@ -5895,14 +5984,20 @@ function construirVistaReporteCotizaciones(quotes = [], itemsMap = new Map()) {
 function renderReporteCotizacionesAdmin(quotes = []) {
   const panel = document.getElementById("quotesReportPanel");
   if (!panel) return;
-  const quotesMes = obtenerCotizacionesFiltradas(obtenerCotizacionesMesActual(quotes));
+  const monthOptions = obtenerOpcionesMesCotizaciones(quotes);
+  if (!monthOptions.some((option) => option.value === quotesMonthFilter)) {
+    quotesMonthFilter = monthOptions[0]?.value || obtenerClaveMesActual();
+  }
+  const quotesMes = obtenerCotizacionesFiltradas(obtenerCotizacionesMesSeleccionado(quotes));
   const total = quotesMes.length;
   const listas = quotesMes.filter((q) => !!q.is_ready).length;
   const caidas = total - listas;
-  const mesLabel = obtenerEtiquetaMesActual();
-  const reportText = construirTextoReporteCotizacionesWhatsApp(quotes);
+  const mesLabel = obtenerEtiquetaMesSeleccionado();
   const itemsMap = quotesAdminCache.itemsByQuote instanceof Map ? quotesAdminCache.itemsByQuote : new Map();
   const reportPreview = construirVistaReporteCotizaciones(quotesMes, itemsMap);
+  const monthSelectOptions = monthOptions.map((option) => `
+    <option value="${escapeHtmlExcel(option.value)}" ${option.value === quotesMonthFilter ? "selected" : ""}>${escapeHtmlExcel(option.label)}</option>
+  `).join("");
 
   panel.innerHTML = `
     ${renderCoberturaVendedoresAdmin(quotes)}
@@ -5913,6 +6008,12 @@ function renderReporteCotizacionesAdmin(quotes = []) {
           <div class="quotes-report-title">Resumen ${mesLabel}</div>
         </div>
         <div class="quotes-report-actions">
+          <label class="quotes-report-month-filter">
+            <span>Mes</span>
+            <select id="quotesMonthFilterSelect">
+              ${monthSelectOptions}
+            </select>
+          </label>
           <button type="button" class="ghost-btn quotes-report-copy-btn" data-copy-quotes-report>Copiar reporte</button>
           <button type="button" class="ghost-btn quotes-report-copy-btn" data-export-sales-report>Descargar Excel ventas</button>
         </div>
@@ -5983,7 +6084,7 @@ function renderReporteCotizacionesAdmin(quotes = []) {
             </div>
           `;
         }).join("")
-        : `<div class="quote-card"><div class="quote-meta">No hay pedidos de mayo en este filtro.</div></div>`
+        : `<div class="quote-card"><div class="quote-meta">No hay pedidos de ${escapeHtmlExcel(mesLabel)} en este filtro.</div></div>`
       }
     </div>
   `;
@@ -6361,6 +6462,13 @@ function configurarPanelCotizaciones() {
     }
   });
 
+  quotesReportePanel?.addEventListener("change", (e) => {
+    const monthSelect = e.target.closest("#quotesMonthFilterSelect");
+    if (!monthSelect) return;
+    quotesMonthFilter = monthSelect.value || obtenerClaveMesActual();
+    renderReporteCotizacionesAdmin(quotesAdminCache.quotes);
+  });
+
   quotesReportePanel?.addEventListener("change", async (e) => {
     const input = e.target.closest("#vendorCoverageFileInput");
     if (!input) return;
@@ -6576,6 +6684,7 @@ configurarInputsTallas();
 configurarLookupCliente();
 restaurarCotizacionPersistida();
 actualizarCarrito();
+inicializarPromoReemplazoScroll();
 if (document.getElementById("clientRut")?.value) {
   validarRutClienteEnUI({ silencioso: true });
 }
