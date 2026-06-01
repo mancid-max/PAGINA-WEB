@@ -276,7 +276,7 @@ const HANTAN_BY_SKU = {
   "4371-00": ["universal.png"],
   "4371-01": ["universal.png"],
   "4374-00": ["power strech.png"],
-  "4377-00": ["universal.png"],
+  "4380-00": ["universal.png"],
   "4377-01": ["universal.png"],
   "4378-00": ["power strech.png"],
 };
