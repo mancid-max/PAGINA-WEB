@@ -10,6 +10,8 @@ let draftTallasPorSku = {}; // legacy (borradores desactivados)
 const TALLAS_DISPONIBLES = ["36", "38", "40", "42", "44", "46"];
 const WEB_DISCOUNT_RATE = 0.05;
 const WEB_DISCOUNT_PERCENT = Math.round(WEB_DISCOUNT_RATE * 100);
+const IVA_RATE = 0.19;
+const IVA_PERCENT = Math.round(IVA_RATE * 100);
 let quotesAccessToken = sessionStorage.getItem("quotes_access_token") || "";
 let quotesUserEmail = sessionStorage.getItem("quotes_user_email") || "";
 let quotesAdminCache = { quotes: [], itemsByQuote: new Map() };
@@ -3526,6 +3528,8 @@ function actualizarCarrito() {
   let totalEstimado = 0;
   let totalLista = 0;
   let totalAhorro = 0;
+  let totalIva = 0;
+  let totalConIva = 0;
 
   if (!pedido.length) {
     container.innerHTML = `
@@ -3591,12 +3595,17 @@ function actualizarCarrito() {
     container.insertAdjacentElement("afterend", totalsBox);
   }
 
+    totalIva = totalEstimado > 0 ? Math.round(totalEstimado * IVA_RATE) : 0;
+    totalConIva = totalEstimado + totalIva;
+
     totalsBox.innerHTML = `
       <div class="cart-totals-head"><span class="cart-totals-title">Resumen total</span></div>
       <div class="cart-totals-row"><span>Total prendas</span><strong>${totalItems}</strong></div>
       ${totalLista > 0 ? `<div class="cart-totals-row"><span>Total lista</span><strong>${formatearPrecioCLP(totalLista)}</strong></div>` : ""}
       ${totalAhorro > 0 ? `<div class="cart-totals-row cart-totals-row-accent"><span>Descuento web ${WEB_DISCOUNT_PERCENT}%</span><strong>- ${formatearPrecioCLP(totalAhorro)}</strong></div>` : ""}
-      ${totalEstimado > 0 ? `<div class="cart-totals-row cart-totals-row-final"><span>Total con descuento</span><strong>${formatearPrecioCLP(totalEstimado)}</strong></div>` : ""}
+      ${totalEstimado > 0 ? `<div class="cart-totals-row"><span>Total neto con descuento</span><strong>${formatearPrecioCLP(totalEstimado)}</strong></div>` : ""}
+      ${totalIva > 0 ? `<div class="cart-totals-row"><span>IVA ${IVA_PERCENT}%</span><strong>${formatearPrecioCLP(totalIva)}</strong></div>` : ""}
+      ${totalConIva > 0 ? `<div class="cart-totals-row cart-totals-row-final"><span>Total final con IVA</span><strong>${formatearPrecioCLP(totalConIva)}</strong></div>` : ""}
       ${totalAhorro > 0 ? `<div class="cart-totals-row cart-totals-row-saving"><span>Ahorro</span><strong>${formatearPrecioCLP(totalAhorro)}</strong></div>` : ""}
     `;
     guardarCotizacionPersistida();
