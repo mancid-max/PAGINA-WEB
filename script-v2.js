@@ -2138,6 +2138,7 @@ async function cargarProductosCatalogo() {
       productos = directCatalog43.productos;
       productosGrid = directCatalog43.productosGrid;
       renderGrid(productosGrid);
+      actualizarCarrito();
       inicializarBuscadorModelos();
       return;
     }
@@ -2176,6 +2177,7 @@ async function cargarProductosCatalogo() {
       productosGrid = construirProductosGridFallback(productos, stockBySku);
     }
     renderGrid(productosGrid);
+    actualizarCarrito();
     inicializarBuscadorModelos();
   } catch (err) {
     console.error(`Error cargando ${CATALOG_DATA_FILE}:`, err);
@@ -2412,6 +2414,32 @@ function skuEstaAgotado(sku) {
   return TALLAS_DISPONIBLES.every((talla) => Math.max(0, Number(stock.sizes?.[talla]) || 0) <= 0);
 }
 
+function obtenerMiniaturaCarritoPorSku(sku) {
+  const normalized = normalizarSkuCatalogo(sku);
+  if (!normalized) return "";
+  const base = obtenerBaseFamilia(normalized);
+  let producto = (Array.isArray(productos) ? productos : []).find((item) => normalizarSkuCatalogo(item?.family) === normalized);
+  if (!producto) {
+    producto = (Array.isArray(productos) ? productos : []).find((item) => obtenerBaseFamilia(item?.family) === base);
+  }
+  if (!producto) return "";
+
+  const preferredVariant = Array.isArray(producto?.variants)
+    ? producto.variants.find((variant) => normalizarSkuCatalogo(variant?.sku) === normalized)
+    : null;
+
+  const imageSource = preferredVariant ? { ...producto, variants: [preferredVariant] } : producto;
+
+  const imageList = buildImageList(imageSource);
+  const uniqueImages = obtenerImagenesCuradasParaVisor(normalized, imageList, 4);
+  const firstImage = Array.isArray(uniqueImages) ? uniqueImages[0] : "";
+  if (firstImage) return normalizarRutaImagenCatalogo(firstImage);
+
+  const fallbackImage = obtenerImagenPortadaProducto(imageSource);
+  if (fallbackImage) return normalizarRutaImagenCatalogo(fallbackImage);
+  return "";
+}
+
 function configurarRealtimeStock() {
   if (!stockSupabaseHabilitado() || stockRealtimeChannel) return;
   const client = obtenerClienteSupabase();
@@ -2475,6 +2503,7 @@ function cargarStockData() {
     productos = directCatalog43.productos;
     productosGrid = directCatalog43.productosGrid;
     renderGrid(productosGrid);
+    actualizarCarrito();
     return Promise.resolve();
   }
   return cargarStockDatasetPreferido()
@@ -2487,6 +2516,7 @@ function cargarStockData() {
       if (stockChanged && Array.isArray(productos) && productos.length) {
         productosGrid = construirProductosGridPorSku(productos, stockBySku);
         renderGrid(productosGrid);
+        actualizarCarrito();
         lastRenderedStockSignature = nextSignature;
       }
     })
@@ -3545,6 +3575,7 @@ function actualizarCarrito() {
         const detallePrecio = obtenerDetallePrecioCatalogoCruzado(item.sku);
         const precioListaUnitario = detallePrecio?.lista || null;
         const precioUnitario = detallePrecio?.final || null;
+          const thumbnail = obtenerMiniaturaCarritoPorSku(item.sku);
           const subtotalLista = precioListaUnitario ? precioListaUnitario * cantidadModelo : 0;
           const subtotal = precioUnitario ? precioUnitario * cantidadModelo : 0;
           totalItems += cantidadModelo;
@@ -3557,8 +3588,12 @@ function actualizarCarrito() {
 
         return `
         <div class="cart-item">
+          <div class="cart-item-thumb-wrap">
+            ${thumbnail ? `<img class="cart-item-thumb" data-thumb-src="${escapeHtmlExcel(thumbnail)}" alt="Modelo ${item.sku}" loading="lazy">` : `<div class="cart-item-thumb cart-item-thumb-fallback">M</div>`}
+          </div>
+          <div class="cart-item-body">
           <div class="cart-item-top">
-            <div>
+            <div class="cart-item-main">
               <div class="cart-item-title">Modelo ${item.sku}</div>
               <div class="cart-item-collection">${item.source === "catalogo-43" ? "Cole 43" : "Cole 42"}</div>
             </div>
@@ -3570,12 +3605,13 @@ function actualizarCarrito() {
           </div>
           <div class="cart-item-sizes">${tallasHtml}</div>
           <div class="cart-item-summary">
-            <div>Prendas modelo: <strong>${cantidadModelo}</strong></div>
+            <div class="cart-item-summary-chip"><span>Prendas</span><strong>${cantidadModelo}</strong></div>
             ${
               precioUnitario
-                ? `<div>Subtotal: <strong>${formatearPrecioCLP(subtotal)}</strong></div>`
+                ? `<div class="cart-item-summary-chip is-price"><span>Subtotal</span><strong>${formatearPrecioCLP(subtotal)}</strong></div>`
                 : ""
             }
+          </div>
           </div>
         </div>
       `;
@@ -3583,15 +3619,26 @@ function actualizarCarrito() {
       .join("");
   }
 
+  container.querySelectorAll(".cart-item-thumb[data-thumb-src]").forEach((img) => {
+    const src = img.getAttribute("data-thumb-src");
+    if (!src) return;
+    asignarImagenCatalogo(img, src, { eager: false, fetchPriority: "high", preferOriginal: true });
+  });
+
   if (cartCountEl) {
     cartCountEl.innerText = String(totalItems);
   }
 
   let totalsBox = document.getElementById("cartTotals");
+  const totalsSlot = document.getElementById("cartTotalsSlot");
   if (!totalsBox) {
     totalsBox = document.createElement("div");
     totalsBox.id = "cartTotals";
     totalsBox.className = "cart-totals";
+  }
+  if (totalsSlot) {
+    totalsSlot.replaceChildren(totalsBox);
+  } else if (!totalsBox.parentElement || totalsBox.parentElement !== container.parentElement) {
     container.insertAdjacentElement("afterend", totalsBox);
   }
 
@@ -3599,7 +3646,10 @@ function actualizarCarrito() {
     totalConIva = totalEstimado + totalIva;
 
     totalsBox.innerHTML = `
-      <div class="cart-totals-head"><span class="cart-totals-title">Resumen total</span></div>
+      <div class="cart-totals-head">
+        <span class="cart-totals-title">Total a pagar</span>
+        <span class="cart-totals-note">5% web + IVA incluido</span>
+      </div>
       <div class="cart-totals-row"><span>Total prendas</span><strong>${totalItems}</strong></div>
       ${totalLista > 0 ? `<div class="cart-totals-row"><span>Total lista</span><strong>${formatearPrecioCLP(totalLista)}</strong></div>` : ""}
       ${totalAhorro > 0 ? `<div class="cart-totals-row cart-totals-row-accent"><span>Descuento web ${WEB_DISCOUNT_PERCENT}%</span><strong>- ${formatearPrecioCLP(totalAhorro)}</strong></div>` : ""}
@@ -3611,7 +3661,15 @@ function actualizarCarrito() {
     guardarCotizacionPersistida();
   }
 
-function eliminarItem(index) {
+async function eliminarItem(index) {
+  const item = pedido[index];
+  if (!item) return;
+  const confirmar = await mostrarConfirmacionAccion({
+    titulo: "Eliminar modelo",
+    mensaje: `¿Seguro que quieres quitar el modelo ${item.sku} de Tu Pedido?`,
+    confirmarTexto: "Sí, eliminar",
+  });
+  if (!confirmar) return;
   pedido.splice(index, 1);
   actualizarCarrito();
 }
@@ -3623,9 +3681,34 @@ document.getElementById("cartToggle").onclick = () => {
   document.getElementById("cartSidebar").classList.add("open");
 };
 
+document.getElementById("jumpToSendRequest")?.addEventListener("click", () => {
+  const sidebar = document.getElementById("cartSidebar");
+  const sendBtn = document.getElementById("sendRequest");
+  if (!sidebar || !sendBtn) return;
+
+  const sidebarRect = sidebar.getBoundingClientRect();
+  const sendRect = sendBtn.getBoundingClientRect();
+  const offset = Math.max(16, sendRect.top - sidebarRect.top + sidebar.scrollTop - 80);
+
+  sidebar.scrollTo({
+    top: offset,
+    behavior: "smooth",
+  });
+
+  window.setTimeout(() => {
+    sendBtn.classList.add("cart-send-highlight");
+    window.setTimeout(() => sendBtn.classList.remove("cart-send-highlight"), 1200);
+  }, 220);
+});
+
 document.addEventListener("click", (e) => {
   const sidebar = document.getElementById("cartSidebar");
   const toggle = document.getElementById("cartToggle");
+  const confirmModal = document.getElementById("confirmActionModal");
+  if (!sidebar || !toggle) return;
+  if (e.target?.closest(".cart-trash")) return;
+  if (e.target?.closest("#closeCart")) return;
+  if (confirmModal && !confirmModal.hidden && e.target?.closest("#confirmActionModal")) return;
 
   if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
     sidebar.classList.remove("open");
@@ -4275,8 +4358,16 @@ function mostrarConfirmacionAccion({ titulo = "Confirmar", mensaje = "¿Estás s
       document.removeEventListener("keydown", onKeydown);
       resolve(result);
     };
-    const onOk = () => cleanup(true);
-    const onCancel = () => cleanup(false);
+    const onOk = (event) => {
+      event?.preventDefault?.();
+      event?.stopPropagation?.();
+      cleanup(true);
+    };
+    const onCancel = (event) => {
+      event?.preventDefault?.();
+      event?.stopPropagation?.();
+      cleanup(false);
+    };
     const onKeydown = (e) => {
       if (e.key === "Escape") cleanup(false);
       if (e.key === "Enter") cleanup(true);

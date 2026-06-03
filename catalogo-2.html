@@ -122,12 +122,18 @@
     <button id="closeCart" class="cart-close">X</button>
     <div class="cart-header">
       <h2>Tu Pedido</h2>
+      <button id="jumpToSendRequest" class="cart-jump-send-btn" type="button">Ir a enviar pedido</button>
     </div>
     <div class="cart-layout">
       <div class="cart-summary-column">
+        <div class="cart-section-label">
+          <span>Modelos pedidos</span>
+          <strong>Revisa tallas y cantidades</strong>
+        </div>
         <div id="cartItems"></div>
       </div>
       <div class="cart-form-column">
+        <div id="cartTotalsSlot"></div>
         <div class="cart-client-panel">
           <div class="cart-autofill-trap" aria-hidden="true">
             <input type="text" tabindex="-1" autocomplete="username">
