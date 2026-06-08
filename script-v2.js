@@ -3143,12 +3143,18 @@ function renderizarInfoProductoCatalogo43(charList, producto, detallePrecio) {
 }
 
 const CATALOGO_43_MODELOS_DISPONIBLES = new Set([
+  "4301",
+  "4309",
   "4310",
   "4311",
   "4313",
+  "4314",
+  "4318",
+  "4321",
+  "4323",
+  "4329",
   "4333",
   "4339",
-  "4340",
   "4341",
   "4356",
   "4361",
