@@ -2906,6 +2906,7 @@ function inicializarBuscadorModelos() {
   };
 
   const esBusquedaSkuExacto = (value) => /^\d{4}-\d{2}$/i.test(normalizarBusquedaModelo(value).sku || "");
+  const esBusquedaTipoSku = (value) => String(value || "").includes("-");
 
   const obtenerClavesBusquedaModelo = (producto = {}) => {
     const values = [
@@ -2931,7 +2932,7 @@ function inicializarBuscadorModelos() {
     if (model.raw.includes(term.raw)) return true;
     if (term.sku && model.sku.includes(term.sku)) return true;
     if (term.digits && model.digits.includes(term.digits)) return true;
-    if (esBusquedaSkuExacto(termValue)) return false;
+    if (esBusquedaTipoSku(termValue)) return false;
     if (term.base && model.base === term.base) return true;
     return false;
   };
@@ -2947,7 +2948,7 @@ function inicializarBuscadorModelos() {
     if (!term.raw) return false;
     return obtenerClavesBusquedaModelo(producto).some((key) => {
       const model = normalizarBusquedaModelo(key);
-      if (esBusquedaSkuExacto(termValue)) {
+      if (esBusquedaTipoSku(termValue)) {
         return (
           model.raw === term.raw ||
           (term.sku && model.sku === term.sku) ||
@@ -3033,7 +3034,7 @@ function inicializarBuscadorModelos() {
     }
     const filtrados = obtenerFuenteBusqueda().filter((p) => productoCoincideBusqueda(p, term));
     renderGrid(filtrados);
-    const exactMessage = esBusquedaSkuExacto(term) ? `Modelo inexistente o sin data: ${term}` : "";
+    const exactMessage = esBusquedaTipoSku(term) ? "No existe o sin data" : "";
     actualizarEstadoBusqueda(term, filtrados, { emptyMessage: exactMessage });
   };
 
@@ -3057,9 +3058,9 @@ function inicializarBuscadorModelos() {
       return;
     }
 
-    if (esBusquedaSkuExacto(term)) {
+    if (esBusquedaTipoSku(term)) {
       renderGrid([]);
-      actualizarEstadoBusqueda(term, [], { emptyMessage: `Modelo inexistente o sin data: ${term}` });
+      actualizarEstadoBusqueda(term, [], { emptyMessage: "No existe o sin data" });
       hideSuggestions();
       return;
     }
