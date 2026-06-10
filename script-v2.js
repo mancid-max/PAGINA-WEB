@@ -960,7 +960,6 @@ async function cargarStockSupabasePublico() {
   const { data, error } = await client
     .from("stock_items")
     .select("id,season,article_code,sku,tiro,bota,color,active,updated_at,stock_item_sizes(id,size_label,quantity,sort_order),stock_item_reserve_sizes(size_label,reserve_quantity)")
-    .eq("active", true)
     .order("sku", { ascending: true });
 
   if (error) throw error;
@@ -1150,7 +1149,7 @@ function convertirFilasStockItemsAItems(rows = []) {
   const items = {};
   (Array.isArray(rows) ? rows : [])
     .map((row) => normalizarFilaStockCatalog(row, { preferReserve: true }))
-    .filter((row) => row?.sku && row?.active !== false)
+    .filter((row) => row?.sku)
     .forEach((row) => {
       const sizesMap = Object.fromEntries(
         row.sizes.map((sizeRow) => [sizeRow.size_label, Math.max(0, Number(sizeRow.quantity) || 0)])
@@ -1736,7 +1735,15 @@ function obtenerStockExactoParaSkuDesdeItems(sku, stockItems = {}) {
   if (!key) return null;
   if (stockItems[key]) return stockItems[key];
   if (/^\d{4}$/.test(key) && stockItems[`${key}-00`]) return stockItems[`${key}-00`];
-  return null;
+  const managedStockSku = /^(40|41|42)\d{2}(?:-\d{2})?$/i.test(key);
+  if (!managedStockSku || !Object.keys(stockItems || {}).length) return null;
+  return {
+    article: skuAArticleCode(key),
+    sku: key,
+    description: "",
+    sizes: Object.fromEntries(TALLAS_DISPONIBLES.map((size) => [size, 0])),
+    total: 0,
+  };
 }
 
 function skuTieneStockDisponible(sku, stockItems = {}) {
