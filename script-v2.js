@@ -2964,28 +2964,7 @@ function inicializarBuscadorModelos() {
     });
   };
 
-  let estadoBusquedaEl = document.getElementById("modelSearchStatus");
-  if (!estadoBusquedaEl) {
-    estadoBusquedaEl = document.createElement("div");
-    estadoBusquedaEl.id = "modelSearchStatus";
-    estadoBusquedaEl.className = "model-search-status";
-    estadoBusquedaEl.hidden = true;
-    const searchSection = document.querySelector(".model-search-section");
-    if (searchSection?.parentNode) {
-      searchSection.parentNode.insertBefore(estadoBusquedaEl, searchSection.nextSibling);
-    }
-  }
-
-  const actualizarEstadoBusqueda = (term, resultados, options = {}) => {
-    if (!estadoBusquedaEl) return resultados;
-    const { emptyMessage = "" } = options;
-    if (!term || !emptyMessage || (Array.isArray(resultados) && resultados.length)) {
-      estadoBusquedaEl.hidden = true;
-      estadoBusquedaEl.textContent = "";
-      return resultados;
-    }
-    estadoBusquedaEl.textContent = emptyMessage;
-    estadoBusquedaEl.hidden = false;
+  const actualizarEstadoBusqueda = (_term, resultados) => {
     return resultados;
   };
 
@@ -3034,8 +3013,7 @@ function inicializarBuscadorModelos() {
     }
     const filtrados = obtenerFuenteBusqueda().filter((p) => productoCoincideBusqueda(p, term));
     renderGrid(filtrados);
-    const exactMessage = esBusquedaTipoSku(term) ? "No existe o sin data" : "";
-    actualizarEstadoBusqueda(term, filtrados, { emptyMessage: exactMessage });
+    actualizarEstadoBusqueda(term, filtrados);
   };
 
   const buscarModelo = () => {
@@ -3060,7 +3038,7 @@ function inicializarBuscadorModelos() {
 
     if (esBusquedaTipoSku(term)) {
       renderGrid([]);
-      actualizarEstadoBusqueda(term, [], { emptyMessage: "No existe o sin data" });
+      actualizarEstadoBusqueda(term, []);
       hideSuggestions();
       return;
     }
