@@ -14,9 +14,18 @@ DEFAULT_EXCEL = Path.home() / "OneDrive - Mohicano Jeans" / "INVENTARIO 01-04 CO
 SUPABASE_URL = "https://kdtydxihrflhziclgiof.supabase.co"
 SUPABASE_ANON_KEY = "sb_publishable_37ce4uK_RG8o9pP-Jdf2Xw_3eWgqJQy"
 LANDING_STOCK_FILES = ["stock-data.json", "stock-data-catalogo-2.json"]
+CATALOGO_2_STOCK_FILE = ROOT / "stock-data-catalogo-2.json"
 ALL_SHEETS_JSON = ROOT / "stock-data-all-sheets.json"
 SCRIPT_GENERATE_LANDING = ROOT / "generate_catalog_stock_json_from_excel.py"
 SCRIPT_GENERATE_SUPABASE = ROOT / "generate_supabase_stock_sql_from_excel.py"
+
+
+def parse_target_seasons() -> set[str]:
+    raw = os.environ.get("MOHICANO_STOCK_SEASONS", "")
+    return {part.strip() for part in raw.split(",") if part.strip()}
+
+
+TARGET_SEASONS = parse_target_seasons()
 
 
 def run_command(args: list[str]) -> None:
@@ -73,6 +82,9 @@ def load_consolidated_items() -> list[dict]:
     sheets = payload.get("sheets") or {}
     for sheet_payload in sheets.values():
         for item in sheet_payload.get("items") or []:
+            season = str(item.get("season") or "").strip()
+            if TARGET_SEASONS and season not in TARGET_SEASONS:
+                continue
             items.append(item)
     if not items:
         raise RuntimeError("No se encontraron items consolidados en stock-data-all-sheets.json")
@@ -181,16 +193,17 @@ def deactivate_missing_excel_items(token: str, existing_rows: list[dict], curren
 
 
 def push_landing_stock() -> None:
-    run_command(["git", "add", "--", *LANDING_STOCK_FILES])
+    landing_files = ["stock-data.json"] if TARGET_SEASONS == {"42"} else LANDING_STOCK_FILES
+    run_command(["git", "add", "--", *landing_files])
     diff = subprocess.run(
-        ["git", "diff", "--cached", "--quiet", "--", *LANDING_STOCK_FILES],
+        ["git", "diff", "--cached", "--quiet", "--", *landing_files],
         cwd=ROOT,
         check=False,
     )
     if diff.returncode == 0:
         print("Sin cambios para publicar en la landing.")
         return
-    run_command(["git", "commit", "-m", "Auto-sync stock desde Excel", "--", *LANDING_STOCK_FILES])
+    run_command(["git", "commit", "-m", "Auto-sync stock desde Excel", "--", *landing_files])
     run_command(["git", "push", "origin", "HEAD:main"])
 
 
@@ -199,8 +212,15 @@ def main() -> None:
     if not excel_path.exists():
         raise SystemExit(f"No se encontro el Excel: {excel_path}")
 
+    backup_catalogo_2 = None
+    if TARGET_SEASONS == {"42"} and CATALOGO_2_STOCK_FILE.exists():
+        backup_catalogo_2 = CATALOGO_2_STOCK_FILE.read_text(encoding="utf-8")
+
     print("Regenerando stock de la landing...")
     run_command([sys.executable, str(SCRIPT_GENERATE_LANDING), str(excel_path)])
+
+    if backup_catalogo_2 is not None:
+        CATALOGO_2_STOCK_FILE.write_text(backup_catalogo_2, encoding="utf-8")
 
     print("Generando dataset completo para Supabase...")
     run_command([sys.executable, str(SCRIPT_GENERATE_SUPABASE), str(excel_path)])

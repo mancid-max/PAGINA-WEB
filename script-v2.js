@@ -728,7 +728,10 @@ function buscarClienteLocalPorRut(rutInput) {
 }
 
 function esProductoAgotado(item) {
-  if (CATALOG_SOURCE === "catalogo-43") return false;
+  if (CATALOG_SOURCE === "catalogo-43") {
+    const family = normalizarSkuCatalogo(item?._preferredSku || item?.family || item?._baseFamily || "");
+    return Boolean(family) && CATALOGO_43_SKUS_AGOTADOS.has(family);
+  }
   if (item?.isSoldOut === true) return true;
   if (!INVENTORY_ENABLED || !Object.keys(stockBySku || {}).length) return false;
   const skus = [item?.family, ...((Array.isArray(item?.variants) ? item.variants : []).map((variant) => variant?.sku))]
@@ -3160,8 +3163,13 @@ const CATALOGO_43_MODELOS_DISPONIBLES = new Set([
   "4361",
 ]);
 
+const CATALOGO_43_SKUS_AGOTADOS = new Set([
+  "4361-04",
+]);
+
 function obtenerEstadoVisibilidadCatalogo43(producto = {}) {
-  const family = normalizarSkuCatalogo(producto?._baseFamily || producto?.family || "");
+  const family = normalizarSkuCatalogo(producto?._preferredSku || producto?.family || producto?._baseFamily || "");
+  if (family && CATALOGO_43_SKUS_AGOTADOS.has(family)) return "soldout";
   const model = obtenerBaseFamilia(family);
   if (!model) return "production";
   return CATALOGO_43_MODELOS_DISPONIBLES.has(model) ? "available" : "production";
@@ -3186,6 +3194,7 @@ function renderGrid(lista) {
       (p, index) => {
         const detallePrecio = obtenerDetallePrecioCatalogo(p);
         const hantanBadges = obtenerHantanesModelo(p);
+        const estadoVisibilidad43 = CATALOG_SOURCE === "catalogo-43" ? obtenerEstadoVisibilidadCatalogo43(p) : "";
         return `
       <div class="card ${esProductoAgotado(p) ? "card-sold-out" : ""}" data-family="${p.family}" onclick="verProductoDesdeCard('${p._baseFamily || p.family}','${p._preferredSku || p.family}')">
         <div class="card-title-row">
@@ -3201,7 +3210,7 @@ function renderGrid(lista) {
                 : ""
             }
           </div>
-          ${esProductoAgotado(p) ? '<span class="card-stock-badge sold-out">Agotado</span>' : ""}
+          ${esProductoAgotado(p) && CATALOG_SOURCE !== "catalogo-43" ? '<span class="card-stock-badge sold-out">Agotado</span>' : ""}
         </div>
         <div class="card-image-wrap">
           ${
@@ -3215,7 +3224,11 @@ function renderGrid(lista) {
           }
           ${
             CATALOG_SOURCE === "catalogo-43"
-              ? `<span class="catalog-visibility-badge ${obtenerEstadoVisibilidadCatalogo43(p) === "available" ? "is-available" : "is-production"}">${obtenerEstadoVisibilidadCatalogo43(p) === "available" ? "Disponible" : "En producción"}</span>`
+              ? (
+                  estadoVisibilidad43 === "soldout"
+                    ? ""
+                    : `<span class="catalog-visibility-badge ${estadoVisibilidad43 === "available" ? "is-available" : "is-production"}">${estadoVisibilidad43 === "available" ? "Disponible" : "En producción"}</span>`
+                )
               : ""
           }
           ${
