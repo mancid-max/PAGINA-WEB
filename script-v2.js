@@ -1731,6 +1731,14 @@ function obtenerStockParaSkuDesdeItems(sku, stockItems = {}) {
   return null;
 }
 
+function obtenerStockExactoParaSkuDesdeItems(sku, stockItems = {}) {
+  const key = normalizarSkuCatalogo(sku);
+  if (!key) return null;
+  if (stockItems[key]) return stockItems[key];
+  if (/^\d{4}$/.test(key) && stockItems[`${key}-00`]) return stockItems[`${key}-00`];
+  return null;
+}
+
 function skuTieneStockDisponible(sku, stockItems = {}) {
   if (!Object.keys(stockItems || {}).length) return false;
   const stock = obtenerStockParaSkuDesdeItems(sku, stockItems);
@@ -2593,7 +2601,7 @@ function aplicarStockATallas(sku) {
     return;
   }
 
-  const stock = obtenerStockParaSku(sku);
+  const stock = obtenerStockExactoParaSkuDesdeItems(sku, stockBySku);
   TALLAS_DISPONIBLES.forEach((talla) => {
     const input = document.getElementById("t" + talla);
     const label = input?.closest("label");
