@@ -2905,6 +2905,8 @@ function inicializarBuscadorModelos() {
     return { raw, sku, digits, base };
   };
 
+  const esBusquedaSkuExacto = (value) => /^\d{4}-\d{2}$/i.test(normalizarBusquedaModelo(value).sku || "");
+
   const obtenerClavesBusquedaModelo = (producto = {}) => {
     const values = [
       producto?.family,
@@ -2929,6 +2931,7 @@ function inicializarBuscadorModelos() {
     if (model.raw.includes(term.raw)) return true;
     if (term.sku && model.sku.includes(term.sku)) return true;
     if (term.digits && model.digits.includes(term.digits)) return true;
+    if (esBusquedaSkuExacto(termValue)) return false;
     if (term.base && model.base === term.base) return true;
     return false;
   };
@@ -2944,6 +2947,13 @@ function inicializarBuscadorModelos() {
     if (!term.raw) return false;
     return obtenerClavesBusquedaModelo(producto).some((key) => {
       const model = normalizarBusquedaModelo(key);
+      if (esBusquedaSkuExacto(termValue)) {
+        return (
+          model.raw === term.raw ||
+          (term.sku && model.sku === term.sku) ||
+          (term.digits && model.digits === term.digits)
+        );
+      }
       return (
         model.raw === term.raw ||
         (term.sku && model.sku === term.sku) ||
@@ -2953,7 +2963,28 @@ function inicializarBuscadorModelos() {
     });
   };
 
-  const actualizarEstadoBusqueda = (term, resultados) => {
+  let estadoBusquedaEl = document.getElementById("modelSearchStatus");
+  if (!estadoBusquedaEl) {
+    estadoBusquedaEl = document.createElement("div");
+    estadoBusquedaEl.id = "modelSearchStatus";
+    estadoBusquedaEl.className = "model-search-status";
+    estadoBusquedaEl.hidden = true;
+    const searchSection = document.querySelector(".model-search-section");
+    if (searchSection?.parentNode) {
+      searchSection.parentNode.insertBefore(estadoBusquedaEl, searchSection.nextSibling);
+    }
+  }
+
+  const actualizarEstadoBusqueda = (term, resultados, options = {}) => {
+    if (!estadoBusquedaEl) return resultados;
+    const { emptyMessage = "" } = options;
+    if (!term || !emptyMessage || (Array.isArray(resultados) && resultados.length)) {
+      estadoBusquedaEl.hidden = true;
+      estadoBusquedaEl.textContent = "";
+      return resultados;
+    }
+    estadoBusquedaEl.textContent = emptyMessage;
+    estadoBusquedaEl.hidden = false;
     return resultados;
   };
 
@@ -3002,7 +3033,8 @@ function inicializarBuscadorModelos() {
     }
     const filtrados = obtenerFuenteBusqueda().filter((p) => productoCoincideBusqueda(p, term));
     renderGrid(filtrados);
-    actualizarEstadoBusqueda(term, filtrados);
+    const exactMessage = esBusquedaSkuExacto(term) ? `Modelo inexistente o sin data: ${term}` : "";
+    actualizarEstadoBusqueda(term, filtrados, { emptyMessage: exactMessage });
   };
 
   const buscarModelo = () => {
@@ -3022,6 +3054,13 @@ function inicializarBuscadorModelos() {
       actualizarEstadoBusqueda(term, [exacto]);
       hideSuggestions();
       setTimeout(() => verProducto(exacto._baseFamily || exacto.family, exacto._preferredSku || exacto.family), 0);
+      return;
+    }
+
+    if (esBusquedaSkuExacto(term)) {
+      renderGrid([]);
+      actualizarEstadoBusqueda(term, [], { emptyMessage: `Modelo inexistente o sin data: ${term}` });
+      hideSuggestions();
       return;
     }
 
