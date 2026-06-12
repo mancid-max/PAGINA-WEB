@@ -734,6 +734,16 @@ function esProductoAgotado(item) {
   }
   if (item?.isSoldOut === true) return true;
   if (!INVENTORY_ENABLED || !Object.keys(stockBySku || {}).length) return false;
+  const exactSku = normalizarSkuCatalogo(item?._preferredSku || item?.family || "");
+  if (/^(40|41|42)\d{2}(?:-\d{2})?$/i.test(exactSku)) {
+    const exactStock = obtenerStockExactoParaSkuDesdeItems(exactSku, stockBySku);
+    if (exactStock) {
+      const exactTotal = Number(exactStock?.total) || 0;
+      const exactHasStock = exactTotal > 0
+        || TALLAS_DISPONIBLES.some((talla) => Math.max(0, Number(exactStock?.sizes?.[talla]) || 0) > 0);
+      return !exactHasStock;
+    }
+  }
   const skus = [item?.family, ...((Array.isArray(item?.variants) ? item.variants : []).map((variant) => variant?.sku))]
     .filter(Boolean);
   if (!skus.length) return false;
@@ -1828,6 +1838,21 @@ function imagenCompatibleConSku(path, sku) {
 }
 
 function construirProductosGridPorSku(items = [], stockItems = {}) {
+  return construirTarjetasCatalogoPorSku(items, stockItems, { includeSoldOut: false });
+}
+
+function construirProductosGridAgotadosPorSku(items = [], stockItems = {}) {
+  return construirTarjetasCatalogoPorSku(items, stockItems, { includeSoldOut: true })
+    .filter((item) => item?.isSoldOut)
+    .sort((a, b) => {
+      const aKey = normalizarSkuCatalogo(a?.family);
+      const bKey = normalizarSkuCatalogo(b?.family);
+      return aKey.localeCompare(bKey, undefined, { numeric: true });
+    });
+}
+
+function construirTarjetasCatalogoPorSku(items = [], stockItems = {}, options = {}) {
+  const { includeSoldOut = false } = options;
   const cards = [];
   const seenSku = new Set();
   const seenImageSignatureByFamily = new Map();
@@ -1848,9 +1873,11 @@ function construirProductosGridPorSku(items = [], stockItems = {}) {
 
     candidates.forEach((entry) => {
       if (seenSku.has(entry.sku)) return;
-      const stock = obtenerStockParaSkuDesdeItems(entry.sku, stockItems);
+      const stockExacto = obtenerStockExactoParaSkuDesdeItems(entry.sku, stockItems);
+      const stock = stockExacto || obtenerStockParaSkuDesdeItems(entry.sku, stockItems);
       const total = Math.max(0, Number(stock?.total) || 0);
-      if (total <= 0) return;
+      const agotado = total <= 0;
+      if (agotado && !includeSoldOut) return;
 
       const images = obtenerImagenesReales(entry.source).filter((img) => imagenCompatibleConSku(img, entry.sku));
       const cardImage = images[0] || "";
@@ -1872,7 +1899,7 @@ function construirProductosGridPorSku(items = [], stockItems = {}) {
         _cardImage: cardImage,
         _preferredImages: [...images],
         _stockTotal: total,
-        isSoldOut: false,
+        isSoldOut: agotado,
       });
     });
   });
@@ -2190,7 +2217,11 @@ async function cargarProductosCatalogo() {
     }
 
     productos = [...items].sort((a, b) => compararProductosPorStockDesc(a, b, stockBySku));
-    productosGrid = construirProductosGridPorSku(productos, stockBySku);
+    const tarjetasConStock = construirProductosGridPorSku(productos, stockBySku);
+    const tarjetasAgotadas = CATALOG_SOURCE === "catalogo-1"
+      ? construirProductosGridAgotadosPorSku(itemsCatalogoBase, stockBySku)
+      : [];
+    productosGrid = [...tarjetasConStock, ...tarjetasAgotadas];
     if (CATALOG_SOURCE === "catalogo-43" && !productosGrid.length) {
       productosGrid = construirProductosGridFallback(productos, stockBySku);
     }
@@ -3212,23 +3243,11 @@ function filtrarProductosPorVisibilidad(lista = []) {
   return Array.isArray(lista) ? lista : [];
 }
 
-function renderGrid(lista) {
-  const container = document.getElementById("grid");
-  const listaConImagen = filtrarProductosPorVisibilidad(Array.isArray(lista) ? lista : [])
-    .map((p) => ({
-      ...p,
-      _safeCardImage: obtenerImagenSeguraTarjeta(p),
-    }))
-    .filter((p) => Boolean(p?._safeCardImage) && normalizarRutaAsset(p._safeCardImage) !== "Imagenes/Logo/app-icon.png");
-  const listaOrdenada = [...listaConImagen].sort((a, b) => compararProductosPorStockDesc(a, b, stockBySku));
-
-  container.innerHTML = listaOrdenada
-    .map(
-      (p, index) => {
-        const detallePrecio = obtenerDetallePrecioCatalogo(p);
-        const hantanBadges = obtenerHantanesModelo(p);
-        const estadoVisibilidad43 = CATALOG_SOURCE === "catalogo-43" ? obtenerEstadoVisibilidadCatalogo43(p) : "";
-        return `
+function renderCatalogCardHtml(p) {
+  const detallePrecio = obtenerDetallePrecioCatalogo(p);
+  const hantanBadges = obtenerHantanesModelo(p);
+  const estadoVisibilidad43 = CATALOG_SOURCE === "catalogo-43" ? obtenerEstadoVisibilidadCatalogo43(p) : "";
+  return `
       <div class="card ${esProductoAgotado(p) ? "card-sold-out" : ""}" data-family="${p.family}" onclick="verProductoDesdeCard('${p._baseFamily || p.family}','${p._preferredSku || p.family}')">
         <div class="card-title-row">
           <div class="card-title-block">
@@ -3279,9 +3298,46 @@ function renderGrid(lista) {
         </div>
       </div>
     `;
-      }
-    )
-    .join("");
+}
+
+function renderCatalog43Section(title, copy, items = [], extraClass = "") {
+  if (!Array.isArray(items) || !items.length) return "";
+  return `
+    <section class="catalog-grid-section ${extraClass}">
+      <div class="catalog-grid-section-head">
+        <h3>${title}</h3>
+        <p>${copy}</p>
+      </div>
+      <div class="catalog-grid-section-grid">
+        ${items.map((p) => renderCatalogCardHtml(p)).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderGrid(lista) {
+  const container = document.getElementById("grid");
+  const listaConImagen = filtrarProductosPorVisibilidad(Array.isArray(lista) ? lista : [])
+    .map((p) => ({
+      ...p,
+      _safeCardImage: obtenerImagenSeguraTarjeta(p),
+    }))
+    .filter((p) => Boolean(p?._safeCardImage) && normalizarRutaAsset(p._safeCardImage) !== "Imagenes/Logo/app-icon.png");
+  const listaOrdenada = [...listaConImagen].sort((a, b) => compararProductosPorStockDesc(a, b, stockBySku));
+  const available43 = CATALOG_SOURCE === "catalogo-43"
+    ? listaOrdenada.filter((p) => obtenerEstadoVisibilidadCatalogo43(p) === "available")
+    : [];
+  const production43 = CATALOG_SOURCE === "catalogo-43"
+    ? listaOrdenada.filter((p) => obtenerEstadoVisibilidadCatalogo43(p) !== "available")
+    : [];
+
+  container.classList.toggle("product-grid-sections", CATALOG_SOURCE === "catalogo-43");
+  container.innerHTML = CATALOG_SOURCE === "catalogo-43"
+    ? [
+        renderCatalog43Section("Disponible", "Modelos listos para venta inmediata.", available43, "is-available"),
+        renderCatalog43Section("En producción", "Modelos vigentes en producción o en desarrollo.", production43, "is-production"),
+      ].filter(Boolean).join("")
+    : listaOrdenada.map((p) => renderCatalogCardHtml(p)).join("");
 
   container.querySelectorAll("img[data-image-src]").forEach((img, index) => {
     img.addEventListener("error", () => {
