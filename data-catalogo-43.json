@@ -117,6 +117,29 @@
         "fabric":  "PATRICIA DARK"
     },
     {
+        "family":  "4311-00",
+        "main_image":  "43/4311/4311-00-main.jpg",
+        "gallery":  [
+                        "43/4311/4311-00-main.jpg",
+                        "43/4311/4311-00-alt-1.jpg",
+                        "43/4311/4311-00-alt-2.jpg"
+                    ],
+        "description":  "JEAN ? CINTURA ? FLARE",
+        "characteristics":  [
+                                "Tipo: JEAN",
+                                "Tiro: CINTURA",
+                                "Bota: FLARE",
+                                "TecnologÃ­a: Power Stretch"
+                            ],
+        "variants":  [
+
+                     ],
+        "tipo":  "JEAN",
+        "tiro":  "CINTURA",
+        "bota":  "FLARE",
+        "fabric":  ""
+    },
+    {
         "family":  "4313-00",
         "main_image":  "43/43/4313/editar/Mohicano-160 copie.jpg",
         "gallery":  [
@@ -908,6 +931,48 @@
         "tiro":  "CINTURA",
         "bota":  "Recto",
         "fabric":  "Ayla/New glue"
+    },
+    {
+        "family":  "4371-00",
+        "main_image":  "43/4371-00/Mohicano-234-.jpg",
+        "gallery":  [
+                        "43/4371-00/Mohicano-234-.jpg",
+                        "43/4371-00/Mohicano-238 copie-.jpg",
+                        "43/4371-00/Mohicano-240-.jpg"
+                    ],
+        "description":  "JEAN ? CINTURA ? FLARE",
+        "characteristics":  [
+                                "Tipo: JEAN",
+                                "Tiro: CINTURA",
+                                "Bota: FLARE",
+                                "Tecnología: Universal"
+                            ],
+        "variants":  [ ],
+        "tipo":  "JEAN",
+        "tiro":  "CINTURA",
+        "bota":  "FLARE",
+        "fabric":  ""
+    },
+    {
+        "family":  "4371-01",
+        "main_image":  "43/4371-01/Mohicano-234.jpg",
+        "gallery":  [
+                        "43/4371-01/Mohicano-234.jpg",
+                        "43/4371-01/Mohicano-238 copie.jpg",
+                        "43/4371-01/Mohicano-240.jpg"
+                    ],
+        "description":  "JEAN ? CINTURA ? FLARE",
+        "characteristics":  [
+                                "Tipo: JEAN",
+                                "Tiro: CINTURA",
+                                "Bota: FLARE",
+                                "Tecnología: Universal"
+                            ],
+        "variants":  [ ],
+        "tipo":  "JEAN",
+        "tiro":  "CINTURA",
+        "bota":  "FLARE",
+        "fabric":  ""
     },
     {
         "family":  "4380-00",

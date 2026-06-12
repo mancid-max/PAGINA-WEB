@@ -518,6 +518,12 @@ function obtenerRutaImagenOptimizadaJpg(path) {
   return `${OPTIMIZED_IMAGE_ROOT}/${normalized}`;
 }
 
+function rutaPrefiereOriginal(path) {
+  const normalized = normalizarRutaAsset(path);
+  if (!normalized) return false;
+  return /^43\/4311\//i.test(normalized);
+}
+
 function restaurarImagenOriginal(img) {
   if (!img || img.dataset.fallbackApplied === "1") return;
   const originalSrc = img.dataset.originalSrc || "";
@@ -589,7 +595,9 @@ function asignarImagenCatalogo(img, path, options = {}) {
     const optimizedJpgSrc = buildAssetUrl(img.dataset.optimizedJpgSrc || candidate);
     const originalSrc = buildAssetUrl(candidate);
 
-    if (preferOriginal) {
+    const preferOriginalForCandidate = preferOriginal || rutaPrefiereOriginal(candidate);
+
+    if (preferOriginalForCandidate) {
       const originalLoader = new Image();
       originalLoader.onload = () => {
         if (img.dataset.requestId !== requestId) return;
@@ -3324,20 +3332,8 @@ function renderGrid(lista) {
     }))
     .filter((p) => Boolean(p?._safeCardImage) && normalizarRutaAsset(p._safeCardImage) !== "Imagenes/Logo/app-icon.png");
   const listaOrdenada = [...listaConImagen].sort((a, b) => compararProductosPorStockDesc(a, b, stockBySku));
-  const available43 = CATALOG_SOURCE === "catalogo-43"
-    ? listaOrdenada.filter((p) => obtenerEstadoVisibilidadCatalogo43(p) === "available")
-    : [];
-  const production43 = CATALOG_SOURCE === "catalogo-43"
-    ? listaOrdenada.filter((p) => obtenerEstadoVisibilidadCatalogo43(p) !== "available")
-    : [];
-
-  container.classList.toggle("product-grid-sections", CATALOG_SOURCE === "catalogo-43");
-  container.innerHTML = CATALOG_SOURCE === "catalogo-43"
-    ? [
-        renderCatalog43Section("Disponible", "Modelos listos para venta inmediata.", available43, "is-available"),
-        renderCatalog43Section("En producción", "Modelos vigentes en producción o en desarrollo.", production43, "is-production"),
-      ].filter(Boolean).join("")
-    : listaOrdenada.map((p) => renderCatalogCardHtml(p)).join("");
+  container.classList.remove("product-grid-sections");
+  container.innerHTML = listaOrdenada.map((p) => renderCatalogCardHtml(p)).join("");
 
   container.querySelectorAll("img[data-image-src]").forEach((img, index) => {
     img.addEventListener("error", () => {
