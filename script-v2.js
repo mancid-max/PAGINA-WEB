@@ -606,6 +606,7 @@ function asignarImagenCatalogo(img, path, options = {}) {
       const originalLoader = new Image();
       originalLoader.onload = () => {
         if (img.dataset.requestId !== requestId) return;
+        if (!originalLoader.naturalWidth) { probarCandidato(candidateIndex + 1); return; }
         img.dataset.fallbackApplied = "1";
         finalizarCargaVisualImagen(img, originalSrc);
       };
@@ -620,6 +621,7 @@ function asignarImagenCatalogo(img, path, options = {}) {
     const loader = new Image();
     loader.onload = () => {
       if (img.dataset.requestId !== requestId) return;
+      if (!loader.naturalWidth) { probarCandidato(candidateIndex + 1); return; }
       finalizarCargaVisualImagen(img, optimizedSrc);
     };
 
@@ -628,6 +630,7 @@ function asignarImagenCatalogo(img, path, options = {}) {
       const jpgLoader = new Image();
       jpgLoader.onload = () => {
         if (img.dataset.requestId !== requestId) return;
+        if (!jpgLoader.naturalWidth) { probarCandidato(candidateIndex + 1); return; }
         finalizarCargaVisualImagen(img, optimizedJpgSrc);
       };
       jpgLoader.onerror = () => {
@@ -635,6 +638,7 @@ function asignarImagenCatalogo(img, path, options = {}) {
         const originalLoader = new Image();
         originalLoader.onload = () => {
           if (img.dataset.requestId !== requestId) return;
+          if (!originalLoader.naturalWidth) { probarCandidato(candidateIndex + 1); return; }
           img.dataset.fallbackApplied = "1";
           finalizarCargaVisualImagen(img, originalSrc);
         };
@@ -3409,13 +3413,13 @@ function renderGrid(lista) {
   container.innerHTML = listaOrdenada.map((p) => renderCatalogCardHtml(p)).join("");
 
   container.querySelectorAll("img[data-image-src]").forEach((img, index) => {
-    img.addEventListener("error", () => {
+    const removeCardOnBadImage = () => {
       const card = img.closest(".card");
-      if (card) {
-        card.remove();
-      } else {
-        img.remove();
-      }
+      if (card) card.remove(); else img.remove();
+    };
+    img.addEventListener("error", removeCardOnBadImage, { once: true });
+    img.addEventListener("load", () => {
+      if (!img.naturalWidth) removeCardOnBadImage();
     }, { once: true });
 
     asignarImagenCatalogo(img, img.dataset.imageSrc, obtenerPreferenciasCargaTarjeta(index));
