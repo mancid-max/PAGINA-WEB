@@ -582,12 +582,12 @@ function asignarImagenCatalogo(img, path, options = {}) {
     if (img.dataset.requestId !== requestId) return;
     const candidate = sourceCandidates[candidateIndex] || "";
     if (!candidate) {
-      img.dataset.fallbackApplied = "1";
       const card = img.closest(".card");
       if (card) {
-        card.hidden = true;
+        card.remove();
       } else {
-        finalizarCargaVisualImagen(img, buildAssetUrl("Imagenes/Logo/app-icon.png"));
+        img.removeAttribute("src");
+        img.classList.remove("catalog-image-loading");
       }
       return;
     }
