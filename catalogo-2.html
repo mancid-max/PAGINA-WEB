@@ -168,6 +168,10 @@
             <button id="openImageGalleryBtn" class="image-gallery-btn" type="button">Ver im&aacute;genes</button>
             <button id="openVideoGalleryBtn" class="image-gallery-btn image-video-btn" type="button" hidden>Ver video</button>
             <div id="imageSoldOutOverlay" class="image-sold-out-overlay" hidden>AGOTADO</div>
+            <button id="inlineVideoPreviewWrap" class="inline-video-preview" type="button" hidden aria-label="Ver video del modelo">
+                <video id="inlineVideoPreview" class="inline-video-preview-player" muted loop playsinline preload="metadata"></video>
+                <span class="inline-video-preview-label">Video</span>
+            </button>
             <img id="viewerImg">
         </div>
         <div id="thumbContainer" class="thumbnails"></div>

@@ -583,7 +583,12 @@ function asignarImagenCatalogo(img, path, options = {}) {
     const candidate = sourceCandidates[candidateIndex] || "";
     if (!candidate) {
       img.dataset.fallbackApplied = "1";
-      finalizarCargaVisualImagen(img, buildAssetUrl("Imagenes/Logo/app-icon.png"));
+      const card = img.closest(".card");
+      if (card) {
+        card.hidden = true;
+      } else {
+        finalizarCargaVisualImagen(img, buildAssetUrl("Imagenes/Logo/app-icon.png"));
+      }
       return;
     }
 
@@ -3232,9 +3237,8 @@ function obtenerImagenSeguraTarjeta(producto) {
 }
 
 function tarjetaSinImagenCatalogo43(producto) {
-  if (CATALOG_SOURCE !== "catalogo-43") return false;
   const imagePath = normalizarRutaAsset(producto?._safeCardImage || producto?._cardImage || producto?.main_image || "");
-  return imagePath === "Imagenes/Logo/app-icon.png";
+  return !imagePath || imagePath === "Imagenes/Logo/app-icon.png";
 }
 
 function obtenerMetaCatalogo43(producto = {}) {
@@ -5674,6 +5678,7 @@ function obtenerClaveMesActual() {
 }
 
 function obtenerCotizacionesMesSeleccionado(quotes = []) {
+  if (quotesMonthFilter === "all") return quotes;
   const selected = quotesMonthFilter || obtenerClaveMesActual();
   return quotes.filter((q) => {
     if (!q?.created_at) return false;
@@ -5682,6 +5687,7 @@ function obtenerCotizacionesMesSeleccionado(quotes = []) {
 }
 
 function obtenerEtiquetaMesSeleccionado() {
+  if (quotesMonthFilter === "all") return "todos los meses";
   return obtenerEtiquetaMesDesdeClave(quotesMonthFilter || obtenerClaveMesActual()) || obtenerEtiquetaMesDesdeClave(obtenerClaveMesActual());
 }
 
@@ -5704,6 +5710,7 @@ function obtenerOpcionesMesCotizaciones(quotes = []) {
       label: obtenerEtiquetaMesDesdeClave(currentKey) || currentKey,
     });
   }
+  options.unshift({ value: "all", label: "Todos los meses" });
   return options;
 }
 
@@ -6159,6 +6166,7 @@ function construirTextoReporteCotizacionesWhatsApp(quotes = []) {
   const pctCaidas = total ? Math.round((caidas / total) * 100) : 0;
   const mesLabel = obtenerEtiquetaMesSeleccionado();
   const itemsMap = quotesAdminCache.itemsByQuote instanceof Map ? quotesAdminCache.itemsByQuote : new Map();
+  const resumen = construirResumenVentasColecciones(quotes, itemsMap);
   const lines = [
     `*Reporte de pedidos ${mesLabel}*`,
     `Total pedidos: ${total}`,
@@ -6166,6 +6174,13 @@ function construirTextoReporteCotizacionesWhatsApp(quotes = []) {
   ];
   if (caidas > 0) {
     lines.push(`Pedidos no listos / caídos: ${caidas} (${pctCaidas}%)`);
+  }
+  lines.push(`Total prendas: ${resumen.totalPrendas}`);
+  if (resumen.totalDinero) {
+    lines.push(`Total dinero web: ${formatearPrecioCLP(resumen.totalDinero)}`);
+    resumen.collections.filter((c) => c.totalPrendas > 0).forEach((c) => {
+      lines.push(`  ${c.label}: ${c.totalPrendas} prendas · ${formatearPrecioCLP(c.totalDinero)}`);
+    });
   }
   if (quotesMes.length) {
     lines.push("", "*Detalle por pedido*");
@@ -6260,8 +6275,8 @@ function renderReporteCotizacionesAdmin(quotes = []) {
   const panel = document.getElementById("quotesReportPanel");
   if (!panel) return;
   const monthOptions = obtenerOpcionesMesCotizaciones(quotes);
-  if (!monthOptions.some((option) => option.value === quotesMonthFilter)) {
-    quotesMonthFilter = monthOptions[0]?.value || obtenerClaveMesActual();
+  if (quotesMonthFilter !== "all" && !monthOptions.some((option) => option.value === quotesMonthFilter)) {
+    quotesMonthFilter = obtenerClaveMesActual();
   }
   const quotesMes = obtenerCotizacionesFiltradas(obtenerCotizacionesMesSeleccionado(quotes));
   const total = quotesMes.length;
@@ -6273,6 +6288,42 @@ function renderReporteCotizacionesAdmin(quotes = []) {
   const monthSelectOptions = monthOptions.map((option) => `
     <option value="${escapeHtmlExcel(option.value)}" ${option.value === quotesMonthFilter ? "selected" : ""}>${escapeHtmlExcel(option.label)}</option>
   `).join("");
+
+  const resumen = construirResumenVentasColecciones(quotes, itemsMap);
+  const totalPrendas = resumen.totalPrendas;
+  const totalDinero = resumen.totalDinero;
+
+  const allModels = new Map();
+  resumen.collections.forEach((col) => {
+    col.modelsList.forEach((m) => {
+      const e = allModels.get(m.sku);
+      if (e) { e.prendas += m.prendas; e.dinero += m.dinero; }
+      else allModels.set(m.sku, { sku: m.sku, prendas: m.prendas, dinero: m.dinero });
+    });
+  });
+  const topModelos = [...allModels.values()].sort((a, b) => b.prendas - a.prendas).slice(0, 5);
+
+  const collectionRows = resumen.collections
+    .filter((col) => col.totalPrendas > 0 || col.totalPedidos > 0)
+    .map((col) => `
+      <tr>
+        <td>${escapeHtmlExcel(col.label)}</td>
+        <td class="is-num">${escapeHtmlExcel(String(col.totalPedidos))}</td>
+        <td class="is-num">${escapeHtmlExcel(String(col.totalPrendas))}</td>
+        <td class="is-num">${col.totalDinero ? escapeHtmlExcel(formatearPrecioCLP(col.totalDinero)) : "-"}</td>
+      </tr>
+    `).join("");
+
+  const topModelosRows = topModelos.length
+    ? topModelos.map((m, i) => `
+        <tr>
+          <td>${escapeHtmlExcel(String(i + 1))}</td>
+          <td><strong>${escapeHtmlExcel(m.sku)}</strong></td>
+          <td class="is-num">${escapeHtmlExcel(String(m.prendas))}</td>
+          ${totalDinero ? `<td class="is-num">${escapeHtmlExcel(formatearPrecioCLP(m.dinero))}</td>` : ""}
+        </tr>
+      `).join("")
+    : `<tr><td colspan="4">Sin datos este mes.</td></tr>`;
 
   panel.innerHTML = `
     ${renderCoberturaVendedoresAdmin(quotes)}
@@ -6295,7 +6346,7 @@ function renderReporteCotizacionesAdmin(quotes = []) {
       </div>
       <div class="quotes-report-metrics">
         <div class="quotes-report-metric">
-          <span>Total</span>
+          <span>Pedidos</span>
           <strong>${total}</strong>
         </div>
         <div class="quotes-report-metric is-ready">
@@ -6304,10 +6355,48 @@ function renderReporteCotizacionesAdmin(quotes = []) {
         </div>
         ${caidas > 0 ? `
         <div class="quotes-report-metric is-open">
-          <span>No listas / caídas</span>
+          <span>Caídas</span>
           <strong>${caidas}</strong>
         </div>` : ""}
+        <div class="quotes-report-metric">
+          <span>Prendas</span>
+          <strong>${escapeHtmlExcel(String(totalPrendas))}</strong>
+        </div>
+        ${totalDinero ? `
+        <div class="quotes-report-metric is-money">
+          <span>Dinero web</span>
+          <strong>${escapeHtmlExcel(formatearPrecioCLP(totalDinero))}</strong>
+        </div>` : ""}
       </div>
+      ${collectionRows ? `
+      <div class="quotes-report-section">
+        <div class="quotes-report-section-title">Por colección</div>
+        <div class="quotes-report-preview-table-wrap">
+          <table class="quotes-report-preview-table">
+            <thead>
+              <tr><th>Colección</th><th>Pedidos</th><th>Prendas</th><th>Dinero web</th></tr>
+            </thead>
+            <tbody>${collectionRows}</tbody>
+          </table>
+        </div>
+      </div>` : ""}
+      ${topModelos.length ? `
+      <div class="quotes-report-section">
+        <div class="quotes-report-section-title">Top modelos del mes</div>
+        <div class="quotes-report-preview-table-wrap">
+          <table class="quotes-report-preview-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Modelo</th>
+                <th>Prendas</th>
+                ${totalDinero ? "<th>Dinero web</th>" : ""}
+              </tr>
+            </thead>
+            <tbody>${topModelosRows}</tbody>
+          </table>
+        </div>
+      </div>` : ""}
       <div class="quotes-report-text">
         <div class="quotes-report-text-head">Vista previa ordenada</div>
         <div class="quotes-report-preview-list">${reportPreview}</div>
