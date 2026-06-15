@@ -77,6 +77,43 @@
     ]
   },
   {
+    "family": "4208-00",
+    "main_image": "42/4208/editar/Mohicano0100.jpg",
+    "gallery": [
+      "42/4208/editar/Mohicano0100.jpg",
+      "42/4208/editar/Mohicano0096 copie.jpg",
+      "42/4208/editar/Mohicano0090.jpg",
+      "42/4208/editar/Mohicano0088.jpg",
+      "42/4208/editar/Mohicano0060.jpg"
+    ],
+    "description": "Modelo 4208-00",
+    "characteristics": [
+      "Tiro: Cintura",
+      "Bota: Flare"
+    ],
+    "variants": [
+      {
+        "sku": "4208-01",
+        "main_image": "42/4208/editar/Mohicano0096 copie.jpg",
+        "gallery": [
+          "42/4208/editar/Mohicano0096 copie.jpg",
+          "42/4208/editar/Mohicano0090.jpg",
+          "42/4208/editar/Mohicano0088.jpg",
+          "42/4208/editar/Mohicano0060.jpg"
+        ]
+      },
+      {
+        "sku": "4208-02",
+        "main_image": "42/4208/editar/Mohicano0090.jpg",
+        "gallery": [
+          "42/4208/editar/Mohicano0090.jpg",
+          "42/4208/editar/Mohicano0088.jpg",
+          "42/4208/editar/Mohicano0060.jpg"
+        ]
+      }
+    ]
+  },
+  {
     "family": "4214-00",
     "variants": [
       {
@@ -159,6 +196,37 @@
     "variants": []
   },
   {
+    "family": "4224-00",
+    "main_image": "42/4224/Mohicano0500 copie.jpg",
+    "gallery": [
+      "42/4224/Mohicano0500 copie.jpg",
+      "42/4224/Mohicano0495 copie.jpg",
+      "42/4224/Mohicano0489.jpg",
+      "42/4224/Mohicano0485.jpg",
+      "42/4224/Mohicano0479 copie.jpg"
+    ],
+    "description": "Modelo 4224-00",
+    "characteristics": [
+      "Tiro: Medio",
+      "Bota: Oxford"
+    ],
+    "variants": [
+      {
+        "sku": "4224-01",
+        "main_image": "42/4224-01 gravillado/Mohicano0549.jpg",
+        "gallery": [
+          "42/4224-01 gravillado/Mohicano0549.jpg",
+          "42/4224-01 gravillado/Mohicano0548.jpg",
+          "42/4224-01 gravillado/Mohicano0545 copie.jpg",
+          "42/4224-01 gravillado/Mohicano0542.jpg",
+          "42/4224-01 gravillado/Mohicano0540.jpg",
+          "42/4224-01 gravillado/Mohicano0537.jpg",
+          "42/4224-01 gravillado/Mohicano0530.jpg"
+        ]
+      }
+    ]
+  },
+  {
     "family": "4226-01",
     "main_image": "Imagenes/4226/4226-01/catalogo 42 _page-0116.jpg",
     "gallery": [
@@ -187,9 +255,38 @@
           "Imagenes/4235/Copia de CRI_8494.jpg",
           "Imagenes/4235/Copia de CRI_8498.jpg",
           "Imagenes/4235/Copia de CRI_8502.jpg"
+    ]
+  },
+  {
+    "family": "4249-00",
+    "main_image": "42/4249/editar/Mohicano-21.jpg",
+    "gallery": [
+      "42/4249/editar/Mohicano-21.jpg",
+      "42/4249/editar/Mohicano-26 copie.jpg",
+      "42/4249/editar/Mohicano-27.jpg",
+      "42/4249/editar/Mohicano-30.jpg",
+      "42/4249/editar/Mohicano-33 copie.jpg"
+    ],
+    "description": "Modelo 4249-00",
+    "characteristics": [
+      "Tiro: Cintura",
+      "Bota: Wide leg"
+    ],
+    "variants": [
+      {
+        "sku": "4249-60",
+        "main_image": "42/4249/editar/Mohicano-26 copie.jpg",
+        "gallery": [
+          "42/4249/editar/Mohicano-26 copie.jpg",
+          "42/4249/editar/Mohicano-27.jpg",
+          "42/4249/editar/Mohicano-30.jpg",
+          "42/4249/editar/Mohicano-33 copie.jpg",
+          "42/4249/editar/Mohicano-21.jpg"
         ]
       }
     ]
+  }
+]
   },
   {
     "family": "4243-00",
@@ -204,6 +301,24 @@
     "characteristics": [
       "Cintura",
       "Pitillo"
+    ],
+    "variants": []
+  },
+  {
+    "family": "4242-00",
+    "main_image": "42/4242/Mohicano0338.jpg",
+    "gallery": [
+      "42/4242/Mohicano0338.jpg",
+      "42/4242/Mohicano0329.jpg",
+      "42/4242/Mohicano0321.jpg",
+      "42/4242/Mohicano0317.jpg",
+      "42/4242/Mohicano0310 copie.jpg",
+      "42/4242/Mohicano0308.jpg"
+    ],
+    "description": "Modelo 4242-00",
+    "characteristics": [
+      "Tiro: Cintura",
+      "Bota: Palazzo"
     ],
     "variants": []
   },
