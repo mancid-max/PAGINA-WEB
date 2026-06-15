@@ -2299,17 +2299,29 @@ function renderImages(imageList, sku = "") {
     return;
   }
 
-  asignarImagenCatalogo(viewer, uniqueImages[0], { eager: true, fetchPriority: "high" });
+  asignarImagenCatalogo(viewer, uniqueImages[0], {
+    eager: true,
+    fetchPriority: "high",
+    preferOriginal: CATALOG_SOURCE === "catalogo-43",
+  });
 
   uniqueImages.forEach((imgSrc, index) => {
     const thumb = document.createElement("img");
-    asignarImagenCatalogo(thumb, imgSrc, { eager: index === 0, fetchPriority: "low" });
+    asignarImagenCatalogo(thumb, imgSrc, {
+      eager: index === 0,
+      fetchPriority: "low",
+      preferOriginal: CATALOG_SOURCE === "catalogo-43",
+    });
     thumb.alt = "";
     thumb.setAttribute("aria-hidden", "true");
     if (index === 0) thumb.classList.add("active-thumb");
 
     thumb.onclick = () => {
-      asignarImagenCatalogo(viewer, imgSrc, { eager: true, fetchPriority: "high" });
+      asignarImagenCatalogo(viewer, imgSrc, {
+        eager: true,
+        fetchPriority: "high",
+        preferOriginal: CATALOG_SOURCE === "catalogo-43",
+      });
       imagenModalIndex = index;
       // limpia active
       thumbContainer.querySelectorAll("img").forEach((t) => t.classList.remove("active-thumb"));
@@ -2787,17 +2799,29 @@ function renderZoomGallery() {
     imagenModalIndex = 0;
   }
 
-  asignarImagenCatalogo(zoomMain, imagenesModalActual[imagenModalIndex], { eager: true, fetchPriority: "high" });
+  asignarImagenCatalogo(zoomMain, imagenesModalActual[imagenModalIndex], {
+    eager: true,
+    fetchPriority: "high",
+    preferOriginal: CATALOG_SOURCE === "catalogo-43",
+  });
 
   imagenesModalActual.forEach((imgSrc, index) => {
     const thumb = document.createElement("img");
-    asignarImagenCatalogo(thumb, imgSrc, { eager: index === imagenModalIndex, fetchPriority: "low" });
+    asignarImagenCatalogo(thumb, imgSrc, {
+      eager: index === imagenModalIndex,
+      fetchPriority: "low",
+      preferOriginal: CATALOG_SOURCE === "catalogo-43",
+    });
     thumb.alt = "";
     thumb.setAttribute("aria-hidden", "true");
     if (index === imagenModalIndex) thumb.classList.add("active-thumb");
     thumb.onclick = () => {
       imagenModalIndex = index;
-      asignarImagenCatalogo(zoomMain, imgSrc, { eager: true, fetchPriority: "high" });
+      asignarImagenCatalogo(zoomMain, imgSrc, {
+        eager: true,
+        fetchPriority: "high",
+        preferOriginal: CATALOG_SOURCE === "catalogo-43",
+      });
       zoomThumbs.querySelectorAll("img").forEach((t) => t.classList.remove("active-thumb"));
       thumb.classList.add("active-thumb");
     };
@@ -3414,7 +3438,7 @@ function obtenerPreferenciasCargaTarjeta(index = 0) {
     return {
       eager: index < 1,
       fetchPriority: index === 0 ? "high" : "low",
-      preferOriginal: IS_LOCAL_FILE_PROTOCOL,
+      preferOriginal: true,
     };
   }
   return {
