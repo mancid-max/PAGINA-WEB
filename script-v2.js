@@ -2415,8 +2415,9 @@ function obtenerVideoProducto(sku) {
 
 function pausarVideoModal() {
   const videoEl = document.getElementById("videoZoomPlayer");
-  if (!videoEl) return;
-  videoEl.pause();
+  if (videoEl) videoEl.pause();
+  const inlineVideo = document.getElementById("inlineVideoPlayer");
+  if (inlineVideo) inlineVideo.pause();
 }
 
 function pausarVideoPreviewInline() {
@@ -2458,61 +2459,56 @@ function actualizarVideoPreviewInline(videoSrc = "") {
 
 function actualizarVideoModal(sku) {
   const videoBtn = document.getElementById("openVideoGalleryBtn");
-  const videoEl = document.getElementById("videoZoomPlayer");
+  const inlineVideo = document.getElementById("inlineVideoPlayer");
+  const viewerImg = document.getElementById("viewerImg");
   const videoPath = obtenerVideoProducto(sku);
+
+  // Reset inline player whenever product/variant changes
+  if (inlineVideo) {
+    inlineVideo.pause();
+    inlineVideo.hidden = true;
+    inlineVideo.removeAttribute("src");
+    inlineVideo.dataset.src = "";
+    inlineVideo.load();
+  }
+  if (viewerImg) viewerImg.hidden = false;
+
   if (!videoPath) {
-    cerrarVisorVideo();
     videoActivoSrc = "";
-    if (videoEl) {
-      videoEl.removeAttribute("src");
-      videoEl.dataset.src = "";
-      videoEl.load();
-    }
     if (videoBtn) videoBtn.hidden = true;
-    actualizarVideoPreviewInline("");
     return;
   }
 
   videoActivoSrc = withCacheBust(videoPath);
-  if (videoEl && videoEl.dataset.src && videoEl.dataset.src !== videoActivoSrc) {
-    videoEl.pause();
-    videoEl.removeAttribute("src");
-    videoEl.dataset.src = "";
-    videoEl.load();
-  }
   if (videoBtn) videoBtn.hidden = false;
-  actualizarVideoPreviewInline(videoActivoSrc);
 }
 
 function abrirVisorVideo() {
-  const zoomModal = document.getElementById("videoZoomModal");
-  const videoEl = document.getElementById("videoZoomPlayer");
-  if (!zoomModal || !videoEl || !videoActivoSrc) return;
+  const inlineVideo = document.getElementById("inlineVideoPlayer");
+  const viewerImg = document.getElementById("viewerImg");
+  if (!inlineVideo || !videoActivoSrc) return;
   cerrarVisorImagenes();
-  if (videoEl.dataset.src !== videoActivoSrc) {
-    videoEl.src = videoActivoSrc;
-    videoEl.dataset.src = videoActivoSrc;
-    videoEl.load();
+  if (inlineVideo.dataset.src !== videoActivoSrc) {
+    inlineVideo.src = videoActivoSrc;
+    inlineVideo.dataset.src = videoActivoSrc;
+    inlineVideo.load();
   }
-  pausarVideoPreviewInline();
-  zoomModal.hidden = false;
-  document.body.classList.add("image-zoom-open");
-  const playPromise = videoEl.play();
+  if (viewerImg) viewerImg.hidden = true;
+  inlineVideo.hidden = false;
+  const playPromise = inlineVideo.play();
   if (playPromise && typeof playPromise.catch === "function") {
     playPromise.catch(() => {});
   }
 }
 
 function cerrarVisorVideo() {
-  const zoomModal = document.getElementById("videoZoomModal");
-  const videoEl = document.getElementById("videoZoomPlayer");
-  if (!zoomModal) return;
-  if (videoEl) {
-    videoEl.pause();
+  const inlineVideo = document.getElementById("inlineVideoPlayer");
+  const viewerImg = document.getElementById("viewerImg");
+  if (inlineVideo) {
+    inlineVideo.pause();
+    inlineVideo.hidden = true;
   }
-  zoomModal.hidden = true;
-  document.body.classList.remove("image-zoom-open");
-  if (videoActivoSrc) actualizarVideoPreviewInline(videoActivoSrc);
+  if (viewerImg) viewerImg.hidden = false;
 }
 
 /***********************
