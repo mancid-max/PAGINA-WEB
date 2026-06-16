@@ -2457,7 +2457,6 @@ function actualizarVideoPreviewInline(videoSrc = "") {
 }
 
 function actualizarVideoModal(sku) {
-  const videoBtn = document.getElementById("openVideoGalleryBtn");
   const videoEl = document.getElementById("videoZoomPlayer");
   const videoPath = obtenerVideoProducto(sku);
   if (!videoPath) {
@@ -2468,7 +2467,6 @@ function actualizarVideoModal(sku) {
       videoEl.dataset.src = "";
       videoEl.load();
     }
-    if (videoBtn) videoBtn.hidden = true;
     actualizarVideoPreviewInline("");
     return;
   }
@@ -2480,7 +2478,6 @@ function actualizarVideoModal(sku) {
     videoEl.dataset.src = "";
     videoEl.load();
   }
-  if (videoBtn) videoBtn.hidden = false;
   actualizarVideoPreviewInline(videoActivoSrc);
 }
 
@@ -3693,7 +3690,6 @@ document.getElementById("modal").onclick = (e) => {
 };
 
 document.getElementById("openImageGalleryBtn")?.addEventListener("click", abrirVisorImagenes);
-document.getElementById("openVideoGalleryBtn")?.addEventListener("click", abrirVisorVideo);
 document.getElementById("closeImageZoomBtn")?.addEventListener("click", cerrarVisorImagenes);
 document.getElementById("imageZoomModal")?.addEventListener("click", (e) => {
   if (e.target.dataset.closeImageZoom !== undefined) cerrarVisorImagenes();
