@@ -120,7 +120,7 @@
     "4016": {
       "article": "4016",
       "sku": "4016",
-      "description": "CINTURA / PITILLO",
+      "description": "CINTURA / PITILLO    (BLUE) / BIOMEDIOFOCALIZADO",
       "sizes": {
         "36": 18,
         "38": 2,
@@ -414,7 +414,7 @@
     "0541-19": {
       "article": "05-4119",
       "sku": "0541-19",
-      "description": "CINTURA",
+      "description": "CINTURA / MINI",
       "sizes": {
         "36": 4,
         "38": 11,
@@ -432,12 +432,12 @@
       "sizes": {
         "36": 0,
         "38": 0,
-        "40": 4,
-        "42": 3,
-        "44": 13,
+        "40": 3,
+        "42": 0,
+        "44": 4,
         "46": 0
       },
-      "total": 20
+      "total": 7
     },
     "4188-60": {
       "article": "4188-60",
@@ -466,76 +466,6 @@
         "46": 1
       },
       "total": 10
-    },
-    "4108-00": {
-      "article": "4108-00",
-      "sku": "4108-00",
-      "description": "CINTURA / PALAZZO",
-      "sizes": {
-        "36": 0,
-        "38": 0,
-        "40": 1,
-        "42": 6,
-        "44": 0,
-        "46": 2
-      },
-      "total": 9
-    },
-    "4177-04": {
-      "article": "4177-04",
-      "sku": "4177-04",
-      "description": "CINTURA / FLARE",
-      "sizes": {
-        "36": 1,
-        "38": 0,
-        "40": 1,
-        "42": 4,
-        "44": 0,
-        "46": 2
-      },
-      "total": 8
-    },
-    "4166-00": {
-      "article": "4166-00",
-      "sku": "4166-00",
-      "description": "CINTURA / PITILLO",
-      "sizes": {
-        "36": 0,
-        "38": 0,
-        "40": 1,
-        "42": 7,
-        "44": 0,
-        "46": 0
-      },
-      "total": 8
-    },
-    "4109": {
-      "article": "4109",
-      "sku": "4109",
-      "description": "CINTURA / PALAZZO",
-      "sizes": {
-        "36": 1,
-        "38": 1,
-        "40": 1,
-        "42": 1,
-        "44": 1,
-        "46": 1
-      },
-      "total": 6
-    },
-    "4165-00": {
-      "article": "416500",
-      "sku": "4165-00",
-      "description": "CINTURA / PITILLO",
-      "sizes": {
-        "36": 0,
-        "38": 1,
-        "40": 0,
-        "42": 0,
-        "44": 0,
-        "46": 0
-      },
-      "total": 1
     }
   }
 }
