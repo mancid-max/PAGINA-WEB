@@ -4725,7 +4725,7 @@ box-shadow: 0 -10px 18px rgba(255,255,255,0.95), 0 10px 24px rgba(0,0,0,0.16);
 
 .client-lookup-msg.loading{ color:#cbd5e1; }
 .client-lookup-msg.ok{ color:#86efac; font-weight:600; }
-.client-lookup-msg.new{ color:#fde68a; font-weight:600; }
+.client-lookup-msg.new{ color:#b45309; font-weight:600; }
 .client-lookup-msg.error{ color:#fca5a5; font-weight:700; }
 .client-lookup-msg.shake{ animation: shakeX .28s ease; }
 
@@ -4769,9 +4769,9 @@ box-shadow: 0 -10px 18px rgba(255,255,255,0.95), 0 10px 24px rgba(0,0,0,0.16);
   margin-top:2px;
   padding:9px 11px;
   border-radius:12px;
-  border:1px solid rgba(251,191,36,0.18);
-  background:rgba(255,255,255,0.04);
-  color:#f8e7a1;
+  border:1px solid rgba(180,83,9,0.20);
+  background:rgba(251,191,36,0.07);
+  color:#78350f;
   font-size:11px;
   line-height:1.4;
 }
