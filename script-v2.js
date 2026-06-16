@@ -2154,7 +2154,9 @@ async function cargarProductosCatalogo() {
       : Promise.resolve([]);
     const catalog43ThumbnailPromise = CATALOG_SOURCE === "catalogo-1"
       ? fetch(withCacheBust("data-catalogo-43.json")).then((res) => res.json()).catch(() => [])
-      : Promise.resolve([]);
+      : CATALOG_SOURCE === "catalogo-43"
+        ? fetch(withCacheBust("data-catalogo-42.json")).then((res) => res.json()).catch(() => [])
+        : Promise.resolve([]);
     const catalogCoverMapPromise = fetch(withCacheBust("catalog-cover-map.json")).then((res) => {
       if (!res.ok) throw new Error(`status ${res.status}`);
       return res.json();
