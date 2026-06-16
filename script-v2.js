@@ -4,6 +4,7 @@
 let productos = [];
 let productosGrid = [];
 let productosCatalogoBase = [];
+let thumbnailBySku = {};
 let pedido = [];
 let skuActivo = "";
 let draftTallasPorSku = {}; // legacy (borradores desactivados)
@@ -2151,6 +2152,9 @@ async function cargarProductosCatalogo() {
     const catalog42PresencePromise = CATALOG_SOURCE === "catalogo-1"
       ? fetch(withCacheBust("data-catalogo-42-presence.json")).then((res) => res.json())
       : Promise.resolve([]);
+    const catalog43ThumbnailPromise = CATALOG_SOURCE === "catalogo-1"
+      ? fetch(withCacheBust("data-catalogo-43.json")).then((res) => res.json()).catch(() => [])
+      : Promise.resolve([]);
     const catalogCoverMapPromise = fetch(withCacheBust("catalog-cover-map.json")).then((res) => {
       if (!res.ok) throw new Error(`status ${res.status}`);
       return res.json();
@@ -2165,7 +2169,7 @@ async function cargarProductosCatalogo() {
       })
       : Promise.resolve(null);
 
-    const [data, priceData, stockData, extraCatalogData, catalog42Data, catalog42PresenceData, catalogCoverMapData, stockOverridesData, trazabilidadData] = await Promise.all([
+    const [data, priceData, stockData, extraCatalogData, catalog42Data, catalog42PresenceData, catalogCoverMapData, stockOverridesData, trazabilidadData, catalog43ThumbnailData] = await Promise.all([
       catalogPromise,
       priceDataPromise,
       stockPromise,
@@ -2175,12 +2179,23 @@ async function cargarProductosCatalogo() {
       catalogCoverMapPromise,
       stockOverridesPromise,
       trazabilidadPromise,
+      catalog43ThumbnailPromise,
     ]);
 
     catalogPriceBySource = {
       ...catalogPriceBySource,
       ...(priceData || {}),
     };
+
+    if (Array.isArray(catalog43ThumbnailData)) {
+      catalog43ThumbnailData.forEach((item) => {
+        const sku = normalizarSkuCatalogo(item?.family);
+        if (!sku) return;
+        const img = item?.main_image || (Array.isArray(item?.gallery) ? item.gallery[0] : "") || "";
+        if (img) thumbnailBySku[sku] = normalizarRutaAsset(img);
+      });
+    }
+
     actualizarCarrito();
 
     if (INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43") {
@@ -2545,7 +2560,9 @@ function obtenerMiniaturaCarritoPorSku(sku) {
   if (!producto) {
     producto = (Array.isArray(productos) ? productos : []).find((item) => obtenerBaseFamilia(item?.family) === base);
   }
-  if (!producto) return "";
+  if (!producto) {
+    return thumbnailBySku[normalized] || thumbnailBySku[`${base}-00`] || "";
+  }
 
   const preferredVariant = Array.isArray(producto?.variants)
     ? producto.variants.find((variant) => normalizarSkuCatalogo(variant?.sku) === normalized)
