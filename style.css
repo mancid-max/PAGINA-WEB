@@ -946,19 +946,6 @@ image-rendering: auto;
 filter:none;
 }
 
-.inline-video-player{
-max-width:100%;
-max-height:calc(100% - 14px);
-object-fit:contain;
-display:block;
-border-radius:8px;
-background:#0a0a0d;
-}
-
-.inline-video-player[hidden]{
-display:none !important;
-}
-
 .modal-hantan-stack{
 position:absolute;
 left:12px;
