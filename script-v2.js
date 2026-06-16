@@ -236,7 +236,7 @@ const HANTAN_BY_SKU = {
   "4322-00": ["power strech.png"],
   "4322-01": ["power strech.png"],
   "4322-02": ["power strech.png"],
-  "4323-01": ["power strech.png", "push in push up.png"],
+  "4323-00": ["power strech.png", "push in push up.png"],
   "4325-00": ["power strech.png"],
   "4325-01": ["power strech.png"],
   "4327-00": ["power strech.png", "smart denim.png"],
