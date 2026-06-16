@@ -3664,6 +3664,15 @@ function verProducto(familyId, preferredSku = "") {
   if (modalRight) modalRight.scrollTop = 0;
 
   document.getElementById("modal").classList.add("active");
+
+  if (typeof fbq === "function") {
+    fbq("track", "ViewContent", {
+      content_ids: [skuActivo],
+      content_name: p?.family || skuActivo,
+      content_type: "product",
+      currency: "CLP",
+    });
+  }
 }
 
 /***********************
@@ -3743,6 +3752,18 @@ document.getElementById("addBtn").onclick = () => {
   mostrarToastExito("Producto agregado", "Puedes verlo en Tu pedido.");
   cerrarPanelCotizacionModal();
   document.getElementById("modal").classList.remove("active");
+
+  if (typeof fbq === "function") {
+    const precio = obtenerPrecioCatalogo(skuActivo) || 0;
+    fbq("track", "AddToCart", {
+      content_ids: [skuActivo],
+      content_name: skuActivo,
+      content_type: "product",
+      value: precio * total,
+      currency: "CLP",
+      num_items: total,
+    });
+  }
 };
 
 /***********************
