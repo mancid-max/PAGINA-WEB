@@ -450,42 +450,6 @@
         "fabric":  "Ayla"
     },
     {
-        "family":  "4323-01",
-        "main_image":  "43/4323/editar/Mohicano-211.jpg",
-        "gallery":  [
-                        "43/4323/editar/Mohicano-211.jpg",
-                        "43/4323/editar/Mohicano-214.jpg",
-                        "43/4323/editar/Mohicano-215.jpg",
-                        "43/4323/editar/Mohicano-216.jpg",
-                        "43/4323/editar/Mohicano-222.jpg",
-                        "43/4323/Mohicano-210.jpg",
-                        "43/4323/Mohicano-212.jpg",
-                        "43/4323/Mohicano-213.jpg",
-                        "43/4323/Mohicano-217.jpg",
-                        "43/4323/Mohicano-218.jpg",
-                        "43/4323/Mohicano-219.jpg",
-                        "43/4323/Mohicano-220.jpg",
-                        "43/4323/Mohicano-221.jpg"
-                    ],
-        "description":  "JEAN ? CINTURA ? FLARE",
-        "characteristics":  [
-                                "Tipo: JEAN",
-                                "Tiro: CINTURA",
-                                "Bota: FLARE",
-                                "Tela: Ayla",
-                                "TecnologÃ­a: Perfect Fit",
-                                "Disponible: 452 unidades",
-                                "Cortes: 11582"
-                            ],
-        "variants":  [
-
-                     ],
-        "tipo":  "JEAN",
-        "tiro":  "CINTURA",
-        "bota":  "FLARE",
-        "fabric":  "Ayla"
-    },
-    {
         "family":  "4325-01",
         "main_image":  "43/43/4325/editar/Mohicano-172.jpg",
         "gallery":  [
