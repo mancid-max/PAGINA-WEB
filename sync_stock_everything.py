@@ -16,8 +16,8 @@ SUPABASE_ANON_KEY = "sb_publishable_37ce4uK_RG8o9pP-Jdf2Xw_3eWgqJQy"
 LANDING_STOCK_FILES = ["stock-data.json", "stock-data-catalogo-2.json"]
 CATALOGO_2_STOCK_FILE = ROOT / "stock-data-catalogo-2.json"
 ALL_SHEETS_JSON = ROOT / "stock-data-all-sheets.json"
-SCRIPT_GENERATE_LANDING = ROOT / "generate_catalog_stock_json_from_excel.py"
-SCRIPT_GENERATE_SUPABASE = ROOT / "generate_supabase_stock_sql_from_excel.py"
+SCRIPT_GENERATE_LANDING = ROOT / "scripts" / "generate_catalog_stock_json_from_excel.py"
+SCRIPT_GENERATE_SUPABASE = ROOT / "scripts" / "generate_supabase_stock_sql_from_excel.py"
 
 
 def parse_target_seasons() -> set[str]:
@@ -116,12 +116,13 @@ def normalize_text(value) -> str | None:
 
 
 def sync_sizes(token: str, stock_item_id: int, sizes: dict[str, int]) -> None:
-    delete_url = f"{SUPABASE_URL}/rest/v1/stock_item_sizes?stock_item_id=eq.{stock_item_id}"
-    request_json("DELETE", delete_url, {
+    minimal_headers = {
         "apikey": SUPABASE_ANON_KEY,
         "Authorization": f"Bearer {token}",
         "Prefer": "return=minimal",
-    })
+    }
+    request_json("DELETE", f"{SUPABASE_URL}/rest/v1/stock_item_sizes?stock_item_id=eq.{stock_item_id}", minimal_headers)
+    request_json("DELETE", f"{SUPABASE_URL}/rest/v1/stock_item_reserve_sizes?stock_item_id=eq.{stock_item_id}", minimal_headers)
 
     size_rows = []
     for index, size_label in enumerate(["36", "38", "40", "42", "44", "46"], start=1):
