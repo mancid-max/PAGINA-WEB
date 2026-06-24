@@ -3315,14 +3315,15 @@ function renderizarInfoProductoCatalogo43(charList, producto, detallePrecio) {
 }
 
 const CATALOGO_43_MODELOS_DISPONIBLES = new Set([
-  "4301", "4309", "4310", "4311", "4313", "4314", "4318",
-  "4321", "4322", "4323", "4329", "4333", "4339", "4340",
+  "4301", "4309", "4310", "4311", "4313", "4314", "4318", "4319",
+  "4321", "4322", "4323", "4325", "4329", "4333", "4337", "4339", "4341", "4362",
 ]);
 
 const CATALOGO_43_SKUS_AGOTADOS = new Set([
-  "4356-00",
-  "4361-04", "4361-08", "4361-16", "4361-67",
-  "4362-08", "4362-16", "4362-48",
+  "4322-02", "4322-60",
+  "4356-00", "4356-01",
+  "4361-04", "4361-08", "4361-16", "4361-48", "4361-67",
+  "4362-08", "4362-16",
   "4363-00",
   "4365-00",
   "4371-00", "4371-01",
@@ -3334,8 +3335,8 @@ function obtenerEstadoVisibilidadCatalogo43(producto = {}) {
   const family = normalizarSkuCatalogo(producto?._preferredSku || producto?.family || producto?._baseFamily || "");
   if (family && CATALOGO_43_SKUS_AGOTADOS.has(family)) return "soldout";
   const model = obtenerBaseFamilia(family);
-  if (!model) return "production";
-  return CATALOGO_43_MODELOS_DISPONIBLES.has(model) ? "available" : "production";
+  if (!model) return "soldout";
+  return CATALOGO_43_MODELOS_DISPONIBLES.has(model) ? "available" : "soldout";
 }
 
 function filtrarProductosPorVisibilidad(lista = []) {
