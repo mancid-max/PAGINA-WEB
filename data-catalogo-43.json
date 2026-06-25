@@ -325,42 +325,6 @@
         "fabric":  "New Glue"
     },
     {
-        "family":  "4322-00",
-        "main_image":  "43/4322/editar/Mohicano-50.jpg",
-        "gallery":  [
-                        "43/4322/editar/Mohicano-50.jpg",
-                        "43/4322/editar/Mohicano-51.jpg",
-                        "43/4322/editar/Mohicano-54.jpg",
-                        "43/4322/editar/Mohicano-56.jpg",
-                        "43/4322/editar/Mohicano-58.jpg",
-                        "43/4322/Mohicano-49.jpg",
-                        "43/4322/Mohicano-52.jpg",
-                        "43/4322/Mohicano-53.jpg",
-                        "43/4322/Mohicano-55.jpg",
-                        "43/4322/Mohicano-57.jpg",
-                        "43/4322/Mohicano-59.jpg",
-                        "43/4322/Mohicano-60.jpg",
-                        "43/4322/Mohicano-61.jpg"
-                    ],
-        "description":  "JEAN ? CINTURA ? FLARE",
-        "characteristics":  [
-                                "Tipo: JEAN",
-                                "Tiro: CINTURA",
-                                "Bota: FLARE",
-                                "Tela: B2868V-3",
-                                "TecnologÃ­a: Power Stretch",
-                                "Disponible: 1 unidades",
-                                "Cortes: 961250"
-                            ],
-        "variants":  [
-
-                     ],
-        "tipo":  "JEAN",
-        "tiro":  "CINTURA",
-        "bota":  "FLARE",
-        "fabric":  "B2868V-3"
-    },
-    {
         "family":  "4322-60",
         "main_image":  "43/4322-01/editar/Mohicano-62.jpg",
         "gallery":  [
