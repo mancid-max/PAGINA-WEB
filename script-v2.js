@@ -6495,9 +6495,26 @@ function renderReporteCotizacionesAdmin(quotes = []) {
   `;
 }
 
+function inyectarEstilosQuotesList() {
+  if (document.getElementById("ql-styles")) return;
+  const s = document.createElement("style");
+  s.id = "ql-styles";
+  s.textContent = `
+    .ql-filters{display:flex!important;flex-direction:column!important;gap:8px!important;padding:14px 0 10px!important;border-bottom:1px solid rgba(0,0,0,.08)!important;margin-bottom:6px!important}
+    .ql-search{background:rgba(0,0,0,.05)!important;border:none!important;border-radius:10px!important;font-size:13px!important;padding:11px 14px!important;outline:none!important;width:100%!important;box-sizing:border-box!important;transition:background .2s!important;color:inherit!important}
+    .ql-search:focus{background:rgba(0,0,0,.09)!important}
+    .ql-search::placeholder{opacity:.5!important}
+    .ql-status-btns{display:flex!important;gap:3px!important;background:rgba(0,0,0,.07)!important;border-radius:10px!important;padding:3px!important}
+    .ql-filter-btn{flex:1!important;text-align:center!important;font-size:11.5px!important;padding:7px 6px!important;border-radius:8px!important;border:none!important;color:inherit!important;opacity:.55!important;background:transparent!important;cursor:pointer!important;white-space:nowrap!important;transition:all .15s!important;font-family:inherit!important}
+    .ql-filter-btn.active{opacity:1!important;font-weight:600!important;background:rgba(255,255,255,.88)!important;color:#111!important;box-shadow:0 1px 4px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.06)!important}
+  `;
+  document.head.appendChild(s);
+}
+
 function renderCotizacionesAdmin(quotes = [], items = []) {
   const list = document.getElementById("quotesList");
   if (!list) return;
+  inyectarEstilosQuotesList();
 
   if (items.length || quotes.length) {
     const itemsMap = agruparItemsPorQuote(items);
@@ -6521,9 +6538,9 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
     <div class="ql-filters">
       <input id="quotesListSearchInput" type="text" class="ql-search" placeholder="Buscar por nombre o RUT…" value="${escapeHtmlExcel(quotesListSearchFilter)}">
       <div class="ql-status-btns">
-        <button type="button" class="ghost-btn ql-filter-btn${quotesListStatusFilter === "all" ? " active" : ""}" data-ql-filter="all">Todos (${allQuotes.length})</button>
-        <button type="button" class="ghost-btn ql-filter-btn${quotesListStatusFilter === "open" ? " active" : ""}" data-ql-filter="open">Pendientes (${pendientes})</button>
-        <button type="button" class="ghost-btn ql-filter-btn${quotesListStatusFilter === "ready" ? " active" : ""}" data-ql-filter="ready">Listos (${allQuotes.length - pendientes})</button>
+        <button type="button" class="ql-filter-btn${quotesListStatusFilter === "all" ? " active" : ""}" data-ql-filter="all">Todos (${allQuotes.length})</button>
+        <button type="button" class="ql-filter-btn${quotesListStatusFilter === "open" ? " active" : ""}" data-ql-filter="open">Pendientes (${pendientes})</button>
+        <button type="button" class="ql-filter-btn${quotesListStatusFilter === "ready" ? " active" : ""}" data-ql-filter="ready">Listos (${allQuotes.length - pendientes})</button>
       </div>
     </div>
   `;
@@ -6675,8 +6692,8 @@ async function cargarCotizacionesAdmin() {
   if (ids.length) {
     const inFilter = `(${ids.join(",")})`;
     const itemsRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/quote_items?select=quote_id,sku,size,quantity&quote_id=in.${inFilter}&order=id.desc`,
-      { headers: { ...headers, "Range-Unit": "items", Range: "0-9999" } }
+      `${SUPABASE_URL}/rest/v1/quote_items?select=quote_id,sku,size,quantity&quote_id=in.${inFilter}&order=id.desc&limit=9999`,
+      { headers }
     );
     if (!itemsRes.ok) {
       const errText = await itemsRes.text();
