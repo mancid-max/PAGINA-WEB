@@ -6676,7 +6676,7 @@ async function cargarCotizacionesAdmin() {
     const inFilter = `(${ids.join(",")})`;
     const itemsRes = await fetch(
       `${SUPABASE_URL}/rest/v1/quote_items?select=quote_id,sku,size,quantity&quote_id=in.${inFilter}&order=id.desc`,
-      { headers }
+      { headers: { ...headers, "Range-Unit": "items", Range: "0-9999" } }
     );
     if (!itemsRes.ok) {
       const errText = await itemsRes.text();
