@@ -6545,8 +6545,12 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
     </div>
   `;
 
+  const inputFocused = document.activeElement?.id === "quotesListSearchInput";
+  const cursorPos = inputFocused ? (document.activeElement.selectionStart ?? null) : null;
+
   if (!filtered.length) {
     list.innerHTML = filterBar + `<div class="quote-card"><div class="quote-meta">No hay pedidos para mostrar.</div></div>`;
+    if (inputFocused) { const i = document.getElementById("quotesListSearchInput"); if (i) { i.focus(); if (cursorPos !== null) i.setSelectionRange(cursorPos, cursorPos); } }
     return;
   }
 
@@ -6604,6 +6608,11 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
       </div>
     `;
   }).join("");
+
+  if (inputFocused) {
+    const i = document.getElementById("quotesListSearchInput");
+    if (i) { i.focus(); if (cursorPos !== null) i.setSelectionRange(cursorPos, cursorPos); }
+  }
 }
 
 async function actualizarEstadoCotizacion(quoteId, isReady) {
