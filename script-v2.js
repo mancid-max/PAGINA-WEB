@@ -20,6 +20,8 @@ let trazabilidadCache = [];
 let trazabilidadMeta = null;
 let adminActiveTab = "cotizaciones";
 let quotesStatusFilter = "all";
+let quotesListStatusFilter = "all";
+let quotesListSearchFilter = "";
 let quotesMonthFilter = (() => {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -6497,14 +6499,42 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
   const list = document.getElementById("quotesList");
   if (!list) return;
 
-  if (!quotes.length) {
-    list.innerHTML = `<div class="quote-card"><div class="quote-meta">No hay pedidos para mostrar.</div></div>`;
+  if (items.length || quotes.length) {
+    const itemsMap = agruparItemsPorQuote(items);
+    quotesAdminCache = { quotes: [...quotes], itemsByQuote: itemsMap };
+  }
+
+  const allQuotes = quotesAdminCache.quotes;
+  const search = quotesListSearchFilter.trim().toLowerCase();
+  let filtered = allQuotes;
+  if (quotesListStatusFilter === "open") filtered = filtered.filter((q) => !q.is_ready);
+  else if (quotesListStatusFilter === "ready") filtered = filtered.filter((q) => !!q.is_ready);
+  if (search) {
+    filtered = filtered.filter((q) =>
+      (q.store_name || "").toLowerCase().includes(search) ||
+      (q.client_rut || "").toLowerCase().replace(/[.\-]/g, "").includes(search.replace(/[.\-]/g, ""))
+    );
+  }
+
+  const pendientes = allQuotes.filter((q) => !q.is_ready).length;
+  const filterBar = `
+    <div class="ql-filters">
+      <input id="quotesListSearchInput" type="text" class="ql-search" placeholder="Buscar por nombre o RUT…" value="${escapeHtmlExcel(quotesListSearchFilter)}">
+      <div class="ql-status-btns">
+        <button type="button" class="ghost-btn ql-filter-btn${quotesListStatusFilter === "all" ? " active" : ""}" data-ql-filter="all">Todos (${allQuotes.length})</button>
+        <button type="button" class="ghost-btn ql-filter-btn${quotesListStatusFilter === "open" ? " active" : ""}" data-ql-filter="open">Pendientes (${pendientes})</button>
+        <button type="button" class="ghost-btn ql-filter-btn${quotesListStatusFilter === "ready" ? " active" : ""}" data-ql-filter="ready">Listos (${allQuotes.length - pendientes})</button>
+      </div>
+    </div>
+  `;
+
+  if (!filtered.length) {
+    list.innerHTML = filterBar + `<div class="quote-card"><div class="quote-meta">No hay pedidos para mostrar.</div></div>`;
     return;
   }
 
-  const itemsMap = agruparItemsPorQuote(items);
-  quotesAdminCache = { quotes: [...quotes], itemsByQuote: itemsMap };
-  list.innerHTML = quotes.map((q) => {
+  const itemsMap = quotesAdminCache.itemsByQuote instanceof Map ? quotesAdminCache.itemsByQuote : new Map();
+  list.innerHTML = filterBar + filtered.map((q) => {
     const detalles = (itemsMap.get(q.id) || []).sort((a, b) => {
       if (String(a.sku) !== String(b.sku)) return String(a.sku).localeCompare(String(b.sku));
       return String(a.size).localeCompare(String(b.size), undefined, { numeric: true });
@@ -6816,6 +6846,20 @@ function configurarPanelCotizaciones() {
   });
 
   btnLogout?.addEventListener("click", logoutCotizaciones);
+
+  quotesListEl?.addEventListener("input", (e) => {
+    if (e.target.id !== "quotesListSearchInput") return;
+    quotesListSearchFilter = e.target.value;
+    renderCotizacionesAdmin();
+  });
+
+  quotesListEl?.addEventListener("click", (e) => {
+    const filterBtn = e.target.closest(".ql-filter-btn[data-ql-filter]");
+    if (filterBtn) {
+      quotesListStatusFilter = filterBtn.dataset.qlFilter || "all";
+      renderCotizacionesAdmin();
+    }
+  });
 
   quotesListEl?.addEventListener("change", async (e) => {
     const checkbox = e.target.closest(".quote-ready-checkbox");
