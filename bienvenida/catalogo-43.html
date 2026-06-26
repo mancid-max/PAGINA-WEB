@@ -483,12 +483,13 @@ body #stockCatalogSearchInput{background:var(--s2)!important;border:1px solid va
 body #stockCatalogSearchInput::placeholder{color:var(--c2)!important}
 body .stock-editor-save{background:var(--cream)!important;color:var(--bg)!important;border-color:var(--cream)!important}
 body .stock-editor-delete{border-color:rgba(239,68,68,.28)!important;color:rgba(239,68,68,.65)!important}
-body .ql-filters{display:flex!important;flex-direction:column!important;gap:8px!important;padding:10px 0 6px!important}
-body .ql-search{background:var(--s2)!important;border:1px solid var(--bdr)!important;border-radius:var(--r)!important;color:var(--cream)!important;font-family:'Inter',sans-serif;font-size:12px;padding:9px 12px!important;outline:none!important;width:100%!important;box-sizing:border-box!important}
+body .ql-filters{display:flex!important;flex-direction:column!important;gap:8px!important;padding:14px 0 10px!important;border-bottom:1px solid var(--bdr)!important;margin-bottom:6px!important}
+body .ql-search{background:rgba(255,255,255,.06)!important;border:none!important;border-radius:10px!important;color:var(--cream)!important;font-family:'Inter',sans-serif!important;font-size:13px!important;padding:11px 14px!important;outline:none!important;width:100%!important;box-sizing:border-box!important;transition:background .2s!important}
+body .ql-search:focus{background:rgba(255,255,255,.1)!important}
 body .ql-search::placeholder{color:var(--c2)!important}
-body .ql-status-btns{display:flex!important;gap:6px!important;flex-wrap:wrap!important}
-body .ql-filter-btn{font-size:11px!important;padding:5px 11px!important;border-radius:20px!important;border:1px solid var(--bdr)!important;color:var(--c2)!important;background:transparent!important}
-body .ql-filter-btn.active{background:var(--cream)!important;color:var(--bg)!important;border-color:var(--cream)!important;font-weight:600!important}
+body .ql-status-btns{display:flex!important;gap:3px!important;background:rgba(255,255,255,.07)!important;border-radius:10px!important;padding:3px!important}
+body .ql-filter-btn{flex:1!important;text-align:center!important;font-size:11.5px!important;font-family:'Inter',sans-serif!important;padding:7px 6px!important;border-radius:8px!important;border:none!important;color:var(--c2)!important;background:transparent!important;cursor:pointer!important;white-space:nowrap!important;transition:all .15s!important}
+body .ql-filter-btn.active{background:rgba(255,255,255,.13)!important;color:var(--cream)!important;font-weight:600!important;box-shadow:0 1px 4px rgba(0,0,0,.25),0 0 0 .5px rgba(255,255,255,.08)!important}
 
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:var(--bg)}
