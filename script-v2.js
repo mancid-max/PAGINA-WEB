@@ -3337,7 +3337,9 @@ function obtenerEstadoVisibilidadCatalogo43(producto = {}) {
 }
 
 function filtrarProductosPorVisibilidad(lista = []) {
-  return Array.isArray(lista) ? lista : [];
+  if (!Array.isArray(lista)) return [];
+  if (CATALOG_SOURCE !== "catalogo-43") return lista;
+  return lista.filter((p) => obtenerEstadoVisibilidadCatalogo43(p) !== "soldout");
 }
 
 function renderCatalogCardHtml(p) {
