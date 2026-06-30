@@ -749,8 +749,7 @@ function buscarClienteLocalPorRut(rutInput) {
 
 function esProductoAgotado(item) {
   if (CATALOG_SOURCE === "catalogo-43") {
-    const family = normalizarSkuCatalogo(item?._preferredSku || item?.family || item?._baseFamily || "");
-    return Boolean(family) && CATALOGO_43_SKUS_AGOTADOS.has(family);
+    return obtenerEstadoVisibilidadCatalogo43(item) === "soldout";
   }
   if (item?.isSoldOut === true) return true;
   if (!INVENTORY_ENABLED || !Object.keys(stockBySku || {}).length) return false;
@@ -3337,9 +3336,7 @@ function obtenerEstadoVisibilidadCatalogo43(producto = {}) {
 }
 
 function filtrarProductosPorVisibilidad(lista = []) {
-  if (!Array.isArray(lista)) return [];
-  if (CATALOG_SOURCE !== "catalogo-43") return lista;
-  return lista.filter((p) => obtenerEstadoVisibilidadCatalogo43(p) !== "soldout");
+  return Array.isArray(lista) ? lista : [];
 }
 
 function renderCatalogCardHtml(p) {
