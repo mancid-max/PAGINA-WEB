@@ -66,7 +66,8 @@ exports.handler = async (event) => {
   }
 
   const nombre    = (body.nombre    || "").trim();
-  const telefono  = (body.telefono  || "").trim();
+  const _tel      = (body.telefono  || "").trim();
+  const telefono  = (_tel.includes("{{") ? "" : _tel);
   const email     = (body.email     || "").trim();
   const instagram = (body.instagram || "").trim();
   const whatsapp  = (body.whatsapp  || "").trim();
