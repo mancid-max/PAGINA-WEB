@@ -2,7 +2,7 @@
 // Recibe leads desde ManyChat (Instagram DM / WhatsApp) y los guarda en Supabase CRM
 
 const SUPABASE_URL = process.env.SUPABASE_URL || "https://kdtydxihrflhziclgiof.supabase.co";
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
+const SUPABASE_KEY = process.env.SUPABASE_CRM_KEY || process.env.SUPABASE_SERVICE_KEY;
 const CRM_SECRET   = process.env.CRM_SECRET   || "mohicano-crm-2026";
 
 // ── Helpers Supabase ──────────────────────────────────────────────────────────
