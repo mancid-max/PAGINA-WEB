@@ -69,7 +69,8 @@ exports.handler = async (event) => {
   const _tel      = (body.telefono  || "").trim();
   const telefono  = (_tel.includes("{{") ? "" : _tel);
   const email     = (body.email     || "").trim();
-  const instagram = (body.instagram || "").trim();
+  const _ig       = (body.instagram || "").trim();
+  const instagram = (_ig.includes("{{") ? "" : _ig);
   const whatsapp  = (body.whatsapp  || "").trim();
   const mensaje   = (body.mensaje   || "").trim();
   const canal     = (body.canal     || "instagram").trim();
