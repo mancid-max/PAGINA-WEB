@@ -81,11 +81,24 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: "Faltan datos del contacto" };
   }
 
-  // ── 1. Buscar cliente existente por teléfono ──────────────────────────────
+  // ── 1. Buscar cliente existente (mc_id → instagram → teléfono) ──────────────
   let rut = null;
   let clienteExiste = false;
 
-  if (telefono) {
+  // 1a. Por mc_id (más confiable)
+  if (mc_id) {
+    const byMcId = await sbGet("crm_clientes", { mc_id: `eq.${mc_id}` });
+    if (byMcId.length) { rut = byMcId[0].rut; clienteExiste = true; }
+  }
+
+  // 1b. Por username de Instagram
+  if (!clienteExiste && instagram) {
+    const byIg = await sbGet("crm_clientes", { contacto: `eq.@${instagram}` });
+    if (byIg.length) { rut = byIg[0].rut; clienteExiste = true; }
+  }
+
+  // 1c. Por teléfono
+  if (!clienteExiste && telefono) {
     const fono_clean = telefono.replace(/\D/g, "");
     const existentes = await sbGet("crm_clientes", { telefono: `eq.${telefono}` });
     if (!existentes.length && fono_clean.length >= 8) {
@@ -112,6 +125,8 @@ exports.handler = async (event) => {
       telefono:        telefono || whatsapp || null,
       correo:          email || null,
       contacto:        instagram ? `@${instagram}` : null,
+      canal:           canal,
+      mc_id:           mc_id || null,
       ciudad:          null,
       region:          null,
       tipo_cliente:    "Lead",
