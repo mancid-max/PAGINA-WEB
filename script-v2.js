@@ -2839,10 +2839,13 @@ function actualizarEstadoCotizacionProducto(producto, sku) {
   const quotePanelModelTitle = document.getElementById("quotePanelModelTitle");
   const descriptionEl = document.getElementById("description");
   const detallePrecio = obtenerDetallePrecioCatalogo(sku || producto?.family);
+  const tituloPrefix = CATALOG_SOURCE === "catalogo-43" && producto?.bota
+    ? producto.bota.charAt(0).toUpperCase() + producto.bota.slice(1).toLowerCase()
+    : "Modelo";
   if (titleEl) {
-    titleEl.innerText = agotado ? `Modelo ${skuLabel} - Agotado` : "Modelo " + skuLabel;
+    titleEl.innerText = agotado ? `${tituloPrefix} ${skuLabel} - Agotado` : `${tituloPrefix} ${skuLabel}`;
   }
-  if (quotePanelModelTitle) quotePanelModelTitle.innerText = "Modelo " + skuLabel;
+  if (quotePanelModelTitle) quotePanelModelTitle.innerText = `${tituloPrefix} ${skuLabel}`;
   if (descriptionEl && detallePrecio && CATALOG_SOURCE !== "catalogo-43") {
     const textoBase = normalizarTextoVisible(producto?.description || "");
     descriptionEl.innerText = `${textoBase}${textoBase ? " · " : ""}Precio mayor s/iva: ${formatearPrecioCLP(detallePrecio.final)}`;
@@ -3347,7 +3350,7 @@ function renderCatalogCardHtml(p) {
       <div class="card ${esProductoAgotado(p) ? "card-sold-out" : ""}" data-family="${p.family}" onclick="verProductoDesdeCard('${p._baseFamily || p.family}','${p._preferredSku || p.family}')">
         <div class="card-title-row">
           <div class="card-title-block">
-            <div class="card-title">Modelo ${normalizarSkuCatalogo(p.family)}</div>
+            <div class="card-title">${CATALOG_SOURCE === "catalogo-43" && p.bota ? p.bota.charAt(0).toUpperCase() + p.bota.slice(1).toLowerCase() : "Modelo"} ${normalizarSkuCatalogo(p.family)}</div>
             ${
               detallePrecio
                 ? `<div class="card-price">
