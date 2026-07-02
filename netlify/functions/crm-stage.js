@@ -69,6 +69,16 @@ exports.handler = async (event) => {
     cambiado_por: "manychat",
   });
 
+  if (ok) {
+    await sbPost("crm_interacciones", {
+      cliente_rut: rut,
+      tipo:        canal === "whatsapp" ? "whatsapp" : "instagram_dm",
+      detalle:     notas || `Etapa cambiada a: ${etapa}`,
+      automatico:  true,
+      usuario:     "manychat",
+    });
+  }
+
   return {
     statusCode: ok ? 200 : 500,
     headers: { "Content-Type": "application/json" },
