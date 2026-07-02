@@ -8,7 +8,7 @@ const CRM_SECRET   = process.env.CRM_SECRET       || "mohicano-crm-2026";
 const ETAPAS_VALIDAS = [
   "Nuevo mensaje",
   "Link individual enviado",
-  "Link mayorista enviado",
+  "Link formulario mayorista enviado",
   "Quiere hablar",
   "Sin respuesta",
   "En conversación",
