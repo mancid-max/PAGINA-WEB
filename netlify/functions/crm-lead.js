@@ -7,6 +7,22 @@ const CRM_SECRET   = process.env.CRM_SECRET   || "mohicano-crm-2026";
 
 // ── Helpers Supabase ──────────────────────────────────────────────────────────
 
+async function sbPatch(table, match, data) {
+  const qs = new URLSearchParams(match).toString();
+  const r  = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${qs}`, {
+    method:  "PATCH",
+    headers: {
+      "apikey":        SUPABASE_KEY,
+      "Authorization": `Bearer ${SUPABASE_KEY}`,
+      "Content-Type":  "application/json",
+      "Prefer":        "return=minimal",
+    },
+    body: JSON.stringify(data),
+  });
+  if (!r.ok) console.error(`[sbPatch] ${table} → ${r.status}: ${await r.text()}`);
+  return r.ok;
+}
+
 async function sbPost(table, data) {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
     method:  "POST",
@@ -166,6 +182,7 @@ exports.handler = async (event) => {
   console.log("[crm-lead] crm_interacciones ok:", okInter);
 
   if (clienteExiste) {
+    if (nombre) await sbPatch("crm_clientes", { rut: `eq.${rut}` }, { razon_social: nombre });
     await sbPost("crm_pipeline", {
       cliente_rut:  rut,
       etapa:        "Nuevo mensaje",
