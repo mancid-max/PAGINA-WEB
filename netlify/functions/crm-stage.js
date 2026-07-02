@@ -44,6 +44,7 @@ exports.handler = async (event) => {
   const rut   = (body.rut   || "").trim();
   const etapa = (body.etapa || "En conversación").trim();
   const canal = (body.canal || "").trim();
+  const notas = (body.notas || "").trim();
 
   console.log("[crm-stage] rut:", rut, "etapa:", etapa);
 
@@ -58,7 +59,7 @@ exports.handler = async (event) => {
     cliente_rut:  rut,
     etapa,
     automatico:   true,
-    notas:        `Agente tomó la conversación via ${canal || "manychat"}`,
+    notas:        notas || `Agente tomó la conversación via ${canal || "manychat"}`,
     cambiado_por: "manychat",
   });
 
