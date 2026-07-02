@@ -65,7 +65,8 @@ exports.handler = async (event) => {
     return { statusCode: 401, body: "Unauthorized" };
   }
 
-  const nombre    = (body.nombre    || "").trim();
+  const _nombre   = (body.nombre    || "").trim();
+  const nombre    = (_nombre.includes("{{") ? "" : _nombre);
   const _tel      = (body.telefono  || "").trim();
   const telefono  = (_tel.includes("{{") ? "" : _tel);
   const email     = (body.email     || "").trim();
