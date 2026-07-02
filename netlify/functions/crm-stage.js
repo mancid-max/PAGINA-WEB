@@ -6,8 +6,14 @@ const SUPABASE_KEY = process.env.SUPABASE_CRM_KEY || process.env.SUPABASE_SERVIC
 const CRM_SECRET   = process.env.CRM_SECRET       || "mohicano-crm-2026";
 
 const ETAPAS_VALIDAS = [
-  "Nuevo mensaje", "En conversación", "Enviado info",
-  "Sin respuesta", "Cerrado", "Aprobado", "No aprobado",
+  "Nuevo mensaje",
+  "Link individual enviado",
+  "Link mayorista enviado",
+  "Quiere hablar",
+  "Sin respuesta",
+  "En conversación",
+  "Aprobado",
+  "No aprobado",
 ];
 
 async function sbPost(table, data) {
