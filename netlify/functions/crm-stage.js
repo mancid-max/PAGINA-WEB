@@ -10,8 +10,7 @@ const ETAPAS_VALIDAS = [
   "Link individual enviado",
   "Link formulario mayorista enviado",
   "Quiere hablar",
-  "Sin respuesta",
-  "En conversación",
+  "Formulario completado",
   "Aprobado",
   "No aprobado",
 ];
