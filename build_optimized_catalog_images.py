@@ -26,7 +26,7 @@ def collect_image_paths(repo_root: Path, json_files: list[str]) -> list[Path]:
         if not json_path.exists():
             continue
 
-        data = json.loads(json_path.read_text(encoding="utf-8"))
+        data = json.loads(json_path.read_text(encoding="utf-8-sig"))
         if not isinstance(data, list):
             continue
 
