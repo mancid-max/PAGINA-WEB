@@ -382,7 +382,7 @@ function restaurarCotizacionPersistida() {
   }
 }
 
-const ASSET_VERSION = Date.now();
+const ASSET_VERSION = "20260703";
 const OPTIMIZED_IMAGE_ROOT = "Imagenes-web";
 const OPTIMIZED_IMAGE_SOURCE_ROOTS = ["Imagenes", "Imagenes2", "Imagenes3", "42", "43"];
 const IS_LOCAL_FILE_PROTOCOL = typeof window !== "undefined" && window.location?.protocol === "file:";
