@@ -2,7 +2,7 @@
 // Recibe envíos del formulario B2B (Klaviyo embed en mayorista.html) y crea el lead en CRM
 
 const SUPABASE_URL = process.env.SUPABASE_URL || "https://kdtydxihrflhziclgiof.supabase.co";
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
+const SUPABASE_KEY = process.env.SUPABASE_CRM_KEY || process.env.SUPABASE_SERVICE_KEY;
 const CRM_SECRET   = process.env.CRM_SECRET || "mohicano-crm-2026";
 
 const SB_HEADERS = {
