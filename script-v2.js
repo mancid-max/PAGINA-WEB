@@ -3394,9 +3394,9 @@ function renderCatalogCardHtml(p) {
                 </div>`
               : ""
           }
+          ${CATALOG_SOURCE === "catalogo-43" && !esProductoAgotado(p) ? '<span class="card-cta-hint">Haz tu curva aquí</span>' : ""}
           ${esProductoAgotado(p) ? '<span class="sold-out-ribbon sold-out-ribbon-card">AGOTADO</span>' : ""}
         </div>
-        ${CATALOG_SOURCE === "catalogo-43" && !esProductoAgotado(p) ? '<div class="card-cta-hint">Haz tu curva aquí</div>' : ""}
       </div>
     `;
 }
@@ -6500,11 +6500,16 @@ function inyectarEstilosCardCta() {
   s.id = "card-cta-styles";
   s.textContent = `
     .card-cta-hint{
+      position:absolute!important;
+      bottom:0!important;left:0!important;right:0!important;
+      z-index:6!important;
       display:block!important;
-      padding:6px 12px 8px!important;
-      font-size:11px!important;font-weight:700!important;
-      color:#d71920!important;letter-spacing:.5px!important;
-      text-transform:uppercase!important;text-align:center!important;
+      padding:9px 12px!important;
+      background:linear-gradient(to top,rgba(0,0,0,.62) 0%,rgba(0,0,0,.18) 100%)!important;
+      color:#fff!important;
+      font-size:11.5px!important;font-weight:700!important;
+      letter-spacing:.5px!important;text-transform:uppercase!important;
+      text-align:center!important;pointer-events:none!important;
     }
   `;
   document.head.appendChild(s);
