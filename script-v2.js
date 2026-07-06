@@ -3379,7 +3379,7 @@ function renderCatalogCardHtml(p) {
               ? (
                   estadoVisibilidad43 === "soldout"
                     ? ""
-                    : `<span class="catalog-visibility-badge ${estadoVisibilidad43 === "available" ? "is-available" : "is-production"}">${estadoVisibilidad43 === "available" ? "Disponible" : "En producción"}</span>${estadoVisibilidad43 === "available" ? '<span class="card-cta-hint">Haz tu curva aquí</span>' : ""}`
+                    : `<span class="catalog-visibility-badge ${estadoVisibilidad43 === "available" ? "is-available" : "is-production"}">${estadoVisibilidad43 === "available" ? "Disponible" : "En producción"}</span>`
                 )
               : ""
           }
@@ -3396,6 +3396,7 @@ function renderCatalogCardHtml(p) {
           }
           ${esProductoAgotado(p) ? '<span class="sold-out-ribbon sold-out-ribbon-card">AGOTADO</span>' : ""}
         </div>
+        ${CATALOG_SOURCE === "catalogo-43" && !esProductoAgotado(p) ? '<div class="card-cta-hint">Haz tu curva aquí</div>' : ""}
       </div>
     `;
 }
@@ -6500,10 +6501,10 @@ function inyectarEstilosCardCta() {
   s.textContent = `
     .card-cta-hint{
       display:block!important;
-      margin-top:5px!important;
-      font-size:11px!important;font-weight:600!important;
-      color:#d71920!important;letter-spacing:.3px!important;
-      text-transform:uppercase!important;cursor:pointer!important;
+      padding:6px 12px 8px!important;
+      font-size:11px!important;font-weight:700!important;
+      color:#d71920!important;letter-spacing:.5px!important;
+      text-transform:uppercase!important;text-align:center!important;
     }
   `;
   document.head.appendChild(s);
