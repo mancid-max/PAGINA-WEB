@@ -2333,7 +2333,7 @@ function renderImages(imageList, sku = "") {
   asignarImagenCatalogo(viewer, uniqueImages[0], {
     eager: true,
     fetchPriority: "high",
-    preferOriginal: CATALOG_SOURCE === "catalogo-43",
+    preferOriginal: false,
   });
 
   uniqueImages.forEach((imgSrc, index) => {
@@ -2341,7 +2341,7 @@ function renderImages(imageList, sku = "") {
     asignarImagenCatalogo(thumb, imgSrc, {
       eager: index === 0,
       fetchPriority: "low",
-      preferOriginal: CATALOG_SOURCE === "catalogo-43",
+      preferOriginal: false,
     });
     thumb.alt = "";
     thumb.setAttribute("aria-hidden", "true");
@@ -2351,7 +2351,7 @@ function renderImages(imageList, sku = "") {
       asignarImagenCatalogo(viewer, imgSrc, {
         eager: true,
         fetchPriority: "high",
-        preferOriginal: CATALOG_SOURCE === "catalogo-43",
+        preferOriginal: false,
       });
       imagenModalIndex = index;
       // limpia active
@@ -2880,7 +2880,7 @@ function renderZoomGallery() {
   asignarImagenCatalogo(zoomMain, imagenesModalActual[imagenModalIndex], {
     eager: true,
     fetchPriority: "high",
-    preferOriginal: CATALOG_SOURCE === "catalogo-43",
+    preferOriginal: false,
   });
 
   imagenesModalActual.forEach((imgSrc, index) => {
@@ -2888,7 +2888,7 @@ function renderZoomGallery() {
     asignarImagenCatalogo(thumb, imgSrc, {
       eager: index === imagenModalIndex,
       fetchPriority: "low",
-      preferOriginal: CATALOG_SOURCE === "catalogo-43",
+      preferOriginal: false,
     });
     thumb.alt = "";
     thumb.setAttribute("aria-hidden", "true");
@@ -2898,7 +2898,7 @@ function renderZoomGallery() {
       asignarImagenCatalogo(zoomMain, imgSrc, {
         eager: true,
         fetchPriority: "high",
-        preferOriginal: CATALOG_SOURCE === "catalogo-43",
+        preferOriginal: false,
       });
       zoomThumbs.querySelectorAll("img").forEach((t) => t.classList.remove("active-thumb"));
       thumb.classList.add("active-thumb");
@@ -3503,9 +3503,9 @@ function obtenerHantanesModelo(producto = {}) {
 function obtenerPreferenciasCargaTarjeta(index = 0) {
   if (CATALOG_SOURCE === "catalogo-43") {
     return {
-      eager: index < 1,
-      fetchPriority: index === 0 ? "high" : "low",
-      preferOriginal: true,
+      eager: index < 4,
+      fetchPriority: index < 2 ? "high" : "low",
+      preferOriginal: false,
     };
   }
   return {
