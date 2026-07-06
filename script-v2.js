@@ -3394,7 +3394,7 @@ function renderCatalogCardHtml(p) {
                 </div>`
               : ""
           }
-          ${CATALOG_SOURCE === "catalogo-43" && !esProductoAgotado(p) ? '<span class="card-cta-hint">Haz tu curva aquí</span>' : ""}
+          ${CATALOG_SOURCE === "catalogo-43" && !esProductoAgotado(p) ? '<span class="card-cta-hint">Presiona en la imagen para hacer tu curva</span>' : ""}
           ${esProductoAgotado(p) ? '<span class="sold-out-ribbon sold-out-ribbon-card">AGOTADO</span>' : ""}
         </div>
       </div>
@@ -6501,18 +6501,15 @@ function inyectarEstilosCardCta() {
   s.textContent = `
     .card-cta-hint{
       position:absolute!important;
-      top:48px!important;right:2px!important;
+      bottom:0!important;left:0!important;right:0!important;
       z-index:6!important;
-      display:inline-flex!important;align-items:center!important;justify-content:center!important;
-      min-height:28px!important;padding:5px 11px!important;
-      border-radius:999px!important;
-      background:rgba(215,25,32,0.90)!important;
+      display:block!important;
+      padding:9px 12px!important;
+      background:linear-gradient(to top,rgba(0,0,0,.62) 0%,rgba(0,0,0,.18) 100%)!important;
       color:#fff!important;
-      font-size:10px!important;font-weight:800!important;
-      letter-spacing:.04em!important;text-transform:uppercase!important;
-      box-shadow:0 10px 20px rgba(15,23,42,0.14)!important;
-      pointer-events:none!important;
-      max-width:calc(100% - 18px)!important;
+      font-size:11.5px!important;font-weight:700!important;
+      letter-spacing:.5px!important;text-transform:uppercase!important;
+      text-align:center!important;pointer-events:none!important;
     }
   `;
   document.head.appendChild(s);
