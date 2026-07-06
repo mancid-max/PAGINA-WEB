@@ -68,11 +68,19 @@ exports.handler = async (event) => {
     const grupos = gruposData.groups || [];
     log.push(`Grupos PS encontrados: ${grupos.length}`);
 
-    // Buscar grupo mayorista (por nombre)
-    const grupoMay = grupos.find(g =>
-      (g.name?.[0]?.value || g.name || "").toLowerCase().includes("mayor") ||
-      (g.name?.[0]?.value || g.name || "").toLowerCase().includes("wholesale")
-    );
+    const todosGrupos = grupos.map(g => ({ id: g.id, name: g.name?.[0]?.value || g.name }));
+    log.push(`Grupos: ${JSON.stringify(todosGrupos)}`);
+
+    // Permitir forzar group_id por query param
+    const grupoIdForzado = event.queryStringParameters?.group_id;
+
+    // Buscar grupo mayorista (por nombre) o usar el forzado
+    const grupoMay = grupoIdForzado
+      ? grupos.find(g => String(g.id) === String(grupoIdForzado))
+      : grupos.find(g =>
+          (g.name?.[0]?.value || g.name || "").toLowerCase().includes("mayor") ||
+          (g.name?.[0]?.value || g.name || "").toLowerCase().includes("wholesale")
+        );
 
     if (!grupoMay) {
       return {
@@ -81,8 +89,8 @@ exports.handler = async (event) => {
         body: JSON.stringify({
           ok: false,
           log,
-          grupos: grupos.map(g => ({ id: g.id, name: g.name?.[0]?.value || g.name })),
-          error: "No se encontró grupo mayorista — revisa los grupos listados y pasa group_id manualmente",
+          grupos: todosGrupos,
+          error: "No se encontró grupo mayorista — usa ?group_id=X con el id correcto de la lista",
         }),
       };
     }
