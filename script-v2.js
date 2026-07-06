@@ -2923,14 +2923,48 @@ function cerrarVisorImagenes() {
   document.body.classList.remove("image-zoom-open");
 }
 
+function inyectarEstilosModalCta() {
+  if (document.getElementById("modal-cta-styles")) return;
+  const s = document.createElement("style");
+  s.id = "modal-cta-styles";
+  s.textContent = `
+    .modal-cta-banner{
+      display:flex!important;align-items:center!important;gap:10px!important;
+      width:100%!important;max-width:520px!important;
+      margin:0 0 14px!important;padding:13px 16px!important;
+      border-radius:12px!important;border:none!important;cursor:pointer!important;
+      background:linear-gradient(135deg,#d71920 0%,#a30f15 100%)!important;
+      color:#fff!important;text-align:left!important;
+      box-shadow:0 4px 16px rgba(215,25,32,.35)!important;
+      transition:transform .15s ease,box-shadow .15s ease!important;
+    }
+    .modal-cta-banner:hover{
+      transform:translateY(-2px)!important;
+      box-shadow:0 8px 24px rgba(215,25,32,.45)!important;
+    }
+    .modal-cta-banner__icon{font-size:18px!important;flex-shrink:0!important;}
+    .modal-cta-banner__text{flex:1!important;font-size:14px!important;line-height:1.3!important;}
+    .modal-cta-banner__text strong{display:block!important;font-size:15px!important;font-weight:700!important;}
+    .modal-cta-banner__arrow{font-size:18px!important;flex-shrink:0!important;opacity:.8!important;}
+  `;
+  document.head.appendChild(s);
+}
+
 function inicializarPanelCotizacionModal() {
   if (quotePanelReady) return;
+  inyectarEstilosModalCta();
   const modalContent = document.querySelector("#modal .modal-content");
   const modalRight = document.querySelector("#modal .modal-right");
   const variantContainer = document.getElementById("variantContainer");
   const sizesPanel = document.querySelector("#modal .sizes-panel");
   const addBtn = document.getElementById("addBtn");
   if (!modalContent || !modalRight || !variantContainer || !sizesPanel || !addBtn) return;
+
+  const ctaBanner = document.createElement("button");
+  ctaBanner.id = "modalCtaBanner";
+  ctaBanner.type = "button";
+  ctaBanner.className = "modal-cta-banner";
+  ctaBanner.innerHTML = `<span class="modal-cta-banner__icon">👆</span><span class="modal-cta-banner__text">¿Te gustó? <strong>Hacé tu pedido aquí</strong></span><span class="modal-cta-banner__arrow">→</span>`;
 
   const trigger = document.createElement("button");
   trigger.id = "openQuotePanelBtn";
@@ -2960,12 +2994,14 @@ function inicializarPanelCotizacionModal() {
   panelCard.appendChild(sizesPanel);
   panelCard.appendChild(addBtn);
 
+  ctaBanner.addEventListener("click", abrirPanelCotizacionModal);
   trigger.addEventListener("click", abrirPanelCotizacionModal);
   panel.addEventListener("click", (e) => {
     if (e.target?.dataset?.closeQuotePanel !== undefined) cerrarPanelCotizacionModal();
   });
   panel.querySelector("#closeQuotePanelBtn")?.addEventListener("click", cerrarPanelCotizacionModal);
 
+  modalRight.insertBefore(ctaBanner, modalRight.firstChild);
   modalRight.insertBefore(trigger, variantContainer.nextSibling);
   modalContent.appendChild(panel);
   quotePanelReady = true;
