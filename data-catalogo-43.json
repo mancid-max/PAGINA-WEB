@@ -307,6 +307,23 @@
     "fabric": "New Glue"
   },
   {
+    "family": "4322-02",
+    "main_image": "43/4322-02/Mohicano-50.jpg",
+    "gallery": [
+      "43/4322-02/Mohicano-50.jpg",
+      "43/4322-02/Mohicano-51.jpg",
+      "43/4322-02/Mohicano-54.jpg",
+      "43/4322-02/Mohicano-56.jpg",
+      "43/4322-02/Mohicano-58.jpg"
+    ],
+    "description": "JEAN Â· CINTURA Â· FLARE",
+    "characteristics": [
+      "Tela: B2868V-3",
+      "TecnologÃ­a: Power Stretch"
+    ],
+    "variants": []
+  },
+  {
     "family": "4322-60",
     "main_image": "43/4322-01/editar/Mohicano-62.jpg",
     "gallery": [
@@ -348,23 +365,6 @@
     "tiro": "CINTURA",
     "bota": "FLARE",
     "fabric": "B2868V-3"
-  },
-  {
-    "family": "4322-02",
-    "main_image": "43/4322-02/Mohicano-50.jpg",
-    "gallery": [
-      "43/4322-02/Mohicano-50.jpg",
-      "43/4322-02/Mohicano-51.jpg",
-      "43/4322-02/Mohicano-54.jpg",
-      "43/4322-02/Mohicano-56.jpg",
-      "43/4322-02/Mohicano-58.jpg"
-    ],
-    "description": "JEAN Â· CINTURA Â· FLARE",
-    "characteristics": [
-      "Tela: B2868V-3",
-      "TecnologÃ­a: Power Stretch"
-    ],
-    "variants": []
   },
   {
     "family": "4323-01",
@@ -635,6 +635,26 @@
     "fabric": "New Glue"
   },
   {
+    "family": "4348-01",
+    "main_image": "43/4348-01/editar/Mohicano-89.jpg",
+    "gallery": [
+      "43/4348-01/editar/Mohicano-89.jpg",
+      "43/4348-01/editar/Mohicano-93.jpg",
+      "43/4348-01/editar/Mohicano-94.jpg",
+      "43/4348-01/editar/Mohicano-97.jpg"
+    ],
+    "description": "JEAN CINTURA PITILLO",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: PITILLO",
+      "Color: MARENGO"
+    ],
+    "tiro": "CINTURA",
+    "bota": "PITILLO",
+    "variants": []
+  },
+  {
     "family": "4356-00",
     "main_image": "43/4356/editar/Mohicano-108 copie.jpg",
     "gallery": [
@@ -888,6 +908,27 @@
     "fabric": "Ayla/New glue"
   },
   {
+    "family": "4366-04",
+    "main_image": "43/4366-06/editar/4366.jpg",
+    "gallery": [
+      "43/4366-06/editar/4366.jpg",
+      "43/4366-06/editar/Mohicano-102.jpg",
+      "43/4366-06/editar/Mohicano-103.jpg",
+      "43/4366-06/editar/Mohicano-106.jpg",
+      "43/4366-06/editar/Mohicano-98.jpg"
+    ],
+    "description": "JEAN CINTURA RECTO",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: RECTO",
+      "Color: CAFE"
+    ],
+    "tiro": "CINTURA",
+    "bota": "RECTO",
+    "variants": []
+  },
+  {
     "family": "4371-00",
     "main_image": "43/4371-00/Mohicano-234-.jpg",
     "gallery": [
@@ -938,6 +979,30 @@
     "fabric": ""
   },
   {
+    "family": "4378-00",
+    "main_image": "43/4378/Copia de CRI_8232.jpg",
+    "gallery": [
+      "43/4378/Copia de CRI_8232.jpg",
+      "43/4378/Copia de CRI_8236.jpg",
+      "43/4378/Copia de CRI_8243.jpg",
+      "43/4378/Copia de CRI_8244.jpg",
+      "43/4378/Copia de CRI_8249.jpg"
+    ],
+    "description": "JEAN ? CINTURA ? Recto",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: Recto",
+      "Tela: B2868V-3",
+      "TecnologÃ­a: Power Stretch"
+    ],
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "Recto",
+    "fabric": "B2868V-3"
+  },
+  {
     "family": "4380-00",
     "main_image": "43/4377/editar/Mohicano-159.jpg",
     "gallery": [
@@ -965,29 +1030,5 @@
     "tiro": "CINTURA",
     "bota": "PALAZZO",
     "fabric": "OUTLANDER"
-  },
-  {
-    "family": "4378-00",
-    "main_image": "43/4378/Copia de CRI_8232.jpg",
-    "gallery": [
-      "43/4378/Copia de CRI_8232.jpg",
-      "43/4378/Copia de CRI_8236.jpg",
-      "43/4378/Copia de CRI_8243.jpg",
-      "43/4378/Copia de CRI_8244.jpg",
-      "43/4378/Copia de CRI_8249.jpg"
-    ],
-    "description": "JEAN ? CINTURA ? Recto",
-    "characteristics": [
-      "Tipo: JEAN",
-      "Tiro: CINTURA",
-      "Bota: Recto",
-      "Tela: B2868V-3",
-      "TecnologÃ­a: Power Stretch"
-    ],
-    "variants": [],
-    "tipo": "JEAN",
-    "tiro": "CINTURA",
-    "bota": "Recto",
-    "fabric": "B2868V-3"
   }
 ]

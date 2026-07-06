@@ -3326,7 +3326,7 @@ const CATALOGO_43_MODELOS_DISPONIBLES = new Set([
 
 const CATALOGO_43_SKUS_AGOTADOS = new Set([
   "4322-01", "4322-02", "4322-60",
-  "4348-00", "4348-60",
+  "4348-00", "4348-60", "4348-61",
   "4362-08", "4362-16",
 ]);
 
