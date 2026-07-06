@@ -3394,7 +3394,7 @@ function renderCatalogCardHtml(p) {
                 </div>`
               : ""
           }
-          ${CATALOG_SOURCE === "catalogo-43" && !esProductoAgotado(p) ? '<span class="card-cta-hint">👆</span>' : ""}
+          ${CATALOG_SOURCE === "catalogo-43" && !esProductoAgotado(p) ? '<span class="card-cta-hint">👆 Curva aquí</span>' : ""}
           ${esProductoAgotado(p) ? '<span class="sold-out-ribbon sold-out-ribbon-card">AGOTADO</span>' : ""}
         </div>
       </div>
@@ -6501,20 +6501,22 @@ function inyectarEstilosCardCta() {
   s.textContent = `
     .card-cta-hint{
       position:absolute!important;
-      bottom:14px!important;right:14px!important;
+      bottom:12px!important;right:10px!important;
       z-index:6!important;
-      width:42px!important;height:42px!important;
-      display:flex!important;align-items:center!important;justify-content:center!important;
-      background:rgba(255,255,255,0.92)!important;
-      border-radius:50%!important;
-      font-size:20px!important;
-      box-shadow:0 2px 10px rgba(0,0,0,.18)!important;
+      display:flex!important;align-items:center!important;gap:5px!important;
+      background:rgba(255,255,255,0.88)!important;
+      border-radius:20px!important;
+      padding:5px 10px 5px 8px!important;
+      font-size:11px!important;font-weight:600!important;
+      color:#222!important;letter-spacing:.3px!important;
+      box-shadow:0 2px 8px rgba(0,0,0,.15)!important;
       pointer-events:none!important;
-      animation:cta-pulse 1.8s ease-in-out infinite!important;
+      animation:cta-pulse 2s ease-in-out infinite!important;
+      white-space:nowrap!important;
     }
     @keyframes cta-pulse{
-      0%,100%{transform:scale(1);box-shadow:0 2px 10px rgba(0,0,0,.18),0 0 0 0 rgba(255,255,255,.5);}
-      50%{transform:scale(1.12);box-shadow:0 4px 16px rgba(0,0,0,.22),0 0 0 8px rgba(255,255,255,.0);}
+      0%,100%{opacity:1;transform:scale(1);}
+      50%{opacity:.7;transform:scale(1.04);}
     }
   `;
   document.head.appendChild(s);
