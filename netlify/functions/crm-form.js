@@ -60,6 +60,7 @@ exports.handler = async (event) => {
   const telefono = (body.telefono || "").trim();
   const ciudad   = (body.ciudad   || "").trim();
   const region   = (body.region   || "").trim();
+  const mc_id    = (body.mc_id    || "").trim();
 
   if (!email && !telefono) {
     return { statusCode: 400, headers, body: JSON.stringify({ ok: false, error: "Faltan datos" }) };
@@ -135,6 +136,22 @@ exports.handler = async (event) => {
     usuario:     "klaviyo_form",
     metadata:    { email, telefono, ciudad, region, nombre },
   });
+
+  // Marcar campo en ManyChat para que el flujo muestre mensaje alternativo
+  if (mc_id && process.env.MANYCHAT_API_KEY) {
+    await fetch("https://api.manychat.com/fb/subscriber/setCustomFieldByName", {
+      method:  "POST",
+      headers: {
+        "Content-Type":  "application/json",
+        "Authorization": `Bearer ${process.env.MANYCHAT_API_KEY}`,
+      },
+      body: JSON.stringify({
+        subscriber_id: mc_id,
+        field_name:    "formulario_completado",
+        field_value:   1,
+      }),
+    }).catch(() => {});
+  }
 
   return {
     statusCode: 200,
