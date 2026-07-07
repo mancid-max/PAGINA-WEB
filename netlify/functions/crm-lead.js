@@ -184,18 +184,9 @@ exports.handler = async (event) => {
   if (clienteExiste) {
     if (nombre) await sbPatch("crm_clientes", { rut: `eq.${rut}` }, { razon_social: nombre });
 
-    // Si ya completó el formulario B2B → mover a "En revisión" en vez de "Nuevo mensaje"
-    const formInter = await sbGet("crm_interacciones", {
-      "cliente_rut": `eq.${rut}`,
-      "tipo":        "eq.formulario_b2b",
-      "limit":       "1",
-      "select":      "id",
-    });
-    const etapaVuelta = formInter.length ? "En revisión" : "Nuevo mensaje";
-
     await sbPost("crm_pipeline", {
       cliente_rut:  rut,
-      etapa:        etapaVuelta,
+      etapa:        "Nuevo mensaje",
       automatico:   true,
       notas:        `Mensaje via ${canal}: ${mensaje}`,
       cambiado_por: "manychat",
