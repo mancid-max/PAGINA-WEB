@@ -301,6 +301,11 @@ const LOCAL_CLIENT_OVERRIDES = [
     rut_normalized: "21423987-6",
     razon_social: "THAI TUCKI PAOA",
   },
+  {
+    rut: "78.082.214-7",
+    rut_normalized: "78082214-7",
+    razon_social: "CAROLINA PARKAS",
+  },
 ];
 
 function inferirCatalogoDesdeSku(value) {
@@ -2224,6 +2229,7 @@ async function cargarProductosCatalogo() {
       renderGrid(productosGrid);
       actualizarCarrito();
       inicializarBuscadorModelos();
+      inyectarSubtituloHeroCatalogo43();
       return;
     }
     if (CATALOG_SOURCE === "catalogo-1") {
@@ -6491,6 +6497,29 @@ function renderReporteCotizacionesAdmin(quotes = []) {
       }
     </div>
   `;
+}
+
+function inyectarSubtituloHeroCatalogo43() {
+  if (document.getElementById("hero-cta-43")) return;
+  const h1 = document.querySelector("h1.hero-title");
+  if (!h1) return;
+  const s = document.createElement("style");
+  s.id = "hero-cta-43-styles";
+  s.textContent = `
+    .hero-cta-43{
+      display:block;
+      font-size:13px;font-weight:500;
+      color:#888;letter-spacing:.4px;
+      margin-top:4px;margin-bottom:0;
+      text-align:center;
+    }
+  `;
+  document.head.appendChild(s);
+  const p = document.createElement("p");
+  p.id = "hero-cta-43";
+  p.className = "hero-cta-43";
+  p.textContent = "Selecciona un modelo y realiza tu pedido";
+  h1.insertAdjacentElement("afterend", p);
 }
 
 function inyectarEstilosCardCta() {
