@@ -2230,6 +2230,7 @@ async function cargarProductosCatalogo() {
       actualizarCarrito();
       inicializarBuscadorModelos();
       inyectarSubtituloHeroCatalogo43();
+      inyectarEstilosPromoBannerMobile();
       return;
     }
     if (CATALOG_SOURCE === "catalogo-1") {
@@ -6506,20 +6507,72 @@ function inyectarSubtituloHeroCatalogo43() {
   const s = document.createElement("style");
   s.id = "hero-cta-43-styles";
   s.textContent = `
+    .hero-cta-43-wrap{
+      display:flex;justify-content:center;
+      margin-top:12px;margin-bottom:0;
+      min-height:28px;
+    }
     .hero-cta-43{
-      display:block;
-      font-size:13px;font-weight:500;
-      color:#888;letter-spacing:.4px;
-      margin-top:4px;margin-bottom:0;
-      text-align:center;
+      display:inline-block;
+      font-size:14px;font-weight:700;
+      letter-spacing:.7px;text-transform:uppercase;
+      color:#c0181b;
+      overflow:hidden;
+      white-space:nowrap;
+      width:0;
+      border-right:2px solid #c0181b;
+      animation:
+        hero-type 2s steps(44,end) 0.4s forwards,
+        hero-cursor 0.7s step-end infinite,
+        hero-cursor-fade 0.5s ease 5s forwards;
+    }
+    @keyframes hero-type{
+      from{width:0;}
+      to{width:44ch;}
+    }
+    @keyframes hero-cursor{
+      0%,100%{border-color:#c0181b;}
+      50%{border-color:transparent;}
+    }
+    @keyframes hero-cursor-fade{
+      to{border-color:transparent;}
     }
   `;
   document.head.appendChild(s);
-  const p = document.createElement("p");
+  const wrap = document.createElement("div");
+  wrap.className = "hero-cta-43-wrap";
+  const p = document.createElement("span");
   p.id = "hero-cta-43";
   p.className = "hero-cta-43";
   p.textContent = "Selecciona un modelo y realiza tu pedido";
-  h1.insertAdjacentElement("afterend", p);
+  wrap.appendChild(p);
+  h1.insertAdjacentElement("afterend", wrap);
+}
+
+function inyectarEstilosPromoBannerMobile() {
+  if (document.getElementById("promo-banner-mobile-fix")) return;
+  const s = document.createElement("style");
+  s.id = "promo-banner-mobile-fix";
+  s.textContent = `
+    body .promo-banner-visual {
+      height: 280px;
+      min-height: 0;
+      max-height: 280px;
+      overflow: hidden;
+      border-radius: 20px;
+    }
+    body .promo-banner-visual img {
+      width: 100%;
+      height: 280px;
+      min-height: 0;
+      object-fit: cover;
+      object-position: left center;
+    }
+    @media (max-width: 900px) {
+      body .promo-banner-card { display: none; }
+    }
+  `;
+  document.head.appendChild(s);
 }
 
 function inyectarEstilosCardCta() {
@@ -7195,6 +7248,26 @@ document.getElementById("sendRequest").onclick = async () => {
     btn.innerText = "Enviando pedido...";
     await guardarCotizacionSupabase(cliente);
 
+    // ── CRM: registrar pedido si el cliente vino desde WhatsApp ──────────
+    const _waPhone = sessionStorage.getItem("crm_wa_phone") || cliente.client_phone || "";
+    const _mcId    = sessionStorage.getItem("crm_mc_id")    || "";
+    if (_waPhone || _mcId) {
+      fetch("/.netlify/functions/crm-lead", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          secret:     "mohicano-crm-2026",
+          canal:      "whatsapp",
+          tipo_flujo: "mayorista",
+          nombre:     cliente.razon_social || "",
+          telefono:   _waPhone,
+          mc_id:      _mcId,
+          mensaje:    `Realizó un pedido en la página (${CATALOG_SOURCE})`,
+          etapa:      "Realizó pedido",
+        }),
+      }).catch(() => {});
+    }
+
     mostrarToastExito("Pedido enviado con éxito", "Recibimos tu solicitud correctamente.");
     limpiarCarrito();
   } catch (error) {
@@ -7222,3 +7295,34 @@ document.getElementById("closeCart").onclick = () => {
   document.getElementById("cartSidebar").classList.remove("open");
   document.querySelector(".cart-overlay")?.classList.remove("active");
 };
+
+// ── CRM: tracking de visita desde WhatsApp ManyChat ──────────────────────────
+// ManyChat manda los links con ?wa={{phone}}&mc={{subscriber id}}
+// Ej: mohicanojeans.netlify.app/cole-43?wa=56912345678&mc=1234567890
+(function _crmWaTracking() {
+  try {
+    const params  = new URLSearchParams(window.location.search);
+    const waPhone = params.get("wa") || "";
+    const mcId    = params.get("mc") || "";
+    if (!waPhone && !mcId) return;
+
+    // Guardar para usarlo si después hacen un pedido
+    if (waPhone) sessionStorage.setItem("crm_wa_phone", waPhone);
+    if (mcId)    sessionStorage.setItem("crm_mc_id",    mcId);
+
+    // Registrar visita en CRM (fire-and-forget)
+    fetch("/.netlify/functions/crm-lead", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        secret:     "mohicano-crm-2026",
+        canal:      "whatsapp",
+        tipo_flujo: "mayorista",
+        telefono:   waPhone,
+        mc_id:      mcId,
+        mensaje:    "Visitó la página desde WhatsApp",
+        etapa:      "Contactó",
+      }),
+    }).catch(() => {});
+  } catch (_) {}
+})();

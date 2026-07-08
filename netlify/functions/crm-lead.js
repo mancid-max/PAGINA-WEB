@@ -81,17 +81,20 @@ exports.handler = async (event) => {
     return { statusCode: 401, body: "Unauthorized" };
   }
 
-  const _nombre   = (body.nombre    || "").trim();
-  const nombre    = (_nombre.includes("{{") ? "" : _nombre);
-  const _tel      = (body.telefono  || "").trim();
-  const telefono  = (_tel.includes("{{") ? "" : _tel);
-  const email     = (body.email     || "").trim();
-  const _ig       = (body.instagram || "").trim();
-  const instagram = (_ig.includes("{{") ? "" : _ig);
-  const whatsapp  = (body.whatsapp  || "").trim();
-  const mensaje   = (body.mensaje   || "").trim();
-  const canal     = (body.canal     || "instagram").trim();
-  const mc_id     = (body.mc_id     || "").trim();
+  const _nombre    = (body.nombre     || "").trim();
+  const nombre     = (_nombre.includes("{{") ? "" : _nombre);
+  const _tel       = (body.telefono   || "").trim();
+  const telefono   = (_tel.includes("{{") ? "" : _tel);
+  const email      = (body.email      || "").trim();
+  const _ig        = (body.instagram  || "").trim();
+  const instagram  = (_ig.includes("{{") ? "" : _ig);
+  const whatsapp   = (body.whatsapp   || "").trim();
+  const mensaje    = (body.mensaje    || "").trim();
+  const canal      = (body.canal      || "instagram").trim();
+  const mc_id      = (body.mc_id      || "").trim();
+  const tipo_flujo = (body.tipo_flujo || "nuevo").trim(); // "nuevo" | "mayorista"
+
+  const esMayorista = tipo_flujo === "mayorista";
 
   console.log("[crm-lead] datos:", { nombre, telefono, instagram, canal });
 
@@ -152,11 +155,16 @@ exports.handler = async (event) => {
     });
     console.log("[crm-lead] crm_clientes ok:", okCliente, "rut:", rut);
 
+    const notaInicial = esMayorista
+      ? `Se identificó como mayorista existente vía ${canal}. Mensaje: ${mensaje}`
+      : `Lead nuevo desde ${canal}. Mensaje: ${mensaje}`;
+
+    const etapaInicial = (body.etapa || "").trim() || (esMayorista ? "Contactó" : "Nuevo mensaje");
     const okPipeline = await sbPost("crm_pipeline", {
       cliente_rut:  rut,
-      etapa:        "Nuevo mensaje",
+      etapa:        etapaInicial,
       automatico:   true,
-      notas:        `Lead nuevo desde ${canal}. Mensaje: ${mensaje}`,
+      notas:        notaInicial,
       cambiado_por: "manychat",
     });
     console.log("[crm-lead] crm_pipeline ok:", okPipeline);
@@ -173,6 +181,7 @@ exports.handler = async (event) => {
     usuario:     "manychat",
     metadata: {
       canal,
+      tipo_flujo,
       instagram_username: instagram || null,
       whatsapp_number:    whatsapp  || null,
       mc_id:              mc_id     || null,
@@ -184,11 +193,15 @@ exports.handler = async (event) => {
   if (clienteExiste) {
     if (nombre) await sbPatch("crm_clientes", { rut: `eq.${rut}` }, { razon_social: nombre });
 
+    const notaExistente = esMayorista
+      ? `Mayorista existente escribió vía ${canal}: ${mensaje}`
+      : `Mensaje via ${canal}: ${mensaje}`;
+
     await sbPost("crm_pipeline", {
       cliente_rut:  rut,
-      etapa:        "Nuevo mensaje",
+      etapa:        (body.etapa || "").trim() || (esMayorista ? "Contactó" : "Nuevo mensaje"),
       automatico:   true,
-      notas:        `Mensaje via ${canal}: ${mensaje}`,
+      notas:        notaExistente,
       cambiado_por: "manychat",
     });
   }
