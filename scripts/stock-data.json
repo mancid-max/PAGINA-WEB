@@ -1,0 +1,832 @@
+{
+  "source_file": "C:\\Users\\Lenovo\\OneDrive - Mohicano Jeans\\INVENTARIO 01-04 COMPLETO.xlsx",
+  "sheet_name": "COLE 42",
+  "items": {
+    "4222-00": {
+      "article": "422200",
+      "sku": "4222-00",
+      "description": "MEDIO / TOBILLERO / bLUE",
+      "sizes": {
+        "36": 0,
+        "38": 18,
+        "40": 17,
+        "42": 14,
+        "44": 10,
+        "46": 11
+      },
+      "total": 70
+    },
+    "4249-00": {
+      "article": "424900",
+      "sku": "4249-00",
+      "description": "CINTURA / PALAZZO / MARENGO",
+      "sizes": {
+        "36": 26,
+        "38": 53,
+        "40": 47,
+        "42": 41,
+        "44": 26,
+        "46": 7
+      },
+      "total": 200
+    },
+    "4236-00": {
+      "article": "423600",
+      "sku": "4236-00",
+      "description": "CINTURA / PALAZZO / BLUE",
+      "sizes": {
+        "36": 14,
+        "38": 28,
+        "40": 19,
+        "42": 16,
+        "44": 11,
+        "46": 16
+      },
+      "total": 104
+    },
+    "4235-00": {
+      "article": "423500",
+      "sku": "4235-00",
+      "description": "CINTURA / PITILLO / BLUE",
+      "sizes": {
+        "36": 9,
+        "38": 16,
+        "40": 16,
+        "42": 20,
+        "44": 17,
+        "46": 10
+      },
+      "total": 88
+    },
+    "4203-01": {
+      "article": "420301",
+      "sku": "4203-01",
+      "description": "MEDIO / TOBILLERO / GRAVILLADO GRIS",
+      "sizes": {
+        "36": 4,
+        "38": 11,
+        "40": 16,
+        "42": 21,
+        "44": 18,
+        "46": 10
+      },
+      "total": 80
+    },
+    "4210-00": {
+      "article": "421000",
+      "sku": "4210-00",
+      "description": "MEDIO / OXFORD / BLUE",
+      "sizes": {
+        "36": 5,
+        "38": 15,
+        "40": 15,
+        "42": 15,
+        "44": 10,
+        "46": 10
+      },
+      "total": 70
+    },
+    "4228-00": {
+      "article": "422800",
+      "sku": "4228-00",
+      "description": "MEDIO / FLARE / NEGRO",
+      "sizes": {
+        "36": 0,
+        "38": 0,
+        "40": 28,
+        "42": 0,
+        "44": 27,
+        "46": 0
+      },
+      "total": 55
+    },
+    "4208-00": {
+      "article": "420800",
+      "sku": "4208-00",
+      "description": "CINTURA / FLARE / BLUE",
+      "sizes": {
+        "36": 6,
+        "38": 11,
+        "40": 14,
+        "42": 13,
+        "44": 6,
+        "46": 6
+      },
+      "total": 56
+    },
+    "4220-00": {
+      "article": "422000",
+      "sku": "4220-00",
+      "description": "CINTURA / PITILLO / BLUE",
+      "sizes": {
+        "36": 32,
+        "38": 6,
+        "40": 8,
+        "42": 4,
+        "44": 3,
+        "46": 0
+      },
+      "total": 53
+    },
+    "4214-00": {
+      "article": "421400",
+      "sku": "4214-00",
+      "description": "CINTURA / OXFORD / NEGRO",
+      "sizes": {
+        "36": 4,
+        "38": 1,
+        "40": 5,
+        "42": 5,
+        "44": 10,
+        "46": 24
+      },
+      "total": 49
+    },
+    "4244-00": {
+      "article": "424400",
+      "sku": "4244-00",
+      "description": "CINTURA / PITILLO / BIOMEDIO FOCALIZ",
+      "sizes": {
+        "36": 16,
+        "38": 10,
+        "40": 6,
+        "42": 15,
+        "44": 0,
+        "46": 0
+      },
+      "total": 47
+    },
+    "4246-00": {
+      "article": "424600",
+      "sku": "4246-00",
+      "description": "CINTURA / TOBILLERO / BLUE",
+      "sizes": {
+        "36": 3,
+        "38": 0,
+        "40": 17,
+        "42": 12,
+        "44": 14,
+        "46": 0
+      },
+      "total": 46
+    },
+    "4221-01": {
+      "article": "422101",
+      "sku": "4221-01",
+      "description": "CINTURA / PITILLO / OXIDADO LASER",
+      "sizes": {
+        "36": 14,
+        "38": 0,
+        "40": 12,
+        "42": 7,
+        "44": 11,
+        "46": 0
+      },
+      "total": 44
+    },
+    "4227-01": {
+      "article": "422701",
+      "sku": "4227-01",
+      "description": "CINTURA / RECTO / BIOMEDIO",
+      "sizes": {
+        "36": 4,
+        "38": 3,
+        "40": 3,
+        "42": 7,
+        "44": 12,
+        "46": 15
+      },
+      "total": 44
+    },
+    "4201-60": {
+      "article": "420160",
+      "sku": "4201-60",
+      "description": "CINTURA / PITILLO / CLARO",
+      "sizes": {
+        "36": 0,
+        "38": 12,
+        "40": 9,
+        "42": 10,
+        "44": 6,
+        "46": 5
+      },
+      "total": 42
+    },
+    "4229-00": {
+      "article": "422900",
+      "sku": "4229-00",
+      "description": "CINTURA / PITILLO / BLUE",
+      "sizes": {
+        "36": 35,
+        "38": 1,
+        "40": 0,
+        "42": 0,
+        "44": 2,
+        "46": 0
+      },
+      "total": 38
+    },
+    "4201-00": {
+      "article": "420100",
+      "sku": "4201-00",
+      "description": "CINTURA / PITILLO / bLUE",
+      "sizes": {
+        "36": 8,
+        "38": 0,
+        "40": 29,
+        "42": 0,
+        "44": 0,
+        "46": 0
+      },
+      "total": 37
+    },
+    "4230-00": {
+      "article": "423000",
+      "sku": "4230-00",
+      "description": "CINTURA / PALAZZO / BLUE",
+      "sizes": {
+        "36": 7,
+        "38": 0,
+        "40": 0,
+        "42": 1,
+        "44": 19,
+        "46": 8
+      },
+      "total": 35
+    },
+    "4211-00": {
+      "article": "421100",
+      "sku": "4211-00",
+      "description": "CINTURA / FLARE / BLUE",
+      "sizes": {
+        "36": 1,
+        "38": 1,
+        "40": 3,
+        "42": 5,
+        "44": 18,
+        "46": 5
+      },
+      "total": 33
+    },
+    "4248-01": {
+      "article": "424801",
+      "sku": "4248-01",
+      "description": "CINTURA / RECTO / GRAVILLADO GRIS",
+      "sizes": {
+        "36": 1,
+        "38": 7,
+        "40": 2,
+        "42": 9,
+        "44": 6,
+        "46": 4
+      },
+      "total": 29
+    },
+    "4218-01": {
+      "article": "421801",
+      "sku": "4218-01",
+      "description": "CINTURA / FLARE / BLUE",
+      "sizes": {
+        "36": 0,
+        "38": 0,
+        "40": 4,
+        "42": 4,
+        "44": 11,
+        "46": 9
+      },
+      "total": 28
+    },
+    "4219-01": {
+      "article": "421901",
+      "sku": "4219-01",
+      "description": "CINTURA / PITILLO / BLUE",
+      "sizes": {
+        "36": 2,
+        "38": 8,
+        "40": 6,
+        "42": 5,
+        "44": 4,
+        "46": 1
+      },
+      "total": 26
+    },
+    "4223-00": {
+      "article": "422300",
+      "sku": "4223-00",
+      "description": "MEDIO / FLARE / NEGRO",
+      "sizes": {
+        "36": 6,
+        "38": 2,
+        "40": 4,
+        "42": 11,
+        "44": 3,
+        "46": 0
+      },
+      "total": 26
+    },
+    "4219-02": {
+      "article": "421902",
+      "sku": "4219-02",
+      "description": "CINTURA / PITILLO / OXIDADO",
+      "sizes": {
+        "36": 2,
+        "38": 6,
+        "40": 6,
+        "42": 5,
+        "44": 4,
+        "46": 2
+      },
+      "total": 25
+    },
+    "4227-00": {
+      "article": "422700",
+      "sku": "4227-00",
+      "description": "CINTURA / RECTO TOBI / BLUE",
+      "sizes": {
+        "36": 5,
+        "38": 7,
+        "40": 6,
+        "42": 0,
+        "44": 0,
+        "46": 5
+      },
+      "total": 23
+    },
+    "4204-00": {
+      "article": "420400",
+      "sku": "4204-00",
+      "description": "MEDIO / FLARE / BOTON DIFERENTE",
+      "sizes": {
+        "36": 22,
+        "38": 0,
+        "40": 0,
+        "42": 0,
+        "44": 5,
+        "46": 12
+      },
+      "total": 39
+    },
+    "4221-90": {
+      "article": "422190",
+      "sku": "4221-90",
+      "description": "CINTURA / TOBILLERO / GLITER",
+      "sizes": {
+        "36": 2,
+        "38": 2,
+        "40": 5,
+        "42": 5,
+        "44": 3,
+        "46": 2
+      },
+      "total": 19
+    },
+    "4201-01": {
+      "article": "420101",
+      "sku": "4201-01",
+      "description": "CINTURA / PITILLO / BLUE",
+      "sizes": {
+        "36": 5,
+        "38": 3,
+        "40": 4,
+        "42": 3,
+        "44": 3,
+        "46": 0
+      },
+      "total": 18
+    },
+    "4208-02": {
+      "article": "420802",
+      "sku": "4208-02",
+      "description": "CINTURA / FLARE / GRAVILLADO  L",
+      "sizes": {
+        "36": 1,
+        "38": 5,
+        "40": 5,
+        "42": 3,
+        "44": 3,
+        "46": 2
+      },
+      "total": 19
+    },
+    "4232-00": {
+      "article": "423200",
+      "sku": "4232-00",
+      "description": "CINTURA / OXFORD / BLUE",
+      "sizes": {
+        "36": 0,
+        "38": 0,
+        "40": 9,
+        "42": 3,
+        "44": 3,
+        "46": 3
+      },
+      "total": 18
+    },
+    "4247-01": {
+      "article": "424701",
+      "sku": "4247-01",
+      "description": "CINTURA / RECTO / BIOMEDIO FOCALIZ",
+      "sizes": {
+        "36": 0,
+        "38": 0,
+        "40": 7,
+        "42": 0,
+        "44": 10,
+        "46": 0
+      },
+      "total": 17
+    },
+    "4221-00": {
+      "article": "422100",
+      "sku": "4221-00",
+      "description": "CINTURA / TOBILLERO / BLACK BLUE LASER",
+      "sizes": {
+        "36": 0,
+        "38": 0,
+        "40": 0,
+        "42": 0,
+        "44": 3,
+        "46": 13
+      },
+      "total": 16
+    },
+    "4240-00": {
+      "article": "424000",
+      "sku": "4240-00",
+      "description": "CINTURA / PITILLO / NEGRO",
+      "sizes": {
+        "36": 5,
+        "38": 0,
+        "40": 0,
+        "42": 0,
+        "44": 10,
+        "46": 0
+      },
+      "total": 15
+    },
+    "4213-01": {
+      "article": "421301",
+      "sku": "4213-01",
+      "description": "CINTURA / OXFORD / GRAVILLADO",
+      "sizes": {
+        "36": 3,
+        "38": 0,
+        "40": 6,
+        "42": 2,
+        "44": 4,
+        "46": 0
+      },
+      "total": 15
+    },
+    "4202-00": {
+      "article": "420200",
+      "sku": "4202-00",
+      "description": "CINTURA / RECTO / BLUE",
+      "sizes": {
+        "36": 0,
+        "38": 0,
+        "40": 0,
+        "42": 0,
+        "44": 0,
+        "46": 10
+      },
+      "total": 10
+    },
+    "4226-00": {
+      "article": "422600",
+      "sku": "4226-00",
+      "description": "MEDIO / PITILLO / BLUE",
+      "sizes": {
+        "36": 3,
+        "38": 2,
+        "40": 3,
+        "42": 2,
+        "44": 0,
+        "46": 4
+      },
+      "total": 14
+    },
+    "4243-00": {
+      "article": "424300",
+      "sku": "4243-00",
+      "description": "CINTURA / PITILLO / BLUE",
+      "sizes": {
+        "36": 0,
+        "38": 4,
+        "40": 2,
+        "42": 2,
+        "44": 0,
+        "46": 5
+      },
+      "total": 13
+    },
+    "4214-02": {
+      "article": "421402",
+      "sku": "4214-02",
+      "description": "CINTURA / OXFORD",
+      "sizes": {
+        "36": 0,
+        "38": 3,
+        "40": 1,
+        "42": 4,
+        "44": 3,
+        "46": 2
+      },
+      "total": 13
+    },
+    "4235-01": {
+      "article": "423501",
+      "sku": "4235-01",
+      "description": "CINTURA / PITILLO",
+      "sizes": {
+        "36": 2,
+        "38": 3,
+        "40": 0,
+        "42": 2,
+        "44": 0,
+        "46": 5
+      },
+      "total": 12
+    },
+    "4242-00": {
+      "article": "424200",
+      "sku": "4242-00",
+      "description": "CINTURA / PALAZZO",
+      "sizes": {
+        "36": 2,
+        "38": 3,
+        "40": 1,
+        "42": 2,
+        "44": 2,
+        "46": 1
+      },
+      "total": 11
+    },
+    "4205-01": {
+      "article": "420501",
+      "sku": "4205-01",
+      "description": "CINTURA / OXFORD",
+      "sizes": {
+        "36": 6,
+        "38": 0,
+        "40": 0,
+        "42": 0,
+        "44": 5,
+        "46": 1
+      },
+      "total": 12
+    },
+    "4214-01": {
+      "article": "421401",
+      "sku": "4214-01",
+      "description": "CINTURA / OXFORD",
+      "sizes": {
+        "36": 0,
+        "38": 3,
+        "40": 6,
+        "42": 2,
+        "44": 0,
+        "46": 1
+      },
+      "total": 12
+    },
+    "4239-00": {
+      "article": "423900",
+      "sku": "4239-00",
+      "description": "CINTURA / FLARE",
+      "sizes": {
+        "36": 0,
+        "38": 0,
+        "40": 0,
+        "42": 0,
+        "44": 1,
+        "46": 2
+      },
+      "total": 3
+    },
+    "4226-01": {
+      "article": "422601",
+      "sku": "4226-01",
+      "description": "MEDIO / PITILLO",
+      "sizes": {
+        "36": 0,
+        "38": 0,
+        "40": 0,
+        "42": 0,
+        "44": 7,
+        "46": 0
+      },
+      "total": 7
+    },
+    "4249-60": {
+      "article": "424960",
+      "sku": "4249-60",
+      "description": "CINTURA / PALAZZO",
+      "sizes": {
+        "36": 1,
+        "38": 2,
+        "40": 2,
+        "42": 2,
+        "44": 1,
+        "46": 1
+      },
+      "total": 9
+    },
+    "4233-48": {
+      "article": "423348",
+      "sku": "4233-48",
+      "description": "CINTURA / TOBILLERO / BURDEO",
+      "sizes": {
+        "36": 0,
+        "38": 2,
+        "40": 2,
+        "42": 1,
+        "44": 3,
+        "46": 0
+      },
+      "total": 8
+    },
+    "4209-00": {
+      "article": "420900",
+      "sku": "4209-00",
+      "description": "MEDIO / PITILLO",
+      "sizes": {
+        "36": 0,
+        "38": 0,
+        "40": 0,
+        "42": 0,
+        "44": 0,
+        "46": 7
+      },
+      "total": 7
+    },
+    "4210-01": {
+      "article": "421001",
+      "sku": "4210-01",
+      "description": "MEDIO / RECTO",
+      "sizes": {
+        "36": 0,
+        "38": 0,
+        "40": 2,
+        "42": 1,
+        "44": 1,
+        "46": 2
+      },
+      "total": 6
+    },
+    "4233-09": {
+      "article": "423309",
+      "sku": "4233-09",
+      "description": "CINTURA / TOBILLERO / VERDE MENTA",
+      "sizes": {
+        "36": 0,
+        "38": 1,
+        "40": 2,
+        "42": 2,
+        "44": 0,
+        "46": 0
+      },
+      "total": 5
+    },
+    "4233-04": {
+      "article": "423304",
+      "sku": "4233-04",
+      "description": "CINTURA / TOBILLERO / CAFE",
+      "sizes": {
+        "36": 2,
+        "38": 1,
+        "40": 1,
+        "42": 0,
+        "44": 0,
+        "46": 0
+      },
+      "total": 4
+    },
+    "4204-02": {
+      "article": "420402",
+      "sku": "4204-02",
+      "description": "MEDIO / FLARE",
+      "sizes": {
+        "36": 0,
+        "38": 0,
+        "40": 0,
+        "42": 0,
+        "44": 4,
+        "46": 0
+      },
+      "total": 4
+    },
+    "4234-48": {
+      "article": "423448",
+      "sku": "4234-48",
+      "description": "CINTURA / FLARE / BURDEO",
+      "sizes": {
+        "36": 0,
+        "38": 0,
+        "40": 0,
+        "42": 0,
+        "44": 4,
+        "46": 0
+      },
+      "total": 4
+    },
+    "4234-04": {
+      "article": "423404",
+      "sku": "4234-04",
+      "description": "CINTURA / FLARE / CAFE",
+      "sizes": {
+        "36": 0,
+        "38": 1,
+        "40": 1,
+        "42": 1,
+        "44": 1,
+        "46": 0
+      },
+      "total": 4
+    },
+    "4234-08": {
+      "article": "423408",
+      "sku": "4234-08",
+      "description": "CINTURA / FLARE / OCRE",
+      "sizes": {
+        "36": 0,
+        "38": 0,
+        "40": 0,
+        "42": 1,
+        "44": 1,
+        "46": 0
+      },
+      "total": 2
+    },
+    "4233-08": {
+      "article": "423308",
+      "sku": "4233-08",
+      "description": "CINTURA / TOBILLERO",
+      "sizes": {
+        "36": 0,
+        "38": 2,
+        "40": 0,
+        "42": 0,
+        "44": 0,
+        "46": 0
+      },
+      "total": 2
+    },
+    "4224-00": {
+      "article": "422400",
+      "sku": "4224-00",
+      "description": "MEDIO / OXFORD",
+      "sizes": {
+        "36": 0,
+        "38": 0,
+        "40": 0,
+        "42": 0,
+        "44": 2,
+        "46": 0
+      },
+      "total": 2
+    },
+    "4211-01": {
+      "article": "421101",
+      "sku": "4211-01",
+      "description": "CINTURA / FLARE",
+      "sizes": {
+        "36": 0,
+        "38": 1,
+        "40": 1,
+        "42": 0,
+        "44": 0,
+        "46": 0
+      },
+      "total": 2
+    },
+    "4214-60": {
+      "article": "421460",
+      "sku": "4214-60",
+      "description": "CINTURA / OXFORD / TACHAS",
+      "sizes": {
+        "36": 0,
+        "38": 0,
+        "40": 0,
+        "42": 0,
+        "44": 1,
+        "46": 0
+      },
+      "total": 1
+    },
+    "4205-00": {
+      "article": "420500",
+      "sku": "4205-00",
+      "description": "CINTURA / OXFORD",
+      "sizes": {
+        "36": 0,
+        "38": 0,
+        "40": 0,
+        "42": 0,
+        "44": 1,
+        "46": 0
+      },
+      "total": 1
+    }
+  }
+}
