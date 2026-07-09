@@ -6550,29 +6550,17 @@ function inyectarSubtituloHeroCatalogo43() {
 }
 
 function inyectarEstilosPromoBannerMobile() {
-  if (document.getElementById("promo-banner-mobile-fix")) return;
-  const s = document.createElement("style");
-  s.id = "promo-banner-mobile-fix";
-  s.textContent = `
-    body .promo-banner-visual {
-      height: 280px;
-      min-height: 0;
-      max-height: 280px;
-      overflow: hidden;
-      border-radius: 20px;
-    }
-    body .promo-banner-visual img {
-      width: 100%;
-      height: 280px;
-      min-height: 0;
-      object-fit: cover;
-      object-position: left center;
-    }
-    @media (max-width: 900px) {
-      body .promo-banner-card { display: none; }
-    }
-  `;
-  document.head.appendChild(s);
+  if (!document.getElementById("promo-banner-mobile-fix")) {
+    const s = document.createElement("style");
+    s.id = "promo-banner-mobile-fix";
+    s.textContent = `body .promo-banner::before{background:none!important;}`;
+    document.head.appendChild(s);
+  }
+  const img = document.querySelector(".promo-banner-visual img");
+  if (!img) return;
+  img.src = "Imagenes/banners/promo-web-5-mobile.jpg";
+  img.style.setProperty("width", "100%", "important");
+  img.style.setProperty("height", "auto", "important");
 }
 
 function inyectarEstilosCardCta() {
