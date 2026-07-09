@@ -829,6 +829,26 @@
     "fabric": "B2868V-3"
   },
   {
+    "family": "4380-02",
+    "main_image": "43/4380/IMG_2080.jpg",
+    "gallery": [
+      "43/4380/IMG_2080.jpg",
+      "43/4380/IMG_2081.jpg",
+      "43/4380/IMG_2082.jpg"
+    ],
+    "description": "JEAN / CINTURA / FLARE",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: FLARE"
+    ],
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "FLARE",
+    "fabric": ""
+  },
+  {
     "family": "4380-00",
     "main_image": "43/4380-00/IMG_2075.jpg",
     "gallery": [
