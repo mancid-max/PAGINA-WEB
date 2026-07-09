@@ -150,7 +150,7 @@ exports.handler = async (event) => {
       mc_id:           mc_id || null,
       ciudad:          null,
       region:          null,
-      tipo_cliente:    "Lead",
+      tipo_cliente:    esMayorista ? "Lead_WA" : "Lead",
       activo_desde:    new Date().getFullYear(),
     });
     console.log("[crm-lead] crm_clientes ok:", okCliente, "rut:", rut);
