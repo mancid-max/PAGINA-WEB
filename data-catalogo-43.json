@@ -269,6 +269,29 @@
     "fabric": "B2868V-3"
   },
   {
+    "family": "4323-00",
+    "main_image": "43/4323-00/portada final .jpg",
+    "gallery": [
+      "43/4323-00/portada final .jpg",
+      "43/4323-00/final 1.jpg",
+      "43/4323-00/final calce .jpg",
+      "43/4323-00/SIN ECOC UERO.jpg"
+    ],
+    "description": "JEAN / CINTURA / FLARE",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: FLARE",
+      "Tela: Ayla",
+      "Tecnología: Perfect Fit"
+    ],
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "FLARE",
+    "fabric": "Ayla"
+  },
+  {
     "family": "4323-01",
     "main_image": "43/4323-01/Mohicano-211 copia.jpg",
     "gallery": [
