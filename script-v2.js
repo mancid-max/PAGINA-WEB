@@ -6553,14 +6553,19 @@ function inyectarEstilosPromoBannerMobile() {
   if (!document.getElementById("promo-banner-mobile-fix")) {
     const s = document.createElement("style");
     s.id = "promo-banner-mobile-fix";
-    s.textContent = `body .promo-banner::before{background:none!important;}`;
+    s.textContent = `
+      @media(max-width:768px){
+        body .promo-banner::before{
+          background-image:url('Imagenes/banners/promo-web-5-mobile.jpg')!important;
+          background-size:cover!important;
+          background-position:center top!important;
+        }
+        body .promo-banner-gallery-rich{display:none!important;}
+        body .promo-banner{min-height:420px!important;}
+      }
+    `;
     document.head.appendChild(s);
   }
-  const img = document.querySelector(".promo-banner-visual img");
-  if (!img) return;
-  img.src = "Imagenes/banners/promo-web-5-mobile.jpg";
-  img.style.setProperty("width", "100%", "important");
-  img.style.setProperty("height", "auto", "important");
 }
 
 function inyectarEstilosCardCta() {
