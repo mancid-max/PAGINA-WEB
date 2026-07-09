@@ -6555,13 +6555,13 @@ function inyectarEstilosPromoBannerMobile() {
     s.id = "promo-banner-mobile-fix";
     s.textContent = `
       @media(max-width:768px){
-        body .promo-banner::before{
-          background-image:url('Imagenes/banners/promo-web-5-mobile.jpg')!important;
-          background-size:cover!important;
-          background-position:center top!important;
+        body .promo-banner::before{background-image:none!important;}
+        body .promo-banner-visual{
+          background:url('Imagenes/banners/promo-web-5-mobile.jpg') center top / cover no-repeat !important;
+          min-height:260px!important;
         }
-        body .promo-banner-gallery-rich{display:none!important;}
-        body .promo-banner{min-height:420px!important;}
+        body .promo-banner-visual img{visibility:hidden!important;}
+        body .promo-banner-card{display:none!important;}
       }
     `;
     document.head.appendChild(s);
