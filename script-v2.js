@@ -3407,7 +3407,7 @@ function obtenerEstadoVisibilidadCatalogo43(producto = {}) {
 
 const CATALOGO_44_MODELOS_DISPONIBLES = new Set([
   "4448", "4453", "4455",
-  "3802", "4321",
+  "4401", "4402",
 ]);
 
 const CATALOGO_44_SKUS_AGOTADOS = new Set([]);
@@ -3437,7 +3437,7 @@ function renderCatalogCardHtml(p) {
       <div class="card ${esProductoAgotado(p) ? "card-sold-out" : ""}" data-family="${p.family}" onclick="verProductoDesdeCard('${p._baseFamily || p.family}','${p._preferredSku || p.family}')">
         <div class="card-title-row">
           <div class="card-title-block">
-            <div class="card-title">${(CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44") && p.bota ? p.bota.charAt(0).toUpperCase() + p.bota.slice(1).toLowerCase() : "Modelo"} ${CATALOG_SOURCE === "catalogo-44" && /^EX-/i.test(String(p.family || "")) ? String(p.family).toUpperCase() : normalizarSkuCatalogo(p.family)}</div>
+            <div class="card-title">${(CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44") && p.bota ? p.bota.charAt(0).toUpperCase() + p.bota.slice(1).toLowerCase() : "Modelo"} ${normalizarSkuCatalogo(p.family)}</div>
             ${
               detallePrecio
                 ? `<div class="card-price">
