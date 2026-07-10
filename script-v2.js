@@ -2326,9 +2326,11 @@ async function cargarProductosCatalogo() {
       productosGrid = construirProductosGridFallback(productos, stockBySku);
     }
     if (IS_COTIZACION_MODE) {
+      productosGrid = productosGrid.map((p) => ({ ...p, _cotizacion_collection: "42" }));
       const raw43 = await fetch(withCacheBust("data-catalogo-43.json")).then((r) => r.json()).catch(() => []);
       const direct43 = prepararCatalogo43Directo(Array.isArray(raw43) ? raw43 : [], {});
-      productosGrid = [...productosGrid, ...direct43.productosGrid];
+      const tagged43 = direct43.productosGrid.map((p) => ({ ...p, _cotizacion_collection: "43" }));
+      productosGrid = [...productosGrid, ...tagged43];
     }
     renderGrid(productosGrid);
     actualizarCarrito();
@@ -3446,7 +3448,7 @@ function renderCatalogCardHtml(p) {
       ? obtenerEstadoVisibilidadCatalogo44(p)
       : "";
   return `
-      <div class="card ${esProductoAgotado(p) ? "card-sold-out" : ""}" data-family="${p.family}" onclick="verProductoDesdeCard('${p._baseFamily || p.family}','${p._preferredSku || p.family}')">
+      <div class="card ${esProductoAgotado(p) ? "card-sold-out" : ""}" data-family="${p.family}" data-collection="${p._cotizacion_collection || ""}" onclick="verProductoDesdeCard('${p._baseFamily || p.family}','${p._preferredSku || p.family}')">
         <div class="card-title-row">
           <div class="card-title-block">
             <div class="card-title">${(CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44" || IS_COTIZACION_MODE) && p.bota ? p.bota.charAt(0).toUpperCase() + p.bota.slice(1).toLowerCase() : "Modelo"} ${normalizarSkuCatalogo(p.family)}</div>
@@ -3473,13 +3475,15 @@ function renderCatalogCardHtml(p) {
               : `<img data-image-src="${p._safeCardImage}" alt="Modelo ${p.family}">`
           }
           ${
-            (CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44")
-              ? (
-                  estadoVisibilidad43 === "soldout"
-                    ? ""
-                    : `<span class="catalog-visibility-badge ${estadoVisibilidad43 === "available" ? "is-available" : "is-production"}">${estadoVisibilidad43 === "available" ? "Disponible" : "En producción"}</span>`
-                )
-              : ""
+            IS_COTIZACION_MODE
+              ? '<span class="catalog-visibility-badge is-available">Disponible</span>'
+              : (CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44")
+                ? (
+                    estadoVisibilidad43 === "soldout"
+                      ? ""
+                      : `<span class="catalog-visibility-badge ${estadoVisibilidad43 === "available" ? "is-available" : "is-production"}">${estadoVisibilidad43 === "available" ? "Disponible" : "En producción"}</span>`
+                  )
+                : ""
           }
           ${
             hantanBadges.length
@@ -3492,7 +3496,7 @@ function renderCatalogCardHtml(p) {
                 </div>`
               : ""
           }
-          ${(CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44") && !esProductoAgotado(p) ? '<span class="card-cta-hint">👆 Curva aquí</span>' : ""}
+          ${(CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44" || IS_COTIZACION_MODE) && !esProductoAgotado(p) ? '<span class="card-cta-hint">👆 Curva aquí</span>' : ""}
           ${esProductoAgotado(p) ? '<span class="sold-out-ribbon sold-out-ribbon-card">AGOTADO</span>' : ""}
         </div>
       </div>
