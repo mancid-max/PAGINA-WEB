@@ -755,6 +755,7 @@ function buscarClienteLocalPorRut(rutInput) {
 }
 
 function esProductoAgotado(item) {
+  if (IS_COTIZACION_MODE) return false;
   if (CATALOG_SOURCE === "catalogo-43") {
     return obtenerEstadoVisibilidadCatalogo43(item) === "soldout";
   }
@@ -2180,7 +2181,7 @@ async function cargarProductosCatalogo() {
       ? Promise.resolve(embeddedCatalog)
       : fetch(withCacheBust(CATALOG_DATA_FILE)).then((res) => res.json());
     const priceDataPromise = cargarTodosLosMapasPreciosCatalogo();
-    const stockPromise = INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43" && CATALOG_SOURCE !== "catalogo-44"
+    const stockPromise = INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43" && CATALOG_SOURCE !== "catalogo-44" && !IS_COTIZACION_MODE
       ? cargarStockDatasetPreferido().catch((err) => {
         if (CATALOG_SOURCE === "catalogo-43") {
           console.warn(`No se pudo cargar ${STOCK_DATA_FILE}, se usa fallback de catálogo 43:`, err);
@@ -2247,11 +2248,13 @@ async function cargarProductosCatalogo() {
     actualizarCarrito();
 
     if (INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43" && CATALOG_SOURCE !== "catalogo-44") {
-      stockBySku = {
-        ...crearStockSinteticoAgotados(),
-        ...normalizarMapaStockPorSku(stockData?.items || {}),
-      };
-      lastRenderedStockSignature = crearFirmaStock(stockBySku);
+      if (!IS_COTIZACION_MODE) {
+        stockBySku = {
+          ...crearStockSinteticoAgotados(),
+          ...normalizarMapaStockPorSku(stockData?.items || {}),
+        };
+        lastRenderedStockSignature = crearFirmaStock(stockBySku);
+      }
     } else if (CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44") {
       stockBySku = {};
       lastRenderedStockSignature = "";
@@ -2322,6 +2325,11 @@ async function cargarProductosCatalogo() {
     if (CATALOG_SOURCE === "catalogo-43" && !productosGrid.length) {
       productosGrid = construirProductosGridFallback(productos, stockBySku);
     }
+    if (IS_COTIZACION_MODE) {
+      const raw43 = await fetch(withCacheBust("data-catalogo-43.json")).then((r) => r.json()).catch(() => []);
+      const direct43 = prepararCatalogo43Directo(Array.isArray(raw43) ? raw43 : [], {});
+      productosGrid = [...productosGrid, ...direct43.productosGrid];
+    }
     renderGrid(productosGrid);
     actualizarCarrito();
     inicializarBuscadorModelos();
@@ -2332,7 +2340,7 @@ async function cargarProductosCatalogo() {
 
 cargarProductosCatalogo();
 
-if (INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43" && CATALOG_SOURCE !== "catalogo-44") {
+if (INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43" && CATALOG_SOURCE !== "catalogo-44" && !IS_COTIZACION_MODE) {
   configurarRealtimeStock();
   cargarStockData();
   window.setInterval(cargarStockData, STOCK_REFRESH_INTERVAL_MS);
@@ -2911,7 +2919,7 @@ function actualizarEstadoCotizacionProducto(producto, sku) {
   const quotePanelModelTitle = document.getElementById("quotePanelModelTitle");
   const descriptionEl = document.getElementById("description");
   const detallePrecio = obtenerDetallePrecioCatalogo(sku || producto?.family);
-  const tituloPrefix = (CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44") && producto?.bota
+  const tituloPrefix = (CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44" || IS_COTIZACION_MODE) && producto?.bota
     ? producto.bota.charAt(0).toUpperCase() + producto.bota.slice(1).toLowerCase()
     : "Modelo";
   if (titleEl) {
@@ -3441,7 +3449,7 @@ function renderCatalogCardHtml(p) {
       <div class="card ${esProductoAgotado(p) ? "card-sold-out" : ""}" data-family="${p.family}" onclick="verProductoDesdeCard('${p._baseFamily || p.family}','${p._preferredSku || p.family}')">
         <div class="card-title-row">
           <div class="card-title-block">
-            <div class="card-title">${(CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44") && p.bota ? p.bota.charAt(0).toUpperCase() + p.bota.slice(1).toLowerCase() : "Modelo"} ${normalizarSkuCatalogo(p.family)}</div>
+            <div class="card-title">${(CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44" || IS_COTIZACION_MODE) && p.bota ? p.bota.charAt(0).toUpperCase() + p.bota.slice(1).toLowerCase() : "Modelo"} ${normalizarSkuCatalogo(p.family)}</div>
             ${
               detallePrecio
                 ? `<div class="card-price">
