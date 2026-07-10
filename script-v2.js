@@ -3427,7 +3427,7 @@ function filtrarProductosPorVisibilidad(lista = []) {
 function renderCatalogCardHtml(p) {
   inyectarEstilosCardCta();
   const detallePrecio = obtenerDetallePrecioCatalogo(p);
-  const hantanBadges = obtenerHantanesModelo(p);
+  const hantanBadges = CATALOG_SOURCE !== "catalogo-44" ? obtenerHantanesModelo(p) : [];
   const estadoVisibilidad43 = CATALOG_SOURCE === "catalogo-43"
     ? obtenerEstadoVisibilidadCatalogo43(p)
     : CATALOG_SOURCE === "catalogo-44"
@@ -3606,7 +3606,7 @@ function obtenerPreferenciasCargaTarjeta(index = 0) {
 function renderizarHantanModal(producto = {}) {
   const stack = document.getElementById("modalHantanStack");
   if (!stack) return;
-  const badges = obtenerHantanesModelo(producto);
+  const badges = CATALOG_SOURCE !== "catalogo-44" ? obtenerHantanesModelo(producto) : [];
   if (!badges.length) {
     stack.innerHTML = "";
     stack.removeAttribute("data-count");
