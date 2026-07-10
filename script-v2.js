@@ -2601,6 +2601,7 @@ function obtenerStockParaSku(sku) {
 
 function skuEstaAgotado(sku) {
   if (CATALOG_SOURCE === "catalogo-43") return false;
+  if (CATALOG_SOURCE === "catalogo-44") return false;
   if (!INVENTORY_ENABLED) return false;
   const stock = obtenerStockParaSku(sku);
   if (!stock || !stock.sizes || typeof stock.sizes !== "object") return true;
@@ -2907,7 +2908,7 @@ function actualizarEstadoCotizacionProducto(producto, sku) {
   const quotePanelModelTitle = document.getElementById("quotePanelModelTitle");
   const descriptionEl = document.getElementById("description");
   const detallePrecio = obtenerDetallePrecioCatalogo(sku || producto?.family);
-  const tituloPrefix = CATALOG_SOURCE === "catalogo-43" && producto?.bota
+  const tituloPrefix = (CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44") && producto?.bota
     ? producto.bota.charAt(0).toUpperCase() + producto.bota.slice(1).toLowerCase()
     : "Modelo";
   if (titleEl) {
