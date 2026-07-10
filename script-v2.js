@@ -3687,6 +3687,9 @@ function verProducto(familyId, preferredSku = "") {
     const preferredItem = productos.find((item) => normalizarSkuCatalogo(item.family) === preferredSkuNormalized);
     if (preferredItem) p = preferredItem;
   }
+  if (!p && Array.isArray(productosGrid)) {
+    p = productosGrid.find((item) => normalizarSkuCatalogo(item._baseFamily || item.family) === normalizarSkuCatalogo(familyId));
+  }
   if (!p) return;
 
   const preferredVariant = preferredSkuNormalized && Array.isArray(p?.variants)
