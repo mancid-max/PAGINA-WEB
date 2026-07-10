@@ -49,6 +49,7 @@ let videoActivoSrc = "";
 let catalogCoverBySku = {};
 const INVENTORY_ENABLED = true;
 const STOCK_REFRESH_INTERVAL_MS = 30000;
+const IS_COTIZACION_MODE = document.body?.dataset?.mode === "cotizacion";
 const CART_STORAGE_KEY = "mohicano_cart_shared_v3";
 const SOLD_OUT_CATALOG_ITEMS = [
   {
@@ -949,6 +950,7 @@ function obtenerPrecioCatalogo(value, source = CATALOG_SOURCE) {
 }
 
 function obtenerDetallePrecioCatalogo(value, source = CATALOG_SOURCE) {
+  if (IS_COTIZACION_MODE) return null;
   const precioLista = obtenerPrecioListaCatalogo(value, source);
   if (!precioLista) return null;
   const precioFinal = calcularPrecioWebConDescuento(precioLista);
@@ -2902,7 +2904,7 @@ function actualizarEstadoCotizacionProducto(producto, sku) {
 
   if (addBtn) {
     addBtn.disabled = agotado;
-    addBtn.innerText = agotado ? "Agotado" : "Agregar al pedido";
+    addBtn.innerText = agotado ? "Agotado" : IS_COTIZACION_MODE ? "Agregar a cotización" : "Agregar al pedido";
   }
 
   const titleEl = document.getElementById("modalTitle");
@@ -3872,7 +3874,7 @@ function actualizarCarrito() {
     container.innerHTML = `
       <div class="cart-empty-state">
         <div class="cart-empty-title">Aún no agregas modelos</div>
-        <div class="cart-empty-text">Selecciona tallas y cantidades para armar tu pedido.</div>
+        <div class="cart-empty-text">Selecciona tallas y cantidades para armar tu ${IS_COTIZACION_MODE ? "cotización" : "pedido"}.</div>
       </div>
     `;
   } else {
@@ -6628,7 +6630,7 @@ function inyectarSubtituloHeroCatalogo43() {
   const p = document.createElement("span");
   p.id = "hero-cta-43";
   p.className = "hero-cta-43";
-  p.textContent = "Selecciona un modelo y realiza tu pedido";
+  p.textContent = IS_COTIZACION_MODE ? "Selecciona un modelo y realiza tu cotización" : "Selecciona un modelo y realiza tu pedido";
   wrap.appendChild(p);
   h1.insertAdjacentElement("afterend", wrap);
 }
