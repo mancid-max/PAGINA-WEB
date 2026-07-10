@@ -311,6 +311,7 @@ const LOCAL_CLIENT_OVERRIDES = [
 function inferirCatalogoDesdeSku(value) {
   const sku = normalizarSkuCatalogo(value || "");
   if (/^43\d{2}(?:-\d{2})?$/i.test(sku)) return "catalogo-43";
+  if (/^44\d{2}(?:-\d{2})?$/i.test(sku)) return "catalogo-44";
   return "catalogo-1";
 }
 
@@ -756,6 +757,9 @@ function esProductoAgotado(item) {
   if (CATALOG_SOURCE === "catalogo-43") {
     return obtenerEstadoVisibilidadCatalogo43(item) === "soldout";
   }
+  if (CATALOG_SOURCE === "catalogo-44") {
+    return obtenerEstadoVisibilidadCatalogo44(item) === "soldout";
+  }
   if (item?.isSoldOut === true) return true;
   if (!INVENTORY_ENABLED || !Object.keys(stockBySku || {}).length) return false;
   const exactSku = normalizarSkuCatalogo(item?._preferredSku || item?.family || "");
@@ -821,6 +825,7 @@ const STOCK_DATA_FILE_BY_SOURCE = {
   "catalogo-1": "stock-data.json",
   "catalogo-2": "stock-data-catalogo-2.json",
   "catalogo-43": "stock-data-catalogo-43.json",
+  "catalogo-44": "stock-data-catalogo-44.json",
 };
 const STOCK_DATA_FILE = STOCK_DATA_FILE_BY_SOURCE[CATALOG_SOURCE] || "stock-data.json";
 const CATALOG_PRICE_CONFIG_BY_SOURCE = {
@@ -864,6 +869,7 @@ function leerJsonEmbebido(id) {
 function obtenerCatalogoEmbebidoLocal() {
   if (!IS_LOCAL_FILE_PROTOCOL) return null;
   if (CATALOG_SOURCE === "catalogo-43") return leerJsonEmbebido("catalogo43-inline-data");
+  if (CATALOG_SOURCE === "catalogo-44") return leerJsonEmbebido("catalogo44-inline-data");
   return null;
 }
 
@@ -2028,6 +2034,38 @@ function prepararCatalogo43Directo(items = [], stockItems = {}) {
   };
 }
 
+function prepararCatalogo44Directo(items = []) {
+  const directItems = (Array.isArray(items) ? items : [])
+    .map((item) => {
+      const family = normalizarSkuCatalogo(item?.family);
+      const images = obtenerImagenesReales(item);
+      const mainImage = images[0] || "";
+      if (!family || !mainImage) return null;
+      return {
+        ...item,
+        family,
+        main_image: mainImage,
+        gallery: images.length ? images : (Array.isArray(item?.gallery) ? item.gallery : []),
+        variants: [],
+        _baseFamily: obtenerBaseFamilia(family) ? `${obtenerBaseFamilia(family)}-00` : family,
+        _preferredSku: family,
+        _cardImage: mainImage,
+        _preferredImages: [...images],
+        _stockTotal: 0,
+        isSoldOut: false,
+      };
+    })
+    .filter(Boolean);
+
+  return {
+    productos: directItems,
+    productosGrid: directItems.map((item) => ({
+      ...item,
+      _cardImage: item._cardImage || item.main_image,
+    })),
+  };
+}
+
 function marcarProductoAgotado(item) {
   const characteristics = Array.isArray(item?.characteristics) ? [...item.characteristics] : [];
   if (!characteristics.some((value) => String(value || "").toLowerCase().includes("agotado"))) {
@@ -2140,7 +2178,7 @@ async function cargarProductosCatalogo() {
       ? Promise.resolve(embeddedCatalog)
       : fetch(withCacheBust(CATALOG_DATA_FILE)).then((res) => res.json());
     const priceDataPromise = cargarTodosLosMapasPreciosCatalogo();
-    const stockPromise = INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43"
+    const stockPromise = INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43" && CATALOG_SOURCE !== "catalogo-44"
       ? cargarStockDatasetPreferido().catch((err) => {
         if (CATALOG_SOURCE === "catalogo-43") {
           console.warn(`No se pudo cargar ${STOCK_DATA_FILE}, se usa fallback de catálogo 43:`, err);
@@ -2206,13 +2244,13 @@ async function cargarProductosCatalogo() {
 
     actualizarCarrito();
 
-    if (INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43") {
+    if (INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43" && CATALOG_SOURCE !== "catalogo-44") {
       stockBySku = {
         ...crearStockSinteticoAgotados(),
         ...normalizarMapaStockPorSku(stockData?.items || {}),
       };
       lastRenderedStockSignature = crearFirmaStock(stockBySku);
-    } else if (CATALOG_SOURCE === "catalogo-43") {
+    } else if (CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44") {
       stockBySku = {};
       lastRenderedStockSignature = "";
     }
@@ -2231,6 +2269,16 @@ async function cargarProductosCatalogo() {
       inicializarBuscadorModelos();
       inyectarSubtituloHeroCatalogo43();
       inyectarEstilosPromoBannerMobile();
+      return;
+    }
+    if (CATALOG_SOURCE === "catalogo-44") {
+      productosCatalogoBase = Array.isArray(items) ? [...items] : [];
+      const directCatalog44 = prepararCatalogo44Directo(items);
+      productos = directCatalog44.productos;
+      productosGrid = directCatalog44.productosGrid;
+      renderGrid(productosGrid);
+      actualizarCarrito();
+      inicializarBuscadorModelos();
       return;
     }
     if (CATALOG_SOURCE === "catalogo-1") {
@@ -2653,6 +2701,19 @@ function cargarStockData() {
     actualizarCarrito();
     return Promise.resolve();
   }
+  if (CATALOG_SOURCE === "catalogo-44") {
+    stockBySku = {};
+    if (skuActivo) aplicarStockATallas(skuActivo);
+    const baseItems44 = Array.isArray(productosCatalogoBase) && productosCatalogoBase.length
+      ? productosCatalogoBase
+      : productos;
+    const directCatalog44 = prepararCatalogo44Directo(baseItems44);
+    productos = directCatalog44.productos;
+    productosGrid = directCatalog44.productosGrid;
+    renderGrid(productosGrid);
+    actualizarCarrito();
+    return Promise.resolve();
+  }
   return cargarStockDatasetPreferido()
     .then((data) => {
       const nextStock = normalizarMapaStockPorSku(data?.items || {});
@@ -2704,7 +2765,7 @@ function asegurarBadgeStock(label) {
 }
 
 function aplicarStockATallas(sku) {
-  if (CATALOG_SOURCE === "catalogo-43") {
+  if (CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44") {
     TALLAS_DISPONIBLES.forEach((talla) => {
       const input = document.getElementById("t" + talla);
       const label = input?.closest("label");
@@ -3344,6 +3405,21 @@ function obtenerEstadoVisibilidadCatalogo43(producto = {}) {
   return CATALOGO_43_MODELOS_DISPONIBLES.has(model) ? "available" : "soldout";
 }
 
+const CATALOGO_44_MODELOS_DISPONIBLES = new Set([
+  "4448", "4453", "4455",
+  "3802", "4321",
+]);
+
+const CATALOGO_44_SKUS_AGOTADOS = new Set([]);
+
+function obtenerEstadoVisibilidadCatalogo44(producto = {}) {
+  const family = normalizarSkuCatalogo(producto?._preferredSku || producto?.family || producto?._baseFamily || "");
+  if (family && CATALOGO_44_SKUS_AGOTADOS.has(family)) return "soldout";
+  const model = obtenerBaseFamilia(family);
+  if (!model) return "soldout";
+  return CATALOGO_44_MODELOS_DISPONIBLES.has(model) ? "available" : "soldout";
+}
+
 function filtrarProductosPorVisibilidad(lista = []) {
   return Array.isArray(lista) ? lista : [];
 }
@@ -3352,12 +3428,16 @@ function renderCatalogCardHtml(p) {
   inyectarEstilosCardCta();
   const detallePrecio = obtenerDetallePrecioCatalogo(p);
   const hantanBadges = obtenerHantanesModelo(p);
-  const estadoVisibilidad43 = CATALOG_SOURCE === "catalogo-43" ? obtenerEstadoVisibilidadCatalogo43(p) : "";
+  const estadoVisibilidad43 = CATALOG_SOURCE === "catalogo-43"
+    ? obtenerEstadoVisibilidadCatalogo43(p)
+    : CATALOG_SOURCE === "catalogo-44"
+      ? obtenerEstadoVisibilidadCatalogo44(p)
+      : "";
   return `
       <div class="card ${esProductoAgotado(p) ? "card-sold-out" : ""}" data-family="${p.family}" onclick="verProductoDesdeCard('${p._baseFamily || p.family}','${p._preferredSku || p.family}')">
         <div class="card-title-row">
           <div class="card-title-block">
-            <div class="card-title">${CATALOG_SOURCE === "catalogo-43" && p.bota ? p.bota.charAt(0).toUpperCase() + p.bota.slice(1).toLowerCase() : "Modelo"} ${normalizarSkuCatalogo(p.family)}</div>
+            <div class="card-title">${(CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44") && p.bota ? p.bota.charAt(0).toUpperCase() + p.bota.slice(1).toLowerCase() : "Modelo"} ${normalizarSkuCatalogo(p.family)}</div>
             ${
               detallePrecio
                 ? `<div class="card-price">
@@ -3381,7 +3461,7 @@ function renderCatalogCardHtml(p) {
               : `<img data-image-src="${p._safeCardImage}" alt="Modelo ${p.family}">`
           }
           ${
-            CATALOG_SOURCE === "catalogo-43"
+            (CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44")
               ? (
                   estadoVisibilidad43 === "soldout"
                     ? ""
@@ -3876,6 +3956,8 @@ function actualizarCarrito() {
         <span class="cart-totals-note">5% web + IVA incluido</span>
       </div>
       <div class="cart-totals-row"><span>Total prendas</span><strong>${totalItems}</strong></div>
+      ${totalItems > 0 && totalItems < 24 ? `<div class="cart-totals-row" style="color:#b45309;font-size:12px;background:#fffbeb;padding:4px 8px;border-radius:4px;margin-top:2px;">⚠️ Faltan ${24 - totalItems} unidades para el mínimo (24)</div>` : ""}
+      ${totalItems >= 24 ? `<div class="cart-totals-row" style="color:#15803d;font-size:12px;">✓ Mínimo mayorista cumplido</div>` : ""}
       ${totalLista > 0 ? `<div class="cart-totals-row"><span>Total lista</span><strong>${formatearPrecioCLP(totalLista)}</strong></div>` : ""}
       ${totalAhorro > 0 ? `<div class="cart-totals-row cart-totals-row-accent"><span>Descuento web ${WEB_DISCOUNT_PERCENT}%</span><strong>- ${formatearPrecioCLP(totalAhorro)}</strong></div>` : ""}
       ${totalEstimado > 0 ? `<div class="cart-totals-row"><span>Total neto con descuento</span><strong>${formatearPrecioCLP(totalEstimado)}</strong></div>` : ""}
@@ -7224,6 +7306,15 @@ function resolverMensajeErrorCotizacion(error) {
 document.getElementById("sendRequest").onclick = async () => {
   if (!pedido.length) {
     return mostrarToastError("Faltan productos", "Agrega al menos un modelo antes de enviar el pedido.");
+  }
+
+  const totalUnidades = pedido.reduce((s, item) =>
+    s + Object.values(item.tallas).reduce((a, b) => a + (Number(b) || 0), 0), 0);
+  if (totalUnidades < 24) {
+    return mostrarToastError(
+      "Mínimo 24 unidades",
+      `Tu pedido tiene ${totalUnidades} unidad${totalUnidades !== 1 ? "es" : ""}. El pedido mínimo mayorista es de 24 unidades.`
+    );
   }
 
   const btn = document.getElementById("sendRequest");

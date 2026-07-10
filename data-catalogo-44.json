@@ -1,0 +1,102 @@
+[
+  {
+    "family": "4448-00",
+    "main_image": "44/4448/1.jpg",
+    "gallery": [
+      "44/4448/1.jpg",
+      "44/4448/2.jpg",
+      "44/4448/3.jpg"
+    ],
+    "description": "JEAN · MEDIO · FLARE",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: MEDIO",
+      "Bota: FLARE",
+      "Tela: New Glue",
+      "OC: 11599"
+    ],
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "MEDIO",
+    "bota": "FLARE",
+    "fabric": "New Glue"
+  },
+  {
+    "family": "4453-00",
+    "main_image": "44/4453/0.jpg",
+    "gallery": [
+      "44/4453/0.jpg",
+      "44/4453/2.jpg"
+    ],
+    "description": "JEAN · CINTURA · RECTO",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: RECTO",
+      "Tela: New Glue",
+      "OC: 11592"
+    ],
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "RECTO",
+    "fabric": "New Glue"
+  },
+  {
+    "family": "4455-00",
+    "main_image": "44/ex 4333/1.jpg",
+    "gallery": [
+      "44/ex 4333/1.jpg",
+      "44/ex 4333/2.jpg",
+      "44/ex 4333/3.jpg"
+    ],
+    "description": "JEAN · CINTURA · PALAZZO",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: PALAZZO",
+      "Tela: Missy Plus",
+      "OC: 11593"
+    ],
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "PALAZZO",
+    "fabric": "Missy Plus"
+  },
+  {
+    "family": "EX-4321",
+    "main_image": "44/ex 4321/1.jpg",
+    "gallery": [
+      "44/ex 4321/1.jpg",
+      "44/ex 4321/2.jpg"
+    ],
+    "description": "JEAN · Cole 44",
+    "characteristics": [
+      "Tipo: JEAN"
+    ],
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "",
+    "bota": "",
+    "fabric": ""
+  },
+  {
+    "family": "EX-3802",
+    "main_image": "44/ex 3802/a.jpg",
+    "gallery": [
+      "44/ex 3802/a.jpg",
+      "44/ex 3802/b.jpg",
+      "44/ex 3802/c.jpg"
+    ],
+    "description": "JEAN · Cole 44",
+    "characteristics": [
+      "Tipo: JEAN"
+    ],
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "",
+    "bota": "",
+    "fabric": ""
+  }
+]
