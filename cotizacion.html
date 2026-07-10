@@ -69,9 +69,9 @@ src="https://www.facebook.com/tr?id=2136280953641446&ev=PageView&noscript=1"
   <div class="collection-switch-row">
     <span class="collection-switch-label">Colecci&oacute;n</span>
     <div class="collection-switch cotizacion-collection-filter" aria-label="Filtrar colección">
-      <button class="collection-switch-link active" data-filter="all">42 · 43</button>
-      <button class="collection-switch-link" data-filter="42">42</button>
-      <button class="collection-switch-link" data-filter="43">43</button>
+      <a class="collection-switch-link active" href="javascript:void(0)" data-filter="all">42 · 43</a>
+      <a class="collection-switch-link" href="javascript:void(0)" data-filter="42">42</a>
+      <a class="collection-switch-link" href="javascript:void(0)" data-filter="43">43</a>
     </div>
   </div>
   <h1 class="hero-title">Cotización</h1>
@@ -325,11 +325,12 @@ src="https://www.facebook.com/tr?id=2136280953641446&ev=PageView&noscript=1"
     });
   }
   document.addEventListener("click", function (e) {
-    var btn = e.target.closest(".cotizacion-collection-filter .collection-switch-link");
-    if (!btn) return;
+    var link = e.target.closest(".cotizacion-collection-filter .collection-switch-link");
+    if (!link) return;
+    e.preventDefault();
     document.querySelectorAll(".cotizacion-collection-filter .collection-switch-link").forEach(function (b) { b.classList.remove("active"); });
-    btn.classList.add("active");
-    activeFilter = btn.dataset.filter || "all";
+    link.classList.add("active");
+    activeFilter = link.dataset.filter || "all";
     aplicarFiltro();
   });
   var observer = new MutationObserver(aplicarFiltro);
