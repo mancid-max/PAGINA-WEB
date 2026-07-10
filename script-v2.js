@@ -2279,6 +2279,7 @@ async function cargarProductosCatalogo() {
       renderGrid(productosGrid);
       actualizarCarrito();
       inicializarBuscadorModelos();
+      inyectarSubtituloHeroCatalogo43();
       return;
     }
     if (CATALOG_SOURCE === "catalogo-1") {
