@@ -3437,7 +3437,7 @@ function renderCatalogCardHtml(p) {
       <div class="card ${esProductoAgotado(p) ? "card-sold-out" : ""}" data-family="${p.family}" onclick="verProductoDesdeCard('${p._baseFamily || p.family}','${p._preferredSku || p.family}')">
         <div class="card-title-row">
           <div class="card-title-block">
-            <div class="card-title">${(CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44") && p.bota ? p.bota.charAt(0).toUpperCase() + p.bota.slice(1).toLowerCase() : "Modelo"} ${normalizarSkuCatalogo(p.family)}</div>
+            <div class="card-title">${(CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44") && p.bota ? p.bota.charAt(0).toUpperCase() + p.bota.slice(1).toLowerCase() : "Modelo"} ${CATALOG_SOURCE === "catalogo-44" && /^EX-/i.test(String(p.family || "")) ? String(p.family).toUpperCase() : normalizarSkuCatalogo(p.family)}</div>
             ${
               detallePrecio
                 ? `<div class="card-price">
@@ -3480,7 +3480,7 @@ function renderCatalogCardHtml(p) {
                 </div>`
               : ""
           }
-          ${CATALOG_SOURCE === "catalogo-43" && !esProductoAgotado(p) ? '<span class="card-cta-hint">👆 Curva aquí</span>' : ""}
+          ${(CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44") && !esProductoAgotado(p) ? '<span class="card-cta-hint">👆 Curva aquí</span>' : ""}
           ${esProductoAgotado(p) ? '<span class="sold-out-ribbon sold-out-ribbon-card">AGOTADO</span>' : ""}
         </div>
       </div>
