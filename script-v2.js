@@ -842,6 +842,15 @@ const CATALOG_PRICE_CONFIG_BY_SOURCE = {
   "catalogo-43": {
     priceFile: "price-data-catalogo-43.json",
   },
+  "catalogo-44": {
+    inlinePrices: {
+      "4448-00": 25990,
+      "4453-00": 25990,
+      "4455-00": 26990,
+      "4490-00": 25990,
+      "4491-00": 25990,
+    },
+  },
 };
 let catalogPriceBySource = {};
 
