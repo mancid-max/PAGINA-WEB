@@ -21,6 +21,7 @@ let trazabilidadMeta = null;
 let adminActiveTab = "cotizaciones";
 let quotesStatusFilter = "all";
 let quotesListStatusFilter = "all";
+let quotesListSourceFilter = "all";
 let quotesListSearchFilter = "";
 let quotesMonthFilter = (() => {
   const now = new Date();
@@ -5081,7 +5082,7 @@ function construirPayloadCotizacion(cliente, itemsGroup = [], source = CATALOG_S
   });
 
   const distinctSources = [...new Set((Array.isArray(itemsGroup) ? itemsGroup : []).map((item) => resolverSourceItemPedido(item, source)).filter(Boolean))];
-  const quoteSource = distinctSources.length > 1 ? "catalogo-mixto" : (distinctSources[0] || source || CATALOG_SOURCE);
+  const quoteSource = IS_COTIZACION_MODE ? "cotizacion" : (distinctSources.length > 1 ? "catalogo-mixto" : (distinctSources[0] || source || CATALOG_SOURCE));
 
   return {
     quote: {
@@ -6778,6 +6779,8 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
   let filtered = allQuotes;
   if (quotesListStatusFilter === "open") filtered = filtered.filter((q) => !q.is_ready);
   else if (quotesListStatusFilter === "ready") filtered = filtered.filter((q) => !!q.is_ready);
+  if (quotesListSourceFilter === "cotizacion") filtered = filtered.filter((q) => String(q.source || "").trim() === "cotizacion");
+  else if (quotesListSourceFilter === "pedido") filtered = filtered.filter((q) => String(q.source || "").trim() !== "cotizacion");
   if (search) {
     filtered = filtered.filter((q) =>
       (q.store_name || "").toLowerCase().includes(search) ||
@@ -6786,6 +6789,7 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
   }
 
   const pendientes = allQuotes.filter((q) => !q.is_ready).length;
+  const totalCotizaciones = allQuotes.filter((q) => String(q.source || "").trim() === "cotizacion").length;
   const filterBar = `
     <div class="ql-filters">
       <input id="quotesListSearchInput" type="text" class="ql-search" placeholder="Buscar por nombre o RUT…" value="${escapeHtmlExcel(quotesListSearchFilter)}">
@@ -6793,6 +6797,11 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
         <button type="button" class="ql-filter-btn${quotesListStatusFilter === "all" ? " active" : ""}" data-ql-filter="all">Todos (${allQuotes.length})</button>
         <button type="button" class="ql-filter-btn${quotesListStatusFilter === "open" ? " active" : ""}" data-ql-filter="open">Pendientes (${pendientes})</button>
         <button type="button" class="ql-filter-btn${quotesListStatusFilter === "ready" ? " active" : ""}" data-ql-filter="ready">Listos (${allQuotes.length - pendientes})</button>
+      </div>
+      <div class="ql-status-btns">
+        <button type="button" class="ql-filter-btn${quotesListSourceFilter === "all" ? " active" : ""}" data-ql-source="all">Todos los orígenes</button>
+        <button type="button" class="ql-filter-btn${quotesListSourceFilter === "pedido" ? " active" : ""}" data-ql-source="pedido">Solo pedidos</button>
+        <button type="button" class="ql-filter-btn${quotesListSourceFilter === "cotizacion" ? " active" : ""}" data-ql-source="cotizacion">Cotizaciones (${totalCotizaciones})</button>
       </div>
     </div>
   `;
@@ -6827,6 +6836,7 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
             </div>
             <div class="quote-code-row">
               <span class="quote-code-pill">${codigo}</span>
+              ${String(q.source || "").trim() === "cotizacion" ? '<span class="quote-code-pill" style="background:#e0f2fe;color:#0369a1;font-size:10px;">COTIZACIÓN</span>' : ""}
               <button type="button" class="ghost-btn quote-export-btn" data-quote-export="${q.id}">Descargar pedido</button>
               <button type="button" class="ghost-btn quote-delete-btn" data-quote-delete="${q.id}">Eliminar pedido</button>
             </div>
@@ -7132,6 +7142,12 @@ function configurarPanelCotizaciones() {
   });
 
   quotesListEl?.addEventListener("click", (e) => {
+    const sourceBtn = e.target.closest(".ql-filter-btn[data-ql-source]");
+    if (sourceBtn) {
+      quotesListSourceFilter = sourceBtn.dataset.qlSource || "all";
+      renderCotizacionesAdmin();
+      return;
+    }
     const filterBtn = e.target.closest(".ql-filter-btn[data-ql-filter]");
     if (filterBtn) {
       quotesListStatusFilter = filterBtn.dataset.qlFilter || "all";
