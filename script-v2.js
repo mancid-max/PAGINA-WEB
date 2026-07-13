@@ -3675,7 +3675,13 @@ function esTextoSensitivoTela(value) {
 
 function filtrarCaracteristicasPublicas(characteristics = []) {
   return Array.isArray(characteristics)
-    ? characteristics.filter((char) => !esTextoSensitivoTela(char))
+    ? characteristics.filter((char) => {
+        if (esTextoSensitivoTela(char)) return false;
+        const lower = String(char || "").toLowerCase();
+        if (lower.startsWith("disponible:")) return false;
+        if (lower.startsWith("cortes:")) return false;
+        return true;
+      })
     : [];
 }
 
