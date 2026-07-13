@@ -7383,7 +7383,7 @@ document.getElementById("sendRequest").onclick = async () => {
 
   const totalUnidades = pedido.reduce((s, item) =>
     s + Object.values(item.tallas).reduce((a, b) => a + (Number(b) || 0), 0), 0);
-  if (totalUnidades < 24) {
+  if (!IS_COTIZACION_MODE && totalUnidades < 24) {
     return mostrarToastError(
       "Mínimo 24 unidades",
       `Tu pedido tiene ${totalUnidades} unidad${totalUnidades !== 1 ? "es" : ""}. El pedido mínimo mayorista es de 24 unidades.`
