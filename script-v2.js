@@ -755,7 +755,12 @@ function buscarClienteLocalPorRut(rutInput) {
 }
 
 function esProductoAgotado(item) {
-  if (IS_COTIZACION_MODE) return false;
+  if (IS_COTIZACION_MODE) {
+    const _src = inferirCatalogoDesdeSku(item?.family || "");
+    if (_src === "catalogo-43") return obtenerEstadoVisibilidadCatalogo43(item) === "soldout";
+    if (_src === "catalogo-44") return false;
+    // Cole 42 en cotización: usa stock normal (fall-through)
+  }
   if (CATALOG_SOURCE === "catalogo-43") {
     return obtenerEstadoVisibilidadCatalogo43(item) === "soldout";
   }
@@ -2181,7 +2186,7 @@ async function cargarProductosCatalogo() {
       ? Promise.resolve(embeddedCatalog)
       : fetch(withCacheBust(CATALOG_DATA_FILE)).then((res) => res.json());
     const priceDataPromise = cargarTodosLosMapasPreciosCatalogo();
-    const stockPromise = INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43" && CATALOG_SOURCE !== "catalogo-44" && !IS_COTIZACION_MODE
+    const stockPromise = INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43" && CATALOG_SOURCE !== "catalogo-44"
       ? cargarStockDatasetPreferido().catch((err) => {
         if (CATALOG_SOURCE === "catalogo-43") {
           console.warn(`No se pudo cargar ${STOCK_DATA_FILE}, se usa fallback de catálogo 43:`, err);
@@ -2248,13 +2253,11 @@ async function cargarProductosCatalogo() {
     actualizarCarrito();
 
     if (INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43" && CATALOG_SOURCE !== "catalogo-44") {
-      if (!IS_COTIZACION_MODE) {
-        stockBySku = {
-          ...crearStockSinteticoAgotados(),
-          ...normalizarMapaStockPorSku(stockData?.items || {}),
-        };
-        lastRenderedStockSignature = crearFirmaStock(stockBySku);
-      }
+      stockBySku = {
+        ...crearStockSinteticoAgotados(),
+        ...normalizarMapaStockPorSku(stockData?.items || {}),
+      };
+      lastRenderedStockSignature = crearFirmaStock(stockBySku);
     } else if (CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44") {
       stockBySku = {};
       lastRenderedStockSignature = "";
@@ -2613,7 +2616,7 @@ function obtenerStockParaSku(sku) {
 }
 
 function skuEstaAgotado(sku) {
-  if (IS_COTIZACION_MODE) return false;
+  if (IS_COTIZACION_MODE && inferirCatalogoDesdeSku(sku) !== "catalogo-1") return false;
   if (CATALOG_SOURCE === "catalogo-43") return false;
   if (CATALOG_SOURCE === "catalogo-44") return false;
   if (!INVENTORY_ENABLED) return false;
@@ -3476,8 +3479,8 @@ function renderCatalogCardHtml(p) {
               : `<img data-image-src="${p._safeCardImage}" alt="Modelo ${p.family}">`
           }
           ${
-            IS_COTIZACION_MODE
-              ? '<span class="catalog-visibility-badge is-available">Disponible</span>'
+            IS_COTIZACION_MODE && p._cotizacion_collection === "43"
+              ? (obtenerEstadoVisibilidadCatalogo43(p) === "soldout" ? "" : '<span class="catalog-visibility-badge is-available">Disponible</span>')
               : (CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44")
                 ? (
                     estadoVisibilidad43 === "soldout"
@@ -5124,8 +5127,49 @@ async function enviarPayloadCotizacionSupabase(payload) {
   return quoteId;
 }
 
+async function enviarPayloadDirectoSinStock(payload) {
+  if (!supabaseConfigurado()) throw new Error("Configura SUPABASE_URL y SUPABASE_ANON_KEY en script-v2.js");
+  if (!payload.items.length) throw new Error("No hay items para guardar");
+  const headers = {
+    apikey: SUPABASE_ANON_KEY,
+    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    "Content-Type": "application/json",
+    Prefer: "return=minimal",
+  };
+  const quoteRes = await fetch(`${SUPABASE_URL}/rest/v1/quotes`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      id: payload.quote.id,
+      store_name: payload.quote.store_name,
+      client_rut: payload.quote.client_rut,
+      client_rut_normalized: payload.quote.client_rut_normalized,
+      client_phone: payload.quote.client_phone,
+      total_items: payload.quote.total_items,
+      created_at_client: payload.quote.created_at_client,
+      source: payload.quote.source,
+    }),
+  });
+  if (!quoteRes.ok) throw new Error(`Error guardando pedido: ${await quoteRes.text() || quoteRes.status}`);
+  const itemsRes = await fetch(`${SUPABASE_URL}/rest/v1/quote_items`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(
+      payload.items.map((item) => ({
+        quote_id: payload.quote.id,
+        sku: item.sku,
+        size: item.talla,
+        quantity: item.cantidad,
+      }))
+    ),
+  });
+  if (!itemsRes.ok) throw new Error(`Error guardando items: ${await itemsRes.text() || itemsRes.status}`);
+  return payload.quote.id;
+}
+
 async function guardarCotizacionSupabase(cliente) {
   const payload = construirPayloadCotizacion(cliente, pedido, CATALOG_SOURCE);
+  if (CATALOG_SOURCE === "catalogo-44") return enviarPayloadDirectoSinStock(payload);
   return enviarPayloadCotizacionSupabase(payload);
 }
 
