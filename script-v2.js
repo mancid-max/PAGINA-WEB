@@ -6459,7 +6459,9 @@ function construirVistaReporteCotizaciones(quotes = [], itemsMap = new Map()) {
         </div>
         <div class="quotes-report-preview-meta quotes-report-preview-meta-finance">
           ${resumenMonto ? `<div class="quotes-report-preview-chip quotes-report-preview-chip-money"><span>Total lista</span><strong>${escapeHtmlExcel(formatearPrecioCLP(resumenMonto.lista))}</strong></div>` : ""}
-          ${resumenMonto ? `<div class="quotes-report-preview-chip quotes-report-preview-chip-money is-highlight"><span>Total web ${WEB_DISCOUNT_PERCENT}%</span><strong>${escapeHtmlExcel(formatearPrecioCLP(resumenMonto.promo))}</strong></div>` : ""}
+          ${resumenMonto ? `<div class="quotes-report-preview-chip quotes-report-preview-chip-money is-highlight"><span>Neto c/desc. ${WEB_DISCOUNT_PERCENT}%</span><strong>${escapeHtmlExcel(formatearPrecioCLP(resumenMonto.promo))}</strong></div>` : ""}
+          ${resumenMonto ? `<div class="quotes-report-preview-chip quotes-report-preview-chip-money"><span>IVA 19%</span><strong>${escapeHtmlExcel(formatearPrecioCLP(Math.round(resumenMonto.promo * IVA_RATE)))}</strong></div>` : ""}
+          ${resumenMonto ? `<div class="quotes-report-preview-chip quotes-report-preview-chip-money is-highlight"><span>Total con IVA</span><strong>${escapeHtmlExcel(formatearPrecioCLP(resumenMonto.promo + Math.round(resumenMonto.promo * IVA_RATE)))}</strong></div>` : ""}
           ${resumenMonto?.ahorro ? `<div class="quotes-report-preview-chip quotes-report-preview-chip-money is-saving"><span>Ahorro</span><strong>${escapeHtmlExcel(formatearPrecioCLP(resumenMonto.ahorro))}</strong></div>` : ""}
           </div>
         <div class="quotes-report-preview-table-wrap">
