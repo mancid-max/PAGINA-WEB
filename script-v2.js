@@ -51,6 +51,8 @@ let catalogCoverBySku = {};
 const INVENTORY_ENABLED = true;
 const STOCK_REFRESH_INTERVAL_MS = 30000;
 const IS_COTIZACION_MODE = document.body?.dataset?.mode === "cotizacion";
+const COTIZACION_PRECIO_DEFAULT = 24990;
+const COTIZACION_PRECIO_OVERRIDES = { "4310-00": 21990, "4310": 21990 };
 const CART_STORAGE_KEY = "mohicano_cart_shared_v3";
 const SOLD_OUT_CATALOG_ITEMS = [
   {
@@ -991,6 +993,14 @@ function obtenerDetallePrecioCatalogoCruzado(value, preferredSource = CATALOG_SO
   }
 
   return null;
+}
+
+function obtenerPrecioCotizacion(sku) {
+  const candidates = obtenerCandidatosSkuPrecio(sku);
+  for (const c of candidates) {
+    if (COTIZACION_PRECIO_OVERRIDES[c] !== undefined) return COTIZACION_PRECIO_OVERRIDES[c];
+  }
+  return COTIZACION_PRECIO_DEFAULT;
 }
 
 function formatearPrecioCLP(value) {
@@ -3916,9 +3926,15 @@ function actualizarCarrito() {
     container.innerHTML = pedido
       .map((item, index) => {
         const cantidadModelo = Object.values(item.tallas).reduce((acc, qty) => acc + (Number(qty) || 0), 0);
-        const detallePrecio = obtenerDetallePrecioCatalogoCruzado(item.sku);
-        const precioListaUnitario = detallePrecio?.lista || null;
-        const precioUnitario = detallePrecio?.final || null;
+        let precioListaUnitario, precioUnitario;
+        if (IS_COTIZACION_MODE) {
+          precioListaUnitario = obtenerPrecioCotizacion(item.sku);
+          precioUnitario = precioListaUnitario;
+        } else {
+          const detallePrecio = obtenerDetallePrecioCatalogoCruzado(item.sku);
+          precioListaUnitario = detallePrecio?.lista || null;
+          precioUnitario = detallePrecio?.final || null;
+        }
           const thumbnail = obtenerMiniaturaCarritoPorSku(item.sku);
           const subtotalLista = precioListaUnitario ? precioListaUnitario * cantidadModelo : 0;
           const subtotal = precioUnitario ? precioUnitario * cantidadModelo : 0;
@@ -3989,7 +4005,18 @@ function actualizarCarrito() {
     totalIva = totalEstimado > 0 ? Math.round(totalEstimado * IVA_RATE) : 0;
     totalConIva = totalEstimado + totalIva;
 
-    totalsBox.innerHTML = `
+    totalsBox.innerHTML = IS_COTIZACION_MODE ? `
+      <div class="cart-totals-head">
+        <span class="cart-totals-title">Total a pagar</span>
+        <span class="cart-totals-note">Precios sin IVA</span>
+      </div>
+      <div class="cart-totals-row"><span>Total prendas</span><strong>${totalItems}</strong></div>
+      ${totalItems > 0 && totalItems < 24 ? `<div class="cart-totals-row" style="color:#b45309;font-size:12px;background:#fffbeb;padding:4px 8px;border-radius:4px;margin-top:2px;">⚠️ Faltan ${24 - totalItems} unidades para el mínimo (24)</div>` : ""}
+      ${totalItems >= 24 ? `<div class="cart-totals-row" style="color:#15803d;font-size:12px;">✓ Mínimo mayorista cumplido</div>` : ""}
+      ${totalLista > 0 ? `<div class="cart-totals-row"><span>Neto sin IVA</span><strong>${formatearPrecioCLP(totalLista)}</strong></div>` : ""}
+      ${totalIva > 0 ? `<div class="cart-totals-row"><span>IVA ${IVA_PERCENT}%</span><strong>${formatearPrecioCLP(totalIva)}</strong></div>` : ""}
+      ${totalConIva > 0 ? `<div class="cart-totals-row cart-totals-row-final"><span>Total con IVA</span><strong>${formatearPrecioCLP(totalConIva)}</strong></div>` : ""}
+    ` : `
       <div class="cart-totals-head">
         <span class="cart-totals-title">Total a pagar</span>
         <span class="cart-totals-note">5% web + IVA incluido</span>
