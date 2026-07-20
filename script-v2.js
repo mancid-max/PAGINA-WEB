@@ -2365,7 +2365,7 @@ async function cargarProductosCatalogo() {
 
 cargarProductosCatalogo();
 
-if (INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43" && CATALOG_SOURCE !== "catalogo-44" && !IS_COTIZACION_MODE) {
+if (INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43" && CATALOG_SOURCE !== "catalogo-44" && (!IS_COTIZACION_MODE || CATALOG_SOURCE === "catalogo-1")) {
   configurarRealtimeStock();
   cargarStockData();
   window.setInterval(cargarStockData, STOCK_REFRESH_INTERVAL_MS);
