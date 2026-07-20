@@ -2760,13 +2760,18 @@ function cargarStockData() {
       stockBySku = nextStock;
       if (skuActivo) aplicarStockATallas(skuActivo);
       if (stockChanged && Array.isArray(productos) && productos.length) {
-        const tarjetasConStock = construirProductosGridPorSku(productos, stockBySku);
-        const tarjetasAgotadas = CATALOG_SOURCE === "catalogo-1"
-          ? construirProductosGridAgotadosPorSku(productosCatalogoBase, stockBySku)
-          : [];
-        productosGrid = [...tarjetasConStock, ...tarjetasAgotadas];
-        renderGrid(productosGrid);
-        actualizarCarrito();
+        if (IS_COTIZACION_MODE) {
+          renderGrid(productosGrid);
+          actualizarCarrito();
+        } else {
+          const tarjetasConStock = construirProductosGridPorSku(productos, stockBySku);
+          const tarjetasAgotadas = CATALOG_SOURCE === "catalogo-1"
+            ? construirProductosGridAgotadosPorSku(productosCatalogoBase, stockBySku)
+            : [];
+          productosGrid = [...tarjetasConStock, ...tarjetasAgotadas];
+          renderGrid(productosGrid);
+          actualizarCarrito();
+        }
         lastRenderedStockSignature = nextSignature;
       }
     })
