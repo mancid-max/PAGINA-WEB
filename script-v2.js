@@ -3722,13 +3722,19 @@ function verProductoDesdeCard(baseFamily, preferredSku) {
 function verProducto(familyId, preferredSku = "") {
   inicializarPanelCotizacionModal();
   const preferredSkuNormalized = normalizarSkuCatalogo(preferredSku);
-  let p = productos.find((item) => normalizarSkuCatalogo(item.family) === normalizarSkuCatalogo(familyId));
-  if (preferredSkuNormalized) {
-    const preferredItem = productos.find((item) => normalizarSkuCatalogo(item.family) === preferredSkuNormalized);
-    if (preferredItem) p = preferredItem;
-  }
-  if (!p && Array.isArray(productosGrid)) {
-    p = productosGrid.find((item) => normalizarSkuCatalogo(item._baseFamily || item.family) === normalizarSkuCatalogo(familyId));
+  let p;
+  if (IS_COTIZACION_MODE && Array.isArray(productosGrid)) {
+    p = productosGrid.find((item) => normalizarSkuCatalogo(item._preferredSku || item.family) === (preferredSkuNormalized || normalizarSkuCatalogo(familyId)));
+    if (!p) p = productosGrid.find((item) => normalizarSkuCatalogo(item.family) === normalizarSkuCatalogo(familyId));
+  } else {
+    p = productos.find((item) => normalizarSkuCatalogo(item.family) === normalizarSkuCatalogo(familyId));
+    if (preferredSkuNormalized) {
+      const preferredItem = productos.find((item) => normalizarSkuCatalogo(item.family) === preferredSkuNormalized);
+      if (preferredItem) p = preferredItem;
+    }
+    if (!p && Array.isArray(productosGrid)) {
+      p = productosGrid.find((item) => normalizarSkuCatalogo(item._baseFamily || item.family) === normalizarSkuCatalogo(familyId));
+    }
   }
   if (!p) return;
 
