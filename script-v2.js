@@ -4861,6 +4861,18 @@ function toggleClientPhoneField(show, { value = "", readonly = false } = {}) {
   }
 }
 
+function toggleClientExtraFields(show) {
+  const wrapEl = document.getElementById("clientExtraWrap");
+  if (!wrapEl) return;
+  wrapEl.hidden = !show;
+  if (!show) {
+    ["clientNombreTienda","clientGiro","clientDireccion","clientComuna","clientTransporte"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = "";
+    });
+  }
+}
+
 function normalizarTelefonoCliente(value) {
   const raw = String(value || "").trim();
   if (!raw) return "";
@@ -4944,6 +4956,7 @@ async function validarRutClienteEnUI({ silencioso = false } = {}) {
     setClientLookupUI();
     toggleClientNameField(false);
     toggleClientPhoneField(false);
+    toggleClientExtraFields(false);
     return null;
   }
 
@@ -4951,6 +4964,7 @@ async function validarRutClienteEnUI({ silencioso = false } = {}) {
     renderClientNewHelper(false);
     toggleClientNameField(false);
     toggleClientPhoneField(false);
+    toggleClientExtraFields(false);
     if (!silencioso) setClientLookupUI({ tipo: "error", texto: "Formato de RUT inválido" });
     return null;
   }
@@ -4968,6 +4982,7 @@ async function validarRutClienteEnUI({ silencioso = false } = {}) {
     renderClientNewHelper(true, "Completa nombre y teléfono del cliente nuevo para enviar el pedido.");
     toggleClientNameField(true, { value: clienteNuevo.razon_social, readonly: false });
     toggleClientPhoneField(true, { value: clienteNuevo.client_phone, readonly: false });
+    if (!IS_COTIZACION_MODE) toggleClientExtraFields(true);
     guardarCotizacionPersistida();
     return clienteNuevo;
   }
@@ -4981,6 +4996,7 @@ async function validarRutClienteEnUI({ silencioso = false } = {}) {
     renderClientNewHelper(false);
     toggleClientNameField(false);
     toggleClientPhoneField(false);
+    toggleClientExtraFields(false);
     guardarCotizacionPersistida();
     return cliente;
   } catch (err) {
@@ -4988,6 +5004,7 @@ async function validarRutClienteEnUI({ silencioso = false } = {}) {
     setClientLookupUI({ tipo: "error", texto: err.message || "No se pudo validar RUT" });
     toggleClientNameField(false);
     toggleClientPhoneField(false);
+    toggleClientExtraFields(false);
     return null;
   }
 }
@@ -7435,6 +7452,7 @@ function limpiarCarrito() {
   renderClientNewHelper(false);
   toggleClientNameField(false);
   toggleClientPhoneField(false);
+  toggleClientExtraFields(false);
   document.getElementById("cartSidebar").classList.remove("open");
   limpiarCotizacionPersistida();
   actualizarCarrito();
