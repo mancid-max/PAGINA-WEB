@@ -174,17 +174,27 @@ src="https://www.facebook.com/tr?id=2136280953641446&ev=PageView&noscript=1"
             <label for="clientPhone" class="cart-field-label">Teléfono del cliente</label>
             <input type="tel" id="clientPhone" name="client_phone_lookup_off" placeholder="Ej: +56912345678" inputmode="tel" autocomplete="chrome-off" readonly data-lpignore="true" data-1p-ignore="true" data-bwignore="true">
           </div>
-          <div id="clientExtraWrap" class="client-name-wrap" hidden>
-            <label for="clientNombreTienda" class="cart-field-label">Nombre tienda</label>
-            <input type="text" id="clientNombreTienda" placeholder="Ej: Boutique Central" autocomplete="off" data-lpignore="true">
-            <label for="clientGiro" class="cart-field-label" style="margin-top:8px">Giro</label>
-            <input type="text" id="clientGiro" placeholder="Ej: Comercio al por menor" autocomplete="off" data-lpignore="true">
-            <label for="clientDireccion" class="cart-field-label" style="margin-top:8px">Dirección</label>
-            <input type="text" id="clientDireccion" placeholder="Ej: Av. Principal 123" autocomplete="off" data-lpignore="true">
-            <label for="clientComuna" class="cart-field-label" style="margin-top:8px">Comuna</label>
-            <input type="text" id="clientComuna" placeholder="Ej: Santiago" autocomplete="off" data-lpignore="true">
-            <label for="clientTransporte" class="cart-field-label" style="margin-top:8px">Transporte</label>
-            <input type="text" id="clientTransporte" placeholder="Ej: Starken, Chilexpress..." autocomplete="off" data-lpignore="true">
+          <div id="clientExtraWrap" class="cart-client-panel has-new-client" hidden style="margin-top:0;border-radius:0 0 14px 14px;border-top:none">
+            <div class="client-name-wrap is-highlighted">
+              <label for="clientNombreTienda" class="cart-field-label">Nombre tienda</label>
+              <input type="search" id="clientNombreTienda" placeholder="Ej: Boutique Central" autocomplete="chrome-off" data-lpignore="true">
+            </div>
+            <div class="client-name-wrap is-highlighted">
+              <label for="clientGiro" class="cart-field-label">Giro</label>
+              <input type="search" id="clientGiro" placeholder="Ej: Comercio al por menor" autocomplete="chrome-off" data-lpignore="true">
+            </div>
+            <div class="client-name-wrap is-highlighted" style="grid-column:1/-1">
+              <label for="clientDireccion" class="cart-field-label">Dirección</label>
+              <input type="search" id="clientDireccion" placeholder="Ej: Av. Principal 123" autocomplete="chrome-off" data-lpignore="true">
+            </div>
+            <div class="client-name-wrap is-highlighted">
+              <label for="clientComuna" class="cart-field-label">Comuna</label>
+              <input type="search" id="clientComuna" placeholder="Ej: Santiago" autocomplete="chrome-off" data-lpignore="true">
+            </div>
+            <div class="client-name-wrap is-highlighted">
+              <label for="clientTransporte" class="cart-field-label">Transporte</label>
+              <input type="search" id="clientTransporte" placeholder="Ej: Starken..." autocomplete="chrome-off" data-lpignore="true">
+            </div>
           </div>
         </div>
         <button id="sendRequest">Enviar Pedido</button>

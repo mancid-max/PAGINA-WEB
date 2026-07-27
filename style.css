@@ -4697,6 +4697,46 @@ box-shadow: 0 -10px 18px rgba(255,255,255,0.95), 0 10px 24px rgba(0,0,0,0.16);
   transition: background-color 9999s ease-in-out 0s;
 }
 
+#clientNombreTienda,
+#clientGiro,
+#clientDireccion,
+#clientComuna,
+#clientTransporte{
+  width:100%;
+  margin-top:0;
+  padding:12px 14px;
+  border-radius:16px;
+  border: 1px solid rgba(15,23,42,0.12);
+  background: rgba(248,250,252,0.98);
+  color:#111827;
+  -webkit-text-fill-color:#111827;
+  caret-color:#111827;
+  font-size:16px;
+  font-weight:700;
+  outline:none;
+  transition: box-shadow .2s ease, border-color .2s ease;
+}
+
+#clientNombreTienda:focus,
+#clientGiro:focus,
+#clientDireccion:focus,
+#clientComuna:focus,
+#clientTransporte:focus{
+  border-color: rgba(129,140,248,0.35);
+  box-shadow: 0 0 0 4px rgba(129,140,248,0.12);
+}
+
+#clientNombreTienda::placeholder,
+#clientGiro::placeholder,
+#clientDireccion::placeholder,
+#clientComuna::placeholder,
+#clientTransporte::placeholder{
+  color: rgba(71,85,105,0.88);
+  font-size:13px;
+  font-weight:600;
+  letter-spacing:0;
+}
+
 .client-lookup-badge{
   margin-top:2px;
   padding:7px 10px;
@@ -6452,7 +6492,12 @@ body{
 
   #clientRut,
   #clientName,
-  #clientPhone{
+  #clientPhone,
+  #clientNombreTienda,
+  #clientGiro,
+  #clientDireccion,
+  #clientComuna,
+  #clientTransporte{
     padding:11px 12px;
     border-radius:14px;
     font-size:15px;
