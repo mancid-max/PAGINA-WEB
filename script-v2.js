@@ -4479,7 +4479,7 @@ async function cargarCotizacionAdminPorId(quoteId) {
     const errText = await quoteRes.text();
     if ((errText || "").toLowerCase().includes("client_phone")) {
       quoteRes = await fetch(
-        `${SUPABASE_URL}/rest/v1/quotes?select=id,store_name,client_rut,client_rut_normalized,total_items,created_at,created_at_client,source,is_ready,ready_at&id=eq.${encodeURIComponent(cleanId)}&limit=1`,
+        `${SUPABASE_URL}/rest/v1/quotes?select=id,store_name,client_rut,client_rut_normalized,total_items,created_at,created_at_client,source,is_ready,ready_at,giro,direccion,nombre_tienda,comuna,transporte&id=eq.${encodeURIComponent(cleanId)}&limit=1`,
         { headers }
       );
     } else {
@@ -7004,7 +7004,7 @@ async function cargarCotizacionesAdmin() {
     const errText = await quotesRes.text();
     if ((errText || "").toLowerCase().includes("client_phone")) {
       quotesRes = await fetch(
-        `${SUPABASE_URL}/rest/v1/quotes?select=id,store_name,client_rut,client_rut_normalized,total_items,created_at,created_at_client,source,is_ready,ready_at&order=created_at.desc&limit=500`,
+        `${SUPABASE_URL}/rest/v1/quotes?select=id,store_name,client_rut,client_rut_normalized,total_items,created_at,created_at_client,source,is_ready,ready_at,giro,direccion,nombre_tienda,comuna,transporte&order=created_at.desc&limit=500`,
         { headers }
       );
     } else {
