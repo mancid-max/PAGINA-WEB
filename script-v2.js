@@ -4471,7 +4471,7 @@ async function cargarCotizacionAdminPorId(quoteId) {
   };
 
   let quoteRes = await fetch(
-    `${SUPABASE_URL}/rest/v1/quotes?select=id,store_name,client_rut,client_rut_normalized,client_phone,total_items,created_at,created_at_client,source,is_ready,ready_at&id=eq.${encodeURIComponent(cleanId)}&limit=1`,
+    `${SUPABASE_URL}/rest/v1/quotes?select=id,store_name,client_rut,client_rut_normalized,client_phone,total_items,created_at,created_at_client,source,is_ready,ready_at,giro,direccion,nombre_tienda,comuna,transporte&id=eq.${encodeURIComponent(cleanId)}&limit=1`,
     { headers }
   );
 
@@ -5057,6 +5057,16 @@ function configurarLookupCliente() {
   });
 }
 
+function obtenerCamposExtraCliente() {
+  return {
+    giro: String(document.getElementById("clientGiro")?.value || "").trim(),
+    direccion: String(document.getElementById("clientDireccion")?.value || "").trim(),
+    nombre_tienda: String(document.getElementById("clientNombreTienda")?.value || "").trim(),
+    comuna: String(document.getElementById("clientComuna")?.value || "").trim(),
+    transporte: String(document.getElementById("clientTransporte")?.value || "").trim(),
+  };
+}
+
 async function obtenerClienteParaCotizacion() {
   const rutEl = document.getElementById("clientRut");
   const nameEl = document.getElementById("clientName");
@@ -5072,7 +5082,7 @@ async function obtenerClienteParaCotizacion() {
   }
 
   if (clienteValidado && !clienteValidado.is_new) {
-    return clienteValidado;
+    return { ...clienteValidado, ...obtenerCamposExtraCliente() };
   }
 
   const nombre = String(nameEl?.value || "").trim();
@@ -5108,6 +5118,7 @@ async function obtenerClienteParaCotizacion() {
     razon_social: nombre,
     client_phone: telefono,
     is_new: true,
+    ...obtenerCamposExtraCliente(),
   };
 }
 
@@ -5142,6 +5153,11 @@ function construirPayloadCotizacion(cliente, itemsGroup = [], source = CATALOG_S
       total_items: totalItems,
       created_at_client: createdAtIso,
       source: quoteSource,
+      ...(cliente?.giro ? { giro: cliente.giro } : {}),
+      ...(cliente?.direccion ? { direccion: cliente.direccion } : {}),
+      ...(cliente?.nombre_tienda ? { nombre_tienda: cliente.nombre_tienda } : {}),
+      ...(cliente?.comuna ? { comuna: cliente.comuna } : {}),
+      ...(cliente?.transporte ? { transporte: cliente.transporte } : {}),
     },
     items: lineas,
   };
@@ -6498,6 +6514,11 @@ function construirVistaReporteCotizaciones(quotes = [], itemsMap = new Map()) {
           <div class="quotes-report-preview-chip quotes-report-preview-chip-date"><span>Fecha</span><strong>${escapeHtmlExcel(fecha)}</strong></div>
           <div class="quotes-report-preview-chip"><span>Prendas</span><strong>${escapeHtmlExcel(q.total_items || 0)}</strong></div>
           ${q.client_phone ? `<div class="quotes-report-preview-chip quotes-report-preview-chip-phone"><span>Teléfono</span><strong>${escapeHtmlExcel(q.client_phone)}</strong></div>` : ""}
+          ${q.nombre_tienda ? `<div class="quotes-report-preview-chip"><span>Nombre tienda</span><strong>${escapeHtmlExcel(q.nombre_tienda)}</strong></div>` : ""}
+          ${q.giro ? `<div class="quotes-report-preview-chip"><span>Giro</span><strong>${escapeHtmlExcel(q.giro)}</strong></div>` : ""}
+          ${q.direccion ? `<div class="quotes-report-preview-chip"><span>Dirección</span><strong>${escapeHtmlExcel(q.direccion)}</strong></div>` : ""}
+          ${q.comuna ? `<div class="quotes-report-preview-chip"><span>Comuna</span><strong>${escapeHtmlExcel(q.comuna)}</strong></div>` : ""}
+          ${q.transporte ? `<div class="quotes-report-preview-chip"><span>Transporte</span><strong>${escapeHtmlExcel(q.transporte)}</strong></div>` : ""}
         </div>
         <div class="quotes-report-preview-meta quotes-report-preview-meta-finance">
           ${resumenMonto ? `<div class="quotes-report-preview-chip quotes-report-preview-chip-money"><span>Total lista</span><strong>${escapeHtmlExcel(formatearPrecioCLP(resumenMonto.lista))}</strong></div>` : ""}
@@ -6975,7 +6996,7 @@ async function cargarCotizacionesAdmin() {
   };
 
   let quotesRes = await fetch(
-    `${SUPABASE_URL}/rest/v1/quotes?select=id,store_name,client_rut,client_rut_normalized,client_phone,total_items,created_at,created_at_client,source,is_ready,ready_at&order=created_at.desc&limit=500`,
+    `${SUPABASE_URL}/rest/v1/quotes?select=id,store_name,client_rut,client_rut_normalized,client_phone,total_items,created_at,created_at_client,source,is_ready,ready_at,giro,direccion,nombre_tienda,comuna,transporte&order=created_at.desc&limit=500`,
     { headers }
   );
 
