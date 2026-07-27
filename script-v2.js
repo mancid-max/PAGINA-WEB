@@ -4814,6 +4814,9 @@ function clearCartFieldInvalidState() {
   clearCartFieldInvalid(document.getElementById("clientRut"));
   clearCartFieldInvalid(document.getElementById("clientName"));
   clearCartFieldInvalid(document.getElementById("clientPhone"));
+  ["clientNombreTienda","clientGiro","clientDireccion","clientComuna","clientTransporte"].forEach(id =>
+    clearCartFieldInvalid(document.getElementById(id))
+  );
 }
 
 function renderClientNewHelper(show, text = "Completa nombre y teléfono para enviar el pedido del cliente nuevo.") {
@@ -4979,7 +4982,7 @@ async function validarRutClienteEnUI({ silencioso = false } = {}) {
         tipo: "new",
         texto: "Cliente nuevo detectado.",
       });
-    renderClientNewHelper(true, "Completa nombre y teléfono del cliente nuevo para enviar el pedido.");
+    renderClientNewHelper(true, IS_COTIZACION_MODE ? "Completa nombre y teléfono para enviar el pedido." : "Completa los datos para enviar tu pedido.");
     toggleClientNameField(true, { value: clienteNuevo.razon_social, readonly: false });
     toggleClientPhoneField(true, { value: clienteNuevo.client_phone, readonly: false });
     if (!IS_COTIZACION_MODE) toggleClientExtraFields(true);
@@ -5104,29 +5107,43 @@ async function obtenerClienteParaCotizacion() {
 
   const nombre = String(nameEl?.value || "").trim();
   const telefono = normalizarTelefonoCliente(phoneEl?.value || "");
+  const helperMsg = IS_COTIZACION_MODE ? "Completa nombre y teléfono para enviar el pedido." : "Completa los datos para enviar tu pedido.";
   if (!nombre) {
     toggleClientNameField(true, { value: "", readonly: false });
     toggleClientPhoneField(true, { value: telefono, readonly: false });
-    renderClientNewHelper(true, "Completa nombre y teléfono del cliente nuevo para enviar el pedido.");
+    renderClientNewHelper(true, helperMsg);
     setCartFieldInvalid(nameEl, "Completa el nombre o razón social");
-    setClientLookupUI({
-      tipo: "error",
-      texto: "Agrega nombre y teléfono del cliente nuevo para enviar el pedido.",
-    });
+    setClientLookupUI({ tipo: "error", texto: "Completa los datos para enviar tu pedido." });
     nameEl?.focus();
     throw new Error("Agrega el nombre o razón social del cliente nuevo para enviar el pedido");
   }
   if (!telefono) {
     toggleClientNameField(true, { value: nombre, readonly: false });
     toggleClientPhoneField(true, { value: "", readonly: false });
-    renderClientNewHelper(true, "Completa nombre y teléfono del cliente nuevo para enviar el pedido.");
+    renderClientNewHelper(true, helperMsg);
     setCartFieldInvalid(phoneEl, "Completa el teléfono del cliente");
-    setClientLookupUI({
-      tipo: "error",
-      texto: "Agrega el teléfono del cliente nuevo para enviar el pedido.",
-    });
+    setClientLookupUI({ tipo: "error", texto: "Completa los datos para enviar tu pedido." });
     phoneEl?.focus();
     throw new Error("Agrega el teléfono del cliente nuevo para enviar el pedido");
+  }
+  if (!IS_COTIZACION_MODE) {
+    const extraCampos = [
+      { id: "clientNombreTienda", label: "Nombre de la tienda" },
+      { id: "clientGiro",        label: "Giro" },
+      { id: "clientDireccion",   label: "Dirección" },
+      { id: "clientComuna",      label: "Comuna" },
+      { id: "clientTransporte",  label: "Transporte" },
+    ];
+    for (const campo of extraCampos) {
+      const el = document.getElementById(campo.id);
+      if (!String(el?.value || "").trim()) {
+        renderClientNewHelper(true, helperMsg);
+        setCartFieldInvalid(el, `Completa ${campo.label.toLowerCase()}`);
+        setClientLookupUI({ tipo: "error", texto: "Completa los datos para enviar tu pedido." });
+        el?.focus();
+        throw new Error(`Completa el campo ${campo.label} para enviar el pedido`);
+      }
+    }
   }
 
   return {
