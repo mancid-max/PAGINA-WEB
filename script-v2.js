@@ -847,11 +847,22 @@ const CATALOG_PRICE_CONFIG_BY_SOURCE = {
   },
   "catalogo-44": {
     inlinePrices: {
-      "4448-00": 25990,
-      "4453-00": 25990,
-      "4455-00": 26990,
-      "4490-00": 25990,
-      "4491-00": 25990,
+      "4402-00": 26990,
+      "4412-00": 26990,
+      "4413-00": 24990,
+      "4414-00": 25990,
+      "4416-00": 26990,
+      "4417-00": 26990,
+      "4426-00": 26990,
+      "4431-00": 25990,
+      "4431-01": 25990,
+      "4431-02": 25990,
+      "4441-00": 24990,
+      "4454-00": 25990,
+      "4454-01": 25990,
+      "4458-00": 25990,
+      "4459-00": 25990,
+      "4480-00": 25990,
     },
   },
 };
@@ -4336,6 +4347,41 @@ const ORDER_TEMPLATE_CONFIGS = {
     },
     skuFormatter: "numeric43",
   },
+  "catalogo-44": {
+    file: "PLANILLA 44 LISTA PRECIO FINAL.xlsx",
+    version: "20260728cole44",
+    sheet: ORDER_TEMPLATE_SHEET,
+    firstRow: 15,
+    lastRow: 59,
+    skuColumn: "B",
+    clearSkuColumns: ["A", "B"],
+    rutCell: "L5",
+    phoneCell: "L7",
+    dateCell: "L8",
+    idLabelCell: "U1",
+    idValueCell: "V1",
+    razonSocialCell: "L1",
+    giroCell: "L2",
+    direccionCell: "L3",
+    nombreTiendaCell: "L4",
+    comunaCell: "L6",
+    transporteCell: "E7",
+    clearUnusedFormulaColumns: ["C", "D", "E", "S", "T"],
+    sizeColumns: {
+      "36": "F",
+      "38": "G",
+      "40": "H",
+      "42": "I",
+      "44": "J",
+      "46": "K",
+      "48": "L",
+      "50": "M",
+      "S": "N",
+      "M": "O",
+      "L": "P",
+    },
+    skuFormatter: "numeric43",
+  },
 };
 
 let xlsxPopulateLoaderPromise = null;
@@ -4368,10 +4414,13 @@ function obtenerSourcePlantillaPedido(quote = {}, items = []) {
     .filter(Boolean))];
   if (sources.length === 1) return sources[0];
   if (sources.includes("catalogo-43")) return "catalogo-43";
+  if (sources.includes("catalogo-44")) return "catalogo-44";
   return CATALOG_SOURCE;
 }
 
 function obtenerConfigPlantillaPedido(quote = {}, items = []) {
+  const source = obtenerSourcePlantillaPedido(quote, items);
+  if (ORDER_TEMPLATE_CONFIGS[source]) return ORDER_TEMPLATE_CONFIGS[source];
   return ORDER_TEMPLATE_CONFIGS.unified;
 }
 
@@ -4392,6 +4441,7 @@ function agruparItemsPorPlantillaPedido(quote = {}, items = []) {
 
 function obtenerSufijoArchivoPlantilla(source = "default") {
   if (source === "catalogo-43") return "Cole 43";
+  if (source === "catalogo-44") return "Cole 44";
   return "Cole general";
 }
 
