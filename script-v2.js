@@ -4845,7 +4845,7 @@ function toggleClientNameField(show, { value = "", readonly = false } = {}) {
   inputEl.classList.toggle("is-readonly", !!readonly);
   wrapEl.classList.toggle("is-highlighted", !!show && !readonly);
   if (labelEl) {
-    labelEl.innerText = "Nombre o razón social";
+    labelEl.innerText = "Razón social";
   }
 }
 
