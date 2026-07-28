@@ -4259,6 +4259,12 @@ const ORDER_TEMPLATE_CONFIGS = {
     dateCell: "L8",
     idLabelCell: "U1",
     idValueCell: "V1",
+    razonSocialCell: "I1",
+    giroCell: "I2",
+    direccionCell: "I3",
+    nombreTiendaCell: "I4",
+    comunaCell: "I6",
+    transporteCell: "D7",
     clearUnusedFormulaColumns: ["C", "D", "E", "S", "T"],
     sizeColumns: {
       "36": "F",
@@ -4543,6 +4549,12 @@ async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
   sheet.cell(config.rutCell).value(quote?.client_rut || "");
   sheet.cell(config.dateCell).value(new Date());
   sheet.cell(config.phoneCell).value(quote?.client_phone || "");
+  if (config.razonSocialCell) sheet.cell(config.razonSocialCell).value(quote?.store_name || "");
+  if (config.giroCell)        sheet.cell(config.giroCell).value(quote?.giro || "");
+  if (config.direccionCell)   sheet.cell(config.direccionCell).value(quote?.direccion || "");
+  if (config.nombreTiendaCell)sheet.cell(config.nombreTiendaCell).value(quote?.nombre_tienda || "");
+  if (config.comunaCell)      sheet.cell(config.comunaCell).value(quote?.comuna || "");
+  if (config.transporteCell)  sheet.cell(config.transporteCell).value(quote?.transporte || "");
 
   grouped.forEach((entry, index) => {
     const row = config.firstRow + index;
