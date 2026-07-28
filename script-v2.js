@@ -3449,8 +3449,9 @@ function obtenerEstadoVisibilidadCatalogo43(producto = {}) {
 }
 
 const CATALOGO_44_MODELOS_DISPONIBLES = new Set([
-  "4448", "4453", "4455",
-  "4490", "4491",
+  "4402", "4412", "4413", "4414", "4416", "4417", "4426",
+  "4431", "4441", "4450", "4454", "4458", "4459",
+  "4478", "4480", "4481",
 ]);
 
 const CATALOGO_44_SKUS_AGOTADOS = new Set([]);

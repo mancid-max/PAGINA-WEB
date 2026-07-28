@@ -1,99 +1,173 @@
 [
   {
-    "family": "4448-00",
-    "main_image": "44/4448/3.jpg",
-    "gallery": [
-      "44/4448/3.jpg",
-      "44/4448/1.jpg",
-      "44/4448/2.jpg"
-    ],
-    "description": "JEAN · MEDIO · FLARE",
-    "characteristics": [
-      "Tipo: JEAN",
-      "Tiro: MEDIO",
-      "Bota: FLARE",
-      "Tela: New Glue"
-    ],
-    "variants": [],
-    "tipo": "JEAN",
-    "tiro": "MEDIO",
-    "bota": "FLARE",
-    "fabric": "New Glue"
-  },
-  {
-    "family": "4453-00",
-    "main_image": "44/4453/0.jpg",
-    "gallery": [
-      "44/4453/0.jpg",
-      "44/4453/2.jpg"
-    ],
-    "description": "JEAN · CINTURA · RECTO",
-    "characteristics": [
-      "Tipo: JEAN",
-      "Tiro: CINTURA",
-      "Bota: RECTO",
-      "Tela: New Glue"
-    ],
-    "variants": [],
-    "tipo": "JEAN",
-    "tiro": "CINTURA",
-    "bota": "RECTO",
-    "fabric": "New Glue"
-  },
-  {
-    "family": "4455-00",
-    "main_image": "44/ex 4333/1.jpg",
-    "gallery": [
-      "44/ex 4333/1.jpg",
-      "44/ex 4333/2.jpg",
-      "44/ex 4333/3.jpg"
-    ],
-    "description": "JEAN · CINTURA · PALAZZO",
-    "characteristics": [
-      "Tipo: JEAN",
-      "Tiro: CINTURA",
-      "Bota: PALAZZO",
-      "Tela: Missy Plus"
-    ],
-    "variants": [],
-    "tipo": "JEAN",
-    "tiro": "CINTURA",
-    "bota": "PALAZZO",
-    "fabric": "Missy Plus"
-  },
-  {
-    "family": "4491-00",
-    "main_image": "44/ex 4321/1.jpg",
-    "gallery": [
-      "44/ex 4321/1.jpg",
-      "44/ex 4321/2.jpg"
-    ],
+    "family": "4402-00",
+    "main_image": "44/4402/editar/1.jpg",
+    "gallery": ["44/4402/editar/1.jpg","44/4402/editar/2.jpg","44/4402/editar/3.jpg","44/4402/editar/4.jpg"],
     "description": "JEAN · Cole 44",
-    "characteristics": [
-      "Tipo: JEAN"
-    ],
+    "characteristics": ["Tipo: JEAN"],
     "variants": [],
-    "tipo": "JEAN",
-    "tiro": "",
-    "bota": "",
-    "fabric": ""
+    "tipo": "JEAN","tiro": "","bota": "","fabric": ""
   },
   {
-    "family": "4490-00",
-    "main_image": "44/ex 3802/c.jpg",
-    "gallery": [
-      "44/ex 3802/c.jpg",
-      "44/ex 3802/a.jpg",
-      "44/ex 3802/b.jpg"
-    ],
+    "family": "4412-00",
+    "main_image": "44/4412/editar/1.jpg",
+    "gallery": ["44/4412/editar/1.jpg","44/4412/editar/2.jpg","44/4412/editar/3.jpg","44/4412/editar/4.jpg","44/4412/editar/5.jpg","44/4412/editar/6.jpg","44/4412/editar/7.jpg"],
     "description": "JEAN · Cole 44",
-    "characteristics": [
-      "Tipo: JEAN"
-    ],
+    "characteristics": ["Tipo: JEAN"],
     "variants": [],
-    "tipo": "JEAN",
-    "tiro": "",
-    "bota": "",
-    "fabric": ""
+    "tipo": "JEAN","tiro": "","bota": "","fabric": ""
+  },
+  {
+    "family": "4413-00",
+    "main_image": "44/4413/editar/1.jpg",
+    "gallery": ["44/4413/editar/1.jpg","44/4413/editar/2.jpg","44/4413/editar/3.jpg","44/4413/editar/4.jpg","44/4413/editar/5.jpg"],
+    "description": "JEAN · Cole 44",
+    "characteristics": ["Tipo: JEAN"],
+    "variants": [],
+    "tipo": "JEAN","tiro": "","bota": "","fabric": ""
+  },
+  {
+    "family": "4414-00",
+    "main_image": "44/4414/editar/1.jpg",
+    "gallery": ["44/4414/editar/1.jpg","44/4414/editar/2.jpg","44/4414/editar/3.jpg","44/4414/editar/4.jpg","44/4414/editar/5.jpg"],
+    "description": "JEAN · Cole 44",
+    "characteristics": ["Tipo: JEAN"],
+    "variants": [],
+    "tipo": "JEAN","tiro": "","bota": "","fabric": ""
+  },
+  {
+    "family": "4416-00",
+    "main_image": "44/4416/editar/1.jpg",
+    "gallery": ["44/4416/editar/1.jpg","44/4416/editar/2.jpg","44/4416/editar/3.jpg","44/4416/editar/4.jpg","44/4416/editar/5.jpg","44/4416/editar/6.jpg"],
+    "description": "JEAN · Cole 44",
+    "characteristics": ["Tipo: JEAN"],
+    "variants": [],
+    "tipo": "JEAN","tiro": "","bota": "","fabric": ""
+  },
+  {
+    "family": "4417-00",
+    "main_image": "44/4417/editar/1.jpg",
+    "gallery": ["44/4417/editar/1.jpg","44/4417/editar/2.jpg","44/4417/editar/3.jpg","44/4417/editar/4.jpg","44/4417/editar/5.jpg","44/4417/editar/6.jpg","44/4417/editar/CRI_6210.jpg","44/4417/editar/CRI_6211.jpg","44/4417/editar/CRI_6216.jpg","44/4417/editar/CRI_6222.jpg","44/4417/editar/CRI_6224.jpg","44/4417/editar/CRI_6236.jpg"],
+    "description": "JEAN · Cole 44",
+    "characteristics": ["Tipo: JEAN"],
+    "variants": [],
+    "tipo": "JEAN","tiro": "","bota": "","fabric": ""
+  },
+  {
+    "family": "4426-00",
+    "main_image": "44/4426/editar/1.jpg",
+    "gallery": ["44/4426/editar/1.jpg","44/4426/editar/2.jpg","44/4426/editar/3.jpg","44/4426/editar/4.jpg","44/4426/editar/5.jpg","44/4426/editar/6.jpg"],
+    "description": "JEAN · Cole 44",
+    "characteristics": ["Tipo: JEAN"],
+    "variants": [],
+    "tipo": "JEAN","tiro": "","bota": "","fabric": ""
+  },
+  {
+    "family": "4431-00",
+    "main_image": "44/4431-00/editar/1.jpg",
+    "gallery": ["44/4431-00/editar/1.jpg","44/4431-00/editar/2.jpg","44/4431-00/editar/3.jpg","44/4431-00/editar/4.jpg","44/4431-00/editar/5.jpg"],
+    "description": "JEAN · Cole 44",
+    "characteristics": ["Tipo: JEAN"],
+    "variants": [],
+    "tipo": "JEAN","tiro": "","bota": "","fabric": ""
+  },
+  {
+    "family": "4431-01",
+    "main_image": "44/4431-01/editar/1.jpg",
+    "gallery": ["44/4431-01/editar/1.jpg","44/4431-01/editar/2.jpg","44/4431-01/editar/3.jpg","44/4431-01/editar/4.jpg","44/4431-01/editar/5.jpg","44/4431-01/editar/6.jpg","44/4431-01/editar/7.jpg"],
+    "description": "JEAN · Cole 44",
+    "characteristics": ["Tipo: JEAN"],
+    "variants": [],
+    "tipo": "JEAN","tiro": "","bota": "","fabric": ""
+  },
+  {
+    "family": "4431-02",
+    "main_image": "44/4431/editar/1.jpg",
+    "gallery": ["44/4431/editar/1.jpg","44/4431/editar/2.jpg","44/4431/editar/3.jpg","44/4431/editar/4.jpg","44/4431/editar/5.jpg","44/4431/editar/6.jpg","44/4431/editar/7.jpg"],
+    "description": "JEAN · Cole 44",
+    "characteristics": ["Tipo: JEAN"],
+    "variants": [],
+    "tipo": "JEAN","tiro": "","bota": "","fabric": ""
+  },
+  {
+    "family": "4441-00",
+    "main_image": "44/4441/editar/1.jpg",
+    "gallery": ["44/4441/editar/1.jpg","44/4441/editar/2.jpg","44/4441/editar/3.jpg","44/4441/editar/4.jpg","44/4441/editar/5.jpg","44/4441/editar/6.jpg"],
+    "description": "JEAN · Cole 44",
+    "characteristics": ["Tipo: JEAN"],
+    "variants": [],
+    "tipo": "JEAN","tiro": "","bota": "","fabric": ""
+  },
+  {
+    "family": "4450-00",
+    "main_image": "44/4450/editar/1.jpg",
+    "gallery": ["44/4450/editar/1.jpg","44/4450/editar/2.jpg","44/4450/editar/3.jpg","44/4450/editar/4.jpg","44/4450/editar/5.jpg","44/4450/editar/6.jpg"],
+    "description": "JEAN · Cole 44",
+    "characteristics": ["Tipo: JEAN"],
+    "variants": [],
+    "tipo": "JEAN","tiro": "","bota": "","fabric": ""
+  },
+  {
+    "family": "4454-00",
+    "main_image": "44/4454/editar/1.jpg",
+    "gallery": ["44/4454/editar/1.jpg","44/4454/editar/2.jpg","44/4454/editar/3.jpg","44/4454/editar/4.jpg","44/4454/editar/5.jpg","44/4454/editar/6.jpg","44/4454/editar/7.jpg","44/4454/editar/1(1).jpg","44/4454/editar/2(1).jpg","44/4454/editar/3(1).jpg","44/4454/editar/4(1).jpg","44/4454/editar/5(1).jpg"],
+    "description": "JEAN · Cole 44",
+    "characteristics": ["Tipo: JEAN"],
+    "variants": [],
+    "tipo": "JEAN","tiro": "","bota": "","fabric": ""
+  },
+  {
+    "family": "4454-01",
+    "main_image": "44/4454-01/editar/1.jpg",
+    "gallery": ["44/4454-01/editar/1.jpg","44/4454-01/editar/2.jpg","44/4454-01/editar/3.jpg","44/4454-01/editar/4.jpg","44/4454-01/editar/5.jpg","44/4454-01/editar/6.jpg","44/4454-01/editar/7.jpg"],
+    "description": "JEAN · Cole 44",
+    "characteristics": ["Tipo: JEAN"],
+    "variants": [],
+    "tipo": "JEAN","tiro": "","bota": "","fabric": ""
+  },
+  {
+    "family": "4458-00",
+    "main_image": "44/4458/editar/1.jpg",
+    "gallery": ["44/4458/editar/1.jpg","44/4458/editar/2.jpg","44/4458/editar/3.jpg","44/4458/editar/4.jpg","44/4458/editar/5.jpg","44/4458/editar/6.jpg","44/4458/editar/7.jpg"],
+    "description": "JEAN · Cole 44",
+    "characteristics": ["Tipo: JEAN"],
+    "variants": [],
+    "tipo": "JEAN","tiro": "","bota": "","fabric": ""
+  },
+  {
+    "family": "4459-00",
+    "main_image": "44/4459/editar/1.jpg",
+    "gallery": ["44/4459/editar/1.jpg","44/4459/editar/2.jpg","44/4459/editar/3.jpg","44/4459/editar/4.jpg","44/4459/editar/5.jpg","44/4459/editar/6.jpg"],
+    "description": "JEAN · Cole 44",
+    "characteristics": ["Tipo: JEAN"],
+    "variants": [],
+    "tipo": "JEAN","tiro": "","bota": "","fabric": ""
+  },
+  {
+    "family": "4478-00",
+    "main_image": "44/4478/Mohicano-197 copia.jpg",
+    "gallery": ["44/4478/Mohicano-197 copia.jpg","44/4478/Mohicano-200 copia.jpg","44/4478/Mohicano-206 copie copia.jpg"],
+    "description": "JEAN · Cole 44",
+    "characteristics": ["Tipo: JEAN"],
+    "variants": [],
+    "tipo": "JEAN","tiro": "","bota": "","fabric": ""
+  },
+  {
+    "family": "4480-00",
+    "main_image": "44/4480/Mohicano-190.jpg",
+    "gallery": ["44/4480/Mohicano-190.jpg","44/4480/Mohicano-193.jpg","44/4480/Mohicano-195.jpg","44/4480/Mohicano-198.jpg"],
+    "description": "JEAN · Cole 44",
+    "characteristics": ["Tipo: JEAN"],
+    "variants": [],
+    "tipo": "JEAN","tiro": "","bota": "","fabric": ""
+  },
+  {
+    "family": "4481-00",
+    "main_image": "44/4481/final 1.jpg",
+    "gallery": ["44/4481/final 1.jpg","44/4481/final calce .jpg","44/4481/SIN ECOC UERO.jpg"],
+    "description": "JEAN · Cole 44",
+    "characteristics": ["Tipo: JEAN"],
+    "variants": [],
+    "tipo": "JEAN","tiro": "","bota": "","fabric": ""
   }
 ]
