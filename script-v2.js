@@ -846,13 +846,7 @@ const CATALOG_PRICE_CONFIG_BY_SOURCE = {
     priceFile: "price-data-catalogo-43.json",
   },
   "catalogo-44": {
-    inlinePrices: {
-      "4448-00": 25990,
-      "4453-00": 25990,
-      "4455-00": 26990,
-      "4490-00": 25990,
-      "4491-00": 25990,
-    },
+    inlinePrices: {},
   },
 };
 let catalogPriceBySource = {};
@@ -3449,8 +3443,9 @@ function obtenerEstadoVisibilidadCatalogo43(producto = {}) {
 }
 
 const CATALOGO_44_MODELOS_DISPONIBLES = new Set([
-  "4448", "4453", "4455",
-  "4490", "4491",
+  "4402", "4412", "4413", "4414", "4416", "4417", "4426",
+  "4431", "4441", "4450", "4454", "4458", "4459", "4465",
+  "4478", "4480", "4481",
 ]);
 
 const CATALOGO_44_SKUS_AGOTADOS = new Set([]);
