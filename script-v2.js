@@ -4603,7 +4603,7 @@ async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
   };
 
   try {
-    const bdSheet = wb.sheet("BASE DE DATOS OFICIAL");
+    const bdSheet = workbook.sheet("BASE DE DATOS OFICIAL");
     if (bdSheet && quote?.client_rut) {
       const rutNorm = normalizarRut(String(quote.client_rut));
       let filaVacia = null;
