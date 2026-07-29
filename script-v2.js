@@ -4511,7 +4511,7 @@ function agruparItemsParaPlantilla(quote, items = [], config = ORDER_TEMPLATE_CO
 
 function obtenerValorSkuCeldaPlantilla(sku, config = ORDER_TEMPLATE_CONFIGS.default) {
   const raw = String(sku || "").trim();
-  if (config === ORDER_TEMPLATE_CONFIGS.unified && /^\d+$/.test(raw)) {
+  if ((config === ORDER_TEMPLATE_CONFIGS.unified || config?.skuFormatter === "numeric43") && /^\d+$/.test(raw)) {
     return Number(raw);
   }
   return raw;
