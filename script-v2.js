@@ -4595,17 +4595,50 @@ async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
     });
   }
 
+  const setCelda = (ref, value) => {
+    if (!ref) return;
+    const c = sheet.cell(ref);
+    try { c.formula(null); } catch (e) {}
+    c.value(value != null && value !== "" ? value : null);
+  };
+
+  try {
+    const bdSheet = wb.sheet("BASE DE DATOS OFICIAL");
+    if (bdSheet && quote?.client_rut) {
+      const rutNorm = normalizarRut(String(quote.client_rut));
+      let filaVacia = null;
+      let yaExiste = false;
+      for (let row = 4; row <= 166; row++) {
+        const val = bdSheet.cell(`A${row}`).value();
+        if (!val && filaVacia === null) { filaVacia = row; }
+        if (val && normalizarRut(String(val)) === rutNorm) { yaExiste = true; break; }
+      }
+      if (!yaExiste && filaVacia) {
+        const rutSoloDigitos = String(quote.client_rut).replace(/[^0-9kK]/g, "");
+        bdSheet.cell(`A${filaVacia}`).value(quote.client_rut);
+        bdSheet.cell(`B${filaVacia}`).value(rutSoloDigitos);
+        bdSheet.cell(`C${filaVacia}`).value(quote?.store_name || "");
+        bdSheet.cell(`E${filaVacia}`).value(quote?.direccion || "");
+        bdSheet.cell(`F${filaVacia}`).value(quote?.client_phone || "");
+        bdSheet.cell(`N${filaVacia}`).value(quote?.transporte || "");
+        bdSheet.cell(`S${filaVacia}`).value(quote?.giro || "");
+        bdSheet.cell(`T${filaVacia}`).value(quote?.nombre_tienda || "");
+        bdSheet.cell(`U${filaVacia}`).value(quote?.comuna || "");
+      }
+    }
+  } catch (e) { console.warn("BD cliente:", e); }
+
   sheet.cell(config.idLabelCell).value("ID");
   sheet.cell(config.idValueCell).value(codigo);
   sheet.cell(config.rutCell).value(quote?.client_rut || "");
   sheet.cell(config.dateCell).value(new Date());
   sheet.cell(config.phoneCell).value(quote?.client_phone || "");
-  if (config.razonSocialCell) sheet.cell(config.razonSocialCell).value(quote?.store_name || "");
-  if (config.giroCell)        sheet.cell(config.giroCell).value(quote?.giro || "");
-  if (config.direccionCell)   sheet.cell(config.direccionCell).value(quote?.direccion || "");
-  if (config.nombreTiendaCell)sheet.cell(config.nombreTiendaCell).value(quote?.nombre_tienda || "");
-  if (config.comunaCell)      sheet.cell(config.comunaCell).value(quote?.comuna || "");
-  if (config.transporteCell)  sheet.cell(config.transporteCell).value(quote?.transporte || "");
+  setCelda(config.razonSocialCell, quote?.store_name);
+  setCelda(config.giroCell,        quote?.giro);
+  setCelda(config.direccionCell,   quote?.direccion);
+  setCelda(config.nombreTiendaCell,quote?.nombre_tienda);
+  setCelda(config.comunaCell,      quote?.comuna);
+  setCelda(config.transporteCell,  quote?.transporte);
 
   grouped.forEach((entry, index) => {
     const row = config.firstRow + index;
@@ -5310,16 +5343,7 @@ async function enviarPayloadDirectoSinStock(payload) {
   const quoteRes = await fetch(`${SUPABASE_URL}/rest/v1/quotes`, {
     method: "POST",
     headers,
-    body: JSON.stringify({
-      id: payload.quote.id,
-      store_name: payload.quote.store_name,
-      client_rut: payload.quote.client_rut,
-      client_rut_normalized: payload.quote.client_rut_normalized,
-      client_phone: payload.quote.client_phone,
-      total_items: payload.quote.total_items,
-      created_at_client: payload.quote.created_at_client,
-      source: payload.quote.source,
-    }),
+    body: JSON.stringify(payload.quote),
   });
   if (!quoteRes.ok) throw new Error(`Error guardando pedido: ${await quoteRes.text() || quoteRes.status}`);
   const itemsRes = await fetch(`${SUPABASE_URL}/rest/v1/quote_items`, {
@@ -7404,7 +7428,12 @@ function configurarPanelCotizaciones() {
       descargarCotizacionAdmin(btn.dataset.quoteExport)
         .catch((err) => {
           console.error("No se pudo descargar pedido", err);
-          mostrarToastError("No se pudo descargar", err?.message || "Error preparando el pedido.");
+          const msg = err?.message || "";
+          const sesionExpirada = msg.toLowerCase().includes("jwt expired") || msg.toLowerCase().includes("jwt");
+          mostrarToastError(
+            "No se pudo descargar",
+            sesionExpirada ? "Tu sesión expiró. Cierra sesión e inicia nuevamente." : (msg || "Error preparando el pedido.")
+          );
         })
         .finally(() => {
           btn.disabled = false;
