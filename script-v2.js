@@ -4332,6 +4332,13 @@ const ORDER_TEMPLATE_CONFIGS = {
     dateCell: "L8",
     idLabelCell: "U1",
     idValueCell: "V1",
+    razonSocialCell: "L1",
+    giroCell: "L2",
+    direccionCell: "L3",
+    nombreTiendaCell: "L4",
+    comunaCell: "L6",
+    transporteCell: "E7",
+    clearUnusedFormulaColumns: ["C", "D", "E", "S", "T"],
     sizeColumns: {
       "36": "F",
       "38": "G",
