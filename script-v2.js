@@ -4598,8 +4598,9 @@ async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
   const setCelda = (ref, value) => {
     if (!ref) return;
     const c = sheet.cell(ref);
-    try { c.formula(null); } catch (e) {}
-    c.value(value != null && value !== "" ? value : null);
+    if (value != null && value !== "") {
+      c.formula(`"${String(value).replace(/"/g, '""')}"`);
+    }
   };
 
   try {
