@@ -3587,7 +3587,12 @@ function renderGrid(lista) {
       _safeCardImage: obtenerImagenSeguraTarjeta(p),
     }))
     .filter((p) => Boolean(p?._safeCardImage) && normalizarRutaAsset(p._safeCardImage) !== "Imagenes/Logo/app-icon.png");
-  const listaOrdenada = [...listaConImagen].sort((a, b) => compararProductosPorStockDesc(a, b, stockBySku));
+  const listaOrdenada = [...listaConImagen].sort((a, b) => {
+    const agotadoA = esProductoAgotado(a) ? 1 : 0;
+    const agotadoB = esProductoAgotado(b) ? 1 : 0;
+    if (agotadoA !== agotadoB) return agotadoA - agotadoB;
+    return compararProductosPorStockDesc(a, b, stockBySku);
+  });
   container.classList.remove("product-grid-sections");
   container.innerHTML = listaOrdenada.map((p) => renderCatalogCardHtml(p)).join("");
 
