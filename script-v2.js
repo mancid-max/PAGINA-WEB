@@ -4274,7 +4274,7 @@ const ORDER_TEMPLATE_SHEET = "TOMA DE PEDIDOS";
 const ORDER_TEMPLATE_CONFIGS = {
   unified: {
     file: "PLANILLA 43 LISTA PRECIO FINAL.xlsx",
-    version: "20260730cole43-nocalc",
+    version: "20260730cole43-nohide",
     sheet: ORDER_TEMPLATE_SHEET,
     firstRow: 15,
     lastRow: 59,
@@ -4335,7 +4335,7 @@ const ORDER_TEMPLATE_CONFIGS = {
   },
   "catalogo-43": {
     file: "PLANILLA 43 LISTA PRECIO FINAL.xlsx",
-    version: "20260730cole43-nocalc",
+    version: "20260730cole43-nohide",
     sheet: ORDER_TEMPLATE_SHEET,
     firstRow: 15,
     lastRow: 60,
@@ -4370,7 +4370,7 @@ const ORDER_TEMPLATE_CONFIGS = {
   },
   "catalogo-44": {
     file: "PLANILLA 44 LISTA PRECIO FINAL.xlsx",
-    version: "20260730cole44-nocalc",
+    version: "20260730cole44-nohide",
     sheet: ORDER_TEMPLATE_SHEET,
     firstRow: 15,
     lastRow: 59,
@@ -4595,10 +4595,6 @@ async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
   const sheet = workbook.sheet(config.sheet);
   if (!sheet) throw new Error("No se encontro la hoja TOMA DE PEDIDOS en la plantilla");
 
-  // Mantener todas las hojas de la plantilla, pero dejar visible solo "TOMA DE PEDIDOS".
-  workbook.sheets().forEach((ws) => {
-    ws.hidden(ws.name() !== config.sheet);
-  });
   workbook.activeSheet(sheet);
 
   const grouped = agruparItemsParaPlantilla(quote, items, config);
