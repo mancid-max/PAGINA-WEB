@@ -81,27 +81,9 @@
     "tipo": "JEAN","tiro": "","bota": "","fabric": ""
   },
   {
-    "family": "4431-02",
-    "main_image": "44/4431/editar/1.jpg",
-    "gallery": ["44/4431/editar/1.jpg","44/4431/editar/2.jpg","44/4431/editar/3.jpg","44/4431/editar/4.jpg","44/4431/editar/5.jpg","44/4431/editar/6.jpg","44/4431/editar/7.jpg"],
-    "description": "JEAN · Cole 44",
-    "characteristics": ["Tipo: JEAN"],
-    "variants": [],
-    "tipo": "JEAN","tiro": "","bota": "","fabric": ""
-  },
-  {
     "family": "4441-00",
     "main_image": "44/4441/editar/1.jpg",
     "gallery": ["44/4441/editar/1.jpg","44/4441/editar/2.jpg","44/4441/editar/3.jpg","44/4441/editar/4.jpg","44/4441/editar/5.jpg","44/4441/editar/6.jpg"],
-    "description": "JEAN · Cole 44",
-    "characteristics": ["Tipo: JEAN"],
-    "variants": [],
-    "tipo": "JEAN","tiro": "","bota": "","fabric": ""
-  },
-  {
-    "family": "4450-00",
-    "main_image": "44/4450/editar/1.jpg",
-    "gallery": ["44/4450/editar/1.jpg","44/4450/editar/2.jpg","44/4450/editar/3.jpg","44/4450/editar/4.jpg","44/4450/editar/5.jpg","44/4450/editar/6.jpg"],
     "description": "JEAN · Cole 44",
     "characteristics": ["Tipo: JEAN"],
     "variants": [],
