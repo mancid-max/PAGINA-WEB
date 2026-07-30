@@ -4274,7 +4274,7 @@ const ORDER_TEMPLATE_SHEET = "TOMA DE PEDIDOS";
 const ORDER_TEMPLATE_CONFIGS = {
   unified: {
     file: "PLANILLA 43 LISTA PRECIO FINAL.xlsx",
-    version: "20260730cole43-fixed2",
+    version: "20260730cole43-nocalc",
     sheet: ORDER_TEMPLATE_SHEET,
     firstRow: 15,
     lastRow: 59,
@@ -4335,7 +4335,7 @@ const ORDER_TEMPLATE_CONFIGS = {
   },
   "catalogo-43": {
     file: "PLANILLA 43 LISTA PRECIO FINAL.xlsx",
-    version: "20260730cole43-fixed2",
+    version: "20260730cole43-nocalc",
     sheet: ORDER_TEMPLATE_SHEET,
     firstRow: 15,
     lastRow: 60,
@@ -4370,7 +4370,7 @@ const ORDER_TEMPLATE_CONFIGS = {
   },
   "catalogo-44": {
     file: "PLANILLA 44 LISTA PRECIO FINAL.xlsx",
-    version: "20260729cole44-bd6dig",
+    version: "20260730cole44-nocalc",
     sheet: ORDER_TEMPLATE_SHEET,
     firstRow: 15,
     lastRow: 59,
