@@ -4260,7 +4260,7 @@ const ORDER_TEMPLATE_SHEET = "TOMA DE PEDIDOS";
 const ORDER_TEMPLATE_CONFIGS = {
   unified: {
     file: "PLANILLA 43 LISTA PRECIO FINAL.xlsx",
-    version: "20260526precio-final",
+    version: "20260730cole43-bd44",
     sheet: ORDER_TEMPLATE_SHEET,
     firstRow: 15,
     lastRow: 59,
