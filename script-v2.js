@@ -4321,7 +4321,7 @@ const ORDER_TEMPLATE_CONFIGS = {
   },
   "catalogo-43": {
     file: "PLANILLA 43 LISTA PRECIO FINAL.xlsx",
-    version: "20260520cole43",
+    version: "20260730cole43-bd44",
     sheet: ORDER_TEMPLATE_SHEET,
     firstRow: 15,
     lastRow: 60,
