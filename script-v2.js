@@ -761,14 +761,14 @@ function esProductoAgotado(item) {
   if (IS_COTIZACION_MODE) {
     const _src = inferirCatalogoDesdeSku(item?.family || "");
     if (_src === "catalogo-43") return obtenerEstadoVisibilidadCatalogo43(item) === "soldout";
-    if (_src === "catalogo-44") return false;
+    if (_src === "catalogo-44") return obtenerEstadoVisibilidadCatalogo44(item) !== "available";
     // Cole 42 en cotización: usa stock normal (fall-through)
   }
   if (CATALOG_SOURCE === "catalogo-43") {
     return obtenerEstadoVisibilidadCatalogo43(item) === "soldout";
   }
   if (CATALOG_SOURCE === "catalogo-44") {
-    return obtenerEstadoVisibilidadCatalogo44(item) === "soldout";
+    return obtenerEstadoVisibilidadCatalogo44(item) !== "available";
   }
   if (item?.isSoldOut === true) return true;
   if (!INVENTORY_ENABLED || !Object.keys(stockBySku || {}).length) return false;
@@ -2959,7 +2959,7 @@ function actualizarEstadoCotizacionProducto(producto, sku) {
 
   if (addBtn) {
     addBtn.disabled = agotado;
-    addBtn.innerText = agotado ? "Agotado" : IS_COTIZACION_MODE ? "Agregar a cotización" : "Agregar al pedido";
+    addBtn.innerText = agotado ? (CATALOG_SOURCE === "catalogo-44" ? "En producción" : "Agotado") : IS_COTIZACION_MODE ? "Agregar a cotización" : "Agregar al pedido";
   }
 
   const titleEl = document.getElementById("modalTitle");
@@ -2970,7 +2970,7 @@ function actualizarEstadoCotizacionProducto(producto, sku) {
     ? producto.bota.charAt(0).toUpperCase() + producto.bota.slice(1).toLowerCase()
     : "Modelo";
   if (titleEl) {
-    titleEl.innerText = agotado ? `${tituloPrefix} ${skuLabel} - Agotado` : `${tituloPrefix} ${skuLabel}`;
+    titleEl.innerText = agotado ? `${tituloPrefix} ${skuLabel} - ${CATALOG_SOURCE === "catalogo-44" ? "En producción" : "Agotado"}` : `${tituloPrefix} ${skuLabel}`;
   }
   if (quotePanelModelTitle) quotePanelModelTitle.innerText = `${tituloPrefix} ${skuLabel}`;
   if (descriptionEl && detallePrecio && CATALOG_SOURCE !== "catalogo-43") {
@@ -3486,8 +3486,8 @@ function obtenerEstadoVisibilidadCatalogo44(producto = {}) {
   const family = normalizarSkuCatalogo(producto?._preferredSku || producto?.family || producto?._baseFamily || "");
   if (family && CATALOGO_44_SKUS_AGOTADOS.has(family)) return "soldout";
   const model = obtenerBaseFamilia(family);
-  if (!model) return "soldout";
-  return CATALOGO_44_MODELOS_DISPONIBLES.has(model) ? "available" : "soldout";
+  if (!model) return "produccion";
+  return CATALOGO_44_MODELOS_DISPONIBLES.has(model) ? "available" : "produccion";
 }
 
 function filtrarProductosPorVisibilidad(lista = []) {
@@ -3524,7 +3524,7 @@ function renderCatalogCardHtml(p) {
                 : ""
             }
           </div>
-          ${esProductoAgotado(p) && CATALOG_SOURCE !== "catalogo-43" ? '<span class="card-stock-badge sold-out">Agotado</span>' : ""}
+          ${esProductoAgotado(p) && CATALOG_SOURCE !== "catalogo-43" ? `<span class="card-stock-badge sold-out">${CATALOG_SOURCE === "catalogo-44" ? "En producción" : "Agotado"}</span>` : ""}
         </div>
         <div class="card-image-wrap">
           ${
@@ -3559,7 +3559,7 @@ function renderCatalogCardHtml(p) {
               : ""
           }
           ${(CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44" || IS_COTIZACION_MODE) && !esProductoAgotado(p) ? '<span class="card-cta-hint">👆 Curva aquí</span>' : ""}
-          ${esProductoAgotado(p) ? '<span class="sold-out-ribbon sold-out-ribbon-card">AGOTADO</span>' : ""}
+          ${esProductoAgotado(p) ? `<span class="sold-out-ribbon sold-out-ribbon-card">${CATALOG_SOURCE === "catalogo-44" ? "EN PRODUCCIÓN" : "AGOTADO"}</span>` : ""}
         </div>
       </div>
     `;
