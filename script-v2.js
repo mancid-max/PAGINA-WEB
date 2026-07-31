@@ -2977,12 +2977,13 @@ function actualizarEstadoCotizacionProducto(producto, sku) {
     const textoBase = normalizarTextoVisible(producto?.description || "");
     descriptionEl.innerText = `${textoBase}${textoBase ? " · " : ""}Precio mayor s/iva: ${formatearPrecioCLP(detallePrecio.final)}`;
   }
+  const mostrarOverlay = agotado && CATALOG_SOURCE !== "catalogo-44";
   if (imageViewerEl) {
-    imageViewerEl.classList.toggle("is-sold-out", agotado);
+    imageViewerEl.classList.toggle("is-sold-out", mostrarOverlay);
   }
   if (soldOutOverlayEl) {
-    soldOutOverlayEl.classList.toggle("is-visible", agotado);
-    soldOutOverlayEl.hidden = !agotado;
+    soldOutOverlayEl.classList.toggle("is-visible", mostrarOverlay);
+    soldOutOverlayEl.hidden = !mostrarOverlay;
   }
 
   return agotado;
