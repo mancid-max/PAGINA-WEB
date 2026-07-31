@@ -3480,11 +3480,8 @@ function obtenerEstadoVisibilidadCatalogo43(producto = {}) {
 
 const CATALOGO_44_MODELOS_DISPONIBLES = new Set(["4431"]);
 
-const CATALOGO_44_SKUS_AGOTADOS = new Set([]);
-
 function obtenerEstadoVisibilidadCatalogo44(producto = {}) {
   const family = normalizarSkuCatalogo(producto?._preferredSku || producto?.family || producto?._baseFamily || "");
-  if (family && CATALOGO_44_SKUS_AGOTADOS.has(family)) return "soldout";
   const model = obtenerBaseFamilia(family);
   if (!model) return "produccion";
   return CATALOGO_44_MODELOS_DISPONIBLES.has(model) ? "available" : "produccion";
