@@ -4280,6 +4280,7 @@ const ORDER_TEMPLATE_CONFIGS = {
     file: "PLANILLA 43 LISTA PRECIO FINAL.xlsx",
     version: "20260730cole43-nohide",
     sheet: ORDER_TEMPLATE_SHEET,
+    valorColumn: "S",
     firstRow: 15,
     lastRow: 59,
     skuColumn: "B",
@@ -4663,6 +4664,7 @@ async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
   setCelda(config.comunaCell,      quote?.comuna);
   setCelda(config.transporteCell,  quote?.transporte);
 
+  const esCotizacion = String(quote?.source || "").trim() === "cotizacion";
   grouped.forEach((entry, index) => {
     const row = config.firstRow + index;
     sheet.cell(`${config.skuColumn}${row}`).value(obtenerValorSkuCeldaPlantilla(entry.sku, config));
@@ -4671,6 +4673,9 @@ async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
       if (!col) return;
       sheet.cell(`${col}${row}`).value(qty);
     });
+    if (esCotizacion && config.valorColumn) {
+      sheet.cell(`${config.valorColumn}${row}`).value(obtenerPrecioCotizacion(entry.sku));
+    }
   });
 
   const firstUnusedRow = config.firstRow + grouped.length;
