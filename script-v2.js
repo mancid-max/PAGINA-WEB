@@ -2938,8 +2938,13 @@ function bloquearInputsCotizacion(bloqueado) {
       label.classList.remove("size-low-stock", "size-in-stock");
       label.setAttribute("aria-disabled", "true");
       const badgeEl = asegurarBadgeStock(label);
-      badgeEl.hidden = false;
-      badgeEl.innerText = "Sin stock";
+      if (CATALOG_SOURCE === "catalogo-44") {
+        badgeEl.hidden = true;
+        badgeEl.innerText = "";
+      } else {
+        badgeEl.hidden = false;
+        badgeEl.innerText = "Sin stock";
+      }
       return;
     }
 
