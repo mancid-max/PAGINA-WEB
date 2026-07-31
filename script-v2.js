@@ -761,14 +761,14 @@ function esProductoAgotado(item) {
   if (IS_COTIZACION_MODE) {
     const _src = inferirCatalogoDesdeSku(item?.family || "");
     if (_src === "catalogo-43") return obtenerEstadoVisibilidadCatalogo43(item) === "soldout";
-    if (_src === "catalogo-44") return obtenerEstadoVisibilidadCatalogo44(item) !== "available";
+    if (_src === "catalogo-44") return false;
     // Cole 42 en cotización: usa stock normal (fall-through)
   }
   if (CATALOG_SOURCE === "catalogo-43") {
     return obtenerEstadoVisibilidadCatalogo43(item) === "soldout";
   }
   if (CATALOG_SOURCE === "catalogo-44") {
-    return obtenerEstadoVisibilidadCatalogo44(item) !== "available";
+    return false;
   }
   if (item?.isSoldOut === true) return true;
   if (!INVENTORY_ENABLED || !Object.keys(stockBySku || {}).length) return false;
