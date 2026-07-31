@@ -3521,7 +3521,7 @@ function renderCatalogCardHtml(p) {
                 : ""
             }
           </div>
-          ${esProductoAgotado(p) && CATALOG_SOURCE !== "catalogo-43" ? `<span class="card-stock-badge sold-out">${CATALOG_SOURCE === "catalogo-44" ? "En producción" : "Agotado"}</span>` : ""}
+          ${esProductoAgotado(p) && CATALOG_SOURCE !== "catalogo-43" && CATALOG_SOURCE !== "catalogo-44" ? '<span class="card-stock-badge sold-out">Agotado</span>' : ""}
         </div>
         <div class="card-image-wrap">
           ${
@@ -3556,7 +3556,7 @@ function renderCatalogCardHtml(p) {
               : ""
           }
           ${(CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44" || IS_COTIZACION_MODE) && !esProductoAgotado(p) ? '<span class="card-cta-hint">👆 Curva aquí</span>' : ""}
-          ${esProductoAgotado(p) ? `<span class="sold-out-ribbon sold-out-ribbon-card">${CATALOG_SOURCE === "catalogo-44" ? "EN PRODUCCIÓN" : "AGOTADO"}</span>` : ""}
+          ${esProductoAgotado(p) && CATALOG_SOURCE !== "catalogo-44" ? '<span class="sold-out-ribbon sold-out-ribbon-card">AGOTADO</span>' : ""}
         </div>
       </div>
     `;
