@@ -1011,6 +1011,11 @@ function obtenerPrecioCotizacion(sku) {
   for (const c of candidates) {
     if (COTIZACION_PRECIO_OVERRIDES[c] !== undefined) return COTIZACION_PRECIO_OVERRIDES[c];
   }
+  const sources = Object.keys(catalogPriceBySource || {});
+  for (const source of sources) {
+    const price = obtenerPrecioListaCatalogo(sku, source);
+    if (price) return price;
+  }
   return COTIZACION_PRECIO_DEFAULT;
 }
 
