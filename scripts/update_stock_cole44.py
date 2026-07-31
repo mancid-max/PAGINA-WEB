@@ -68,29 +68,18 @@ def read_cole44_stock():
             return {}
         ws = ET.fromstring(z.read(path))
 
-    stock = {}
+    # Solo nos interesa saber qué modelos EXISTEN en el Excel
+    modelos_en_excel = set()
     for row in ws.iter("{"+NS_M+"}row"):
         cells = {}
         for c in row:
             col = re.sub(r"[0-9]", "", c.get("r",""))
             cells[col] = cell_val(c, strings)
-
         sku = normalize_sku(cells.get(CODE_COL))
-        if not sku:
-            continue
-        sizes = {}
-        for col, size_name in SIZE_COLS.items():
-            val = cells.get(col)
-            try:
-                sizes[size_name] = max(0, int(float(str(val).strip()))) if val else 0
-            except (ValueError, TypeError):
-                sizes[size_name] = 0
-        total = sum(sizes.values())
-        if sku not in stock:
-            stock[sku] = 0
-        stock[sku] += total
+        if sku:
+            modelos_en_excel.add(sku[:4])
 
-    return stock
+    return modelos_en_excel
 
 
 def load_catalog_models():
@@ -100,25 +89,11 @@ def load_catalog_models():
     return {item["family"][:4] for item in data if item.get("family")}
 
 
-def compute_disponibles(stock):
+def compute_disponibles(modelos_en_excel):
     catalog_models = load_catalog_models()
-
-    by_model = {}
-    for sku, total in stock.items():
-        model = sku[:4]
-        if model not in catalog_models:
-            continue
-        by_model[model] = by_model.get(model, 0) + total
-
-    # Modelos del catálogo sin entrada en Excel → stock 0
-    for model in catalog_models:
-        if model not in by_model:
-            by_model[model] = 0
-
-    disponibles = sorted(m for m, total in by_model.items() if total > 0)
-    sin_stock   = sorted(m for m, total in by_model.items() if total == 0)
-
-    return disponibles, sin_stock
+    disponibles    = sorted(m for m in catalog_models if m in modelos_en_excel)
+    en_produccion  = sorted(m for m in catalog_models if m not in modelos_en_excel)
+    return disponibles, en_produccion
 
 
 def update_script(disponibles):
@@ -139,12 +114,12 @@ def update_script(disponibles):
     return True
 
 
-def git_commit_push(disponibles, sin_stock):
+def git_commit_push(disponibles, en_produccion):
     root = SCRIPT_JS.parent
     subprocess.run(["git", "add", "script-v2.js"], cwd=root, check=True)
-    msg = (f"chore: actualizar stock Cole 44 — "
-           f"{len(disponibles)} modelos disponibles, "
-           f"{len(sin_stock)} sin stock\n\n"
+    msg = (f"chore: actualizar Cole 44 — "
+           f"{len(disponibles)} disponibles, "
+           f"{len(en_produccion)} en produccion\n\n"
            f"Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>")
     subprocess.run(["git", "commit", "-m", msg], cwd=root, check=True)
     subprocess.run(["git", "push", "origin", "main"], cwd=root, check=True)
@@ -154,20 +129,20 @@ def git_commit_push(disponibles, sin_stock):
 
 
 def main():
-    print(f"Leyendo stock de '{SHEET_NAME}'...")
-    stock = read_cole44_stock()
-    if not stock:
+    print(f"Leyendo presencia en '{SHEET_NAME}'...")
+    modelos_en_excel = read_cole44_stock()
+    if modelos_en_excel is None:
         return
 
-    disponibles, sin_stock = compute_disponibles(stock)
+    disponibles, en_produccion = compute_disponibles(modelos_en_excel)
 
-    print(f"Disponibles ({len(disponibles)}): {', '.join(disponibles)}")
-    print(f"Sin stock   ({len(sin_stock)}):   {', '.join(sin_stock)}")
+    print(f"Disponibles    ({len(disponibles)}):   {', '.join(disponibles)}")
+    print(f"En produccion  ({len(en_produccion)}): {', '.join(en_produccion)}")
 
     changed = update_script(disponibles)
     if changed:
         print("Cambios detectados, subiendo a produccion...")
-        git_commit_push(disponibles, sin_stock)
+        git_commit_push(disponibles, en_produccion)
     else:
         print("Sin cambios en Cole 44 — nada que subir.")
 
