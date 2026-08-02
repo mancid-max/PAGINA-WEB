@@ -3819,7 +3819,7 @@ function verProducto(familyId, preferredSku = "") {
         li.innerText = normalizarTextoVisible(char);
         ul.appendChild(li);
       });
-      if (detallePrecio) {
+      if (detallePrecio && detallePrecio.descuento > 0) {
         const liPrecio = document.createElement("li");
         liPrecio.innerText = `Precio lista: ${formatearPrecioCLP(detallePrecio.lista)} · Web ${detallePrecio.descuento}%: ${formatearPrecioCLP(detallePrecio.final)}`;
         ul.appendChild(liPrecio);
