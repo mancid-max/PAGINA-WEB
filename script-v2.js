@@ -3439,10 +3439,10 @@ function renderizarInfoProductoCatalogo43(charList, producto, detallePrecio) {
     crearItemInfoCatalogo43("Tiro", meta43?.tiro),
   ].filter(Boolean).forEach((li) => ul.appendChild(li));
 
-  if (detallePrecio) {
+  if (detallePrecio && detallePrecio.descuento > 0) {
     const liPrecio = document.createElement("li");
     liPrecio.className = "feature-price";
-    liPrecio.innerHTML = `<span class="feature-label">Precio web</span><strong>${escapeHtmlExcel(formatearPrecioCLP(detallePrecio.final))}</strong>${detallePrecio.descuento > 0 ? `<em>Lista ${escapeHtmlExcel(formatearPrecioCLP(detallePrecio.lista))} · -${escapeHtmlExcel(detallePrecio.descuento)}% web</em>` : ""}`;
+    liPrecio.innerHTML = `<span class="feature-label">Precio web</span><strong>${escapeHtmlExcel(formatearPrecioCLP(detallePrecio.final))}</strong><em>Lista ${escapeHtmlExcel(formatearPrecioCLP(detallePrecio.lista))} · -${escapeHtmlExcel(detallePrecio.descuento)}% web</em>`;
     ul.appendChild(liPrecio);
   }
 
@@ -3807,7 +3807,7 @@ function verProducto(familyId, preferredSku = "") {
     const publicDescription = limpiarDescripcionPublica(p.description || "");
     descriptionEl.innerText = hasCharacteristics
       ? ""
-      : publicDescription + (detallePrecio ? (detallePrecio.descuento > 0 ? ` · Precio lista: ${formatearPrecioCLP(detallePrecio.lista)} · Web ${detallePrecio.descuento}%: ${formatearPrecioCLP(detallePrecio.final)}` : ` · Precio: ${formatearPrecioCLP(detallePrecio.final)}`) : "");
+      : publicDescription + (detallePrecio?.descuento > 0 ? ` · Precio lista: ${formatearPrecioCLP(detallePrecio.lista)} · Web ${detallePrecio.descuento}%: ${formatearPrecioCLP(detallePrecio.final)}` : "");
     descriptionEl.style.display = hasCharacteristics || !publicDescription ? "none" : "block";
 
     charList.innerHTML = "";
