@@ -975,6 +975,7 @@ function calcularPrecioWebConDescuento(precioLista) {
 
 function obtenerPrecioCatalogo(value, source = CATALOG_SOURCE) {
   const precioLista = obtenerPrecioListaCatalogo(value, source);
+  if (source === "catalogo-44") return precioLista;
   return calcularPrecioWebConDescuento(precioLista);
 }
 
@@ -982,6 +983,9 @@ function obtenerDetallePrecioCatalogo(value, source = CATALOG_SOURCE) {
   if (IS_COTIZACION_MODE) return null;
   const precioLista = obtenerPrecioListaCatalogo(value, source);
   if (!precioLista) return null;
+  if (source === "catalogo-44") {
+    return { lista: precioLista, final: precioLista, descuento: 0, ahorro: 0 };
+  }
   const precioFinal = calcularPrecioWebConDescuento(precioLista);
   const ahorro = Math.max(0, precioLista - (precioFinal || 0));
   return {
@@ -3438,7 +3442,7 @@ function renderizarInfoProductoCatalogo43(charList, producto, detallePrecio) {
   if (detallePrecio) {
     const liPrecio = document.createElement("li");
     liPrecio.className = "feature-price";
-    liPrecio.innerHTML = `<span class="feature-label">Precio web</span><strong>${escapeHtmlExcel(formatearPrecioCLP(detallePrecio.final))}</strong><em>Lista ${escapeHtmlExcel(formatearPrecioCLP(detallePrecio.lista))} · -${escapeHtmlExcel(detallePrecio.descuento)}% web</em>`;
+    liPrecio.innerHTML = `<span class="feature-label">Precio web</span><strong>${escapeHtmlExcel(formatearPrecioCLP(detallePrecio.final))}</strong>${detallePrecio.descuento > 0 ? `<em>Lista ${escapeHtmlExcel(formatearPrecioCLP(detallePrecio.lista))} · -${escapeHtmlExcel(detallePrecio.descuento)}% web</em>` : ""}`;
     ul.appendChild(liPrecio);
   }
 
@@ -3509,10 +3513,14 @@ function renderCatalogCardHtml(p) {
             <div class="card-title">${(CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44" || IS_COTIZACION_MODE) && p.bota ? p.bota.charAt(0).toUpperCase() + p.bota.slice(1).toLowerCase() : "Modelo"} ${normalizarSkuCatalogo(p.family)}</div>
             ${
               detallePrecio
-                ? `<div class="card-price">
+                ? detallePrecio.descuento > 0
+                  ? `<div class="card-price">
                     <span class="card-price-original">${formatearPrecioCLP(detallePrecio.lista)}</span>
                     <span class="card-price-current">${formatearPrecioCLP(detallePrecio.final)}</span>
                     <span class="card-price-badge">-${detallePrecio.descuento}% web</span>
+                  </div>`
+                  : `<div class="card-price">
+                    <span class="card-price-current">${formatearPrecioCLP(detallePrecio.final)}</span>
                   </div>`
                 : precioCotizacion
                 ? `<div class="card-price">
@@ -3799,7 +3807,7 @@ function verProducto(familyId, preferredSku = "") {
     const publicDescription = limpiarDescripcionPublica(p.description || "");
     descriptionEl.innerText = hasCharacteristics
       ? ""
-      : publicDescription + (detallePrecio ? ` · Precio lista: ${formatearPrecioCLP(detallePrecio.lista)} · Web ${detallePrecio.descuento}%: ${formatearPrecioCLP(detallePrecio.final)}` : "");
+      : publicDescription + (detallePrecio ? (detallePrecio.descuento > 0 ? ` · Precio lista: ${formatearPrecioCLP(detallePrecio.lista)} · Web ${detallePrecio.descuento}%: ${formatearPrecioCLP(detallePrecio.final)}` : ` · Precio: ${formatearPrecioCLP(detallePrecio.final)}`) : "");
     descriptionEl.style.display = hasCharacteristics || !publicDescription ? "none" : "block";
 
     charList.innerHTML = "";
@@ -4071,7 +4079,7 @@ function actualizarCarrito() {
       ${totalItems >= 24 ? `<div class="cart-totals-row" style="color:#15803d;font-size:12px;">✓ Mínimo mayorista cumplido</div>` : ""}
       ${totalLista > 0 ? `<div class="cart-totals-row"><span>Total lista</span><strong>${formatearPrecioCLP(totalLista)}</strong></div>` : ""}
       ${totalAhorro > 0 ? `<div class="cart-totals-row cart-totals-row-accent"><span>Descuento web ${WEB_DISCOUNT_PERCENT}%</span><strong>- ${formatearPrecioCLP(totalAhorro)}</strong></div>` : ""}
-      ${totalEstimado > 0 ? `<div class="cart-totals-row"><span>Total neto con descuento</span><strong>${formatearPrecioCLP(totalEstimado)}</strong></div>` : ""}
+      ${totalAhorro > 0 && totalEstimado > 0 ? `<div class="cart-totals-row"><span>Total neto con descuento</span><strong>${formatearPrecioCLP(totalEstimado)}</strong></div>` : ""}
       ${totalIva > 0 ? `<div class="cart-totals-row"><span>IVA ${IVA_PERCENT}%</span><strong>${formatearPrecioCLP(totalIva)}</strong></div>` : ""}
       ${totalConIva > 0 ? `<div class="cart-totals-row cart-totals-row-final"><span>Total final con IVA</span><strong>${formatearPrecioCLP(totalConIva)}</strong></div>` : ""}
       ${totalAhorro > 0 ? `<div class="cart-totals-row cart-totals-row-saving"><span>Ahorro</span><strong>${formatearPrecioCLP(totalAhorro)}</strong></div>` : ""}
@@ -6671,7 +6679,7 @@ function construirVistaReporteCotizaciones(quotes = [], itemsMap = new Map()) {
         </div>
         <div class="quotes-report-preview-meta quotes-report-preview-meta-finance">
           ${resumenMonto ? `<div class="quotes-report-preview-chip quotes-report-preview-chip-money"><span>Total lista</span><strong>${escapeHtmlExcel(formatearPrecioCLP(resumenMonto.lista))}</strong></div>` : ""}
-          ${resumenMonto ? `<div class="quotes-report-preview-chip quotes-report-preview-chip-money is-highlight"><span>Neto c/desc. ${WEB_DISCOUNT_PERCENT}%</span><strong>${escapeHtmlExcel(formatearPrecioCLP(resumenMonto.promo))}</strong></div>` : ""}
+          ${resumenMonto?.tienePromo ? `<div class="quotes-report-preview-chip quotes-report-preview-chip-money is-highlight"><span>Neto c/desc. ${WEB_DISCOUNT_PERCENT}%</span><strong>${escapeHtmlExcel(formatearPrecioCLP(resumenMonto.promo))}</strong></div>` : ""}
           ${resumenMonto ? `<div class="quotes-report-preview-chip quotes-report-preview-chip-money"><span>IVA 19%</span><strong>${escapeHtmlExcel(formatearPrecioCLP(Math.round(resumenMonto.promo * IVA_RATE)))}</strong></div>` : ""}
           ${resumenMonto ? `<div class="quotes-report-preview-chip quotes-report-preview-chip-money is-highlight"><span>Total con IVA</span><strong>${escapeHtmlExcel(formatearPrecioCLP(resumenMonto.promo + Math.round(resumenMonto.promo * IVA_RATE)))}</strong></div>` : ""}
           ${resumenMonto?.ahorro ? `<div class="quotes-report-preview-chip quotes-report-preview-chip-money is-saving"><span>Ahorro</span><strong>${escapeHtmlExcel(formatearPrecioCLP(resumenMonto.ahorro))}</strong></div>` : ""}
