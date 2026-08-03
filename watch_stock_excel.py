@@ -17,7 +17,7 @@ def wait_for_changes(source_path: Path, interval_seconds: int = 10) -> None:
             current_mtime = source_path.stat().st_mtime
             if current_mtime != last_mtime:
                 last_mtime = current_mtime
-                print("Cambio detectado en Excel, regenerando stock-data.json...")
+                print("Cambio detectado en Excel, regenerando archivos de stock...")
                 export_stock()
             time.sleep(interval_seconds)
         except KeyboardInterrupt:

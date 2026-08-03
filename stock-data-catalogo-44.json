@@ -1,0 +1,90 @@
+{
+  "source_file": "C:\\Users\\Lenovo\\OneDrive - Mohicano Jeans\\INVENTARIO 01-04 COMPLETO.xlsx",
+  "sheet_name": "COLE 44",
+  "items": {
+    "4455-00": {
+      "article": "445500",
+      "sku": "4455-00",
+      "description": "CINTURA / WIDE LEG",
+      "sizes": {
+        "36": 31,
+        "38": 56,
+        "40": 65,
+        "42": 62,
+        "44": 42,
+        "46": 35
+      },
+      "total": 291
+    },
+    "4484-00": {
+      "article": "448400",
+      "sku": "4484-00",
+      "description": "CINTURA / TOBILLERO",
+      "sizes": {
+        "36": 45,
+        "38": 100,
+        "40": 106,
+        "42": 105,
+        "44": 86,
+        "46": 66
+      },
+      "total": 508
+    },
+    "4431-00": {
+      "article": "443100",
+      "sku": "4431-00",
+      "description": "CINTURA / WIDE LEG",
+      "sizes": {
+        "36": 29,
+        "38": 59,
+        "40": 67,
+        "42": 57,
+        "44": 26,
+        "46": 29
+      },
+      "total": 267
+    },
+    "4431-01": {
+      "article": "443101",
+      "sku": "4431-01",
+      "description": "CINTURA / WIDE LEG",
+      "sizes": {
+        "36": 11,
+        "38": 65,
+        "40": 47,
+        "42": 59,
+        "44": 42,
+        "46": 28
+      },
+      "total": 252
+    },
+    "4479-00": {
+      "article": "447900",
+      "sku": "4479-00",
+      "description": "CINTURA / FLARE / CELESTE / MISSY PLUS",
+      "sizes": {
+        "36": 0,
+        "38": 29,
+        "40": 42,
+        "42": 38,
+        "44": 33,
+        "46": 36
+      },
+      "total": 178
+    },
+    "4430-00": {
+      "article": "443000",
+      "sku": "4430-00",
+      "description": "CINTURA / FLARE / CELESTE / NEW GLUE",
+      "sizes": {
+        "36": 36,
+        "38": 51,
+        "40": 72,
+        "42": 76,
+        "44": 72,
+        "46": 49
+      },
+      "total": 356
+    }
+  }
+}

@@ -3,7 +3,7 @@ $projectPath = $scriptRoot
 $sourcePath = if ($env:MOHICANO_STOCK_XLSX) { $env:MOHICANO_STOCK_XLSX } else { Join-Path $HOME "OneDrive - Mohicano Jeans\INVENTARIO 01-04 COMPLETO.xlsx" }
 $logPath = Join-Path $projectPath ".watch-stock.out.log"
 $errPath = Join-Path $projectPath ".watch-stock.err.log"
-$stockFiles = @("stock-data.json", "stock-data-catalogo-2.json")
+$stockFiles = @("stock-data.json", "stock-data-catalogo-2.json", "stock-data-catalogo-43.json", "stock-data-catalogo-44.json")
 
 if (-not (Test-Path -LiteralPath $sourcePath)) {
   throw "No se encontro el archivo: $sourcePath"
@@ -57,7 +57,7 @@ try {
     $currentWrite = (Get-Item -LiteralPath $sourcePath).LastWriteTimeUtc
     if ($currentWrite -ne $lastWrite) {
       $lastWrite = $currentWrite
-      Write-Log "Cambio detectado en Excel, regenerando stock-data.json..."
+      Write-Log "Cambio detectado en Excel, regenerando archivos de stock..."
       try {
         python generate_catalog_stock_json_from_excel.py | Tee-Object -FilePath $logPath -Append
         Publish-StockIfChanged

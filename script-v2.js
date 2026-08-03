@@ -34,6 +34,8 @@ let imagenesModalActual = [];
 let imagenModalIndex = 0;
 let quotePanelReady = false;
 let stockBySku = {};
+let stockBySkuCatalogo43 = {};
+let stockBySkuCatalogo44 = {};
 let stockCatalogRows = [];
 let stockRealtimeChannel = null;
 let stockCatalogSeasonFilter = "";
@@ -319,8 +321,16 @@ function inferirCatalogoDesdeSku(value) {
   return "catalogo-1";
 }
 
+function resolverSourceSegunSku(item = {}, fallbackSource = CATALOG_SOURCE) {
+  const inferredSource = inferirCatalogoDesdeSku(item?.sku);
+  const rawSource = String(item?.source || "").trim();
+  if (!rawSource) return inferredSource || fallbackSource;
+  if (inferredSource && rawSource !== inferredSource) return inferredSource;
+  return rawSource || inferredSource || fallbackSource;
+}
+
 function resolverSourceItemPedido(item = {}, fallbackSource = CATALOG_SOURCE) {
-  return String(item?.source || inferirCatalogoDesdeSku(item?.sku) || fallbackSource).trim() || fallbackSource;
+  return resolverSourceSegunSku(item, fallbackSource);
 }
 
 function sanitizarPedidoPersistido(valor) {
@@ -328,7 +338,7 @@ function sanitizarPedidoPersistido(valor) {
   return valor
     .map((item) => {
       const sku = normalizarSkuCatalogo(item?.sku || "");
-      const source = String(item?.source || inferirCatalogoDesdeSku(sku) || CATALOG_SOURCE).trim() || CATALOG_SOURCE;
+      const source = resolverSourceSegunSku({ ...item, sku }, CATALOG_SOURCE);
       const tallasRaw = item?.tallas && typeof item.tallas === "object" ? item.tallas : {};
       const tallas = {};
       TALLAS_DISPONIBLES.forEach((talla) => {
@@ -1031,9 +1041,18 @@ function stockSupabaseHabilitado() {
 }
 
 async function cargarStockJsonLocal() {
-  const res = await fetch(withCacheBust(STOCK_DATA_FILE), { cache: "no-store" });
+  return cargarStockJsonLocalDesdeArchivo(STOCK_DATA_FILE);
+}
+
+async function cargarStockJsonLocalDesdeArchivo(stockFile) {
+  const res = await fetch(withCacheBust(stockFile), { cache: "no-store" });
   if (!res.ok) throw new Error(`status ${res.status}`);
   return res.json();
+}
+
+async function cargarStockJsonLocalPorSource(source) {
+  const stockFile = STOCK_DATA_FILE_BY_SOURCE[source] || "stock-data.json";
+  return cargarStockJsonLocalDesdeArchivo(stockFile);
 }
 
 async function cargarStockSupabasePublico() {
@@ -1108,6 +1127,12 @@ function normalizarMapaStockPorSku(items = {}) {
     if (!entry.article && payload?.article) entry.article = String(payload.article).trim();
   });
   return merged;
+}
+
+function obtenerStockMapPorSource(source = CATALOG_SOURCE) {
+  if (source === "catalogo-43") return stockBySkuCatalogo43 || {};
+  if (source === "catalogo-44") return stockBySkuCatalogo44 || {};
+  return stockBySku || {};
 }
 
 function construirDescripcionStockCatalog(row = {}) {
@@ -2221,13 +2246,10 @@ async function cargarProductosCatalogo() {
       ? Promise.resolve(embeddedCatalog)
       : fetch(withCacheBust(CATALOG_DATA_FILE)).then((res) => res.json());
     const priceDataPromise = cargarTodosLosMapasPreciosCatalogo();
-    const stockPromise = INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43" && CATALOG_SOURCE !== "catalogo-44"
+    const stockPromise = INVENTORY_ENABLED
       ? cargarStockDatasetPreferido().catch((err) => {
-        if (CATALOG_SOURCE === "catalogo-43") {
-          console.warn(`No se pudo cargar ${STOCK_DATA_FILE}, se usa fallback de catálogo 43:`, err);
-          return null;
-        }
-        throw err;
+        console.warn(`No se pudo cargar ${STOCK_DATA_FILE}:`, err);
+        return null;
       })
       : Promise.resolve(null);
     const extraCatalogPromise = CATALOG_SOURCE === "catalogo-1"
@@ -2257,8 +2279,14 @@ async function cargarProductosCatalogo() {
         return res.json();
       })
       : Promise.resolve(null);
+    const catalog43StockPromise = (CATALOG_SOURCE === "catalogo-1" || CATALOG_SOURCE === "catalogo-43")
+      ? cargarStockJsonLocalPorSource("catalogo-43").catch(() => null)
+      : Promise.resolve(null);
+    const catalog44StockPromise = CATALOG_SOURCE === "catalogo-44"
+      ? cargarStockJsonLocalPorSource("catalogo-44").catch(() => null)
+      : Promise.resolve(null);
 
-    const [data, priceData, stockData, extraCatalogData, catalog42Data, catalog42PresenceData, catalogCoverMapData, stockOverridesData, trazabilidadData, catalog43ThumbnailData] = await Promise.all([
+    const [data, priceData, stockData, extraCatalogData, catalog42Data, catalog42PresenceData, catalogCoverMapData, stockOverridesData, trazabilidadData, catalog43ThumbnailData, catalog43StockData, catalog44StockData] = await Promise.all([
       catalogPromise,
       priceDataPromise,
       stockPromise,
@@ -2269,6 +2297,8 @@ async function cargarProductosCatalogo() {
       stockOverridesPromise,
       trazabilidadPromise,
       catalog43ThumbnailPromise,
+      catalog43StockPromise,
+      catalog44StockPromise,
     ]);
 
     catalogPriceBySource = {
@@ -2287,15 +2317,21 @@ async function cargarProductosCatalogo() {
 
     actualizarCarrito();
 
+    stockBySkuCatalogo43 = normalizarMapaStockPorSku(catalog43StockData?.items || {});
+    stockBySkuCatalogo44 = normalizarMapaStockPorSku(catalog44StockData?.items || {});
+
     if (INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-43" && CATALOG_SOURCE !== "catalogo-44") {
       stockBySku = {
         ...crearStockSinteticoAgotados(),
         ...normalizarMapaStockPorSku(stockData?.items || {}),
       };
       lastRenderedStockSignature = crearFirmaStock(stockBySku);
-    } else if (CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44") {
-      stockBySku = {};
-      lastRenderedStockSignature = "";
+    } else if (CATALOG_SOURCE === "catalogo-43") {
+      stockBySku = { ...stockBySkuCatalogo43 };
+      lastRenderedStockSignature = crearFirmaStock(stockBySku);
+    } else if (CATALOG_SOURCE === "catalogo-44") {
+      stockBySku = { ...stockBySkuCatalogo44 };
+      lastRenderedStockSignature = crearFirmaStock(stockBySku);
     }
     catalogCoverBySku = normalizarMapaAssetsPorSku(catalogCoverMapData || {});
 
@@ -2366,7 +2402,7 @@ async function cargarProductosCatalogo() {
     if (IS_COTIZACION_MODE) {
       productosGrid = productosGrid.map((p) => ({ ...p, _cotizacion_collection: "42" }));
       const raw43 = await fetch(withCacheBust("data-catalogo-43.json")).then((r) => r.json()).catch(() => []);
-      const direct43 = prepararCatalogo43Directo(Array.isArray(raw43) ? raw43 : [], {});
+      const direct43 = prepararCatalogo43Directo(Array.isArray(raw43) ? raw43 : [], stockBySkuCatalogo43);
       const tagged43 = direct43.productosGrid.map((p) => ({ ...p, _cotizacion_collection: "43" }));
       productosGrid = [...productosGrid, ...tagged43];
     }
@@ -2742,30 +2778,40 @@ function configurarRealtimeStock() {
 
 function cargarStockData() {
   if (CATALOG_SOURCE === "catalogo-43") {
-    stockBySku = {};
-    if (skuActivo) aplicarStockATallas(skuActivo);
-    const baseItems43 = Array.isArray(productosCatalogoBase) && productosCatalogoBase.length
-      ? productosCatalogoBase
-      : productos;
-    const directCatalog43 = prepararCatalogo43Directo(baseItems43, {});
-    productos = directCatalog43.productos;
-    productosGrid = directCatalog43.productosGrid;
-    renderGrid(productosGrid);
-    actualizarCarrito();
-    return Promise.resolve();
+    return cargarStockJsonLocalPorSource("catalogo-43")
+      .then((data) => {
+        stockBySkuCatalogo43 = normalizarMapaStockPorSku(data?.items || {});
+        stockBySku = { ...stockBySkuCatalogo43 };
+        lastRenderedStockSignature = crearFirmaStock(stockBySku);
+        if (skuActivo) aplicarStockATallas(skuActivo);
+        const baseItems43 = Array.isArray(productosCatalogoBase) && productosCatalogoBase.length
+          ? productosCatalogoBase
+          : productos;
+        const directCatalog43 = prepararCatalogo43Directo(baseItems43, stockBySkuCatalogo43);
+        productos = directCatalog43.productos;
+        productosGrid = directCatalog43.productosGrid;
+        renderGrid(productosGrid);
+        actualizarCarrito();
+      })
+      .catch((err) => console.warn("No se pudo cargar stock-data-catalogo-43.json:", err));
   }
   if (CATALOG_SOURCE === "catalogo-44") {
-    stockBySku = {};
-    if (skuActivo) aplicarStockATallas(skuActivo);
-    const baseItems44 = Array.isArray(productosCatalogoBase) && productosCatalogoBase.length
-      ? productosCatalogoBase
-      : productos;
-    const directCatalog44 = prepararCatalogo44Directo(baseItems44);
-    productos = directCatalog44.productos;
-    productosGrid = directCatalog44.productosGrid;
-    renderGrid(productosGrid);
-    actualizarCarrito();
-    return Promise.resolve();
+    return cargarStockJsonLocalPorSource("catalogo-44")
+      .then((data) => {
+        stockBySkuCatalogo44 = normalizarMapaStockPorSku(data?.items || {});
+        stockBySku = { ...stockBySkuCatalogo44 };
+        lastRenderedStockSignature = crearFirmaStock(stockBySku);
+        if (skuActivo) aplicarStockATallas(skuActivo);
+        const baseItems44 = Array.isArray(productosCatalogoBase) && productosCatalogoBase.length
+          ? productosCatalogoBase
+          : productos;
+        const directCatalog44 = prepararCatalogo44Directo(baseItems44);
+        productos = directCatalog44.productos;
+        productosGrid = directCatalog44.productosGrid;
+        renderGrid(productosGrid);
+        actualizarCarrito();
+      })
+      .catch((err) => console.warn("No se pudo cargar stock-data-catalogo-44.json:", err));
   }
   return cargarStockDatasetPreferido()
     .then((data) => {
@@ -2823,7 +2869,7 @@ function asegurarBadgeStock(label) {
 }
 
 function aplicarStockATallas(sku) {
-  if (CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44") {
+  if (CATALOG_SOURCE === "catalogo-44") {
     TALLAS_DISPONIBLES.forEach((talla) => {
       const input = document.getElementById("t" + talla);
       const label = input?.closest("label");
@@ -3477,9 +3523,20 @@ const CATALOGO_43_SKUS_AGOTADOS = new Set([
 
 function obtenerEstadoVisibilidadCatalogo43(producto = {}) {
   const family = normalizarSkuCatalogo(producto?._preferredSku || producto?.family || producto?._baseFamily || "");
+  const stockItems43 = obtenerStockMapPorSource("catalogo-43");
+  if (family && Object.keys(stockItems43 || {}).length) {
+    const exactStock = obtenerStockExactoParaSkuDesdeItems(family, stockItems43);
+    if (exactStock) return (Number(exactStock?.total) || 0) > 0 ? "available" : "soldout";
+  }
   if (family && CATALOGO_43_SKUS_AGOTADOS.has(family)) return "soldout";
   const model = obtenerBaseFamilia(family);
   if (!model) return "soldout";
+  if (Object.keys(stockItems43 || {}).length) {
+    const hasAvailableModel = Object.entries(stockItems43).some(([sku, payload]) => (
+      obtenerBaseFamilia(sku) === model && (Number(payload?.total) || 0) > 0
+    ));
+    return hasAvailableModel ? "available" : "soldout";
+  }
   return CATALOGO_43_MODELOS_DISPONIBLES.has(model) ? "available" : "soldout";
 }
 
@@ -3489,6 +3546,11 @@ function obtenerEstadoVisibilidadCatalogo44(producto = {}) {
   const family = normalizarSkuCatalogo(producto?._preferredSku || producto?.family || producto?._baseFamily || "");
   const model = obtenerBaseFamilia(family);
   if (!model) return "produccion";
+  const stockItems44 = obtenerStockMapPorSource("catalogo-44");
+  if (Object.keys(stockItems44 || {}).length) {
+    const hasModel = Object.keys(stockItems44).some((sku) => obtenerBaseFamilia(sku) === model);
+    return hasModel ? "available" : "produccion";
+  }
   return CATALOGO_44_MODELOS_DISPONIBLES.has(model) ? "available" : "produccion";
 }
 
@@ -3917,7 +3979,8 @@ document.getElementById("addBtn").onclick = () => {
   let agregoAlgo = false;
 
   if (skuActivo && total > 0) {
-    const existente = pedido.find((item) => item.sku === skuActivo && String(item.source || "") === CATALOG_SOURCE);
+    const sourceForSku = inferirCatalogoDesdeSku(skuActivo) || CATALOG_SOURCE;
+    const existente = pedido.find((item) => item.sku === skuActivo && resolverSourceSegunSku(item, CATALOG_SOURCE) === sourceForSku);
     if (existente) {
       Object.entries(tallas).forEach(([talla, cantidad]) => {
         const qty = Number(cantidad) || 0;
@@ -3925,7 +3988,7 @@ document.getElementById("addBtn").onclick = () => {
         existente.tallas[talla] = (Number(existente.tallas[talla]) || 0) + qty;
       });
     } else {
-      pedido.push({ sku: skuActivo, tallas: { ...tallas }, source: CATALOG_SOURCE });
+      pedido.push({ sku: skuActivo, tallas: { ...tallas }, source: sourceForSku });
     }
     agregoAlgo = true;
   }

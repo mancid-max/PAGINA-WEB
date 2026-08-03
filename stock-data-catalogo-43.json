@@ -3,9 +3,9 @@
   "sheet_name": "COLE 43",
   "items": {
     "4355-00": {
-      "article": "4355-00",
+      "article": "435500",
       "sku": "4355-00",
-      "description": "",
+      "description": "CINTURA / FLARE",
       "sizes": {
         "36": 20,
         "38": 37,
@@ -17,9 +17,9 @@
       "total": 185
     },
     "4311-00": {
-      "article": "4311-00",
+      "article": "431100",
       "sku": "4311-00",
-      "description": "",
+      "description": "CINTURA / RECTO",
       "sizes": {
         "36": 5,
         "38": 18,
@@ -31,9 +31,9 @@
       "total": 66
     },
     "4362-04": {
-      "article": "4362-04",
+      "article": "436204",
       "sku": "4362-04",
-      "description": "",
+      "description": "CINTURA / PITILLO / CAFE",
       "sizes": {
         "36": 16,
         "38": 32,
@@ -45,9 +45,9 @@
       "total": 155
     },
     "4362-48": {
-      "article": "4362-48",
+      "article": "436248",
       "sku": "4362-48",
-      "description": "",
+      "description": "CINTURA / PITILLO / BURDE0",
       "sizes": {
         "36": 8,
         "38": 13,
@@ -59,9 +59,9 @@
       "total": 61
     },
     "4337-00": {
-      "article": "4337-00",
+      "article": "433700",
       "sku": "4337-00",
-      "description": "",
+      "description": "CINTURA / FLARE / OPAQUE",
       "sizes": {
         "36": 0,
         "38": 11,
@@ -73,9 +73,9 @@
       "total": 73
     },
     "4333-00": {
-      "article": "4333-00",
+      "article": "433300",
       "sku": "4333-00",
-      "description": "",
+      "description": "CINTURA / WID LEG / BIO MEDIO",
       "sizes": {
         "36": 0,
         "38": 15,
@@ -89,7 +89,7 @@
     "4378-01": {
       "article": "4378-01",
       "sku": "4378-01",
-      "description": "",
+      "description": "CINTURA / RECTO / MARENGO",
       "sizes": {
         "36": 9,
         "38": 11,
@@ -101,9 +101,9 @@
       "total": 59
     },
     "4366-04": {
-      "article": "4366-04",
+      "article": "436604",
       "sku": "4366-04",
-      "description": "",
+      "description": "CINTURA / RECTO / CAFE",
       "sizes": {
         "36": 0,
         "38": 0,
@@ -115,9 +115,9 @@
       "total": 25
     },
     "4313-00": {
-      "article": "4313-00",
+      "article": "431300",
       "sku": "4313-00",
-      "description": "",
+      "description": "CINTURA / FLARE",
       "sizes": {
         "36": 0,
         "38": 0,
@@ -129,9 +129,9 @@
       "total": 34
     },
     "4310-00": {
-      "article": "4310-00",
+      "article": "431000",
       "sku": "4310-00",
-      "description": "",
+      "description": "CINTURA / TOBILLERO",
       "sizes": {
         "36": 0,
         "38": 6,
@@ -143,9 +143,9 @@
       "total": 33
     },
     "4340-00": {
-      "article": "4340-00",
+      "article": "434000",
       "sku": "4340-00",
-      "description": "",
+      "description": "CINTURA / PALAZZO",
       "sizes": {
         "36": 0,
         "38": 9,
@@ -157,9 +157,9 @@
       "total": 31
     },
     "4322-60": {
-      "article": "4322-60",
+      "article": "432260",
       "sku": "4322-60",
-      "description": "",
+      "description": "CINTURA / PITILLO / MARENGO TACHAS",
       "sizes": {
         "36": 1,
         "38": 4,
@@ -171,9 +171,9 @@
       "total": 28
     },
     "4339-01": {
-      "article": "4339-01",
+      "article": "433901",
       "sku": "4339-01",
-      "description": "",
+      "description": "CINTURA / FLARE / BIOCLARO FOCALIZADO",
       "sizes": {
         "36": 2,
         "38": 4,
@@ -185,9 +185,9 @@
       "total": 26
     },
     "4341-00": {
-      "article": "4341-00",
+      "article": "434100",
       "sku": "4341-00",
-      "description": "",
+      "description": "CINTURA / FLARE",
       "sizes": {
         "36": 0,
         "38": 3,
@@ -199,9 +199,9 @@
       "total": 18
     },
     "4348-01": {
-      "article": "4348-01",
+      "article": "434801",
       "sku": "4348-01",
-      "description": "",
+      "description": "CINTURA / PITILLO / MARENGO",
       "sizes": {
         "36": 0,
         "38": 5,
@@ -213,9 +213,9 @@
       "total": 17
     },
     "4325-00": {
-      "article": "4325-00",
+      "article": "432500",
       "sku": "4325-00",
-      "description": "",
+      "description": "CINTURA / WIDELEG / NEGRO",
       "sizes": {
         "36": 0,
         "38": 0,
@@ -227,9 +227,9 @@
       "total": 15
     },
     "4322-00": {
-      "article": "4322-00",
+      "article": "432200",
       "sku": "4322-00",
-      "description": "",
+      "description": "CINTURA / FLARE",
       "sizes": {
         "36": 0,
         "38": 0,
@@ -241,9 +241,9 @@
       "total": 13
     },
     "4356-00": {
-      "article": "4356-00",
+      "article": "435600",
       "sku": "4356-00",
-      "description": "",
+      "description": "CINTURA / FLARE / GRIS GRAVILLADO",
       "sizes": {
         "36": 2,
         "38": 0,
@@ -255,9 +255,9 @@
       "total": 9
     },
     "4363-00": {
-      "article": "4363-00",
+      "article": "436300",
       "sku": "4363-00",
-      "description": "",
+      "description": "CINTURA / PITILLO",
       "sizes": {
         "36": 1,
         "38": 1,
@@ -269,9 +269,9 @@
       "total": 5
     },
     "4348-61": {
-      "article": "4348-61",
+      "article": "434861",
       "sku": "4348-61",
-      "description": "",
+      "description": "CINTURA / PITILLO / CON TACHAS",
       "sizes": {
         "36": 2,
         "38": 0,
@@ -283,9 +283,9 @@
       "total": 5
     },
     "4319-00": {
-      "article": "4319-00",
+      "article": "431900",
       "sku": "4319-00",
-      "description": "",
+      "description": "MEDIO / FLARE",
       "sizes": {
         "36": 1,
         "38": 2,
@@ -297,9 +297,9 @@
       "total": 4
     },
     "4322-01": {
-      "article": "4322-01",
+      "article": "432201",
       "sku": "4322-01",
-      "description": "",
+      "description": "CINTURA / FLARE",
       "sizes": {
         "36": 1,
         "38": 1,
@@ -311,9 +311,9 @@
       "total": 4
     },
     "4361-67": {
-      "article": "4361-67",
+      "article": "436167",
       "sku": "4361-67",
-      "description": "",
+      "description": "CINTURA / FLARE / CAFE ANIMAL  PRINT",
       "sizes": {
         "36": 0,
         "38": 0,
@@ -325,9 +325,9 @@
       "total": 2
     },
     "4348-60": {
-      "article": "4348-60",
+      "article": "434860",
       "sku": "4348-60",
-      "description": "",
+      "description": "CINTURA / PITILLO / MARENGO",
       "sizes": {
         "36": 1,
         "38": 0,
@@ -339,9 +339,9 @@
       "total": 2
     },
     "4361-04": {
-      "article": "4361-04",
+      "article": "436104",
       "sku": "4361-04",
-      "description": "",
+      "description": "CINTURA / FLARE / CAFÉ",
       "sizes": {
         "36": 0,
         "38": 0,
@@ -353,9 +353,9 @@
       "total": 2
     },
     "4356-01": {
-      "article": "4356-01",
+      "article": "435601",
       "sku": "4356-01",
-      "description": "",
+      "description": "CINTURA / FLARE",
       "sizes": {
         "36": 0,
         "38": 0,
@@ -367,9 +367,9 @@
       "total": 1
     },
     "4322-02": {
-      "article": "4322-02",
+      "article": "432202",
       "sku": "4322-02",
-      "description": "",
+      "description": "CINTURA / FLARE",
       "sizes": {
         "36": 0,
         "38": 0,
@@ -379,160 +379,6 @@
         "46": 0
       },
       "total": 1
-    },
-    "4348-00": {
-      "article": "4348-00",
-      "sku": "4348-00",
-      "description": "",
-      "sizes": {
-        "36": 0,
-        "38": 0,
-        "40": 0,
-        "42": 0,
-        "44": 0,
-        "46": 0
-      },
-      "total": 0
-    },
-    "4361-48": {
-      "article": "4361-48",
-      "sku": "4361-48",
-      "description": "",
-      "sizes": {
-        "36": 0,
-        "38": 0,
-        "40": 0,
-        "42": 0,
-        "44": 0,
-        "46": 0
-      },
-      "total": 0
-    },
-    "4325-01": {
-      "article": "4325-01",
-      "sku": "4325-01",
-      "description": "",
-      "sizes": {
-        "36": 0,
-        "38": 0,
-        "40": 0,
-        "42": 0,
-        "44": 0,
-        "46": 0
-      },
-      "total": 0
-    },
-    "4301-00": {
-      "article": "4301-00",
-      "sku": "4301-00",
-      "description": "",
-      "sizes": {
-        "36": 0,
-        "38": 0,
-        "40": 0,
-        "42": 0,
-        "44": 0,
-        "46": 0
-      },
-      "total": 0
-    },
-    "4314-00": {
-      "article": "4314-00",
-      "sku": "4314-00",
-      "description": "",
-      "sizes": {
-        "36": 0,
-        "38": 0,
-        "40": 0,
-        "42": 0,
-        "44": 0,
-        "46": 0
-      },
-      "total": 0
-    },
-    "4329-00": {
-      "article": "4329-00",
-      "sku": "4329-00",
-      "description": "",
-      "sizes": {
-        "36": 0,
-        "38": 0,
-        "40": 0,
-        "42": 0,
-        "44": 0,
-        "46": 0
-      },
-      "total": 0
-    },
-    "4309-00": {
-      "article": "4309-00",
-      "sku": "4309-00",
-      "description": "",
-      "sizes": {
-        "36": 0,
-        "38": 0,
-        "40": 0,
-        "42": 0,
-        "44": 0,
-        "46": 0
-      },
-      "total": 0
-    },
-    "4318-00": {
-      "article": "4318-00",
-      "sku": "4318-00",
-      "description": "",
-      "sizes": {
-        "36": 0,
-        "38": 0,
-        "40": 0,
-        "42": 0,
-        "44": 0,
-        "46": 0
-      },
-      "total": 0
-    },
-    "4321-00": {
-      "article": "4321-00",
-      "sku": "4321-00",
-      "description": "",
-      "sizes": {
-        "36": 0,
-        "38": 0,
-        "40": 0,
-        "42": 0,
-        "44": 0,
-        "46": 0
-      },
-      "total": 0
-    },
-    "4323-00": {
-      "article": "4323-00",
-      "sku": "4323-00",
-      "description": "",
-      "sizes": {
-        "36": 0,
-        "38": 0,
-        "40": 0,
-        "42": 0,
-        "44": 0,
-        "46": 0
-      },
-      "total": 0
-    },
-    "4339-00": {
-      "article": "4339-00",
-      "sku": "4339-00",
-      "description": "",
-      "sizes": {
-        "36": 0,
-        "38": 0,
-        "40": 0,
-        "42": 0,
-        "44": 0,
-        "46": 0
-      },
-      "total": 0
     }
   }
 }

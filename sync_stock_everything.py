@@ -13,7 +13,12 @@ ROOT = Path(__file__).resolve().parent
 DEFAULT_EXCEL = Path.home() / "OneDrive - Mohicano Jeans" / "INVENTARIO 01-04 COMPLETO.xlsx"
 SUPABASE_URL = "https://kdtydxihrflhziclgiof.supabase.co"
 SUPABASE_ANON_KEY = "sb_publishable_37ce4uK_RG8o9pP-Jdf2Xw_3eWgqJQy"
-LANDING_STOCK_FILES = ["stock-data.json", "stock-data-catalogo-2.json"]
+LANDING_STOCK_FILES = [
+    "stock-data.json",
+    "stock-data-catalogo-2.json",
+    "stock-data-catalogo-43.json",
+    "stock-data-catalogo-44.json",
+]
 CATALOGO_2_STOCK_FILE = ROOT / "stock-data-catalogo-2.json"
 ALL_SHEETS_JSON = ROOT / "stock-data-all-sheets.json"
 SCRIPT_GENERATE_LANDING = ROOT / "scripts" / "generate_catalog_stock_json_from_excel.py"
