@@ -5459,8 +5459,12 @@ async function enviarPayloadCotizacionSupabase(payload) {
     if (lower.includes("create_quote_with_stock_reservation")) {
       throw new Error("Falta instalar la función de reserva de stock en Supabase antes de enviar pedidos.");
     }
-    if (lower.includes("stock insuficiente") || lower.includes("no se encontró stock")) {
-      throw new Error(errText || "No hay stock suficiente para completar el pedido.");
+    // P0001 = RAISE EXCEPTION del stored procedure (siempre es error de stock)
+    let parsed = null;
+    try { parsed = JSON.parse(errText); } catch {}
+    if (parsed?.code === "P0001" || lower.includes("stock insuficiente") || lower.includes("stock")) {
+      const detalle = parsed?.message || "";
+      throw new Error(`No hay stock suficiente para completar el pedido.${detalle ? ` (${detalle})` : ""}`);
     }
     throw new Error(`Error guardando pedido: ${errText || res.status}`);
   }
