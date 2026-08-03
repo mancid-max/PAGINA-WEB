@@ -2714,7 +2714,7 @@ function obtenerStockParaSku(sku) {
 }
 
 function skuEstaAgotado(sku) {
-  if (IS_COTIZACION_MODE && inferirCatalogoDesdeSku(sku) !== "catalogo-1") return false;
+  if (IS_COTIZACION_MODE) return false;
   if (CATALOG_SOURCE === "catalogo-43") return false;
   if (CATALOG_SOURCE === "catalogo-44") return false;
   if (!INVENTORY_ENABLED) return false;
