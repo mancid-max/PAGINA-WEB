@@ -2719,7 +2719,7 @@ function skuEstaAgotado(sku) {
   if (CATALOG_SOURCE === "catalogo-44") return false;
   if (!INVENTORY_ENABLED) return false;
   const stock = obtenerStockParaSku(sku);
-  if (!stock || !stock.sizes || typeof stock.sizes !== "object") return true;
+  if (!stock || !stock.sizes || typeof stock.sizes !== "object") return false;
   return TALLAS_DISPONIBLES.every((talla) => Math.max(0, Number(stock.sizes?.[talla]) || 0) <= 0);
 }
 
