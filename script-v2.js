@@ -4542,6 +4542,11 @@ function obtenerSourcePlantillaPedido(quote = {}, items = []) {
   return CATALOG_SOURCE;
 }
 
+function esPedidoTiendaFilomena(source) {
+  const normalized = String(source || "").trim().toLowerCase();
+  return normalized === "tienda-filomena" || normalized === "cotizacion";
+}
+
 function obtenerConfigPlantillaPedido(quote = {}, items = []) {
   const source = obtenerSourcePlantillaPedido(quote, items);
   if (ORDER_TEMPLATE_CONFIGS[source]) return ORDER_TEMPLATE_CONFIGS[source];
@@ -4839,7 +4844,7 @@ function generarExcelHtmlQuoteAdmin(quote, items = []) {
 <body>
   <table class="sheet">
     <tr>${idRow.join("")}</tr>
-    <tr><td class="title" colspan="3">RESUMEN COTIZACION</td></tr>
+    <tr><td class="title" colspan="3">${escapeHtmlExcel(esPedidoTiendaFilomena(quote?.source) ? "RESUMEN PEDIDO TIENDA FILOMENA" : "RESUMEN COTIZACION")}</td></tr>
     <tr><td class="label">Codigo</td><td class="value" colspan="2">${escapeHtmlExcel(codigo)}</td></tr>
     <tr><td class="label">Tienda</td><td class="value" colspan="2">${escapeHtmlExcel(quote?.store_name || "")}</td></tr>
     <tr><td class="label">RUT</td><td class="value" colspan="2">${escapeHtmlExcel(rut)}</td></tr>
@@ -4863,7 +4868,9 @@ async function descargarCotizacionAdmin(quoteId) {
   const { quote, items } = await cargarCotizacionAdminPorId(quoteId);
   const clienteNombre = sanitizeFileNamePart(quote.store_name, "cliente");
   const codigo = generarCodigoCotizacionVisual(quote);
-  const nombreBase = `Pedido ${codigo} ${clienteNombre}`;
+  const nombreBase = esPedidoTiendaFilomena(quote?.source)
+    ? `Pedido Tienda Filomena ${codigo} ${clienteNombre}`
+    : `Pedido ${codigo} ${clienteNombre}`;
   try {
     const excelBlob = await Promise.race([
       generarExcelPlantillaQuoteAdmin(quote, items),
@@ -7103,8 +7110,8 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
   let filtered = allQuotes;
   if (quotesListStatusFilter === "open") filtered = filtered.filter((q) => !q.is_ready);
   else if (quotesListStatusFilter === "ready") filtered = filtered.filter((q) => !!q.is_ready);
-  if (quotesListSourceFilter === "cotizacion") filtered = filtered.filter((q) => String(q.source || "").trim() === "cotizacion");
-  else if (quotesListSourceFilter === "pedido") filtered = filtered.filter((q) => String(q.source || "").trim() !== "cotizacion");
+  if (quotesListSourceFilter === "cotizacion") filtered = filtered.filter((q) => esPedidoTiendaFilomena(q.source));
+  else if (quotesListSourceFilter === "pedido") filtered = filtered.filter((q) => !esPedidoTiendaFilomena(q.source));
   if (search) {
     filtered = filtered.filter((q) =>
       (q.store_name || "").toLowerCase().includes(search) ||
@@ -7113,7 +7120,7 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
   }
 
   const pendientes = allQuotes.filter((q) => !q.is_ready).length;
-  const totalCotizaciones = allQuotes.filter((q) => String(q.source || "").trim() === "cotizacion").length;
+  const totalCotizaciones = allQuotes.filter((q) => esPedidoTiendaFilomena(q.source)).length;
   const filterBar = `
     <div class="ql-filters">
       <input id="quotesListSearchInput" type="text" class="ql-search" placeholder="Buscar por nombre o RUT…" value="${escapeHtmlExcel(quotesListSearchFilter)}">
@@ -7125,7 +7132,7 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
       <div class="ql-status-btns">
         <button type="button" class="ql-filter-btn${quotesListSourceFilter === "all" ? " active" : ""}" data-ql-source="all">Todos los orígenes</button>
         <button type="button" class="ql-filter-btn${quotesListSourceFilter === "pedido" ? " active" : ""}" data-ql-source="pedido">Solo pedidos</button>
-        <button type="button" class="ql-filter-btn${quotesListSourceFilter === "cotizacion" ? " active" : ""}" data-ql-source="cotizacion">Cotizaciones (${totalCotizaciones})</button>
+        <button type="button" class="ql-filter-btn${quotesListSourceFilter === "cotizacion" ? " active" : ""}" data-ql-source="cotizacion">Tienda Filomena (${totalCotizaciones})</button>
       </div>
     </div>
   `;
@@ -7160,7 +7167,7 @@ function renderCotizacionesAdmin(quotes = [], items = []) {
             </div>
             <div class="quote-code-row">
               <span class="quote-code-pill">${codigo}</span>
-              ${String(q.source || "").trim() === "cotizacion" ? '<span class="quote-code-pill" style="background:#e0f2fe;color:#0369a1;font-size:10px;">COTIZACIÓN</span>' : ""}
+              ${esPedidoTiendaFilomena(q.source) ? '<span class="quote-code-pill" style="background:#e0f2fe;color:#0369a1;font-size:10px;">PEDIDO TIENDA FILOMENA</span>' : ""}
               <button type="button" class="ghost-btn quote-export-btn" data-quote-export="${q.id}">Descargar pedido</button>
               <button type="button" class="ghost-btn quote-delete-btn" data-quote-delete="${q.id}">Eliminar pedido</button>
             </div>
