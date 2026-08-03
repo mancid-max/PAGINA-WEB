@@ -355,18 +355,34 @@ function construirEstadoCotizacionPersistido() {
   const rutEl = document.getElementById("clientRut");
   const nameEl = document.getElementById("clientName");
   const phoneEl = document.getElementById("clientPhone");
+  const extra = obtenerCamposExtraCliente();
   return {
     pedido: sanitizarPedidoPersistido(pedido),
     clientRut: String(rutEl?.value || "").trim(),
     clientName: String(nameEl?.value || "").trim(),
     clientPhone: String(phoneEl?.value || "").trim(),
+    clientNombreTienda: extra.nombre_tienda,
+    clientGiro: extra.giro,
+    clientDireccion: extra.direccion,
+    clientComuna: extra.comuna,
+    clientTransporte: extra.transporte,
   };
 }
 
 function guardarCotizacionPersistida() {
   try {
     const estado = construirEstadoCotizacionPersistido();
-    if (!estado.pedido.length && !estado.clientRut && !estado.clientName && !estado.clientPhone) {
+    if (
+      !estado.pedido.length
+      && !estado.clientRut
+      && !estado.clientName
+      && !estado.clientPhone
+      && !estado.clientNombreTienda
+      && !estado.clientGiro
+      && !estado.clientDireccion
+      && !estado.clientComuna
+      && !estado.clientTransporte
+    ) {
       localStorage.removeItem(CART_STORAGE_KEY);
       return;
     }
@@ -393,9 +409,20 @@ function restaurarCotizacionPersistida() {
     const rutEl = document.getElementById("clientRut");
     const nameEl = document.getElementById("clientName");
     const phoneEl = document.getElementById("clientPhone");
+    const extraFieldMap = {
+      clientNombreTienda: "clientNombreTienda",
+      clientGiro: "clientGiro",
+      clientDireccion: "clientDireccion",
+      clientComuna: "clientComuna",
+      clientTransporte: "clientTransporte",
+    };
     if (rutEl && estado?.clientRut) rutEl.value = String(estado.clientRut).trim();
     if (nameEl && estado?.clientName) nameEl.value = String(estado.clientName).trim();
     if (phoneEl && estado?.clientPhone) phoneEl.value = String(estado.clientPhone).trim();
+    Object.entries(extraFieldMap).forEach(([stateKey, fieldId]) => {
+      const el = document.getElementById(fieldId);
+      if (el && estado?.[stateKey]) el.value = String(estado[stateKey]).trim();
+    });
   } catch (_) {
     pedido = [];
     limpiarCotizacionPersistida();
@@ -5177,10 +5204,10 @@ async function validarRutClienteEnUI({ silencioso = false } = {}) {
         tipo: "new",
         texto: "Cliente nuevo detectado.",
       });
-    renderClientNewHelper(true, IS_COTIZACION_MODE ? "Completa nombre y teléfono para enviar el pedido." : "Completa los datos para enviar tu pedido.");
+    renderClientNewHelper(true, "Completa los datos para enviar tu pedido.");
     toggleClientNameField(true, { value: clienteNuevo.razon_social, readonly: false });
     toggleClientPhoneField(true, { value: clienteNuevo.client_phone, readonly: false });
-    if (!IS_COTIZACION_MODE) toggleClientExtraFields(true);
+    toggleClientExtraFields(true);
     guardarCotizacionPersistida();
     return clienteNuevo;
   }
@@ -5270,6 +5297,14 @@ function configurarLookupCliente() {
     });
     guardarCotizacionPersistida();
   });
+  ["clientNombreTienda", "clientGiro", "clientDireccion", "clientComuna", "clientTransporte"].forEach((id) => {
+    const extraInput = document.getElementById(id);
+    extraInput?.addEventListener("input", () => {
+      if (clienteSeleccionado) return;
+      clearCartFieldInvalid(extraInput);
+      guardarCotizacionPersistida();
+    });
+  });
 }
 
 function obtenerCamposExtraCliente() {
@@ -5302,7 +5337,7 @@ async function obtenerClienteParaCotizacion() {
 
   const nombre = String(nameEl?.value || "").trim();
   const telefono = normalizarTelefonoCliente(phoneEl?.value || "");
-  const helperMsg = IS_COTIZACION_MODE ? "Completa nombre y teléfono para enviar el pedido." : "Completa los datos para enviar tu pedido.";
+  const helperMsg = "Completa los datos para enviar tu pedido.";
   if (!nombre) {
     toggleClientNameField(true, { value: "", readonly: false });
     toggleClientPhoneField(true, { value: telefono, readonly: false });
@@ -5321,23 +5356,21 @@ async function obtenerClienteParaCotizacion() {
     phoneEl?.focus();
     throw new Error("Agrega el teléfono del cliente nuevo para enviar el pedido");
   }
-  if (!IS_COTIZACION_MODE) {
-    const extraCampos = [
-      { id: "clientNombreTienda", label: "Nombre de la tienda" },
-      { id: "clientGiro",        label: "Giro" },
-      { id: "clientDireccion",   label: "Dirección" },
-      { id: "clientComuna",      label: "Comuna" },
-      { id: "clientTransporte",  label: "Transporte" },
-    ];
-    for (const campo of extraCampos) {
-      const el = document.getElementById(campo.id);
-      if (!String(el?.value || "").trim()) {
-        renderClientNewHelper(true, helperMsg);
-        setCartFieldInvalid(el, `Completa ${campo.label.toLowerCase()}`);
-        setClientLookupUI({ tipo: "error", texto: "Completa los datos para enviar tu pedido." });
-        el?.focus();
-        throw new Error(`Completa el campo ${campo.label} para enviar el pedido`);
-      }
+  const extraCampos = [
+    { id: "clientNombreTienda", label: "Nombre de la tienda" },
+    { id: "clientGiro",        label: "Giro" },
+    { id: "clientDireccion",   label: "Dirección" },
+    { id: "clientComuna",      label: "Comuna" },
+    { id: "clientTransporte",  label: "Transporte" },
+  ];
+  for (const campo of extraCampos) {
+    const el = document.getElementById(campo.id);
+    if (!String(el?.value || "").trim()) {
+      renderClientNewHelper(true, helperMsg);
+      setCartFieldInvalid(el, `Completa ${campo.label.toLowerCase()}`);
+      setClientLookupUI({ tipo: "error", texto: "Completa los datos para enviar tu pedido." });
+      el?.focus();
+      throw new Error(`Completa el campo ${campo.label} para enviar el pedido`);
     }
   }
 
@@ -5370,7 +5403,7 @@ function construirPayloadCotizacion(cliente, itemsGroup = [], source = CATALOG_S
   });
 
   const distinctSources = [...new Set((Array.isArray(itemsGroup) ? itemsGroup : []).map((item) => resolverSourceItemPedido(item, source)).filter(Boolean))];
-  const quoteSource = IS_COTIZACION_MODE ? "cotizacion" : (distinctSources.length > 1 ? "catalogo-mixto" : (distinctSources[0] || source || CATALOG_SOURCE));
+  const quoteSource = IS_COTIZACION_MODE ? "tienda-filomena" : (distinctSources.length > 1 ? "catalogo-mixto" : (distinctSources[0] || source || CATALOG_SOURCE));
 
   return {
     quote: {
@@ -7696,6 +7729,12 @@ document.getElementById("sendRequest").onclick = async () => {
 
   const totalUnidades = pedido.reduce((s, item) =>
     s + Object.values(item.tallas).reduce((a, b) => a + (Number(b) || 0), 0), 0);
+  if (IS_COTIZACION_MODE && totalUnidades < 12) {
+    return mostrarToastError(
+      "Mínimo 12 unidades",
+      `Tu pedido tiene ${totalUnidades} unidad${totalUnidades !== 1 ? "es" : ""}. El pedido mínimo para Tienda Filomena es de 12 unidades.`
+    );
+  }
   if (!IS_COTIZACION_MODE && totalUnidades < 24) {
     return mostrarToastError(
       "Mínimo 24 unidades",
