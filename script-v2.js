@@ -431,7 +431,7 @@ function restaurarCotizacionPersistida() {
 
 const ASSET_VERSION = "20260703";
 const OPTIMIZED_IMAGE_ROOT = "Imagenes-web";
-const OPTIMIZED_IMAGE_SOURCE_ROOTS = ["Imagenes", "Imagenes2", "Imagenes3", "42", "43"];
+const OPTIMIZED_IMAGE_SOURCE_ROOTS = ["Imagenes", "Imagenes2", "Imagenes3", "42", "43", "44"];
 const IS_LOCAL_FILE_PROTOCOL = typeof window !== "undefined" && window.location?.protocol === "file:";
 const TEXT_NORMALIZATION_REPLACEMENTS = [
   [/Â·/g, "·"],
