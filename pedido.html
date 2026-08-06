@@ -517,7 +517,7 @@ function renderCatalog() {
     const jpg = p.main_image ? encodeURI("/"+p.main_image) : "";
     const inOrder = orderItems.some(i => i.sku === p.family);
     return `<div class="product-card${inOrder?" in-order":""}" onclick="openGallery('${p.family}')">
-      <div class="product-card-img">${jpg?`<img src="${jpg}" alt="${p.family}" loading="eager">`:""}
+      <div class="product-card-img">${jpg?`<img src="${jpg}" alt="${p.family}" loading="lazy">`:""}
       </div>
       <div class="product-card-info">
         <div class="product-card-code">C${p.collection} ${p.family}</div>
@@ -533,32 +533,6 @@ function renderCatalog() {
 }
 
 // ── GALLERY ──
-async function probeImages(mainImage) {
-  if (!mainImage) return [];
-  const slash = mainImage.lastIndexOf("/");
-  const dir = mainImage.substring(0, slash + 1);
-  const ext = (mainImage.match(/\.(jpg|jpeg|png)$/i)||[".jpg"])[0];
-
-  const probe = i => new Promise(resolve => {
-    const webp = "/Imagenes-web/" + dir + i + ".webp";
-    const jpg = "/" + dir + i + ext;
-    const img = new Image();
-    img.onload = () => resolve({webp, jpg});
-    img.onerror = () => {
-      const img2 = new Image();
-      img2.onload = () => resolve({webp:jpg, jpg});
-      img2.onerror = () => resolve(null);
-      img2.src = jpg;
-    };
-    img.src = webp;
-  });
-
-  const results = await Promise.all([0,1,2,3,4,5,6].map(probe));
-  const found = [];
-  for (const r of results) { if (!r) break; found.push(r); }
-  return found;
-}
-
 function openGallery(sku) {
   const p = catalog.find(x => x.family === sku);
   if (!p) return;
