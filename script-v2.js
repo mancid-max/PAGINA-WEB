@@ -2952,8 +2952,8 @@ function aplicarStockATallas(sku) {
       input.removeAttribute("max");
       input.removeAttribute("aria-disabled");
       textEl.innerText = talla;
-      badgeEl.hidden = false;
-      badgeEl.innerText = "Consultar";
+      badgeEl.hidden = true;
+      badgeEl.innerText = "";
       return;
     }
 
@@ -4100,7 +4100,7 @@ function actualizarCarrito() {
           <div class="cart-item-top">
             <div class="cart-item-main">
               <div class="cart-item-title">Modelo ${item.sku}</div>
-              <div class="cart-item-collection">${item.source === "catalogo-43" ? "Cole 43" : "Cole 42"}</div>
+              <div class="cart-item-collection">${item.source === "catalogo-43" ? "Cole 43" : item.source === "catalogo-44" ? "Cole 44" : "Cole 42"}</div>
             </div>
             <button class="cart-trash" type="button" aria-label="Eliminar modelo ${item.sku}" onclick="eliminarItem(${index})">
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -4162,7 +4162,7 @@ function actualizarCarrito() {
     ` : `
       <div class="cart-totals-head">
         <span class="cart-totals-title">Total a pagar</span>
-        <span class="cart-totals-note">5% web + IVA incluido</span>
+        <span class="cart-totals-note">${totalAhorro > 0 ? `${WEB_DISCOUNT_PERCENT}% web + IVA incluido` : "Precios + IVA incluido"}</span>
       </div>
       <div class="cart-totals-row"><span>Total prendas</span><strong>${totalItems}</strong></div>
       ${totalItems > 0 && totalItems < 24 ? `<div class="cart-totals-row" style="color:#b45309;font-size:12px;background:#fffbeb;padding:4px 8px;border-radius:4px;margin-top:2px;">⚠️ Faltan ${24 - totalItems} unidades para el mínimo (24)</div>` : ""}
