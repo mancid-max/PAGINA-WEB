@@ -3595,8 +3595,9 @@ function renderCatalogCardHtml(p) {
     : CATALOG_SOURCE === "catalogo-44"
       ? obtenerEstadoVisibilidadCatalogo44(p)
       : "";
+  const isAgotado = esProductoAgotado(p) || skuEstaAgotado(p._preferredSku || p.family);
   return `
-      <div class="card ${esProductoAgotado(p) ? "card-sold-out" : ""}" data-family="${p.family}" data-collection="${p._cotizacion_collection || ""}" onclick="verProductoDesdeCard('${p._baseFamily || p.family}','${p._preferredSku || p.family}')">
+      <div class="card ${isAgotado ? "card-sold-out" : ""}" data-family="${p.family}" data-collection="${p._cotizacion_collection || ""}" onclick="verProductoDesdeCard('${p._baseFamily || p.family}','${p._preferredSku || p.family}')">
         <div class="card-title-row">
           <div class="card-title-block">
             <div class="card-title">${(CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44" || IS_COTIZACION_MODE) && p.bota ? p.bota.charAt(0).toUpperCase() + p.bota.slice(1).toLowerCase() : "Modelo"} ${normalizarSkuCatalogo(p.family)}</div>
@@ -3619,7 +3620,7 @@ function renderCatalogCardHtml(p) {
                 : ""
             }
           </div>
-          ${esProductoAgotado(p) && CATALOG_SOURCE !== "catalogo-43" && CATALOG_SOURCE !== "catalogo-44" ? '<span class="card-stock-badge sold-out">Agotado</span>' : ""}
+          ${isAgotado && CATALOG_SOURCE !== "catalogo-43" && CATALOG_SOURCE !== "catalogo-44" ? '<span class="card-stock-badge sold-out">Agotado</span>' : ""}
         </div>
         <div class="card-image-wrap">
           ${
@@ -3653,8 +3654,8 @@ function renderCatalogCardHtml(p) {
                 </div>`
               : ""
           }
-          ${(CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44" || IS_COTIZACION_MODE) && !esProductoAgotado(p) ? '<span class="card-cta-hint">👆 Curva aquí</span>' : ""}
-          ${esProductoAgotado(p) && CATALOG_SOURCE !== "catalogo-44" ? '<span class="sold-out-ribbon sold-out-ribbon-card">AGOTADO</span>' : ""}
+          ${(CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44" || IS_COTIZACION_MODE) && !isAgotado ? '<span class="card-cta-hint">👆 Curva aquí</span>' : ""}
+          ${isAgotado && CATALOG_SOURCE !== "catalogo-44" ? '<span class="sold-out-ribbon sold-out-ribbon-card">AGOTADO</span>' : ""}
         </div>
       </div>
     `;
