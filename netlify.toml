@@ -45,6 +45,16 @@
   status = 301
 
 [[redirects]]
+  from = "/pedido"
+  to = "/pedido.html"
+  status = 200
+
+[[redirects]]
+  from = "/pedido.html"
+  to = "/pedido"
+  status = 301
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
