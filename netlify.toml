@@ -45,6 +45,18 @@
   status = 301
 
 [[redirects]]
+  from = "/cotizacion"
+  to = "/"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/cotizacion.html"
+  to = "/"
+  status = 302
+  force = true
+
+[[redirects]]
   from = "/pedido"
   to = "/pedido.html"
   status = 200
