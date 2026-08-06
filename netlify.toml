@@ -46,14 +46,14 @@
 
 [[redirects]]
   from = "/cotizacion"
-  to = "/"
-  status = 302
+  to = "/404"
+  status = 404
   force = true
 
 [[redirects]]
   from = "/cotizacion.html"
-  to = "/"
-  status = 302
+  to = "/404"
+  status = 404
   force = true
 
 [[redirects]]
