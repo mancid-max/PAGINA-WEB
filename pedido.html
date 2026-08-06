@@ -504,7 +504,7 @@ function renderCatalog() {
     const jpg = "/" + (p.main_image||"");
     const inOrder = orderItems.some(i => i.sku === p.family);
     return `<div class="product-card${inOrder?" in-order":""}" onclick="openGallery('${p.family}')">
-      <img src="${webp}" loading="lazy" onerror="this.src='${jpg}'" alt="${p.family}">
+      <img src="${webp}" onerror="this.src='${jpg}'" alt="${p.family}">
       <div class="product-card-info">
         <div class="product-card-code">C${p.collection} ${p.family}</div>
         ${price
