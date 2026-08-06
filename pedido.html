@@ -72,8 +72,7 @@ body{font-family:var(--font);background:var(--gray-bg);color:#1a1a2e;font-size:1
   cursor:pointer;transition:all .15s;background:var(--white)}
 .product-card:hover{border-color:var(--navy);box-shadow:0 2px 8px rgba(26,35,64,.15);transform:translateY(-1px)}
 .product-card.in-order{border-color:var(--green);background:#f0fdf4}
-.product-card-img{width:100%;aspect-ratio:3/4;background:#e8e9ed;overflow:hidden;position:relative}
-.product-card-img img{width:100%;height:100%;object-fit:cover;display:block}
+.product-card-img{width:100%;padding-bottom:133%;background:#e8e9ed center/cover no-repeat}
 .product-card-info{padding:5px 7px}
 .product-card-code{font-size:10px;font-weight:700;color:var(--navy)}
 .product-card-price{font-size:10px;color:var(--green);font-weight:600}
@@ -124,7 +123,7 @@ table.order-table tr.total-row td{background:var(--navy);color:var(--white);font
 .gallery-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);
   display:flex;align-items:center;justify-content:center;z-index:300}
 .gallery-container{background:var(--white);border-radius:14px;
-  max-width:520px;width:95vw;height:min(92vh,780px);
+  max-width:520px;width:95vw;max-height:min(96vh,880px);
   display:flex;flex-direction:column;overflow:hidden;position:relative;
   box-shadow:0 24px 80px rgba(0,0,0,.5)}
 .gallery-close{position:absolute;top:10px;right:12px;z-index:10;
@@ -154,6 +153,15 @@ table.order-table tr.total-row td{background:var(--navy);color:var(--white);font
 .g-add-btn:hover{background:var(--navy-light)}
 .g-add-btn.in-order{background:var(--green)}
 .g-loading{color:var(--gray-text);font-size:13px;text-align:center;padding:40px}
+.gallery-sizes{padding:10px 16px 6px;flex-shrink:0;border-top:1px solid var(--gray-border)}
+.gs-label{font-size:10px;font-weight:700;color:var(--gray-text);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+.gs-grid{display:flex;gap:5px;flex-wrap:wrap}
+.gs-col{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:30px}
+.gs-col span{font-size:10px;color:var(--gray-text);font-weight:600}
+.gs-col input{width:32px;padding:4px 2px;text-align:center;border:1px solid var(--gray-border);
+  border-radius:4px;font-size:12px;font-family:var(--font);background:var(--white);color:var(--navy)}
+.gs-col input.has-qty{background:#eff6ff;border-color:#93c5fd;font-weight:700}
+.gs-col input:focus{outline:none;border-color:var(--navy)}
 
 /* SUCCESS MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);
@@ -336,6 +344,10 @@ table.order-table tr.total-row td{background:var(--navy);color:var(--white);font
       <button class="g-nav" id="gNext" onclick="gNav(1)">›</button>
     </div>
     <div class="gallery-dots" id="galleryDots"></div>
+    <div class="gallery-sizes">
+      <div class="gs-label">Curva de tallas</div>
+      <div class="gs-grid" id="gallerySizesGrid"></div>
+    </div>
     <div class="gallery-footer">
       <button class="g-add-btn" id="gAddBtn" onclick="galleryAdd()">+ Agregar al pedido</button>
     </div>
@@ -502,12 +514,9 @@ function renderCatalog() {
   grid.innerHTML = list.map(p => {
     const price = getPrice(p);
     const jpg = p.main_image ? encodeURI("/"+p.main_image) : "";
-    const webp = getWebp(p.main_image);
     const inOrder = orderItems.some(i => i.sku === p.family);
     return `<div class="product-card${inOrder?" in-order":""}" onclick="openGallery('${p.family}')">
-      <div class="product-card-img">
-        <img src="${webp}" onerror="if(this.src!=='${jpg}')this.src='${jpg}'" alt="${p.family}">
-      </div>
+      <div class="product-card-img" style="${jpg?`background-image:url('${jpg}')`:""}"></div>
       <div class="product-card-info">
         <div class="product-card-code">C${p.collection} ${p.family}</div>
         ${price
@@ -573,6 +582,20 @@ function openGallery(sku) {
   img.style.display = "";
 
   renderGalleryImage();
+
+  // Poblar curva de tallas
+  const existing = orderItems.find(i => i.sku === sku);
+  document.getElementById("gallerySizesGrid").innerHTML = SIZES.map(sz => {
+    const qty = existing ? (existing.sizes[sz] || 0) : 0;
+    return `<div class="gs-col">
+      <span>${sz}</span>
+      <input type="number" id="gSz${sz}" min="0" max="999"
+        value="${qty||""}" placeholder="0"
+        class="${qty>0?"has-qty":""}"
+        oninput="this.classList.toggle('has-qty',+this.value>0)">
+    </div>`;
+  }).join("");
+
   updateGAddBtn();
 }
 
@@ -623,31 +646,28 @@ function toggleZoom(e) {
 function updateGAddBtn() {
   const btn = document.getElementById("gAddBtn");
   const inOrder = gSku && orderItems.some(i => i.sku === gSku);
-  btn.textContent = inOrder ? "✓ Agregado — Quitar del pedido" : "+ Agregar al pedido";
+  btn.textContent = inOrder ? "✓ Actualizar pedido" : "+ Agregar al pedido";
   btn.className = "g-add-btn" + (inOrder ? " in-order" : "");
 }
 
 function galleryAdd() {
   if (!gSku) return;
-  toggleProduct(gSku);
-  updateGAddBtn();
-}
-
-function closeGallery() {
-  document.getElementById("galleryModal").classList.add("hidden");
-  gSku = null; gImages = [];
-}
-
-// ── ORDER ──
-function toggleProduct(sku) {
-  const idx = orderItems.findIndex(i => i.sku === sku);
+  const sizes = {};
+  SIZES.forEach(sz => {
+    const el = document.getElementById("gSz" + sz);
+    sizes[sz] = Math.max(0, parseInt(el?.value||"0")||0);
+  });
+  const total = Object.values(sizes).reduce((a,b)=>a+b, 0);
+  const idx = orderItems.findIndex(i => i.sku === gSku);
   if (idx >= 0) {
-    orderItems.splice(idx, 1);
-  } else {
-    const p = catalog.find(x => x.family === sku);
+    if (total === 0) {
+      orderItems.splice(idx, 1);
+    } else {
+      orderItems[idx].sizes = sizes;
+    }
+  } else if (total > 0) {
+    const p = catalog.find(x => x.family === gSku);
     if (!p) return;
-    const sizes = {};
-    SIZES.forEach(s => sizes[s] = 0);
     orderItems.push({
       sku: p.family, collection: p.collection,
       description: (p.description||p.family).replace(/jean\s+cole\s+\d+/i,"").trim() || p.family,
@@ -656,7 +676,16 @@ function toggleProduct(sku) {
     });
   }
   renderCatalog(); renderOrder();
+  if (total > 0) closeGallery();
+  else updateGAddBtn();
 }
+
+function closeGallery() {
+  document.getElementById("galleryModal").classList.add("hidden");
+  gSku = null; gImages = [];
+}
+
+// ── ORDER ──
 
 function removeItem(sku) { orderItems = orderItems.filter(i => i.sku !== sku); renderCatalog(); renderOrder(); }
 
