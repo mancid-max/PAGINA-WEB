@@ -72,7 +72,8 @@ body{font-family:var(--font);background:var(--gray-bg);color:#1a1a2e;font-size:1
   cursor:pointer;transition:all .15s;background:var(--white)}
 .product-card:hover{border-color:var(--navy);box-shadow:0 2px 8px rgba(26,35,64,.15);transform:translateY(-1px)}
 .product-card.in-order{border-color:var(--green);background:#f0fdf4}
-.product-card-img{width:100%;padding-bottom:133%;background:#e8e9ed center/cover no-repeat}
+.product-card-img{width:100%;padding-bottom:133%;height:0;position:relative;background:#e8e9ed;overflow:hidden}
+.product-card-img img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:block}
 .product-card-info{padding:5px 7px}
 .product-card-code{font-size:10px;font-weight:700;color:var(--navy)}
 .product-card-price{font-size:10px;color:var(--green);font-weight:600}
@@ -516,7 +517,8 @@ function renderCatalog() {
     const jpg = p.main_image ? encodeURI("/"+p.main_image) : "";
     const inOrder = orderItems.some(i => i.sku === p.family);
     return `<div class="product-card${inOrder?" in-order":""}" onclick="openGallery('${p.family}')">
-      <div class="product-card-img" style="${jpg?`background-image:url('${jpg}')`:""}"></div>
+      <div class="product-card-img">${jpg?`<img src="${jpg}" alt="${p.family}" loading="eager">`:""}
+      </div>
       <div class="product-card-info">
         <div class="product-card-code">C${p.collection} ${p.family}</div>
         ${price
