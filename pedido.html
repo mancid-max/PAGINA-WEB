@@ -72,7 +72,8 @@ body{font-family:var(--font);background:var(--gray-bg);color:#1a1a2e;font-size:1
   cursor:pointer;transition:all .15s;background:var(--white)}
 .product-card:hover{border-color:var(--navy);box-shadow:0 2px 8px rgba(26,35,64,.15);transform:translateY(-1px)}
 .product-card.in-order{border-color:var(--green);background:#f0fdf4}
-.product-card img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;background:#eee}
+.product-card-img{width:100%;aspect-ratio:3/4;background:#e8e9ed;overflow:hidden;position:relative}
+.product-card-img img{width:100%;height:100%;object-fit:cover;display:block}
 .product-card-info{padding:5px 7px}
 .product-card-code{font-size:10px;font-weight:700;color:var(--navy)}
 .product-card-price{font-size:10px;color:var(--green);font-weight:600}
@@ -500,11 +501,13 @@ function renderCatalog() {
   }
   grid.innerHTML = list.map(p => {
     const price = getPrice(p);
+    const jpg = p.main_image ? encodeURI("/"+p.main_image) : "";
     const webp = getWebp(p.main_image);
-    const jpg = "/" + (p.main_image||"");
     const inOrder = orderItems.some(i => i.sku === p.family);
     return `<div class="product-card${inOrder?" in-order":""}" onclick="openGallery('${p.family}')">
-      <img src="${webp}" onerror="this.src='${jpg}'" alt="${p.family}">
+      <div class="product-card-img">
+        <img src="${webp}" onerror="if(this.src!=='${jpg}')this.src='${jpg}'" alt="${p.family}">
+      </div>
       <div class="product-card-info">
         <div class="product-card-code">C${p.collection} ${p.family}</div>
         ${price
@@ -545,10 +548,17 @@ async function probeImages(mainImage) {
   return found;
 }
 
-async function openGallery(sku) {
+function openGallery(sku) {
   const p = catalog.find(x => x.family === sku);
   if (!p) return;
-  gSku = sku; gIdx = 0; gZoomed = false; gImages = [];
+  gSku = sku; gIdx = 0; gZoomed = false;
+
+  // Usar gallery del JSON directamente (sin probing)
+  const paths = (p.gallery && p.gallery.length) ? p.gallery : (p.main_image ? [p.main_image] : []);
+  gImages = paths.map(path => ({
+    webp: getWebp(path),
+    jpg: encodeURI("/"+path)
+  }));
 
   const modal = document.getElementById("galleryModal");
   modal.classList.remove("hidden");
@@ -556,23 +566,12 @@ async function openGallery(sku) {
   const price = getPrice(p);
   document.getElementById("galleryPrice").textContent = price ? "$" + price.toLocaleString("es-CL") : "";
 
-  // reset
   const img = document.getElementById("galleryImg");
-  img.style.display = "none"; img.style.transform = "scale(1)";
+  img.style.transform = "scale(1)";
   document.getElementById("galleryImgWrap").classList.remove("zoomed");
-  document.getElementById("galleryLoading").style.display = "";
-  document.getElementById("galleryDots").innerHTML = "";
-  document.getElementById("gPrev").disabled = true;
-  document.getElementById("gNext").disabled = true;
-  updateGAddBtn();
-
-  gImages = await probeImages(p.main_image);
-  if (!gImages.length && p.main_image) {
-    gImages = [{ webp: getWebp(p.main_image), jpg: "/" + p.main_image }];
-  }
-
   document.getElementById("galleryLoading").style.display = "none";
   img.style.display = "";
+
   renderGalleryImage();
   updateGAddBtn();
 }
