@@ -6467,6 +6467,15 @@ function construirResumenVentasColecciones(quotes = [], itemsMap = new Map()) {
       sizes: {},
       models: new Map(),
     },
+    "catalogo-44": {
+      key: "catalogo-44",
+      label: "Cole 44",
+      totalPrendas: 0,
+      totalDinero: 0,
+      totalPedidos: 0,
+      sizes: {},
+      models: new Map(),
+    },
   };
 
   quotesMes.forEach((quote) => {
@@ -6478,7 +6487,7 @@ function construirResumenVentasColecciones(quotes = [], itemsMap = new Map()) {
       const sku = normalizarSkuCatalogo(item?.sku);
       if (!sku) return;
       const source = String(item?.source || inferirCatalogoDesdeSku(sku) || quote?.source || CATALOG_SOURCE).trim() || CATALOG_SOURCE;
-      const collectionKey = source === "catalogo-43" ? "catalogo-43" : "catalogo-42";
+      const collectionKey = source === "catalogo-43" ? "catalogo-43" : source === "catalogo-44" ? "catalogo-44" : "catalogo-42";
       const collection = collections[collectionKey];
       const size = String(item?.size || "").trim().toUpperCase() || "SIN TALLA";
       const precioUnitario = Number(obtenerPrecioCatalogo(sku, source)) || 0;
