@@ -3276,7 +3276,7 @@ function inicializarBuscadorModelos() {
     if (!term.raw) return true;
     if (model.raw.includes(term.raw)) return true;
     if (term.sku && model.sku.includes(term.sku)) return true;
-    if (term.digits && model.digits.includes(term.digits)) return true;
+    if (term.digits && model.digits.startsWith(term.digits)) return true;
     if (esBusquedaTipoSku(termValue)) return false;
     if (term.base && model.base === term.base) return true;
     return false;
