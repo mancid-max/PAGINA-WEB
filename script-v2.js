@@ -2135,6 +2135,8 @@ function prepararCatalogo44Directo(items = []) {
       const images = obtenerImagenesReales(item);
       const mainImage = images[0] || "";
       if (!family || !mainImage) return null;
+      const stock = obtenerStockParaSkuDesdeItems(family, stockBySkuCatalogo44);
+      const stockTotal = Math.max(0, Number(stock?.total) || 0);
       return {
         ...item,
         family,
@@ -2145,11 +2147,12 @@ function prepararCatalogo44Directo(items = []) {
         _preferredSku: family,
         _cardImage: mainImage,
         _preferredImages: [...images],
-        _stockTotal: 0,
+        _stockTotal: stockTotal,
         isSoldOut: false,
       };
     })
-    .filter(Boolean);
+    .filter(Boolean)
+    .sort((a, b) => (Number(b._stockTotal) || 0) - (Number(a._stockTotal) || 0));
 
   return {
     productos: directItems,
