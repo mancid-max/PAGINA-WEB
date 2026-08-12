@@ -1206,5 +1206,25 @@
     "tiro": "",
     "bota": "",
     "fabric": ""
+  },
+  {
+    "family": "4479-00",
+    "main_image": "43/43/4309/editar/Mohicano-86 copie.jpg",
+    "gallery": [
+      "43/43/4309/editar/Mohicano-86 copie.jpg",
+      "43/43/4309/editar/Mohicano-88.jpg",
+      "43/43/4309/editar/Mohicano-90.jpg",
+      "43/43/4309/editar/Mohicano-93.jpg",
+      "43/43/4309/editar/Mohicano-100.jpg"
+    ],
+    "description": "JEAN · Cole 44",
+    "characteristics": [
+      "Tipo: JEAN"
+    ],
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "",
+    "bota": "",
+    "fabric": ""
   }
 ]
