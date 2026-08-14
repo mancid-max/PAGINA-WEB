@@ -57,6 +57,16 @@
   force = true
 
 [[redirects]]
+  from = "/cole-44"
+  to = "/cole-44.html"
+  status = 200
+
+[[redirects]]
+  from = "/cole-44.html"
+  to = "/cole-44"
+  status = 301
+
+[[redirects]]
   from = "/pedido"
   to = "/pedido.html"
   status = 200
@@ -64,6 +74,11 @@
 [[redirects]]
   from = "/pedido.html"
   to = "/pedido"
+  status = 301
+
+[[redirects]]
+  from = "/"
+  to = "/cole-44"
   status = 301
 
 [[redirects]]
