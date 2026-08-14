@@ -77,6 +77,16 @@
   status = 301
 
 [[redirects]]
+  from = "/pedido-v2"
+  to = "/pedido-v2.html"
+  status = 200
+
+[[redirects]]
+  from = "/pedido-v2.html"
+  to = "/pedido-v2"
+  status = 301
+
+[[redirects]]
   from = "/"
   to = "/cole-44"
   status = 301

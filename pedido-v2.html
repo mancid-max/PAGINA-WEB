@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Colección 44 | Mohicano Jeans — Pedidos Mayoristas</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23d81f2a'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='16' font-weight='bold' fill='white' text-anchor='middle'%3E44%3C/text%3E%3C/svg%3E">
+<script src="xlsx.full.min.js"></script>
+<style>
+:root{
+  --rojo:#d81f2a;--rojo-osc:#a3121b;--verde:#00923f;
+  --tinta:#12283a;--gris:#5b6b7a;--celeste:#eaf6fb;--celeste2:#cfe9f5;
+  --blanco:#ffffff;--sombra:0 10px 30px rgba(18,40,58,.10);--radio:18px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Segoe UI',system-ui,sans-serif;color:var(--tinta);background:radial-gradient(1200px 600px at 50% -100px,#fff 0%,var(--celeste) 45%,var(--celeste2) 100%) fixed;min-height:100vh}
+
+/* cinta marquee */
+.cinta{background:var(--tinta);color:#fff;font-size:.72rem;letter-spacing:.14em;padding:.45rem 0;white-space:nowrap;overflow:hidden}
+.cinta span{display:inline-block;padding-left:100%;animation:marquee 32s linear infinite}
+@keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
+
+/* hero */
+header.hero{max-width:1100px;margin:0 auto;padding:2.2rem 1.2rem 1rem;text-align:center}
+.bandera{display:inline-flex;height:6px;width:120px;border-radius:3px;overflow:hidden;margin-bottom:1rem}
+.bandera i{flex:1}
+.bandera i:nth-child(1){background:var(--verde)}
+.bandera i:nth-child(2){background:#fff;border-top:1px solid #e2e8ee;border-bottom:1px solid #e2e8ee}
+.bandera i:nth-child(3){background:var(--rojo)}
+.hero .presenta{font-size:.8rem;letter-spacing:.5em;color:var(--gris);text-transform:uppercase}
+.hero h1{font-size:clamp(2.6rem,7vw,4.6rem);font-weight:800;letter-spacing:.06em;line-height:1.05;color:var(--rojo);text-transform:uppercase}
+.hero .sub{margin-top:.4rem;font-weight:600;letter-spacing:.3em;color:var(--tinta);text-transform:uppercase;font-size:clamp(.8rem,2.2vw,1rem)}
+.hero .nota{margin-top:.9rem;color:var(--gris);font-size:.92rem;max-width:600px;margin-left:auto;margin-right:auto}
+.hero .acciones{margin-top:1.2rem;display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap}
+
+/* botones */
+.btn{display:inline-flex;align-items:center;gap:.5rem;border:none;cursor:pointer;font-family:inherit;font-weight:600;font-size:.9rem;border-radius:999px;padding:.72rem 1.35rem;transition:transform .15s,box-shadow .15s;text-decoration:none}
+.btn:active{transform:scale(.97)}
+.btn-rojo{background:var(--rojo);color:#fff;box-shadow:0 8px 20px rgba(216,31,42,.35)}
+.btn-rojo:hover{background:var(--rojo-osc)}
+.btn-borde{background:#fff;color:var(--tinta);border:1.5px solid #d8e4ec}
+.btn-borde:hover{border-color:var(--tinta)}
+.btn-wsp{background:#25d366;color:#fff;box-shadow:0 8px 20px rgba(37,211,102,.3)}
+.btn-wsp:hover{background:#1fb457}
+.btn-sm{padding:.5rem .9rem;font-size:.8rem}
+
+/* filtros */
+.barra-filtros{max-width:1100px;margin:1.4rem auto .4rem;padding:0 1.2rem;display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;justify-content:center}
+.chip{border:1.5px solid #d8e4ec;background:#fff;border-radius:999px;padding:.45rem 1.1rem;font-family:inherit;font-size:.82rem;font-weight:600;color:var(--gris);cursor:pointer;transition:all .15s}
+.chip.activo{background:var(--tinta);border-color:var(--tinta);color:#fff}
+.busca{border:1.5px solid #d8e4ec;border-radius:999px;padding:.5rem 1.1rem;font-family:inherit;font-size:.85rem;min-width:220px;outline:none;background:#fff}
+.busca:focus{border-color:var(--rojo)}
+
+/* grid */
+main{max-width:1100px;margin:0 auto;padding:1rem 1.2rem 4rem}
+.titulo-sec{text-align:center;margin:2.2rem 0 1.2rem}
+.titulo-sec h2{color:var(--rojo);font-size:clamp(1.3rem,4vw,2rem);font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.titulo-sec span{display:block;color:var(--gris);font-size:.75rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;margin-top:.2rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.2rem}
+
+/* card */
+.card{background:#fff;border-radius:var(--radio);overflow:hidden;box-shadow:var(--sombra);display:flex;flex-direction:column;transition:transform .18s,box-shadow .18s;position:relative}
+.card:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(18,40,58,.16)}
+.card .marco{position:relative;cursor:pointer;background:linear-gradient(180deg,#eef8fd,#dbeef7)}
+.card .marco img{display:block;width:100%;aspect-ratio:3/4;object-fit:cover;loading:lazy}
+.card .lupa{position:absolute;right:.6rem;bottom:.6rem;background:rgba(255,255,255,.92);border-radius:999px;font-size:.68rem;font-weight:600;color:var(--tinta);padding:.28rem .65rem;pointer-events:none}
+.badge{position:absolute;left:.6rem;top:.6rem;font-size:.62rem;font-weight:700;letter-spacing:.08em;padding:.28rem .65rem;border-radius:999px;text-transform:uppercase}
+.badge-disp{background:#e9f9f0;color:#0c6b3d;border:1px solid #bfe9d2}
+.badge-prod{background:rgba(18,40,58,.82);color:#fff}
+.card .cuerpo{padding:.85rem 1rem 1rem;display:flex;flex-direction:column;gap:.55rem;flex:1}
+.card h3{font-size:1rem;font-weight:700;letter-spacing:.03em}
+.card .codigo{font-size:.75rem;color:var(--gris);font-weight:500}
+.card .precio{font-size:1rem;font-weight:700;color:var(--tinta)}
+.card .precio small{display:block;font-size:.65rem;font-weight:500;color:var(--gris)}
+.card .botones{margin-top:auto;display:flex;gap:.5rem}
+.card .botones .btn{flex:1;justify-content:center;padding:.55rem .8rem;font-size:.8rem}
+.card-agotada .marco{opacity:.7}
+.card-agotada .card-overlay{position:absolute;inset:0;display:flex;align-items:flex-end;padding:.7rem;pointer-events:none}
+
+/* fab */
+.fab-carrito{position:fixed;right:1.2rem;bottom:1.2rem;z-index:60;background:var(--tinta);color:#fff;border:none;cursor:pointer;border-radius:999px;padding:.9rem 1.4rem;font-family:inherit;font-weight:600;font-size:.92rem;display:flex;align-items:center;gap:.6rem;box-shadow:0 12px 32px rgba(18,40,58,.35)}
+.fab-carrito .num{background:var(--rojo);border-radius:999px;min-width:1.5rem;height:1.5rem;display:grid;place-items:center;font-size:.75rem}
+
+/* modal */
+.velo{position:fixed;inset:0;background:rgba(12,25,36,.55);backdrop-filter:blur(3px);z-index:70;display:none;align-items:center;justify-content:center;padding:1rem}
+.velo.abierto{display:flex}
+.modal{background:#fff;border-radius:22px;max-width:940px;width:100%;max-height:92vh;overflow:auto;position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media(max-width:740px){.modal{grid-template-columns:1fr}}
+.modal .galeria{background:linear-gradient(180deg,#eef8fd,#dbeef7);padding:1rem;display:flex;flex-direction:column;gap:.6rem}
+.modal .galeria .principal img{width:100%;border-radius:14px;display:block;max-height:480px;object-fit:contain}
+.modal .galeria .minis{display:flex;gap:.5rem;flex-wrap:wrap}
+.modal .galeria .minis img{width:68px;height:68px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid transparent}
+.modal .galeria .minis img.activa{border-color:var(--rojo)}
+.modal .datos{padding:1.5rem;display:flex;flex-direction:column;gap:.85rem;overflow:auto}
+.modal .datos h2{color:var(--rojo);font-size:1.6rem;font-weight:800}
+.modal .datos .cod{color:var(--gris);font-weight:600;font-size:.88rem;margin-top:-.5rem}
+.modal .datos .precio-g{font-size:1.25rem;font-weight:800}
+.modal .datos .precio-g small{font-size:.7rem;color:var(--gris);font-weight:500;display:block}
+.tallas-caja{border:1.5px solid #e4edf3;border-radius:14px;padding:.9rem}
+.tallas-caja h4{font-size:.75rem;text-transform:uppercase;letter-spacing:.12em;color:var(--gris);margin-bottom:.6rem}
+.talla-fila{display:grid;grid-template-columns:3rem 1fr auto;align-items:center;gap:.6rem;padding:.28rem 0}
+.talla-fila .t{font-weight:700;font-size:.92rem}
+.stepper{display:flex;align-items:center;gap:.5rem}
+.stepper button{width:1.9rem;height:1.9rem;border-radius:8px;border:1.5px solid #d8e4ec;background:#fff;color:var(--tinta);font-size:1rem;font-weight:700;cursor:pointer}
+.stepper button:hover{border-color:var(--rojo);color:var(--rojo)}
+.stepper .cant{min-width:1.8rem;text-align:center;font-weight:700;font-size:.92rem}
+.total-modal{display:flex;justify-content:space-between;align-items:center;font-weight:700}
+.aviso-min{font-size:.76rem;color:var(--rojo-osc);background:#fdecee;border-radius:10px;padding:.5rem .75rem;display:none}
+.aviso-min.ver{display:block}
+.modal .cerrar,.cajon .cerrar{position:absolute;top:.85rem;right:.85rem;width:2.2rem;height:2.2rem;border-radius:999px;border:none;cursor:pointer;background:#f1f6f9;color:var(--tinta);font-size:1rem;font-weight:700;z-index:5}
+
+/* cajón */
+.cajon-velo{position:fixed;inset:0;background:rgba(12,25,36,.45);z-index:80;display:none}
+.cajon-velo.abierto{display:block}
+.cajon{position:fixed;top:0;right:0;height:100dvh;width:min(460px,100vw);background:#fff;z-index:90;transform:translateX(105%);transition:transform .25s ease;display:flex;flex-direction:column;box-shadow:-16px 0 48px rgba(12,25,36,.25)}
+.cajon.abierto{transform:translateX(0)}
+.cajon header{padding:1.2rem 1.3rem .9rem;border-bottom:1px solid #edf3f7;position:relative}
+.cajon header h2{font-size:1.15rem;font-weight:800}
+.cajon header p{font-size:.75rem;color:var(--gris)}
+.cajon .items{flex:1;overflow:auto;padding:1rem 1.3rem;display:flex;flex-direction:column;gap:.9rem}
+.item-c{border:1.5px solid #e4edf3;border-radius:14px;padding:.85rem;display:flex;gap:.75rem}
+.item-c img{width:60px;height:60px;object-fit:cover;border-radius:8px;align-self:flex-start;flex-shrink:0}
+.item-c .info{flex:1;min-width:0}
+.item-c .info h4{font-size:.88rem;font-weight:700}
+.item-c .info .cod{font-size:.7rem;color:var(--gris)}
+.item-c .tallas-mini{display:flex;flex-wrap:wrap;gap:.28rem;margin:.4rem 0}
+.item-c .tallas-mini span{font-size:.65rem;background:var(--celeste);border-radius:6px;padding:.18rem .4rem;font-weight:600}
+.item-c .abajo{display:flex;justify-content:space-between;align-items:center;font-size:.78rem}
+.item-c .abajo b{font-size:.86rem}
+.item-c .quitar{border:none;background:none;color:var(--rojo);cursor:pointer;font-size:.72rem;font-weight:600;text-decoration:underline}
+.item-c .editar{border:none;background:none;color:var(--tinta);cursor:pointer;font-size:.72rem;font-weight:600;text-decoration:underline;margin-right:.5rem}
+.vacio{color:var(--gris);text-align:center;padding:2.5rem 1rem;font-size:.88rem}
+.cajon footer{border-top:1px solid #edf3f7;padding:1rem 1.3rem 1.2rem;display:flex;flex-direction:column;gap:.65rem}
+.cajon footer .linea{display:flex;justify-content:space-between;font-size:.86rem}
+.cajon footer .linea.total{font-size:1rem;font-weight:800}
+.form-caja{display:none;flex-direction:column;gap:.5rem}
+.form-caja.ver{display:flex}
+.form-caja input,.form-caja textarea{border:1.5px solid #d8e4ec;border-radius:10px;padding:.6rem .85rem;font-family:inherit;font-size:.84rem;outline:none;width:100%}
+.form-caja input:focus,.form-caja textarea:focus{border-color:var(--rojo)}
+.form-caja label{font-size:.7rem;font-weight:600;color:var(--gris);text-transform:uppercase;letter-spacing:.08em}
+.exito{display:none;background:#e9f9f0;border:1.5px solid #bfe9d2;color:#0c6b3d;border-radius:12px;padding:.85rem;font-size:.82rem;font-weight:500}
+.exito.ver{display:block}
+
+/* pie */
+footer.pie{text-align:center;color:var(--gris);font-size:.8rem;padding:2rem 1rem 6rem;border-top:1px solid #e4edf3;margin-top:3rem}
+.pie-flag{display:flex;height:7px;max-width:120px;margin:0 auto .8rem;border-radius:3px;overflow:hidden}
+.pie-flag i{flex:1}
+.pie-flag i:nth-child(1){background:var(--verde)}
+.pie-flag i:nth-child(2){background:#fff}
+.pie-flag i:nth-child(3){background:var(--rojo)}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:5.5rem;transform:translateX(-50%) translateY(20px);background:var(--tinta);color:#fff;padding:.65rem 1.2rem;border-radius:999px;font-size:.83rem;font-weight:600;opacity:0;pointer-events:none;transition:all .25s;z-index:100;box-shadow:0 10px 28px rgba(0,0,0,.3)}
+.toast.ver{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="cinta"><span>COLECCIÓN 44 · NUEVA TEMPORADA · PEDIDOS MAYORISTAS · MÍNIMO 12 UNIDADES POR MODELO · COLECCIÓN 44 · NUEVA TEMPORADA · PEDIDOS MAYORISTAS · MÍNIMO 12 UNIDADES POR MODELO ·&nbsp;</span></div>
+
+<header class="hero">
+  <div class="bandera"><i></i><i></i><i></i></div>
+  <p class="presenta">Mohicano presenta</p>
+  <h1>Colección 44</h1>
+  <p class="sub">Nueva Temporada · Pedidos Mayoristas</p>
+  <p class="nota">Catálogo exclusivo para mayoristas — <b id="total-modelos">62</b> modelos. Explora, arma tus curvas por talla y descarga tu <b>Excel</b> con el pedido listo.</p>
+  <div class="acciones">
+    <a class="btn btn-wsp" href="https://wa.me/56912345678" target="_blank" rel="noopener">💬 Hablar con ventas</a>
+    <a class="btn btn-borde" href="/cole-44">Ver catálogo completo</a>
+  </div>
+</header>
+
+<div class="barra-filtros">
+  <button class="chip activo" data-filtro="todos">Todos</button>
+  <button class="chip" data-filtro="disponible">✅ Disponibles</button>
+  <button class="chip" data-filtro="produccion">🔧 En producción</button>
+  <input class="busca" id="busca" type="search" placeholder="Buscar modelo (ej: 4431)…">
+</div>
+
+<main>
+  <div id="sec-disponibles">
+    <div class="titulo-sec">
+      <h2>Disponibles</h2>
+      <span>Stock listo para despacho</span>
+    </div>
+    <div class="grid" id="grid-disponibles"></div>
+  </div>
+  <div id="sec-produccion">
+    <div class="titulo-sec">
+      <h2>En Producción</h2>
+      <span>Próximamente disponibles</span>
+    </div>
+    <div class="grid" id="grid-produccion"></div>
+  </div>
+</main>
+
+<footer class="pie">
+  <div class="pie-flag"><i></i><i></i><i></i></div>
+  Mohicano Jeans · Colección 44 · Pedidos mayoristas<br>
+  <a href="https://mohicanojeans.netlify.app/cole-44" target="_blank">mohicanojeans.netlify.app/cole-44</a>
+</footer>
+
+<button class="fab-carrito" id="abrir-carrito">🛒 Tu pedido <span class="num" id="num-carrito">0</span></button>
+
+<!-- modal producto -->
+<div class="velo" id="velo-modal">
+  <div class="modal">
+    <button class="cerrar" id="cerrar-modal">✕</button>
+    <div class="galeria">
+      <div class="principal"><img id="img-principal" src="" alt=""></div>
+      <div class="minis" id="minis"></div>
+    </div>
+    <div class="datos">
+      <h2 id="m-nombre"></h2>
+      <p class="cod" id="m-codigo"></p>
+      <p class="precio-g" id="m-precio"></p>
+      <div class="tallas-caja">
+        <h4>Cantidades por talla</h4>
+        <div id="m-tallas"></div>
+      </div>
+      <div class="total-modal"><span>Total prendas</span><span id="m-total">0</span></div>
+      <p class="aviso-min" id="m-aviso">El mínimo por modelo es <b>12 unidades</b>. Agrega más prendas para continuar.</p>
+      <button class="btn btn-borde" id="m-curva">⚡ Curva sugerida (12 u.)</button>
+      <button class="btn btn-rojo" id="m-agregar">Agregar al pedido</button>
+    </div>
+  </div>
+</div>
+
+<!-- cajón carrito -->
+<div class="cajon-velo" id="cajon-velo"></div>
+<aside class="cajon" id="cajon">
+  <header>
+    <h2>Tu pedido</h2>
+    <p>Mínimo 12 unidades por modelo</p>
+    <button class="cerrar" id="cerrar-cajon">✕</button>
+  </header>
+  <div class="items" id="items-carrito"></div>
+  <footer>
+    <div class="linea"><span>Total prendas</span><b id="c-prendas">0</b></div>
+    <div class="linea total"><span>Total estimado</span><b id="c-total">$0</b></div>
+    <p style="font-size:.66rem;color:var(--gris)">Precios con IVA incluido.</p>
+    <div class="form-caja" id="form-checkout">
+      <label>Nombre o razón social *</label>
+      <input id="f-nombre" type="text" placeholder="Ej: Comercial Andes SpA">
+      <label>RUT *</label>
+      <input id="f-rut" type="text" placeholder="76.123.456-7">
+      <label>Teléfono *</label>
+      <input id="f-fono" type="tel" placeholder="+56 9 …">
+      <label>Comentario (opcional)</label>
+      <textarea id="f-nota" rows="2" placeholder="Despacho, observaciones…"></textarea>
+    </div>
+    <div class="exito" id="exito">✅ ¡Excel descargado! Adjúntalo al chat de WhatsApp para confirmar tu pedido.</div>
+    <button class="btn btn-rojo" id="btn-finalizar" style="justify-content:center">Finalizar pedido</button>
+    <a class="btn btn-wsp" id="btn-wsp-pedido" href="#" target="_blank" rel="noopener" style="display:none;justify-content:center">💬 Enviar por WhatsApp</a>
+    <button class="btn btn-borde" id="btn-excel-otra" style="display:none;justify-content:center">⬇ Descargar Excel nuevamente</button>
+  </footer>
+</aside>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── DATOS CATÁLOGO ──────────────────────────────────────────────
+const CATALOGO = [{"family":"4484-00","main_image":"44/4484/editar/1.jpg","gallery":["44/4484/editar/1.jpg","44/4484/editar/2.jpg","44/4484/editar/3.jpg"],"price":25990,"disponible":true},{"family":"4430-00","main_image":"44/4430/editar/1.jpg","gallery":["44/4430/editar/1.jpg","44/4430/editar/2.jpg","44/4430/editar/3.jpg"],"price":25990,"disponible":true},{"family":"4455-00","main_image":"44/4455/editar/1.jpg","gallery":["44/4455/editar/1.jpg","44/4455/editar/2.jpg","44/4455/editar/3.jpg","44/4455/editar/4.jpg","44/4455/editar/5.jpg"],"price":26990,"disponible":true},{"family":"4431-00","main_image":"44/4431-00/editar/1.jpg","gallery":["44/4431-00/editar/1.jpg","44/4431-00/editar/2.jpg","44/4431-00/editar/3.jpg","44/4431-00/editar/4.jpg","44/4431-00/editar/5.jpg"],"price":26990,"disponible":true},{"family":"4431-01","main_image":"44/4431-01/editar/1.jpg","gallery":["44/4431-01/editar/1.jpg","44/4431-01/editar/2.jpg","44/4431-01/editar/3.jpg","44/4431-01/editar/4.jpg","44/4431-01/editar/5.jpg"],"price":26990,"disponible":true},{"family":"4479-00","main_image":"43/43/4309/editar/Mohicano-86 copie.jpg","gallery":["43/43/4309/editar/Mohicano-86 copie.jpg","43/43/4309/editar/Mohicano-88.jpg","43/43/4309/editar/Mohicano-90.jpg","43/43/4309/editar/Mohicano-93.jpg","43/43/4309/editar/Mohicano-100.jpg"],"price":25990,"disponible":true},{"family":"4454-00","main_image":"44/4454/editar/1.jpg","gallery":["44/4454/editar/1.jpg","44/4454/editar/2.jpg","44/4454/editar/3.jpg","44/4454/editar/4.jpg","44/4454/editar/5.jpg"],"price":25990,"disponible":true},{"family":"4418-00","main_image":"44/4418/editar/1.jpg","gallery":["44/4418/editar/1.jpg","44/4418/editar/2.jpg","44/4418/editar/3.jpg"],"price":26990,"disponible":true},{"family":"4448-00","main_image":"44/4448/1.jpg","gallery":["44/4448/1.jpg","44/4448/2.jpg","44/4448/3.jpg"],"price":25990,"disponible":true},{"family":"4485-00","main_image":"44/4485/editar/1.jpg","gallery":["44/4485/editar/1.jpg","44/4485/editar/2.jpg","44/4485/editar/3.jpg"],"price":25990,"disponible":true},{"family":"4476-00","main_image":"43/43/4329/editar/Mohicano-197.jpg","gallery":["43/43/4329/editar/Mohicano-197.jpg","43/43/4329/editar/Mohicano-200.jpg","43/43/4329/editar/Mohicano-201.jpg","43/43/4329/editar/Mohicano-203.jpg","43/43/4329/editar/Mohicano-206 copie.jpg"],"price":25990,"disponible":true},{"family":"4402-00","main_image":"44/4402/editar/1.jpg","gallery":["44/4402/editar/1.jpg","44/4402/editar/2.jpg","44/4402/editar/3.jpg","44/4402/editar/4.jpg","44/4402/editar/5.jpg"],"price":26990,"disponible":false},{"family":"4412-00","main_image":"44/4412/editar/1.jpg","gallery":["44/4412/editar/1.jpg","44/4412/editar/2.jpg","44/4412/editar/3.jpg","44/4412/editar/4.jpg","44/4412/editar/5.jpg"],"price":26990,"disponible":false},{"family":"4413-00","main_image":"44/4413/editar/1.jpg","gallery":["44/4413/editar/1.jpg","44/4413/editar/2.jpg","44/4413/editar/3.jpg","44/4413/editar/4.jpg","44/4413/editar/5.jpg"],"price":24990,"disponible":false},{"family":"4414-00","main_image":"44/4414/editar/1.jpg","gallery":["44/4414/editar/1.jpg","44/4414/editar/2.jpg","44/4414/editar/3.jpg","44/4414/editar/4.jpg","44/4414/editar/5.jpg"],"price":25990,"disponible":false},{"family":"4416-00","main_image":"44/4416/editar/1.jpg","gallery":["44/4416/editar/1.jpg","44/4416/editar/2.jpg","44/4416/editar/3.jpg","44/4416/editar/4.jpg","44/4416/editar/5.jpg"],"price":26990,"disponible":false},{"family":"4417-00","main_image":"44/4417/editar/1.jpg","gallery":["44/4417/editar/1.jpg","44/4417/editar/2.jpg","44/4417/editar/3.jpg","44/4417/editar/4.jpg","44/4417/editar/5.jpg"],"price":26990,"disponible":false},{"family":"4426-00","main_image":"44/4426/editar/1.jpg","gallery":["44/4426/editar/1.jpg","44/4426/editar/2.jpg","44/4426/editar/3.jpg","44/4426/editar/4.jpg","44/4426/editar/5.jpg"],"price":26990,"disponible":false},{"family":"4431-02","main_image":"44/4431/editar/1.jpg","gallery":["44/4431/editar/1.jpg","44/4431/editar/2.jpg","44/4431/editar/3.jpg","44/4431/editar/4.jpg","44/4431/editar/5.jpg"],"price":26990,"disponible":false},{"family":"4441-00","main_image":"44/4441/editar/1.jpg","gallery":["44/4441/editar/1.jpg","44/4441/editar/2.jpg","44/4441/editar/3.jpg","44/4441/editar/4.jpg","44/4441/editar/5.jpg"],"price":24990,"disponible":false},{"family":"4450-00","main_image":"44/4450/editar/1.jpg","gallery":["44/4450/editar/1.jpg","44/4450/editar/2.jpg","44/4450/editar/3.jpg","44/4450/editar/4.jpg","44/4450/editar/5.jpg"],"price":null,"disponible":false},{"family":"4454-01","main_image":"44/4454-01/editar/1.jpg","gallery":["44/4454-01/editar/1.jpg","44/4454-01/editar/2.jpg","44/4454-01/editar/3.jpg","44/4454-01/editar/4.jpg","44/4454-01/editar/5.jpg"],"price":25990,"disponible":false},{"family":"4458-00","main_image":"44/4458/editar/1.jpg","gallery":["44/4458/editar/1.jpg","44/4458/editar/2.jpg","44/4458/editar/3.jpg","44/4458/editar/4.jpg","44/4458/editar/5.jpg"],"price":25990,"disponible":false},{"family":"4459-00","main_image":"44/4459/editar/1.jpg","gallery":["44/4459/editar/1.jpg","44/4459/editar/2.jpg","44/4459/editar/3.jpg","44/4459/editar/4.jpg","44/4459/editar/5.jpg"],"price":25990,"disponible":false},{"family":"4478-00","main_image":"44/4478/Mohicano-197 copia.jpg","gallery":["44/4478/Mohicano-197 copia.jpg","44/4478/Mohicano-200 copia.jpg","44/4478/Mohicano-206 copie copia.jpg"],"price":25990,"disponible":false},{"family":"4480-00","main_image":"44/4480/Mohicano-190.jpg","gallery":["44/4480/Mohicano-190.jpg","44/4480/Mohicano-193.jpg","44/4480/Mohicano-195.jpg","44/4480/Mohicano-198.jpg"],"price":25990,"disponible":false},{"family":"4481-00","main_image":"44/4481/final 1.jpg","gallery":["44/4481/final 1.jpg","44/4481/final calce .jpg","44/4481/SIN ECOC UERO.jpg"],"price":25990,"disponible":false},{"family":"4407-00","main_image":"44/4407/editar/1.jpg","gallery":["44/4407/editar/1.jpg","44/4407/editar/2.jpg","44/4407/editar/3.jpg"],"price":26990,"disponible":false},{"family":"4415-00","main_image":"44/4415/editar/1.jpg","gallery":["44/4415/editar/1.jpg","44/4415/editar/2.jpg","44/4415/editar/3.jpg","44/4415/editar/4.jpg","44/4415/editar/5.jpg"],"price":28990,"disponible":false},{"family":"4421-00","main_image":"44/4421/editar/1.jpg","gallery":["44/4421/editar/1.jpg","44/4421/editar/2.jpg","44/4421/editar/3.jpg"],"price":26990,"disponible":false},{"family":"4422-00","main_image":"44/4422/editar/1.jpg","gallery":["44/4422/editar/1.jpg","44/4422/editar/2.jpg","44/4422/editar/3.jpg"],"price":25990,"disponible":false},{"family":"4432-00","main_image":"44/4432/editar/1.jpg","gallery":["44/4432/editar/1.jpg","44/4432/editar/2.jpg","44/4432/editar/3.jpg","44/4432/editar/4.jpg","44/4432/editar/5.jpg"],"price":24990,"disponible":false},{"family":"4434-00","main_image":"44/4434/editar/1.jpg","gallery":["44/4434/editar/1.jpg","44/4434/editar/2.jpg","44/4434/editar/3.jpg"],"price":25990,"disponible":false},{"family":"4435-00","main_image":"44/4435/editar/1.jpg","gallery":["44/4435/editar/1.jpg","44/4435/editar/2.jpg","44/4435/editar/3.jpg","44/4435/editar/4.jpg","44/4435/editar/5.jpg"],"price":25990,"disponible":false},{"family":"4438-00","main_image":"44/4438/editar/1.jpg","gallery":["44/4438/editar/1.jpg","44/4438/editar/2.jpg","44/4438/editar/3.jpg","44/4438/editar/4.jpg","44/4438/editar/5.jpg"],"price":28990,"disponible":false},{"family":"4440-00","main_image":"44/4440/editar/1.jpg","gallery":["44/4440/editar/1.jpg","44/4440/editar/2.jpg","44/4440/editar/3.jpg"],"price":25990,"disponible":false},{"family":"4440-60","main_image":"44/4440-60/editar/1.jpg","gallery":["44/4440-60/editar/1.jpg","44/4440-60/editar/2.jpg","44/4440-60/editar/3.jpg","44/4440-60/editar/4.jpg","44/4440-60/editar/5.jpg"],"price":25990,"disponible":false},{"family":"4442-00","main_image":"44/4442/editar/1.jpg","gallery":["44/4442/editar/1.jpg","44/4442/editar/2.jpg","44/4442/editar/3.jpg","44/4442/editar/4.jpg","44/4442/editar/5.jpg"],"price":25990,"disponible":false},{"family":"4443-00","main_image":"44/4443/editar/1.jpg","gallery":["44/4443/editar/1.jpg","44/4443/editar/2.jpg","44/4443/editar/3.jpg"],"price":25990,"disponible":false},{"family":"4444-00","main_image":"44/4444/editar/1.jpg","gallery":["44/4444/editar/1.jpg","44/4444/editar/2.jpg","44/4444/editar/3.jpg"],"price":25990,"disponible":false},{"family":"4453-01","main_image":"44/4453-01/editar/1.jpg","gallery":["44/4453-01/editar/1.jpg","44/4453-01/editar/2.jpg","44/4453-01/editar/3.jpg","44/4453-01/editar/4.jpg","44/4453-01/editar/5.jpg"],"price":25990,"disponible":false},{"family":"4457-38","main_image":"44/4457-38/editar/CRI_6756.jpg","gallery":["44/4457-38/editar/CRI_6756.jpg","44/4457-38/editar/CRI_6757.jpg","44/4457-38/editar/CRI_6760.jpg"],"price":26990,"disponible":false},{"family":"4471-00","main_image":"44/4471/editar/1.jpg","gallery":["44/4471/editar/1.jpg","44/4471/editar/2.jpg","44/4471/editar/3.jpg","44/4471/editar/4.jpg","44/4471/editar/5.jpg"],"price":25990,"disponible":false},{"family":"4472-00","main_image":"44/4472/editar/1.jpg","gallery":["44/4472/editar/1.jpg","44/4472/editar/2.jpg","44/4472/editar/3.jpg"],"price":25990,"disponible":false},{"family":"4472-01","main_image":"44/4472-01/editar/1.jpg","gallery":["44/4472-01/editar/1.jpg","44/4472-01/editar/2.jpg","44/4472-01/editar/3.jpg","44/4472-01/editar/4.jpg","44/4472-01/editar/5.jpg"],"price":25990,"disponible":false},{"family":"4473-00","main_image":"44/4473/editar/1.jpg","gallery":["44/4473/editar/1.jpg","44/4473/editar/2.jpg","44/4473/editar/3.jpg"],"price":24990,"disponible":false},{"family":"4474-00","main_image":"44/4474/editar/1.jpg","gallery":["44/4474/editar/1.jpg","44/4474/editar/2.jpg","44/4474/editar/3.jpg"],"price":24990,"disponible":false},{"family":"4475-00","main_image":"44/4475/editar/1.jpg","gallery":["44/4475/editar/1.jpg","44/4475/editar/2.jpg","44/4475/editar/3.jpg","44/4475/editar/4.jpg","44/4475/editar/5.jpg"],"price":26990,"disponible":false},{"family":"4482-00","main_image":"44/4482/editar/1.jpg","gallery":["44/4482/editar/1.jpg","44/4482/editar/2.jpg","44/4482/editar/3.jpg"],"price":26990,"disponible":false},{"family":"4486-00","main_image":"44/4486-00/editar/1.jpg","gallery":["44/4486-00/editar/1.jpg","44/4486-00/editar/2.jpg","44/4486-00/editar/3.jpg","44/4486-00/editar/4.jpg"],"price":25990,"disponible":false},{"family":"4486-01","main_image":"44/4486-01/editar/1.jpg","gallery":["44/4486-01/editar/1.jpg","44/4486-01/editar/2.jpg","44/4486-01/editar/3.jpg","44/4486-01/editar/4.jpg"],"price":25990,"disponible":false},{"family":"4488-00","main_image":"44/4488/editar/1.jpg","gallery":["44/4488/editar/1.jpg","44/4488/editar/2.jpg","44/4488/editar/3.jpg","44/4488/editar/4.jpg","44/4488/editar/5.jpg"],"price":26990,"disponible":false},{"family":"4489-00","main_image":"44/4489/editar/1.jpg","gallery":["44/4489/editar/1.jpg","44/4489/editar/2.jpg","44/4489/editar/3.jpg"],"price":26990,"disponible":false},{"family":"4492-00","main_image":"44/4492/editar/1.jpg","gallery":["44/4492/editar/1.jpg","44/4492/editar/2.jpg","44/4492/editar/3.jpg"],"price":25990,"disponible":false},{"family":"4493-00","main_image":"44/4493/editar/1.jpg","gallery":["44/4493/editar/1.jpg","44/4493/editar/2.jpg","44/4493/editar/3.jpg","44/4493/editar/4.jpg","44/4493/editar/5.jpg"],"price":25990,"disponible":false},{"family":"4493-01","main_image":"44/4493-01/editar/1.jpg","gallery":["44/4493-01/editar/1.jpg","44/4493-01/editar/2.jpg","44/4493-01/editar/3.jpg"],"price":26990,"disponible":false},{"family":"4493-09","main_image":"44/4493-09/editar/1.jpg","gallery":["44/4493-09/editar/1.jpg","44/4493-09/editar/2.jpg","44/4493-09/editar/3.jpg"],"price":25990,"disponible":false},{"family":"4494-00","main_image":"44/4494/editar/1.jpg","gallery":["44/4494/editar/1.jpg","44/4494/editar/2.jpg","44/4494/editar/3.jpg"],"price":26990,"disponible":false},{"family":"4494-04","main_image":"44/4494-04/editar/1.jpg","gallery":["44/4494-04/editar/1.jpg","44/4494-04/editar/2.jpg","44/4494-04/editar/3.jpg","44/4494-04/editar/4.jpg","44/4494-04/editar/5.jpg"],"price":26990,"disponible":false},{"family":"4495-24","main_image":"44/4495-24/editar/1.jpg","gallery":["44/4495-24/editar/1.jpg","44/4495-24/editar/2.jpg","44/4495-24/editar/3.jpg","44/4495-24/editar/4.jpg"],"price":26990,"disponible":false},{"family":"4496-09","main_image":"44/4496-09/editar/1.jpg","gallery":["44/4496-09/editar/1.jpg","44/4496-09/editar/2.jpg","44/4496-09/editar/3.jpg"],"price":26990,"disponible":false},{"family":"4477-00","main_image":"43/4318/editar/1Mohicano-150.jpg","gallery":["43/4318/editar/1Mohicano-150.jpg","43/4318/editar/Mohicano-145 copie.jpg","43/4318/editar/Mohicano-149 copie.jpg","43/4318/editar/Mohicano-153.jpg","43/4318/editar/Mohicano-156.jpg"],"price":24990,"disponible":false}];
+
+const TALLAS = ['36','38','40','42','44','46'];
+const MIN_UNIDADES = 12;
+let carrito = {};
+let productoActual = null;
+let filtroActual = 'todos';
+
+// ── HELPERS ─────────────────────────────────────────────────────
+function imgUrl(p){ return '/' + p.split('/').map(s=>encodeURIComponent(s)).join('/'); }
+function fmtPrecio(n){ return n ? '$' + n.toLocaleString('es-CL') : 'A consultar'; }
+
+function mostrarToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('ver');
+  setTimeout(()=>t.classList.remove('ver'), 2200);
+}
+
+// ── RENDER CARD ──────────────────────────────────────────────────
+function crearCard(p){
+  const div = document.createElement('div');
+  div.className = 'card' + (p.disponible ? '' : ' card-prod');
+  div.dataset.family = p.family;
+  div.innerHTML = `
+    <div class="marco" onclick="abrirModal('${p.family}')">
+      <img src="${imgUrl(p.main_image)}" alt="Modelo ${p.family}" loading="lazy"
+           onerror="this.parentNode.style.background='#e8e9ed';this.remove()">
+      <span class="badge ${p.disponible ? 'badge-disp' : 'badge-prod'}">${p.disponible ? '✅ Disponible' : '🔧 En producción'}</span>
+      <span class="lupa">🔍 Ver</span>
+    </div>
+    <div class="cuerpo">
+      <h3>Modelo ${p.family}</h3>
+      <p class="codigo">Código: <b>${p.family}</b></p>
+      <p class="precio">${fmtPrecio(p.price)}<small>Precio lista c/IVA</small></p>
+      <div class="botones">
+        <button class="btn btn-borde" onclick="abrirModal('${p.family}')">Ver tallas</button>
+        <button class="btn btn-rojo" onclick="agregarRapido('${p.family}')">+ Agregar</button>
+      </div>
+    </div>`;
+  return div;
+}
+
+function renderGrid(filtro, busqueda){
+  const q = (busqueda||'').trim().toLowerCase();
+  const lista = CATALOGO.filter(p => {
+    if (filtro === 'disponible' && !p.disponible) return false;
+    if (filtro === 'produccion' && p.disponible) return false;
+    if (q && !p.family.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const disp = lista.filter(p=>p.disponible);
+  const prod = lista.filter(p=>!p.disponible);
+
+  const gD = document.getElementById('grid-disponibles');
+  const gP = document.getElementById('grid-produccion');
+  gD.innerHTML = ''; gP.innerHTML = '';
+  disp.forEach(p=>gD.appendChild(crearCard(p)));
+  prod.forEach(p=>gP.appendChild(crearCard(p)));
+
+  document.getElementById('sec-disponibles').style.display = disp.length ? '' : 'none';
+  document.getElementById('sec-produccion').style.display = prod.length ? '' : 'none';
+}
+
+// ── MODAL ────────────────────────────────────────────────────────
+function abrirModal(family){
+  productoActual = CATALOGO.find(p=>p.family===family);
+  if (!productoActual) return;
+  const p = productoActual;
+  document.getElementById('m-nombre').textContent = 'Modelo ' + p.family;
+  document.getElementById('m-codigo').textContent = 'Código: ' + p.family;
+  document.getElementById('m-precio').innerHTML = fmtPrecio(p.price) + '<small>Precio lista con IVA incluido</small>';
+
+  // galería
+  const imgP = document.getElementById('img-principal');
+  imgP.src = imgUrl(p.main_image); imgP.alt = 'Modelo ' + p.family;
+  const minis = document.getElementById('minis');
+  minis.innerHTML = p.gallery.map((g,i)=>`<img src="${imgUrl(g)}" class="${i===0?'activa':''}" onclick="cambiarImg('${g}',this)" loading="lazy">`).join('');
+
+  // tallas
+  const cur = carrito[family]?.tallas || {};
+  const tallasCaja = document.getElementById('m-tallas');
+  tallasCaja.innerHTML = TALLAS.map(t=>`
+    <div class="talla-fila">
+      <span class="t">${t}</span>
+      <span></span>
+      <div class="stepper">
+        <button onclick="cambiarTalla('${t}',-1)">−</button>
+        <span class="cant" id="cant-${t}">${cur[t]||0}</span>
+        <button onclick="cambiarTalla('${t}',1)">+</button>
+      </div>
+    </div>`).join('');
+
+  actualizarTotalModal();
+  document.getElementById('velo-modal').classList.add('abierto');
+  document.body.style.overflow = 'hidden';
+}
+
+function cambiarImg(src, el){
+  document.getElementById('img-principal').src = imgUrl(src);
+  document.querySelectorAll('#minis img').forEach(i=>i.classList.remove('activa'));
+  el.classList.add('activa');
+}
+
+function cambiarTalla(t, delta){
+  const el = document.getElementById('cant-'+t);
+  const v = Math.max(0, (parseInt(el.textContent)||0) + delta);
+  el.textContent = v;
+  actualizarTotalModal();
+}
+
+function actualizarTotalModal(){
+  const total = TALLAS.reduce((s,t)=>s+(parseInt(document.getElementById('cant-'+t)?.textContent)||0),0);
+  document.getElementById('m-total').textContent = total;
+  const aviso = document.getElementById('m-aviso');
+  aviso.classList.toggle('ver', total > 0 && total < MIN_UNIDADES);
+}
+
+function cerrarModal(){
+  document.getElementById('velo-modal').classList.remove('abierto');
+  document.body.style.overflow = '';
+  productoActual = null;
+}
+
+document.getElementById('cerrar-modal').onclick = cerrarModal;
+document.getElementById('velo-modal').onclick = e => { if(e.target===e.currentTarget) cerrarModal(); };
+
+// curva sugerida
+document.getElementById('m-curva').onclick = () => {
+  const curva = {36:1,38:2,40:3,42:3,44:2,46:1};
+  TALLAS.forEach(t=>{ const el=document.getElementById('cant-'+t); if(el) el.textContent=curva[t]||0; });
+  actualizarTotalModal();
+};
+
+// agregar al pedido desde modal
+document.getElementById('m-agregar').onclick = () => {
+  if (!productoActual) return;
+  const tallas = {};
+  let total = 0;
+  TALLAS.forEach(t=>{ const v=parseInt(document.getElementById('cant-'+t)?.textContent)||0; if(v>0){tallas[t]=v;total+=v;} });
+  if (!total) { mostrarToast('Agrega al menos una prenda'); return; }
+  if (total < MIN_UNIDADES) { mostrarToast(`Mínimo ${MIN_UNIDADES} unidades por modelo`); return; }
+  carrito[productoActual.family] = { producto: productoActual, tallas, total };
+  cerrarModal();
+  actualizarCarrito();
+  mostrarToast(`✅ ${productoActual.family} agregado al pedido`);
+};
+
+function agregarRapido(family){
+  const p = CATALOGO.find(x=>x.family===family);
+  if (!p) return;
+  const curva = {36:1,38:2,40:3,42:3,44:2,46:1};
+  carrito[family] = { producto: p, tallas: {...curva}, total: 12 };
+  actualizarCarrito();
+  mostrarToast(`✅ ${family} agregado (curva 12 u.)`);
+}
+
+// ── CARRITO ──────────────────────────────────────────────────────
+function actualizarCarrito(){
+  const items = Object.values(carrito);
+  document.getElementById('num-carrito').textContent = items.length;
+
+  const cont = document.getElementById('items-carrito');
+  if (!items.length){ cont.innerHTML = '<p class="vacio">Tu pedido está vacío</p>'; }
+  else {
+    cont.innerHTML = items.map(({producto:p, tallas, total})=>{
+      const tMini = Object.entries(tallas).map(([t,n])=>`<span>${t}: ${n}</span>`).join('');
+      const subtotal = p.price ? fmtPrecio(p.price * total) : 'A consultar';
+      return `<div class="item-c">
+        <img src="${imgUrl(p.main_image)}" alt="${p.family}" onerror="this.style.display='none'">
+        <div class="info">
+          <h4>Modelo ${p.family}</h4>
+          <p class="cod">${p.family}</p>
+          <div class="tallas-mini">${tMini}</div>
+          <div class="abajo">
+            <span><button class="editar" onclick="abrirModal('${p.family}')">Editar</button><button class="quitar" onclick="quitarItem('${p.family}')">Quitar</button></span>
+            <b>${subtotal}</b>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  const totalPrendas = items.reduce((s,i)=>s+i.total,0);
+  const totalDinero = items.reduce((s,i)=>s+(i.producto.price ? i.producto.price*i.total : 0),0);
+  document.getElementById('c-prendas').textContent = totalPrendas;
+  document.getElementById('c-total').textContent = fmtPrecio(totalDinero);
+}
+
+function quitarItem(family){
+  delete carrito[family];
+  actualizarCarrito();
+}
+
+// cajón
+document.getElementById('abrir-carrito').onclick = () => {
+  document.getElementById('cajon').classList.add('abierto');
+  document.getElementById('cajon-velo').classList.add('abierto');
+  document.body.style.overflow = 'hidden';
+};
+function cerrarCajon(){
+  document.getElementById('cajon').classList.remove('abierto');
+  document.getElementById('cajon-velo').classList.remove('abierto');
+  document.body.style.overflow = '';
+}
+document.getElementById('cerrar-cajon').onclick = cerrarCajon;
+document.getElementById('cajon-velo').onclick = cerrarCajon;
+
+// ── FINALIZAR / EXCEL ────────────────────────────────────────────
+let excelGenerado = false;
+document.getElementById('btn-finalizar').onclick = () => {
+  const form = document.getElementById('form-checkout');
+  if (!form.classList.contains('ver')){
+    if (!Object.keys(carrito).length){ mostrarToast('Agrega al menos un modelo'); return; }
+    form.classList.add('ver');
+    document.getElementById('btn-finalizar').textContent = '⬇ Descargar Excel y confirmar';
+    return;
+  }
+  const nombre = document.getElementById('f-nombre').value.trim();
+  const rut = document.getElementById('f-rut').value.trim();
+  if (!nombre || !rut){ mostrarToast('Completa nombre y RUT'); return; }
+  generarExcel(nombre, rut);
+};
+
+function generarExcel(nombre, rut){
+  const items = Object.values(carrito);
+  const wb = XLSX.utils.book_new();
+  const rows = [['CÓDIGO','MODELO','36','38','40','42','44','46','TOTAL','PRECIO','SUBTOTAL']];
+  items.forEach(({producto:p, tallas, total})=>{
+    const subtotal = p.price ? p.price * total : '';
+    rows.push([p.family, 'Modelo '+p.family, ...TALLAS.map(t=>tallas[t]||0), total, p.price||'', subtotal]);
+  });
+  const totalPrendas = items.reduce((s,i)=>s+i.total,0);
+  const totalDinero = items.reduce((s,i)=>s+(i.producto.price?i.producto.price*i.total:0),0);
+  rows.push([]);
+  rows.push(['','TOTALES','','','','','','',totalPrendas,'',totalDinero]);
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:12},{wch:16},...TALLAS.map(()=>({wch:6})),{wch:8},{wch:10},{wch:12}];
+  const meta = [['CLIENTE',nombre],['RUT',rut],['FECHA',new Date().toLocaleDateString('es-CL')],['COLECCIÓN','44']];
+  const wsMeta = XLSX.utils.aoa_to_sheet(meta);
+  XLSX.utils.book_append_sheet(wb, wsMeta, 'Cliente');
+  XLSX.utils.book_append_sheet(wb, ws, 'Pedido Cole 44');
+  XLSX.writeFile(wb, `Pedido_Cole44_${rut.replace(/\./g,'').replace(/-/g,'')}.xlsx`);
+
+  excelGenerado = true;
+  document.getElementById('exito').classList.add('ver');
+  document.getElementById('btn-finalizar').style.display = 'none';
+  const wspBtn = document.getElementById('btn-wsp-pedido');
+  const msg = encodeURIComponent(`Hola Mohicano! Adjunto mi pedido Cole 44.\nCliente: ${nombre}\nRUT: ${rut}\nTotal prendas: ${totalPrendas}`);
+  wspBtn.href = `https://wa.me/56912345678?text=${msg}`;
+  wspBtn.style.display = 'flex';
+  document.getElementById('btn-excel-otra').style.display = 'flex';
+}
+
+document.getElementById('btn-excel-otra').onclick = () => {
+  const nombre = document.getElementById('f-nombre').value.trim() || 'cliente';
+  const rut = document.getElementById('f-rut').value.trim() || '00000000';
+  generarExcel(nombre, rut);
+};
+
+// ── FILTROS Y BÚSQUEDA ───────────────────────────────────────────
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.onclick = () => {
+    document.querySelectorAll('.chip').forEach(c=>c.classList.remove('activo'));
+    chip.classList.add('activo');
+    filtroActual = chip.dataset.filtro;
+    renderGrid(filtroActual, document.getElementById('busca').value);
+  };
+});
+
+document.getElementById('busca').oninput = e => {
+  renderGrid(filtroActual, e.target.value);
+};
+
+// ── INIT ─────────────────────────────────────────────────────────
+document.getElementById('total-modelos').textContent = CATALOGO.length;
+renderGrid('todos', '');
+actualizarCarrito();
+</script>
+</body>
+</html>
