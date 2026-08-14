@@ -9,8 +9,6 @@ let pedido = [];
 let skuActivo = "";
 let draftTallasPorSku = {}; // legacy (borradores desactivados)
 const TALLAS_DISPONIBLES = ["36", "38", "40", "42", "44", "46"];
-const WEB_DISCOUNT_RATE = 0.10;
-const WEB_DISCOUNT_PERCENT = Math.round(WEB_DISCOUNT_RATE * 100);
 const IVA_RATE = 0.19;
 const IVA_PERCENT = Math.round(IVA_RATE * 100);
 let quotesAccessToken = sessionStorage.getItem("quotes_access_token") || "";
@@ -1003,33 +1001,15 @@ function obtenerPrecioListaCatalogo(value, source = CATALOG_SOURCE) {
   return null;
 }
 
-function calcularPrecioWebConDescuento(precioLista) {
-  const value = Number(precioLista);
-  if (!Number.isFinite(value) || value <= 0) return null;
-  return Math.round(value * (1 - WEB_DISCOUNT_RATE));
-}
-
 function obtenerPrecioCatalogo(value, source = CATALOG_SOURCE) {
-  const precioLista = obtenerPrecioListaCatalogo(value, source);
-  if (source === "catalogo-44") return precioLista;
-  return calcularPrecioWebConDescuento(precioLista);
+  return obtenerPrecioListaCatalogo(value, source);
 }
 
 function obtenerDetallePrecioCatalogo(value, source = CATALOG_SOURCE) {
   if (IS_COTIZACION_MODE) return null;
   const precioLista = obtenerPrecioListaCatalogo(value, source);
   if (!precioLista) return null;
-  if (source === "catalogo-44") {
-    return { lista: precioLista, final: precioLista, descuento: 0, ahorro: 0 };
-  }
-  const precioFinal = calcularPrecioWebConDescuento(precioLista);
-  const ahorro = Math.max(0, precioLista - (precioFinal || 0));
-  return {
-    lista: precioLista,
-    final: precioFinal,
-    descuento: WEB_DISCOUNT_PERCENT,
-    ahorro,
-  };
+  return { lista: precioLista, final: precioLista, descuento: 0, ahorro: 0 };
 }
 
 function obtenerDetallePrecioCatalogoCruzado(value, preferredSource = CATALOG_SOURCE) {
@@ -3514,13 +3494,6 @@ function renderizarInfoProductoCatalogo43(charList, producto, detallePrecio) {
     crearItemInfoCatalogo43("Tiro", meta43?.tiro),
   ].filter(Boolean).forEach((li) => ul.appendChild(li));
 
-  if (detallePrecio && detallePrecio.descuento > 0) {
-    const liPrecio = document.createElement("li");
-    liPrecio.className = "feature-price";
-    liPrecio.innerHTML = `<span class="feature-label">Precio web</span><strong>${escapeHtmlExcel(formatearPrecioCLP(detallePrecio.final))}</strong><em>Lista ${escapeHtmlExcel(formatearPrecioCLP(detallePrecio.lista))} · -${escapeHtmlExcel(detallePrecio.descuento)}% web</em>`;
-    ul.appendChild(liPrecio);
-  }
-
   charList.appendChild(ul);
 }
 
@@ -3605,13 +3578,7 @@ function renderCatalogCardHtml(p) {
             <div class="card-title">${(CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-44" || IS_COTIZACION_MODE) && p.bota ? p.bota.charAt(0).toUpperCase() + p.bota.slice(1).toLowerCase() : "Modelo"} ${normalizarSkuCatalogo(p.family)}</div>
             ${
               detallePrecio
-                ? detallePrecio.descuento > 0
-                  ? `<div class="card-price">
-                    <span class="card-price-original">${formatearPrecioCLP(detallePrecio.lista)}</span>
-                    <span class="card-price-current">${formatearPrecioCLP(detallePrecio.final)}</span>
-                    <span class="card-price-badge">-${detallePrecio.descuento}% web</span>
-                  </div>`
-                  : `<div class="card-price">
+                ? `<div class="card-price">
                     <span class="card-price-current">${formatearPrecioCLP(detallePrecio.final)}</span>
                   </div>`
                 : precioCotizacion
@@ -3899,7 +3866,7 @@ function verProducto(familyId, preferredSku = "") {
     const publicDescription = limpiarDescripcionPublica(p.description || "");
     descriptionEl.innerText = hasCharacteristics
       ? ""
-      : publicDescription + (detallePrecio?.descuento > 0 ? ` · Precio lista: ${formatearPrecioCLP(detallePrecio.lista)} · Web ${detallePrecio.descuento}%: ${formatearPrecioCLP(detallePrecio.final)}` : "");
+      : publicDescription;
     descriptionEl.style.display = hasCharacteristics || !publicDescription ? "none" : "block";
 
     charList.innerHTML = "";
@@ -3911,11 +3878,6 @@ function verProducto(familyId, preferredSku = "") {
         li.innerText = normalizarTextoVisible(char);
         ul.appendChild(li);
       });
-      if (detallePrecio && CATALOG_SOURCE !== "catalogo-44") {
-        const liPrecio = document.createElement("li");
-        liPrecio.innerText = `Precio lista: ${formatearPrecioCLP(detallePrecio.lista)} · Web ${detallePrecio.descuento}%: ${formatearPrecioCLP(detallePrecio.final)}`;
-        ul.appendChild(liPrecio);
-      }
       charList.appendChild(ul);
     }
   }
@@ -4058,8 +4020,6 @@ function actualizarCarrito() {
   const container = document.getElementById("cartItems");
   let totalItems = 0;
   let totalEstimado = 0;
-  let totalLista = 0;
-  let totalAhorro = 0;
   let totalIva = 0;
   let totalConIva = 0;
 
@@ -4084,12 +4044,9 @@ function actualizarCarrito() {
           precioUnitario = detallePrecio?.final || null;
         }
           const thumbnail = obtenerMiniaturaCarritoPorSku(item.sku);
-          const subtotalLista = precioListaUnitario ? precioListaUnitario * cantidadModelo : 0;
           const subtotal = precioUnitario ? precioUnitario * cantidadModelo : 0;
           totalItems += cantidadModelo;
-          totalLista += subtotalLista;
           totalEstimado += subtotal;
-          totalAhorro += Math.max(0, subtotalLista - subtotal);
           const tallasHtml = Object.entries(item.tallas)
             .map(([t, c]) => `<span class="cart-size-pill">T${t} <strong>${c}</strong></span>`)
             .join("");
@@ -4159,23 +4116,20 @@ function actualizarCarrito() {
         <span class="cart-totals-note">Precios sin IVA</span>
       </div>
       <div class="cart-totals-row"><span>Total prendas</span><strong>${totalItems}</strong></div>
-      ${totalLista > 0 ? `<div class="cart-totals-row"><span>Neto sin IVA</span><strong>${formatearPrecioCLP(totalLista)}</strong></div>` : ""}
+      ${totalEstimado > 0 ? `<div class="cart-totals-row"><span>Neto sin IVA</span><strong>${formatearPrecioCLP(totalEstimado)}</strong></div>` : ""}
       ${totalIva > 0 ? `<div class="cart-totals-row"><span>IVA ${IVA_PERCENT}%</span><strong>${formatearPrecioCLP(totalIva)}</strong></div>` : ""}
       ${totalConIva > 0 ? `<div class="cart-totals-row cart-totals-row-final"><span>Total con IVA</span><strong>${formatearPrecioCLP(totalConIva)}</strong></div>` : ""}
     ` : `
       <div class="cart-totals-head">
         <span class="cart-totals-title">Total a pagar</span>
-        <span class="cart-totals-note">${totalAhorro > 0 ? `${WEB_DISCOUNT_PERCENT}% web + IVA incluido` : "Precios + IVA incluido"}</span>
+        <span class="cart-totals-note">Precios con IVA incluido</span>
       </div>
       <div class="cart-totals-row"><span>Total prendas</span><strong>${totalItems}</strong></div>
       ${totalItems > 0 && totalItems < 24 ? `<div class="cart-totals-row" style="color:#b45309;font-size:12px;background:#fffbeb;padding:4px 8px;border-radius:4px;margin-top:2px;">⚠️ Faltan ${24 - totalItems} unidades para el mínimo (24)</div>` : ""}
       ${totalItems >= 24 ? `<div class="cart-totals-row" style="color:#15803d;font-size:12px;">✓ Mínimo mayorista cumplido</div>` : ""}
-      ${totalLista > 0 ? `<div class="cart-totals-row"><span>Total lista</span><strong>${formatearPrecioCLP(totalLista)}</strong></div>` : ""}
-      ${totalAhorro > 0 ? `<div class="cart-totals-row cart-totals-row-accent"><span>Descuento web ${WEB_DISCOUNT_PERCENT}%</span><strong>- ${formatearPrecioCLP(totalAhorro)}</strong></div>` : ""}
-      ${totalAhorro > 0 && totalEstimado > 0 ? `<div class="cart-totals-row"><span>Total neto con descuento</span><strong>${formatearPrecioCLP(totalEstimado)}</strong></div>` : ""}
+      ${totalEstimado > 0 ? `<div class="cart-totals-row"><span>Neto sin IVA</span><strong>${formatearPrecioCLP(totalEstimado)}</strong></div>` : ""}
       ${totalIva > 0 ? `<div class="cart-totals-row"><span>IVA ${IVA_PERCENT}%</span><strong>${formatearPrecioCLP(totalIva)}</strong></div>` : ""}
       ${totalConIva > 0 ? `<div class="cart-totals-row cart-totals-row-final"><span>Total final con IVA</span><strong>${formatearPrecioCLP(totalConIva)}</strong></div>` : ""}
-      ${totalAhorro > 0 ? `<div class="cart-totals-row cart-totals-row-saving"><span>Ahorro</span><strong>${formatearPrecioCLP(totalAhorro)}</strong></div>` : ""}
     `;
     guardarCotizacionPersistida();
   }
