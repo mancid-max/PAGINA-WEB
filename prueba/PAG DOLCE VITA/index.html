@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dolce Vita · Colección 44 | Mohicano Jeans — Pedidos Mayoristas</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23d81f2a'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='16' font-weight='bold' fill='white' text-anchor='middle'%3EDV%3C/text%3E%3C/svg%3E">
+<meta name="description" content="Catálogo mayorista Dolce Vita, nueva colección 44 de Mohicano Jeans. Arma tu pedido por curvas y envíalo por WhatsApp.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,600;1,700&display=swap" rel="stylesheet">
+<script src="xlsx.full.min.js"></script>
+<style>
+:root{
+  --rojo:#d81f2a; --rojo-osc:#a3121b; --verde:#00923f;
+  --tinta:#12283a; --gris:#5b6b7a; --celeste:#eaf6fb; --celeste2:#cfe9f5;
+  --blanco:#ffffff; --sombra:0 10px 30px rgba(18,40,58,.10);
+  --radio:18px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Poppins',sans-serif;color:var(--tinta);
+  background:radial-gradient(1200px 600px at 50% -100px, #ffffff 0%, var(--celeste) 45%, var(--celeste2) 100%) fixed;
+  min-height:100vh;
+}
+.cinta{
+  background:var(--tinta);color:#fff;font-size:.72rem;letter-spacing:.14em;
+  padding:.45rem 0;white-space:nowrap;overflow:hidden;
+}
+.cinta span{display:inline-block;padding-left:100%;animation:marquee 28s linear infinite}
+@keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
+
+header.hero{max-width:1200px;margin:0 auto;padding:2.2rem 1.2rem 1rem;text-align:center;position:relative}
+.bandera{display:inline-flex;height:6px;width:120px;border-radius:3px;overflow:hidden;margin-bottom:1rem}
+.bandera i{flex:1}
+.bandera i:nth-child(1){background:var(--verde)}
+.bandera i:nth-child(2){background:#fff;border-top:1px solid #e2e8ee;border-bottom:1px solid #e2e8ee}
+.bandera i:nth-child(3){background:var(--rojo)}
+.hero .presenta{font-size:.8rem;letter-spacing:.5em;color:var(--gris);text-transform:uppercase}
+.hero h1{
+  font-size:clamp(2.6rem,7vw,4.6rem);font-weight:800;letter-spacing:.06em;line-height:1.05;
+  color:var(--rojo);text-transform:uppercase;
+}
+.hero h1 .fina{font-family:'Playfair Display',serif;font-style:italic;color:var(--tinta);text-transform:none;letter-spacing:0}
+.hero .sub{margin-top:.4rem;font-weight:600;letter-spacing:.35em;color:var(--tinta);text-transform:uppercase;font-size:clamp(.8rem,2.2vw,1rem)}
+.hero .nota{margin-top:.9rem;color:var(--gris);font-size:.92rem;max-width:640px;margin-left:auto;margin-right:auto}
+.hero .acciones{margin-top:1.2rem;display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap}
+.btn{
+  display:inline-flex;align-items:center;gap:.5rem;border:none;cursor:pointer;
+  font-family:inherit;font-weight:600;font-size:.9rem;border-radius:999px;
+  padding:.72rem 1.35rem;transition:transform .15s ease, box-shadow .15s ease;text-decoration:none;
+}
+.btn:active{transform:scale(.97)}
+.btn-rojo{background:var(--rojo);color:#fff;box-shadow:0 8px 20px rgba(216,31,42,.35)}
+.btn-rojo:hover{background:var(--rojo-osc)}
+.btn-borde{background:#fff;color:var(--tinta);border:1.5px solid #d8e4ec}
+.btn-borde:hover{border-color:var(--tinta)}
+.btn-wsp{background:#25d366;color:#fff;box-shadow:0 8px 20px rgba(37,211,102,.35)}
+.btn-wsp:hover{background:#1fb457}
+.cta-colecciones{
+  display:block;max-width:820px;margin:1.4rem auto 0;padding:1.15rem 1.6rem;border-radius:18px;
+  background:linear-gradient(100deg,var(--tinta) 0%, #1e3c55 100%);color:#fff;text-decoration:none;
+  font-size:clamp(1.05rem,3vw,1.5rem);font-weight:800;letter-spacing:.06em;text-align:center;
+  box-shadow:0 14px 34px rgba(18,40,58,.35);transition:transform .15s ease, box-shadow .15s ease;
+  animation:latido 2.4s ease-in-out infinite;
+}
+.cta-colecciones:hover{transform:translateY(-2px) scale(1.01);box-shadow:0 18px 44px rgba(18,40,58,.45)}
+@keyframes latido{0%,100%{box-shadow:0 14px 34px rgba(18,40,58,.35)}50%{box-shadow:0 14px 40px rgba(216,31,42,.45)}}
+.bloque-catalogo{
+  max-width:760px;margin:3.5rem auto 0;padding:2.4rem 1.5rem;text-align:center;
+  background:#fff;border-radius:22px;box-shadow:var(--sombra);
+}
+.bloque-catalogo h2{color:var(--rojo);font-size:clamp(1.4rem,4vw,2rem);font-weight:800;letter-spacing:.05em;text-transform:uppercase}
+.bloque-catalogo p{color:var(--gris);font-size:.92rem;max-width:480px;margin:.6rem auto 1.2rem}
+.btn-catalogo{font-size:1.05rem;padding:.9rem 1.8rem}
+
+.barra-filtros{max-width:1200px;margin:1.4rem auto .4rem;padding:0 1.2rem;display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;justify-content:center}
+.chip{
+  border:1.5px solid #d8e4ec;background:#fff;border-radius:999px;padding:.45rem 1.1rem;
+  font-family:inherit;font-size:.82rem;font-weight:600;color:var(--gris);cursor:pointer;transition:all .15s;
+}
+.chip.activo{background:var(--tinta);border-color:var(--tinta);color:#fff}
+.busca{
+  border:1.5px solid #d8e4ec;border-radius:999px;padding:.5rem 1.1rem;font-family:inherit;font-size:.85rem;
+  min-width:210px;outline:none;background:#fff;
+}
+.busca:focus{border-color:var(--rojo)}
+.busca::-webkit-search-cancel-button,.busca::-webkit-search-decoration{display:none}
+
+main{max-width:1200px;margin:0 auto;padding:1rem 1.2rem 4rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1.3rem}
+.seccion{margin:2.6rem 0 0}
+.titulo-sec{text-align:center;margin-bottom:1.4rem}
+.titulo-sec h2{
+  color:var(--rojo);font-size:clamp(1.5rem,4vw,2.2rem);font-weight:800;
+  letter-spacing:.08em;text-transform:uppercase;
+}
+.titulo-sec span{
+  display:block;color:var(--gris);font-size:.78rem;font-weight:600;
+  letter-spacing:.2em;text-transform:uppercase;margin-top:.15rem;
+}
+.bandera-sec{display:inline-flex;height:5px;width:96px;border-radius:3px;overflow:hidden;margin-top:.6rem}
+.bandera-sec i{flex:1}
+.bandera-sec i:nth-child(1){background:var(--verde)}
+.bandera-sec i:nth-child(2){background:#fff}
+.bandera-sec i:nth-child(3){background:var(--rojo)}
+/* zig-zag: portada a un costado, modelos al otro */
+.cuerpo-sec{display:grid;grid-template-columns:330px minmax(0,1fr);gap:1.3rem;align-items:start}
+.cover-sec{position:sticky;top:1rem}
+.cover-sec img{width:100%;border-radius:var(--radio);box-shadow:var(--sombra);display:block}
+.seccion.invertida .cuerpo-sec{grid-template-columns:minmax(0,1fr) 330px}
+.seccion.invertida .cover-sec{order:2}
+.seccion .cuerpo-sec .grid{grid-template-columns:repeat(auto-fill,minmax(225px,1fr))}
+@media(max-width:860px){
+  .cuerpo-sec,.seccion.invertida .cuerpo-sec{grid-template-columns:1fr}
+  .seccion.invertida .cover-sec{order:0}
+  .cover-sec{position:static}
+  .cover-sec img{max-height:300px;object-fit:cover;object-position:center 18%}
+}
+.italia-strip{
+  max-width:1200px;margin:1.6rem auto 0;padding:0 1.2rem;display:grid;
+  grid-template-columns:repeat(3,1fr);gap:.9rem;
+}
+.italia-strip img{
+  width:100%;height:190px;object-fit:cover;border-radius:14px;box-shadow:var(--sombra);display:block;
+}
+.italia-strip img:nth-child(3){object-position:center 24%}
+@media(max-width:640px){.italia-strip img{height:110px}}
+.gracias{max-width:420px;margin:0 auto 1.4rem;padding:0 1.2rem}
+.gracias img{width:100%;border-radius:16px;box-shadow:var(--sombra);display:block}
+.card{
+  background:#fff;border-radius:var(--radio);overflow:hidden;box-shadow:var(--sombra);
+  display:flex;flex-direction:column;transition:transform .18s ease, box-shadow .18s ease;position:relative;
+}
+.card:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(18,40,58,.16)}
+.card .marco{position:relative;cursor:pointer;background:linear-gradient(180deg,#eef8fd, #dbeef7)}
+.card .marco img{display:block;width:100%;aspect-ratio:612/792;object-fit:cover}
+.card .lupa{
+  position:absolute;right:.7rem;bottom:.7rem;background:rgba(255,255,255,.92);border-radius:999px;
+  font-size:.72rem;font-weight:600;color:var(--tinta);padding:.32rem .75rem;pointer-events:none;
+}
+.card .etiqueta{
+  position:absolute;left:.7rem;bottom:.7rem;background:var(--tinta);color:#fff;font-size:.66rem;
+  font-weight:600;letter-spacing:.08em;padding:.3rem .7rem;border-radius:999px;text-transform:uppercase;
+}
+.card .cuerpo{padding:1rem 1.1rem 1.15rem;display:flex;flex-direction:column;gap:.65rem;flex:1}
+.card h3{font-size:1.05rem;font-weight:700;letter-spacing:.04em}
+.card .codigo{font-size:.78rem;color:var(--gris);font-weight:500}
+.card .codigo b{color:var(--rojo);font-weight:700}
+.card .precio{font-size:1.05rem;font-weight:700}
+.card .precio small{display:block;font-size:.68rem;font-weight:500;color:var(--gris)}
+.card .botones{margin-top:auto;display:flex;flex-direction:column;gap:.5rem}
+.card .botones .fila{display:flex;gap:.5rem}
+.card .btn{padding:.6rem 1rem;font-size:.82rem;justify-content:center;flex:1}
+
+.pie-flag{display:flex;height:8px}
+.pie-flag i{flex:1}
+.pie-flag i:nth-child(1){background:var(--verde)}
+.pie-flag i:nth-child(2){background:#fff}
+.pie-flag i:nth-child(3){background:var(--rojo)}
+
+/* ===== burbuja carrito ===== */
+.fab-carrito{
+  position:fixed;right:1.2rem;bottom:1.2rem;z-index:60;background:var(--tinta);color:#fff;border:none;cursor:pointer;
+  border-radius:999px;padding:.95rem 1.5rem;font-family:inherit;font-weight:600;font-size:.95rem;
+  display:flex;align-items:center;gap:.6rem;box-shadow:0 12px 32px rgba(18,40,58,.35);
+}
+.fab-carrito .num{background:var(--rojo);border-radius:999px;min-width:1.55rem;height:1.55rem;display:grid;place-items:center;font-size:.8rem}
+
+/* ===== modal producto ===== */
+.velo{position:fixed;inset:0;background:rgba(12,25,36,.55);backdrop-filter:blur(3px);z-index:100;display:none;align-items:center;justify-content:center;padding:1rem}
+.velo.abierto{display:flex}
+.modal{
+  background:#fff;border-radius:22px;max-width:960px;width:100%;max-height:92vh;overflow:auto;position:relative;
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+}
+@media(max-width:760px){.modal{grid-template-columns:1fr}}
+.modal .galeria{background:linear-gradient(180deg,#eef8fd,#dbeef7);padding:1rem;display:flex;flex-direction:column;gap:.6rem}
+.modal .galeria .principal img{width:100%;border-radius:14px;display:block}
+.modal .galeria .minis{display:flex;gap:.5rem}
+.modal .galeria .minis img{width:72px;border-radius:8px;cursor:pointer;border:2px solid transparent;display:block}
+.modal .galeria .minis img.activa{border-color:var(--rojo)}
+.modal .datos{padding:1.6rem 1.5rem 1.5rem;display:flex;flex-direction:column;gap:.9rem}
+.modal .datos h2{color:var(--rojo);font-size:1.7rem;font-weight:800;letter-spacing:.04em}
+.modal .datos .cod{color:var(--gris);font-weight:600;margin-top:-.6rem}
+.modal .datos .precio-g{font-size:1.35rem;font-weight:800}
+.modal .datos .precio-g small{font-size:.72rem;color:var(--gris);font-weight:500;display:block}
+.tallas-caja{border:1.5px solid #e4edf3;border-radius:14px;padding:1rem}
+.tallas-caja h4{font-size:.8rem;text-transform:uppercase;letter-spacing:.12em;color:var(--gris);margin-bottom:.7rem}
+.talla-fila{display:grid;grid-template-columns:3.2rem 1fr auto;align-items:center;gap:.6rem;padding:.32rem 0}
+.talla-fila .t{font-weight:700;font-size:.95rem}
+.stepper{display:flex;align-items:center;gap:.55rem;justify-self:end}
+.stepper button{
+  width:2rem;height:2rem;border-radius:8px;border:1.5px solid #d8e4ec;background:#fff;color:var(--tinta);
+  font-size:1.05rem;font-weight:700;cursor:pointer;line-height:1;
+}
+.stepper button:hover{border-color:var(--rojo);color:var(--rojo)}
+.stepper .cant{min-width:2rem;text-align:center;font-weight:700}
+.total-modal{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:.95rem}
+.aviso-min{font-size:.78rem;color:var(--rojo-osc);background:#fdecee;border-radius:10px;padding:.55rem .8rem;display:none}
+.aviso-min.ver{display:block}
+.modal .cerrar, .cajon .cerrar{
+  position:absolute;top:.9rem;right:.9rem;width:2.3rem;height:2.3rem;border-radius:999px;border:none;cursor:pointer;
+  background:#f1f6f9;color:var(--tinta);font-size:1.05rem;font-weight:700;z-index:5;
+}
+
+/* ===== cajón carrito ===== */
+.cajon-velo{position:fixed;inset:0;background:rgba(12,25,36,.45);z-index:80;display:none}
+.cajon-velo.abierto{display:block}
+.cajon{
+  position:fixed;top:0;right:0;height:100dvh;width:min(460px,100vw);background:#fff;z-index:90;
+  transform:translateX(105%);transition:transform .25s ease;display:flex;flex-direction:column;box-shadow:-16px 0 48px rgba(12,25,36,.25);
+  overflow:hidden;
+}
+.cajon.abierto{transform:translateX(0)}
+.cajon>header{padding:1rem 1.4rem .8rem;border-bottom:1px solid #edf3f7;position:relative;flex-shrink:0}
+.cajon>header h2{font-size:1.1rem;font-weight:800;letter-spacing:.03em}
+.cajon>header p{font-size:.72rem;color:var(--gris)}
+/* Items scroll arriba */
+.cajon-items{flex:1;overflow-y:auto;min-height:0;-webkit-overflow-scrolling:touch}
+.cajon .items{padding:.8rem 1.2rem;display:flex;flex-direction:column;gap:.8rem}
+/* Form fijo abajo */
+.cajon-form{flex-shrink:0;overflow-y:auto;max-height:58vh;border-top:2px solid #edf3f7;-webkit-overflow-scrolling:touch}
+.item-c{border:1.5px solid #e4edf3;border-radius:12px;padding:.75rem;display:flex;gap:.75rem;background:#fff}
+.item-c img{width:64px;height:auto;border-radius:8px;align-self:flex-start;flex-shrink:0}
+.item-c .info{flex:1;min-width:0}
+.item-c .info h4{font-size:.92rem;font-weight:700;margin-bottom:.1rem}
+.item-c .info .cod{font-size:.7rem;color:var(--gris);margin-bottom:.3rem}
+.item-c .tallas-mini{display:flex;flex-wrap:wrap;gap:.3rem;margin:.3rem 0 .35rem}
+.item-c .tallas-mini span{font-size:.74rem;background:var(--celeste);border-radius:6px;padding:.18rem .5rem;font-weight:700;color:var(--tinta)}
+.item-c .abajo{display:flex;justify-content:space-between;align-items:center;font-size:.78rem;margin-top:.25rem}
+.item-c .abajo b{font-size:.9rem;color:var(--rojo)}
+.item-c .quitar{border:none;background:none;color:var(--rojo);cursor:pointer;font-size:.74rem;font-weight:600;text-decoration:underline}
+.item-c .editar{border:none;background:none;color:var(--tinta);cursor:pointer;font-size:.74rem;font-weight:600;text-decoration:underline;margin-right:.5rem}
+.item-c .falta{font-size:.7rem;color:var(--rojo-osc);font-weight:600;margin-top:.2rem}
+.cajon footer{padding:.9rem 1.2rem 1.2rem;display:flex;flex-direction:column;gap:.5rem}
+.resumen-grid{display:grid;grid-template-columns:1fr 1fr;gap:.15rem .6rem;margin-bottom:.35rem}
+.cajon footer .linea{display:flex;justify-content:space-between;font-size:.82rem}
+.cajon footer .linea.total{font-size:1rem;font-weight:800;padding-top:.35rem;border-top:1.5px solid #edf3f7}
+.vacio{color:var(--gris);text-align:center;padding:2rem 1rem;font-size:.88rem}
+
+/* ===== checkout ===== */
+.form-caja{display:none;flex-direction:column;gap:.6rem}
+.form-caja.ver{display:flex}
+.form-caja input,.form-caja textarea{
+  border:1.5px solid #d8e4ec;border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.86rem;outline:none;width:100%;
+}
+.form-caja input:focus,.form-caja textarea:focus{border-color:var(--rojo)}
+.form-caja label{font-size:.72rem;font-weight:600;color:var(--gris);text-transform:uppercase;letter-spacing:.08em}
+.exito{display:none;border-radius:14px;overflow:hidden;border:1.5px solid #a9dbc0}
+.exito.ver{display:flex;flex-direction:column}
+.exito-top{
+  background:linear-gradient(135deg,#0c6b3d 0%,#1a9255 100%);color:#fff;
+  padding:.85rem 1rem;display:flex;align-items:center;gap:.75rem;
+}
+.exito-ico{font-size:1.6rem;flex-shrink:0;line-height:1}
+.exito-top strong{display:block;font-size:.92rem;font-weight:700}
+.exito-top p{font-size:.76rem;opacity:.88;margin:.18rem 0 0}
+.exito-ctas{padding:.7rem 1rem;display:flex;flex-direction:column;gap:.4rem;background:#f0faf5}
+footer.pie{
+  text-align:center;color:var(--gris);font-size:.8rem;padding:2.2rem 1rem 6.5rem;
+}
+footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
+.toast{
+  position:fixed;left:50%;bottom:5.6rem;transform:translateX(-50%) translateY(20px);background:var(--tinta);color:#fff;
+  padding:.7rem 1.3rem;border-radius:999px;font-size:.85rem;font-weight:600;opacity:0;pointer-events:none;
+  transition:all .25s ease;z-index:100;box-shadow:0 10px 30px rgba(0,0,0,.3);
+}
+.toast.ver{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ===== RUT lookup form ===== */
+.rut-row{display:flex;gap:.5rem}
+.rut-row input{flex:1}
+.rut-row .btn-buscar{padding:.6rem 1rem;font-size:.82rem;border-radius:10px;border:1.5px solid var(--rojo);
+  background:var(--rojo);color:#fff;font-family:inherit;font-weight:600;cursor:pointer;white-space:nowrap}
+.rut-estado{font-size:.75rem;font-weight:600;padding:.35rem .6rem;border-radius:8px;margin-top:.15rem;display:none}
+.rut-estado.ok{display:block;background:#e9f9f0;color:#0c6b3d}
+.rut-estado.nuevo{display:block;background:#fff8e1;color:#7a5800}
+.rut-estado.error{display:block;background:#fdecee;color:var(--rojo-osc)}
+.rut-estado.buscando{display:block;background:var(--celeste);color:var(--tinta)}
+.campos-extra{display:flex;flex-direction:column;gap:.6rem}
+.rut-prompt{
+  display:flex;align-items:center;gap:.75rem;
+  background:linear-gradient(135deg,#12283a 0%,#1e3c55 100%);
+  color:#fff;border-radius:14px;padding:.85rem 1rem;
+}
+.rut-prompt-icon{font-size:1.6rem;flex-shrink:0;line-height:1}
+.rut-prompt strong{display:block;font-size:.9rem;font-weight:700;letter-spacing:.01em}
+.rut-prompt span{display:block;font-size:.72rem;opacity:.75;margin-top:.1rem}
+.form-caja select{
+  border:1.5px solid #d8e4ec;border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.86rem;
+  outline:none;width:100%;background:#fff;color:var(--tinta);appearance:none;
+}
+.form-caja select:focus{border-color:var(--rojo)}
+.form-label{font-size:.72rem;font-weight:600;color:var(--gris);text-transform:uppercase;letter-spacing:.08em}
+.spinner{display:inline-block;width:.9rem;height:.9rem;border:2px solid #ccc;border-top-color:var(--rojo);
+  border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:.3rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+.guardando-overlay{font-size:.78rem;color:var(--gris);text-align:center;padding:.4rem}
+
+/* ===== Admin button fijo ===== */
+.fab-admin{
+  position:fixed;right:1.2rem;top:3.5rem;z-index:60;background:var(--tinta);color:rgba(255,255,255,.8);
+  border:none;cursor:pointer;border-radius:999px;padding:.6rem 1.1rem;font-family:inherit;
+  font-weight:600;font-size:.75rem;letter-spacing:.1em;
+  box-shadow:0 6px 20px rgba(18,40,58,.35);
+  opacity:0;transform:translateY(-8px);pointer-events:none;
+  transition:color .15s, opacity .25s ease, transform .25s ease;
+}
+.fab-admin.visible{opacity:1;transform:translateY(0);pointer-events:auto}
+.fab-admin:hover{color:#fff;background:#1e3c55}
+
+/* ===== Admin overlay ===== */
+.admin-velo{
+  position:fixed;inset:0;background:rgba(12,25,36,.65);backdrop-filter:blur(4px);
+  z-index:200;display:none;align-items:flex-start;justify-content:center;padding:1rem;overflow:auto;
+}
+.admin-velo.abierto{display:flex}
+.admin-panel{
+  background:#fff;border-radius:22px;width:100%;max-width:900px;min-height:300px;
+  position:relative;padding:1.8rem 1.6rem 1.6rem;margin:auto;
+}
+.admin-panel .cerrar-admin{
+  position:absolute;top:.9rem;right:.9rem;width:2.3rem;height:2.3rem;border-radius:999px;border:none;
+  cursor:pointer;background:#f1f6f9;color:var(--tinta);font-size:1.05rem;font-weight:700;
+}
+/* login */
+.admin-login-box{max-width:380px;margin:0 auto;display:flex;flex-direction:column;gap:.8rem}
+.admin-login-box h2{color:var(--rojo);font-size:1.5rem;font-weight:800;letter-spacing:.04em;text-align:center}
+.admin-login-box input{
+  border:1.5px solid #d8e4ec;border-radius:10px;padding:.7rem .9rem;font-family:inherit;
+  font-size:.9rem;outline:none;width:100%;
+}
+.admin-login-box input:focus{border-color:var(--rojo)}
+.a-error{font-size:.78rem;color:var(--rojo-osc);background:#fdecee;border-radius:8px;padding:.5rem .7rem;display:none}
+.a-error.ver{display:block}
+/* orders list */
+.admin-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem;margin-bottom:1.2rem}
+.admin-top h2{color:var(--rojo);font-size:1.3rem;font-weight:800}
+.admin-top-acciones{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+.admin-top-acciones input{
+  border:1.5px solid #d8e4ec;border-radius:999px;padding:.45rem 1rem;font-family:inherit;
+  font-size:.82rem;outline:none;min-width:180px;
+}
+.admin-top-acciones input:focus{border-color:var(--rojo)}
+.a-tag{font-size:.65rem;font-weight:700;letter-spacing:.07em;padding:.2rem .5rem;border-radius:999px;text-transform:uppercase}
+.a-tag-dv{background:#fdeef0;color:var(--rojo-osc)}
+.a-tag-otro{background:var(--celeste2);color:var(--tinta)}
+.tabla-pedidos{width:100%;border-collapse:collapse;font-size:.83rem}
+.tabla-pedidos th{text-align:left;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--gris);border-bottom:2px solid #e4edf3;padding:.5rem .7rem}
+.tabla-pedidos td{padding:.55rem .7rem;border-bottom:1px solid #edf3f7;vertical-align:top}
+.tabla-pedidos tr:hover td{background:var(--celeste)}
+.tabla-pedidos .btn-mini{
+  font-size:.72rem;font-weight:600;padding:.3rem .7rem;border-radius:8px;border:1.5px solid #d8e4ec;
+  background:#fff;cursor:pointer;font-family:inherit;transition:all .15s;
+}
+.tabla-pedidos .btn-mini:hover{border-color:var(--rojo);color:var(--rojo)}
+.tabla-pedidos .btn-dl{background:var(--rojo);color:#fff;border-color:var(--rojo)}
+.tabla-pedidos .btn-dl:hover{background:var(--rojo-osc)}
+.a-vacio{color:var(--gris);text-align:center;padding:3rem 1rem;font-size:.9rem}
+.tbl-wrap{overflow-x:auto}
+/* detalle pedido */
+.det-header{display:flex;align-items:center;gap:1rem;margin-bottom:1.2rem;flex-wrap:wrap}
+.det-header h2{color:var(--rojo);font-size:1.2rem;font-weight:800}
+.det-info{background:var(--celeste);border-radius:14px;padding:1rem 1.2rem;display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.4rem .8rem;margin-bottom:1.2rem;font-size:.83rem}
+.det-info dt{font-weight:700;font-size:.7rem;color:var(--gris);text-transform:uppercase;letter-spacing:.07em}
+.det-info dd{margin:0;color:var(--tinta)}
+.det-items-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.8rem;margin-bottom:1.2rem}
+.det-item{border:1.5px solid #e4edf3;border-radius:12px;padding:.8rem .9rem;font-size:.82rem}
+.det-item .dnom{font-weight:700;font-size:.88rem}
+.det-item .dcod{color:var(--gris);font-size:.72rem;margin:.1rem 0 .45rem}
+.det-item .dtallas{display:flex;flex-wrap:wrap;gap:.3rem}
+.det-item .dtallas span{background:var(--celeste2);border-radius:6px;padding:.2rem .45rem;font-weight:600;font-size:.72rem}
+.det-item .dsubt{margin-top:.5rem;font-weight:700;font-size:.82rem;color:var(--tinta)}
+.det-acciones{display:flex;gap:.7rem;flex-wrap:wrap}
+/* estado chips filtro admin */
+.filtros-estado{display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap}
+.chip-estado{border:1.5px solid #d8e4ec;background:#fff;border-radius:999px;padding:.35rem .9rem;
+  font-family:inherit;font-size:.76rem;font-weight:600;color:var(--gris);cursor:pointer;transition:all .15s}
+.chip-estado.activo{background:var(--tinta);border-color:var(--tinta);color:#fff}
+.chip-estado.activo-listo{background:var(--verde);border-color:var(--verde);color:#fff}
+.chip-estado.activo-pend{background:#e6900a;border-color:#e6900a;color:#fff}
+.pill-listo{display:inline-block;font-size:.65rem;font-weight:700;letter-spacing:.06em;padding:.2rem .55rem;
+  border-radius:999px;text-transform:uppercase}
+.pill-listo.si{background:#e9f9f0;color:#0c6b3d}
+.pill-listo.no{background:#fff3cd;color:#7a5800}
+.btn-toggle-listo{font-size:.68rem;font-weight:600;padding:.25rem .6rem;border-radius:7px;border:none;
+  cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-toggle-listo.marcar{background:var(--verde);color:#fff}
+.btn-toggle-listo.desmarcar{background:#e4edf3;color:var(--tinta)}
+.btn-toggle-listo:hover{opacity:.85}
+</style>
+</head>
+<body>
+
+<div class="cinta"><span>DOLCE VITA · NUEVA COLECCIÓN 44 · PEDIDOS MAYORISTAS · MÍNIMO 12 UNIDADES POR MODELO · DOLCE VITA · NUEVA COLECCIÓN 44 · PEDIDOS MAYORISTAS · MÍNIMO 12 UNIDADES POR MODELO ·&nbsp;</span></div>
+
+<header class="hero">
+  <div class="bandera"><i></i><i></i><i></i></div>
+  <p class="presenta">Mohicano presenta</p>
+  <h1>Dolce Vita</h1>
+  <p class="sub">Nueva Colección 44 · Inspirada en Italia</p>
+  <p class="nota">Catálogo exclusivo para mayoristas — <b>62 modelos</b> en 14 líneas. Explora, arma tus curvas por talla y envía tu pedido. Al finalizar se descarga automáticamente tu <b>Excel</b> con códigos, tallas, curvas y cantidades.</p>
+  <div class="acciones">
+    <a class="btn btn-wsp" id="wsp-general" href="#" target="_blank" rel="noopener">💬 Hablar con ventas</a>
+  </div>
+  <a class="cta-colecciones" href="https://mohicanojeans.netlify.app/catalogo-44" target="_blank" rel="noopener">
+    👆 CLICK AQUÍ PARA VER LAS OTRAS COLECCIONES
+  </a>
+</header>
+
+<div class="italia-strip">
+  <img src="img/c2.webp" alt="Dolce Vita en Italia — Galleria" loading="lazy">
+  <img src="img/c4.webp" alt="Dolce Vita en Italia — Catedral de Milán" loading="lazy">
+  <img src="img/c5.webp" alt="Dolce Vita — Postcard desde Italia" loading="lazy">
+</div>
+
+<div class="barra-filtros" id="filtros">
+  <input class="busca" id="busca" type="search" placeholder="Buscar modelo o código…" autocomplete="new-password" spellcheck="false">
+</div>
+
+<main>
+  <div id="catalogo"></div>
+</main>
+
+<section class="bloque-catalogo">
+  <div class="bandera" style="margin:0 auto 1rem;display:flex;max-width:120px"><i></i><i></i><i></i></div>
+  <h2>¿Quieres el catálogo completo?</h2>
+  <p>Descarga o comparte el catálogo DOLCE VITA 44 en PDF, con los 62 modelos y todo el detalle de fits y telas.</p>
+  <a class="btn btn-rojo btn-catalogo" href="catalogo-dolce-vita-44.pdf" target="_blank" rel="noopener">📕 Ver / descargar catálogo PDF</a>
+</section>
+
+<footer class="pie">
+  <div class="gracias"><img src="img/c268.webp" alt="Gracias por visitar Italia — Mohicano" loading="lazy"></div>
+  <div class="bandera" style="margin:0 auto .8rem;display:flex;max-width:120px"><i></i><i></i><i></i></div>
+  Mohicano Jeans · Colección Dolce Vita 44 · Pedidos mayoristas<br>
+  <a href="https://mohicanojeans.netlify.app/catalogo-44" target="_blank" rel="noopener">mohicanojeans.netlify.app/cole-44</a>
+</footer>
+
+<button class="fab-carrito" id="abrir-carrito">🛒 Tu pedido <span class="num" id="num-carrito">0</span></button>
+<button class="fab-admin" id="btn-admin">ADMIN</button>
+
+<!-- modal producto -->
+<div class="velo" id="velo-modal">
+  <div class="modal">
+    <button class="cerrar" id="cerrar-modal">✕</button>
+    <div class="galeria">
+      <div class="principal"><img id="img-principal" src="" alt=""></div>
+      <div class="minis" id="minis"></div>
+    </div>
+    <div class="datos">
+      <h2 id="m-nombre"></h2>
+      <p class="cod" id="m-codigo"></p>
+      <p class="precio-g" id="m-precio"></p>
+      <div class="tallas-caja">
+        <h4>Cantidades por talla</h4>
+        <div id="m-tallas"></div>
+      </div>
+      <div class="total-modal"><span>Total prendas</span><span id="m-total">0</span></div>
+      <p class="aviso-min" id="m-aviso">El mínimo por modelo es de <b>12 unidades</b>. Agrega más prendas para poder añadirlo al pedido.</p>
+      <button class="btn btn-borde" id="m-curva">⚡ Llenar curva sugerida (12 u.)</button>
+      <button class="btn btn-rojo" id="m-agregar">Agregar al pedido</button>
+      <a class="btn btn-wsp" id="m-wsp" href="#" target="_blank" rel="noopener">💬 Consultar este modelo por WhatsApp</a>
+    </div>
+  </div>
+</div>
+
+<!-- cajón carrito -->
+<div class="cajon-velo" id="cajon-velo"></div>
+<aside class="cajon" id="cajon">
+  <header>
+    <h2>Tu pedido</h2>
+    <p>Mínimo 12 unidades por modelo · Revisa tallas y cantidades</p>
+    <button class="cerrar" id="cerrar-cajon">✕</button>
+  </header>
+  <div class="cajon-items">
+  <div class="items" id="items-carrito"></div>
+  </div>
+  <div class="cajon-form">
+  <footer>
+    <div class="resumen-grid">
+      <div class="linea"><span>Prendas</span><b id="c-prendas">0</b></div>
+      <div class="linea"><span>Curvas</span><b id="c-curvas">0</b></div>
+      <div class="linea"><span>Neto</span><b id="c-neto">$0</b></div>
+      <div class="linea"><span>IVA 19%</span><b id="c-iva">$0</b></div>
+    </div>
+    <div class="linea total"><span>Total con IVA</span><b id="c-total">$0</b></div>
+
+    <div class="form-caja ver" id="form-checkout">
+      <div class="rut-prompt">
+        <span class="rut-prompt-icon">🪪</span>
+        <div>
+          <strong>Ingresa tu RUT para continuar</strong>
+          <span>Te identificamos y completamos tu pedido al instante</span>
+        </div>
+      </div>
+      <div class="rut-row">
+        <input id="f-rut" type="text" placeholder="76.123.456-7" autocomplete="off">
+        <button type="button" class="btn-buscar" id="btn-buscar-rut" style="display:none">Buscar</button>
+      </div>
+      <div id="rut-estado" class="rut-estado"></div>
+
+      <div class="campos-extra" id="campos-cliente" style="display:none">
+        <span class="form-label">Razón Social *</span>
+        <input id="f-nombre" type="text" placeholder="Ej: Comercial Andes SpA">
+        <span class="form-label">Teléfono *</span>
+        <input id="f-fono" type="tel" placeholder="+56 9 …">
+        <span class="form-label">Giro *</span>
+        <input id="f-giro" type="text" placeholder="Venta al por menor de ropa">
+        <span class="form-label">Dirección *</span>
+        <input id="f-dir" type="text" placeholder="Av. Ejemplo 123, oficina 4">
+        <span class="form-label">Nombre Tienda *</span>
+        <input id="f-tienda" type="text" placeholder="Mi Tienda">
+        <span class="form-label">Comuna *</span>
+        <input id="f-comuna" type="text" placeholder="Las Condes">
+        <span class="form-label">Transporte *</span>
+        <select id="f-transporte">
+          <option value="">— elige transporte —</option>
+          <option>Starken</option>
+          <option>Chilexpress</option>
+          <option>Bus</option>
+          <option>Retiro en bodega</option>
+          <option>Otro</option>
+        </select>
+        <span class="form-label">Comentario (opcional)</span>
+        <textarea id="f-nota" rows="2" placeholder="Observaciones, despacho, etc."></textarea>
+      </div>
+      <div id="guardando-estado" class="guardando-overlay" style="display:none"></div>
+    </div>
+    <div class="exito" id="exito">
+      <div class="exito-top">
+        <span class="exito-ico">✅</span>
+        <div>
+          <strong>¡Pedido guardado!</strong>
+          <p>Tu Excel se descargó. Si no aparece en tus descargas, usa el botón:</p>
+        </div>
+      </div>
+      <div class="exito-ctas">
+        <button class="btn btn-borde" id="btn-excel-otra" style="justify-content:center">⬇ Descargar Excel nuevamente</button>
+        <a class="btn btn-wsp" id="btn-wsp-pedido" href="#" target="_blank" rel="noopener" style="justify-content:center">💬 Enviar pedido por WhatsApp</a>
+        <button class="btn" id="btn-cerrar-exito" style="justify-content:center;background:#edf3f7;color:#12283a;border:1.5px solid #c8dde8">✕ Cerrar carrito</button>
+      </div>
+    </div>
+    <button class="btn btn-rojo" id="btn-finalizar" style="justify-content:center;display:none">Confirmar y guardar pedido</button>
+  </footer>
+  </div><!-- /cajon-form -->
+</aside>
+
+<div class="toast" id="toast"></div>
+
+<!-- ===== Admin overlay ===== -->
+<div class="admin-velo" id="admin-velo">
+  <div class="admin-panel" id="admin-panel">
+    <button class="cerrar-admin" id="cerrar-admin">✕</button>
+
+    <!-- Login -->
+    <div id="admin-seccion-login">
+      <div class="admin-login-box">
+        <div class="bandera" style="margin:0 auto 1rem;display:flex;max-width:80px"><i></i><i></i><i></i></div>
+        <h2>Acceso Admin</h2>
+        <p style="text-align:center;font-size:.82rem;color:var(--gris);margin-top:-.4rem">Dolce Vita 44 · Pedidos</p>
+        <input id="a-email" type="text" placeholder="correo@ejemplo.com" autocomplete="off" readonly onfocus="this.removeAttribute('readonly')">
+        <input id="a-pass" type="password" placeholder="Contraseña" autocomplete="new-password">
+        <div class="a-error" id="a-error"></div>
+        <button class="btn btn-rojo" id="btn-login-admin" style="justify-content:center">Ingresar</button>
+      </div>
+    </div>
+
+    <!-- Lista de pedidos -->
+    <div id="admin-seccion-lista" style="display:none">
+      <div class="admin-top">
+        <h2>Pedidos Dolce Vita 44</h2>
+        <div class="admin-top-acciones">
+          <input id="a-busca" type="search" placeholder="RUT o cliente…">
+          <button class="btn btn-borde" id="btn-refresh" style="padding:.45rem 1rem;font-size:.82rem">↺ Actualizar</button>
+          <button class="btn btn-borde" id="btn-logout" style="padding:.45rem 1rem;font-size:.82rem">Salir</button>
+        </div>
+      </div>
+      <div class="filtros-estado">
+        <button class="chip-estado activo" data-filtro="todos">Todos</button>
+        <button class="chip-estado" data-filtro="pendiente">Pendientes</button>
+        <button class="chip-estado" data-filtro="listo">Listos</button>
+      </div>
+      <div class="tbl-wrap">
+        <table class="tabla-pedidos" id="tabla-pedidos">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Cliente</th>
+              <th>RUT</th>
+              <th>Origen</th>
+              <th>Prendas</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-pedidos"></tbody>
+        </table>
+      </div>
+      <div id="a-vacio" class="a-vacio" style="display:none">No hay pedidos registrados aún.</div>
+    </div>
+
+    <!-- Detalle de un pedido -->
+    <div id="admin-seccion-detalle" style="display:none">
+      <div class="det-header">
+        <button class="btn btn-borde" id="btn-volver-lista" style="padding:.45rem 1rem;font-size:.82rem">← Volver</button>
+        <h2 id="det-titulo">Pedido</h2>
+      </div>
+      <dl class="det-info" id="det-info"></dl>
+      <div class="det-items-grid" id="det-items"></div>
+      <div class="det-acciones">
+        <button class="btn btn-rojo" id="btn-dl-excel" style="justify-content:center">⬇ Descargar Excel</button>
+        <a class="btn btn-wsp" id="det-wsp" href="#" target="_blank" rel="noopener" style="display:none;justify-content:center">💬 WhatsApp cliente</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
