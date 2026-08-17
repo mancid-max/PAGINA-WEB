@@ -1097,6 +1097,7 @@ function renderizarTablaPedidos(lista) {
       <td style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.2rem">
         <button class="btn-mini" onclick="verDetallePedido('${p.id}')">Ver detalle</button>
         <button class="btn-mini btn-dl" onclick="descargarExcelAdmin('${p.id}')">⬇ Excel</button>
+        <button class="btn-mini btn-del" onclick="eliminarPedido('${p.id}')">🗑 Eliminar</button>
       </td>
     </tr>`;
   }).join("");
@@ -1125,6 +1126,31 @@ window.toggleListo = async function(id, nuevoEstado) {
     if (p) { p.is_ready = nuevoEstado; p.ready_at = nuevoEstado ? new Date().toISOString() : null; }
     renderizarTablaPedidos(adminPedidos);
     toast(nuevoEstado ? "✔ Marcado como listo" : "Desmarcado");
+  } catch(e) {
+    toast("Error: " + e.message);
+  }
+};
+
+window.eliminarPedido = async function(id) {
+  const p = adminPedidos.find(p => p.id === id);
+  const nombre = p?.store_name || p?.client_rut || id;
+  if (!confirm(`¿Eliminar el pedido de "${nombre}"? Esta acción no se puede deshacer.`)) return;
+  try {
+    const headers = {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${adminToken}`,
+      "Content-Type": "application/json",
+      Prefer: "return=minimal",
+    };
+    // Primero eliminar los ítems
+    const r1 = await fetch(`${SUPABASE_URL}/rest/v1/quote_items?quote_id=eq.${id}`, { method:"DELETE", headers });
+    if (!r1.ok) throw new Error("Error eliminando ítems: " + (await r1.text() || r1.status));
+    // Luego eliminar el pedido
+    const r2 = await fetch(`${SUPABASE_URL}/rest/v1/quotes?id=eq.${id}`, { method:"DELETE", headers });
+    if (!r2.ok) throw new Error("Error eliminando pedido: " + (await r2.text() || r2.status));
+    adminPedidos = adminPedidos.filter(p => p.id !== id);
+    renderizarTablaPedidos(adminPedidos);
+    toast("Pedido eliminado");
   } catch(e) {
     toast("Error: " + e.message);
   }
