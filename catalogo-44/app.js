@@ -1225,8 +1225,8 @@ window.verDetallePedido = function(id) {
     $("#det-items").innerHTML = itemsHtml;
   } else if (q.total_items > 0) {
     $("#det-items").innerHTML = `<p style="color:var(--gris);font-size:.85rem;grid-column:1/-1">
-      ⚠ El pedido tiene ${q.total_items} prendas pero el detalle no está disponible en este panel
-      (pedido creado desde otro sistema). Descarga el Excel para ver el desglose completo.</p>`;
+      ⚠ El pedido tiene ${q.total_items} prendas pero el detalle aún no carga —
+      es un problema de permisos en la base de datos que se está corrigiendo. Descarga el Excel para ver el desglose completo.</p>`;
   } else {
     $("#det-items").innerHTML = `<p style="color:var(--gris);font-size:.85rem;grid-column:1/-1">Sin ítems registrados</p>`;
   }
