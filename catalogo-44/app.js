@@ -1131,10 +1131,32 @@ window.toggleListo = async function(id, nuevoEstado) {
   }
 };
 
+function customConfirm(titulo, mensaje) {
+  return new Promise(resolve => {
+    $("#confirm-titulo").textContent = titulo;
+    $("#confirm-msg").textContent = mensaje;
+    $("#confirm-velo").classList.add("abierto");
+    const cerrar = (val) => {
+      $("#confirm-velo").classList.remove("abierto");
+      $("#confirm-ok").removeEventListener("click", onOk);
+      $("#confirm-cancel").removeEventListener("click", onCancel);
+      resolve(val);
+    };
+    const onOk     = () => cerrar(true);
+    const onCancel = () => cerrar(false);
+    $("#confirm-ok").addEventListener("click", onOk);
+    $("#confirm-cancel").addEventListener("click", onCancel);
+  });
+}
+
 window.eliminarPedido = async function(id) {
   const p = adminPedidos.find(p => p.id === id);
   const nombre = p?.store_name || p?.client_rut || id;
-  if (!confirm(`¿Eliminar el pedido de "${nombre}"? Esta acción no se puede deshacer.`)) return;
+  const ok = await customConfirm(
+    "Eliminar pedido",
+    `¿Eliminar el pedido de "${nombre}"? Esta acción no se puede deshacer.`
+  );
+  if (!ok) return;
   try {
     const headers = {
       apikey: SUPABASE_KEY,
@@ -1142,15 +1164,13 @@ window.eliminarPedido = async function(id) {
       "Content-Type": "application/json",
       Prefer: "return=minimal",
     };
-    // Primero eliminar los ítems
     const r1 = await fetch(`${SUPABASE_URL}/rest/v1/quote_items?quote_id=eq.${id}`, { method:"DELETE", headers });
     if (!r1.ok) throw new Error("Error eliminando ítems: " + (await r1.text() || r1.status));
-    // Luego eliminar el pedido
     const r2 = await fetch(`${SUPABASE_URL}/rest/v1/quotes?id=eq.${id}`, { method:"DELETE", headers });
     if (!r2.ok) throw new Error("Error eliminando pedido: " + (await r2.text() || r2.status));
     adminPedidos = adminPedidos.filter(p => p.id !== id);
     renderizarTablaPedidos(adminPedidos);
-    toast("Pedido eliminado");
+    toast(`🗑 Pedido de "${nombre}" eliminado`);
   } catch(e) {
     toast("Error: " + e.message);
   }

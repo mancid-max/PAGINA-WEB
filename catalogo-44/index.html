@@ -311,6 +311,22 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
 .fab-admin.visible{opacity:1;transform:translateY(0);pointer-events:auto}
 .fab-admin:hover{color:#fff;background:#1e3c55}
 
+/* ===== Modal confirmación ===== */
+.confirm-velo{
+  position:fixed;inset:0;background:rgba(12,25,36,.65);backdrop-filter:blur(4px);
+  z-index:500;display:none;align-items:center;justify-content:center;padding:1rem;
+}
+.confirm-velo.abierto{display:flex}
+.confirm-box{
+  background:#fff;border-radius:20px;padding:2rem 1.8rem 1.6rem;max-width:380px;width:100%;
+  text-align:center;box-shadow:0 24px 60px rgba(12,25,36,.3);
+}
+.confirm-ico{font-size:2.4rem;margin-bottom:.6rem}
+.confirm-titulo{font-size:1.1rem;font-weight:800;color:var(--tinta);margin-bottom:.5rem}
+.confirm-msg{font-size:.88rem;color:var(--gris);line-height:1.5;margin-bottom:1.3rem}
+.confirm-btns{display:flex;gap:.7rem;justify-content:center}
+.confirm-btns .btn{min-width:130px;justify-content:center}
+
 /* ===== Admin overlay ===== */
 .admin-velo{
   position:fixed;inset:0;background:rgba(12,25,36,.65);backdrop-filter:blur(4px);
@@ -552,6 +568,19 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
 </aside>
 
 <div class="toast" id="toast"></div>
+
+<!-- ===== Modal confirmación ===== -->
+<div class="confirm-velo" id="confirm-velo">
+  <div class="confirm-box">
+    <div class="confirm-ico">🗑</div>
+    <h3 class="confirm-titulo" id="confirm-titulo">Eliminar pedido</h3>
+    <p class="confirm-msg" id="confirm-msg"></p>
+    <div class="confirm-btns">
+      <button class="btn btn-rojo" id="confirm-ok">Sí, eliminar</button>
+      <button class="btn btn-borde" id="confirm-cancel">Cancelar</button>
+    </div>
+  </div>
+</div>
 
 <!-- ===== Admin overlay ===== -->
 <div class="admin-velo" id="admin-velo">
