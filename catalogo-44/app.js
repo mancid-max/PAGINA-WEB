@@ -1079,7 +1079,8 @@ function renderizarTablaPedidos(lista) {
   }
   aviso.style.display = "none";
   tbody.innerHTML = filtrados.map(p => {
-    const fecha = new Date(p.created_at).toLocaleDateString("es-CL", {day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"});
+    const d = new Date(p.created_at);
+    const fecha = `${String(d.getDate()).padStart(2,"0")}-${String(d.getMonth()+1).padStart(2,"0")}<br><span style="font-size:.7rem;color:var(--gris)">${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}</span>`;
     const src = p.source || "—";
     const srcLabel = src.includes("dolce")   ? "DV 44"
                    : src.includes("mixto")   ? "Mixto"
@@ -1089,21 +1090,23 @@ function renderizarTablaPedidos(lista) {
                    : src.includes("unified") ? "Unificado"
                    : src;
     const srcClass = src.includes("dolce") || src.includes("44") ? "a-tag-dv" : "a-tag-otro";
-    const srcTag = `<span class="a-tag ${srcClass}" style="white-space:nowrap">${srcLabel}</span>`;
+    const srcTag = `<span class="a-tag ${srcClass}">${srcLabel}</span>`;
     const listo = !!p.is_ready;
-    const estadoHtml = `<span class="pill-listo ${listo?"si":"no"}">${listo?"✔ Listo":"Pendiente"}</span>`;
-    const btnListo = `<button class="btn-toggle-listo ${listo?"desmarcar":"marcar"}" onclick="toggleListo('${p.id}',${!listo})">${listo?"Desmarcar":"Marcar listo"}</button>`;
+    const iconListo = listo ? "✔" : "○";
+    const titleListo = listo ? "Desmarcar listo" : "Marcar como listo";
     return `<tr>
       <td>${fecha}</td>
-      <td>${p.store_name||"—"}</td>
-      <td>${p.client_rut||"—"}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${p.store_name||""}">${p.store_name||"—"}</td>
+      <td style="white-space:nowrap">${p.client_rut||"—"}</td>
       <td>${srcTag}</td>
-      <td>${p.total_items||"?"}</td>
-      <td>${estadoHtml}<br>${btnListo}</td>
-      <td style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.2rem">
-        <button class="btn-mini" onclick="verDetallePedido('${p.id}')">Ver detalle</button>
-        <button class="btn-mini btn-dl" onclick="descargarExcelAdmin('${p.id}')">⬇ Excel</button>
-        <button class="btn-mini btn-del" onclick="eliminarPedido('${p.id}')">🗑 Eliminar</button>
+      <td style="text-align:center;font-weight:700">${p.total_items||"?"}</td>
+      <td style="text-align:center">
+        <button class="btn-icon-listo ${listo?"si":"no"}" title="${titleListo}" onclick="toggleListo('${p.id}',${!listo})">${iconListo}</button>
+      </td>
+      <td style="white-space:nowrap">
+        <button class="btn-ico" title="Ver detalle" onclick="verDetallePedido('${p.id}')">👁</button>
+        <button class="btn-ico btn-ico-dl" title="Descargar Excel" onclick="descargarExcelAdmin('${p.id}')">📥</button>
+        <button class="btn-ico btn-ico-del" title="Eliminar" onclick="eliminarPedido('${p.id}')">🗑</button>
       </td>
     </tr>`;
   }).join("");

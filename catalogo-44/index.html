@@ -370,15 +370,20 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
   color:var(--gris);border-bottom:2px solid #e4edf3;padding:.45rem .5rem;white-space:nowrap}
 .tabla-pedidos td{padding:.45rem .5rem;border-bottom:1px solid #edf3f7;vertical-align:top}
 .tabla-pedidos tr:hover td{background:var(--celeste)}
-.tabla-pedidos .btn-mini{
-  font-size:.72rem;font-weight:600;padding:.3rem .7rem;border-radius:8px;border:1.5px solid #d8e4ec;
-  background:#fff;cursor:pointer;font-family:inherit;transition:all .15s;
+.btn-ico{
+  width:2rem;height:2rem;border-radius:8px;border:1.5px solid #e4edf3;background:#fff;
+  cursor:pointer;font-size:.95rem;line-height:1;transition:all .15s;
 }
-.tabla-pedidos .btn-mini:hover{border-color:var(--rojo);color:var(--rojo)}
-.tabla-pedidos .btn-dl{background:var(--rojo);color:#fff;border-color:var(--rojo)}
-.tabla-pedidos .btn-dl:hover{background:var(--rojo-osc)}
-.tabla-pedidos .btn-del{background:#fff;color:#b91c1c;border-color:#fca5a5}
-.tabla-pedidos .btn-del:hover{background:#fef2f2;border-color:#b91c1c}
+.btn-ico:hover{border-color:var(--tinta);background:var(--celeste)}
+.btn-ico-dl{border-color:#fca5a5}
+.btn-ico-dl:hover{background:#fef2f2;border-color:var(--rojo)}
+.btn-ico-del:hover{background:#fef2f2;border-color:#b91c1c}
+.btn-icon-listo{
+  width:2rem;height:2rem;border-radius:8px;border:1.5px solid #d8e4ec;background:#fff;
+  cursor:pointer;font-size:1rem;font-weight:700;transition:all .15s;color:var(--gris);
+}
+.btn-icon-listo.si{background:#e8f7ef;border-color:#6bcf9e;color:#0c6b3d}
+.btn-icon-listo.no:hover{background:var(--celeste);border-color:var(--tinta)}
 .a-vacio{color:var(--gris);text-align:center;padding:3rem 1rem;font-size:.9rem}
 .tbl-wrap{overflow-x:auto}
 /* detalle pedido */
@@ -626,9 +631,9 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
               <th>Cliente</th>
               <th>RUT</th>
               <th>Origen</th>
-              <th>Prendas</th>
-              <th>Estado</th>
-              <th>Acciones</th>
+              <th style="text-align:center">Uds.</th>
+              <th style="text-align:center">Listo</th>
+              <th></th>
             </tr>
           </thead>
           <tbody id="tbody-pedidos"></tbody>
