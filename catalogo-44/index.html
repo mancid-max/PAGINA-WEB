@@ -330,12 +330,14 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
 /* ===== Admin overlay ===== */
 .admin-velo{
   position:fixed;inset:0;background:rgba(12,25,36,.65);backdrop-filter:blur(4px);
-  z-index:200;display:none;align-items:flex-start;justify-content:center;padding:1rem;overflow:auto;
+  z-index:200;display:none;align-items:flex-start;justify-content:center;padding:1rem;
+  overflow:hidden;
 }
 .admin-velo.abierto{display:flex}
 .admin-panel{
-  background:#fff;border-radius:22px;width:100%;max-width:900px;min-height:300px;
+  background:#fff;border-radius:22px;width:100%;max-width:900px;
   position:relative;padding:1.8rem 1.6rem 1.6rem;margin:auto;
+  max-height:calc(100dvh - 2rem);overflow-y:auto;overflow-x:hidden;
 }
 .admin-panel .cerrar-admin{
   position:absolute;top:.9rem;right:.9rem;width:2.3rem;height:2.3rem;border-radius:999px;border:none;
@@ -363,10 +365,10 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
 .a-tag{font-size:.65rem;font-weight:700;letter-spacing:.07em;padding:.2rem .5rem;border-radius:999px;text-transform:uppercase}
 .a-tag-dv{background:#fdeef0;color:var(--rojo-osc)}
 .a-tag-otro{background:var(--celeste2);color:var(--tinta)}
-.tabla-pedidos{width:100%;border-collapse:collapse;font-size:.83rem}
-.tabla-pedidos th{text-align:left;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--gris);border-bottom:2px solid #e4edf3;padding:.5rem .7rem}
-.tabla-pedidos td{padding:.55rem .7rem;border-bottom:1px solid #edf3f7;vertical-align:top}
+.tabla-pedidos{width:100%;border-collapse:collapse;font-size:.8rem}
+.tabla-pedidos th{text-align:left;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--gris);border-bottom:2px solid #e4edf3;padding:.45rem .5rem;white-space:nowrap}
+.tabla-pedidos td{padding:.45rem .5rem;border-bottom:1px solid #edf3f7;vertical-align:top}
 .tabla-pedidos tr:hover td{background:var(--celeste)}
 .tabla-pedidos .btn-mini{
   font-size:.72rem;font-weight:600;padding:.3rem .7rem;border-radius:8px;border:1.5px solid #d8e4ec;
