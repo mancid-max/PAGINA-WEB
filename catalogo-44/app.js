@@ -1046,7 +1046,13 @@ async function cargarPedidosAdmin() {
         `${SUPABASE_URL}/rest/v1/quote_items?select=quote_id,sku,size,quantity&quote_id=in.(${ids.join(",")})&limit=9999`,
         { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}` } }
       );
-      if (ir.ok) items = await ir.json();
+      if (ir.ok) {
+        items = await ir.json();
+        console.log(`[admin] quote_items: ${items.length} filas cargadas para ${ids.length} pedidos`);
+      } else {
+        const errTxt = await ir.text();
+        console.error(`[admin] quote_items fetch falló (${ir.status}):`, errTxt);
+      }
     }
 
     adminPedidos.forEach(q => { q._items = items.filter(it => it.quote_id === q.id); });
