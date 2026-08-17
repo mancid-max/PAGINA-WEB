@@ -164,19 +164,6 @@ const guardar = () => { try { localStorage.setItem("dv44_carrito", JSON.stringif
 /* ---- WhatsApp -------------------------------------------- */
 $("#wsp-general").href = linkWsp("¡Hola Mohicano! 👖 Soy mayorista y quiero información de la colección DOLCE VITA 44.");
 
-function compartirCatalogo() {
-  const msg = [
-    "🌸 *MOHICANO JEANS*",
-    "*DOLCE VITA · Primavera-Verano 2026*",
-    "",
-    "Nuevo catálogo exclusivo para mayoristas 👖",
-    "62 modelos en 14 líneas — jeans, chaquetas y más.",
-    "",
-    "👉 " + LANDING + "/",
-  ].join("\n");
-  window.open(linkWsp(msg), "_blank", "noopener");
-}
-
 /* ---- FILTROS --------------------------------------------- */
 const barra = $("#filtros");
 [{id:"todos", nombre:"Todo el catálogo"}, ...SECCIONES].forEach(s => {
