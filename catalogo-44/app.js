@@ -8,7 +8,9 @@ const MIN_POR_MODELO = 12;
 const TALLAS_JEANS   = ["36","38","40","42","44","46"];
 const TALLAS_CHAQ    = ["S","M","L","XL"];
 const CURVA_JEANS    = {"36":2,"38":2,"40":2,"42":2,"44":2,"46":2};
+const CURVA_JEANS_17 = {"36":2,"38":3,"40":4,"42":4,"44":3,"46":1};
 const CURVA_CHAQ     = {"S":3,"M":3,"L":3,"XL":3};
+const CURVA_CHAQ_17  = {"S":4,"M":5,"L":5,"XL":3};
 const LANDING        = "https://mohicanojeans.netlify.app/catalogo-44";
 const SOURCE_PEDIDO  = "dolce-vita-44";
 
@@ -118,7 +120,8 @@ const MODELOS = [
 const $     = s => document.querySelector(s);
 const CLP   = n => "$" + Number(n).toLocaleString("es-CL");
 const tallasDe  = m => m.tipo === "chaqueta" ? TALLAS_CHAQ : TALLAS_JEANS;
-const curvaDe   = m => m.tipo === "chaqueta" ? CURVA_CHAQ  : CURVA_JEANS;
+const curvaDe   = m => m.tipo === "chaqueta" ? CURVA_CHAQ    : CURVA_JEANS;
+const curva17De = m => m.tipo === "chaqueta" ? CURVA_CHAQ_17 : CURVA_JEANS_17;
 const buscar    = c => MODELOS.find(m => m.codigo === c);
 const nombreSec = id => (SECCIONES.find(s => s.id === id) || {}).nombre || "";
 const linkWsp   = txt => `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(txt)}`;
@@ -269,32 +272,41 @@ function pintarTallasModal() {
   const m = modeloAbierto;
   $("#m-tallas").innerHTML = tallasDe(m).map(t => `
     <div class="talla-fila">
-      <span class="t">${t}</span><span></span>
-      <div class="stepper">
-        <button onclick="paso('${t}',-1)">−</button>
-        <span class="cant" id="cant-${t}">${selModal[t]||0}</span>
-        <button onclick="paso('${t}',1)">+</button>
-      </div>
+      <span class="t">${t}</span>
+      <input type="number" class="cant-input" id="cant-${t}"
+             min="0" max="99" value="${selModal[t]||0}"
+             oninput="setCant('${t}',this.value)">
     </div>`).join("");
   actualizarTotalModal();
 }
-window.paso = function(t, d) {
-  selModal[t] = Math.max(0, (selModal[t]||0) + d);
-  if (!selModal[t]) delete selModal[t];
-  $("#cant-"+t).textContent = selModal[t] || 0;
+window.setCant = function(t, v) {
+  const n = Math.max(0, parseInt(v) || 0);
+  if (n > 0) selModal[t] = n;
+  else delete selModal[t];
   actualizarTotalModal();
 };
+function aplicarCurva(cv) {
+  tallasDe(modeloAbierto).forEach(t => {
+    const n = cv[t] || 0;
+    if (n > 0) selModal[t] = n; else delete selModal[t];
+    const inp = document.getElementById("cant-" + t);
+    if (inp) inp.value = n;
+  });
+  actualizarTotalModal();
+}
 function totalSel() { return Object.values(selModal).reduce((a,b) => a+b, 0); }
 function actualizarTotalModal() {
   const tot = totalSel();
   $("#m-total").textContent = tot;
   $("#m-aviso").classList.toggle("ver", tot > 0 && tot < MIN_POR_MODELO);
 }
-$("#m-curva").onclick = () => {
-  const cv = curvaDe(modeloAbierto);
-  Object.keys(cv).forEach(t => selModal[t] = (selModal[t]||0) + cv[t]);
-  pintarTallasModal();
-  toast("Curva de 12 unidades agregada ✔");
+$("#m-curva12").onclick = () => {
+  aplicarCurva(curvaDe(modeloAbierto));
+  toast("Curva 12 unidades aplicada ✔");
+};
+$("#m-curva17").onclick = () => {
+  aplicarCurva(curva17De(modeloAbierto));
+  toast("Curva 17 unidades aplicada ✔");
 };
 $("#m-agregar").onclick = () => {
   const tot = totalSel();

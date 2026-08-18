@@ -195,15 +195,16 @@ main{max-width:1200px;margin:0 auto;padding:1rem 1.2rem 4rem}
 .modal .datos .precio-g small{font-size:.72rem;color:var(--gris);font-weight:500;display:block}
 .tallas-caja{border:1.5px solid #e4edf3;border-radius:14px;padding:1rem}
 .tallas-caja h4{font-size:.8rem;text-transform:uppercase;letter-spacing:.12em;color:var(--gris);margin-bottom:.7rem}
-.talla-fila{display:grid;grid-template-columns:3.2rem 1fr auto;align-items:center;gap:.6rem;padding:.32rem 0}
+.talla-fila{display:flex;justify-content:space-between;align-items:center;padding:.32rem 0}
 .talla-fila .t{font-weight:700;font-size:.95rem}
-.stepper{display:flex;align-items:center;gap:.55rem;justify-self:end}
-.stepper button{
-  width:2rem;height:2rem;border-radius:8px;border:1.5px solid #d8e4ec;background:#fff;color:var(--tinta);
-  font-size:1.05rem;font-weight:700;cursor:pointer;line-height:1;
+.cant-input{
+  width:72px;text-align:center;border:1.5px solid #d8e4ec;border-radius:8px;
+  padding:6px 8px;font-size:1rem;font-weight:700;color:var(--tinta);
 }
-.stepper button:hover{border-color:var(--rojo);color:var(--rojo)}
-.stepper .cant{min-width:2rem;text-align:center;font-weight:700}
+.cant-input:focus{border-color:var(--rojo);outline:none}
+.cant-input::-webkit-inner-spin-button,.cant-input::-webkit-outer-spin-button{-webkit-appearance:none}
+.cant-input[type=number]{-moz-appearance:textfield}
+.curvas-row{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem}
 .total-modal{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:.95rem}
 .aviso-min{font-size:.78rem;color:var(--rojo-osc);background:#fdecee;border-radius:10px;padding:.55rem .8rem;display:none}
 .aviso-min.ver{display:block}
@@ -522,9 +523,11 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
       </div>
       <div class="total-modal"><span>Total prendas</span><span id="m-total">0</span></div>
       <p class="aviso-min" id="m-aviso">El mínimo por modelo es de <b>12 unidades</b>. Agrega más prendas para poder añadirlo al pedido.</p>
-      <button class="btn btn-borde" id="m-curva">⚡ Llenar curva sugerida (12 u.)</button>
+      <div class="curvas-row">
+        <button class="btn btn-borde" id="m-curva12">⚡ Curva 12 u.</button>
+        <button class="btn btn-borde" id="m-curva17">⚡ Curva 17 u.</button>
+      </div>
       <button class="btn btn-rojo" id="m-agregar">Agregar al pedido</button>
-      <a class="btn btn-wsp" id="m-wsp" href="#" target="_blank" rel="noopener">💬 Consultar este modelo por WhatsApp</a>
     </div>
   </div>
 </div>
