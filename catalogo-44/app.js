@@ -894,7 +894,7 @@ async function generarExcelConPlantilla44(quote, items) {
 
   const setCelda = (ref, val) => {
     if (!ref || val == null || val === "") return;
-    sh.cell(ref).formula(`"${String(val).replace(/"/g,'""')}"`);
+    sh.cell(ref).value(String(val));
   };
 
   sh.cell(CONFIG44.rutCell).value(quote.client_rut || "");
@@ -1247,6 +1247,10 @@ $("#btn-volver-lista").onclick = () => mostrarSeccionAdmin("lista");
 window.descargarExcelAdmin = async function(id) {
   const q = adminPedidos.find(p => p.id === id);
   if (!q) return;
+  if ((q._items || []).length === 0 && q.total_items > 0) {
+    toast("⚠ Sesión expirada — cerrá sesión y volvé a entrar para cargar los ítems");
+    return;
+  }
   toast("Generando Excel con PLANILLA 44…");
   try {
     await generarExcelConPlantilla44(q, q._items || []);
@@ -1258,6 +1262,10 @@ window.descargarExcelAdmin = async function(id) {
 
 $("#btn-dl-excel").onclick = async () => {
   if (!adminPedidoActual) return;
+  if ((adminPedidoActual._items || []).length === 0 && adminPedidoActual.total_items > 0) {
+    toast("⚠ Sesión expirada — cerrá sesión y volvé a entrar para cargar los ítems");
+    return;
+  }
   toast("Generando Excel…");
   try {
     await generarExcelConPlantilla44(adminPedidoActual, adminPedidoActual._items || []);
