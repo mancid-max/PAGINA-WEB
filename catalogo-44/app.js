@@ -1239,17 +1239,32 @@ window.verDetallePedido = function(id) {
 
 $("#btn-volver-lista").onclick = () => mostrarSeccionAdmin("lista");
 
+/* ---- ADMIN: helpers ítems -------------------------------- */
+async function fetchItemsParaPedido(quoteId) {
+  const ir = await fetch(
+    `${SUPABASE_URL}/rest/v1/quote_items?select=quote_id,sku,size,quantity&quote_id=eq.${quoteId}`,
+    { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}` } }
+  );
+  if (ir.ok) return await ir.json();
+  return [];
+}
+
+async function resolverItems(q) {
+  if ((q._items || []).length > 0) return q._items;
+  const items = await fetchItemsParaPedido(q.id);
+  q._items = items;
+  return items;
+}
+
 /* ---- ADMIN: EXCEL POR PEDIDO ------------------------------ */
 window.descargarExcelAdmin = async function(id) {
   const q = adminPedidos.find(p => p.id === id);
   if (!q) return;
-  if ((q._items || []).length === 0 && q.total_items > 0) {
-    toast("⚠ Sesión expirada — cerrá sesión y volvé a entrar para cargar los ítems");
-    return;
-  }
+  toast("Cargando ítems…");
+  const items = await resolverItems(q);
   toast("Generando Excel con PLANILLA 44…");
   try {
-    await generarExcelConPlantilla44(q, q._items || []);
+    await generarExcelConPlantilla44(q, items);
     toast("Excel descargado ⬇");
   } catch(e) {
     toast("Error: " + e.message);
@@ -1258,13 +1273,11 @@ window.descargarExcelAdmin = async function(id) {
 
 $("#btn-dl-excel").onclick = async () => {
   if (!adminPedidoActual) return;
-  if ((adminPedidoActual._items || []).length === 0 && adminPedidoActual.total_items > 0) {
-    toast("⚠ Sesión expirada — cerrá sesión y volvé a entrar para cargar los ítems");
-    return;
-  }
+  toast("Cargando ítems…");
+  const items = await resolverItems(adminPedidoActual);
   toast("Generando Excel…");
   try {
-    await generarExcelConPlantilla44(adminPedidoActual, adminPedidoActual._items || []);
+    await generarExcelConPlantilla44(adminPedidoActual, items);
     toast("Excel descargado ⬇");
   } catch(e) {
     toast("Error: " + e.message);
