@@ -207,10 +207,6 @@ function cardHTML(m) {
           <div class="fila">
             <button class="btn btn-rojo" onclick="abrirModal('${m.codigo}')">Armar curva</button>
           </div>
-          <div class="fila">
-            <a class="btn btn-wsp" target="_blank" rel="noopener"
-               href="${linkWsp(`¡Hola Mohicano! 👖 Quiero consultar por el modelo *${m.nombre} ${m.codigo}* de la colección DOLCE VITA 44.`)}">💬 WhatsApp</a>
-          </div>
         </div>
       </div>
       <div class="pie-flag"><i></i><i></i><i></i></div>
