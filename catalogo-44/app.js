@@ -932,10 +932,10 @@ async function generarExcelConPlantilla44(quote, items) {
   const blob = await wb.outputAsync();
   const url = URL.createObjectURL(new Blob([blob], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));
   const a = document.createElement("a");
-  const rut = String(quote.client_rut||"").replace(/[^0-9kK]/gi,"");
+  const nombre = String(quote.store_name||quote.client_rut||"").replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]/g," ").trim().replace(/\s+/g,"_").slice(0,30);
   const f = new Date(quote.created_at||Date.now());
   const d = f.getFullYear()+String(f.getMonth()+1).padStart(2,"0")+String(f.getDate()).padStart(2,"0");
-  a.href = url; a.download = `Pedido_DV44_${rut}_${d}.xlsx`;
+  a.href = url; a.download = `Pedido_DV44_${nombre}_${d}.xlsx`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
