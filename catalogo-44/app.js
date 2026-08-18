@@ -837,9 +837,9 @@ async function generarExcel(cliente, payload, carritoRef) {
   const blob = await wb.outputAsync();
   const url = URL.createObjectURL(new Blob([blob], { type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
   const a = document.createElement("a");
-  const rutLimpio = String(cliente.rut || "").replace(/[^0-9kK]/gi, "");
+  const nombreCliente = String(cliente.razon_social || cliente.rut || "").replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]/g," ").trim().replace(/\s+/g,"_").slice(0,30);
   const yyyymmdd = f.getFullYear() + String(f.getMonth()+1).padStart(2,"0") + String(f.getDate()).padStart(2,"0");
-  a.href = url; a.download = `NotaPedido_DolceVita44_${rutLimpio}_${yyyymmdd}.xlsx`;
+  a.href = url; a.download = `NotaPedido_DolceVita44_${nombreCliente}_${yyyymmdd}.xlsx`;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 8000);
 }
