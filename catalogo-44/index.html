@@ -292,10 +292,18 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
   display:flex;align-items:center;gap:.75rem;
   background:linear-gradient(135deg,#12283a 0%,#1e3c55 100%);
   color:#fff;border-radius:14px;padding:.85rem 1rem;
+  width:100%;border:none;font-family:inherit;cursor:pointer;text-align:left;
 }
+.rut-prompt:hover{background:linear-gradient(135deg,#1a3550 0%,#264d6e 100%)}
 .rut-prompt-icon{font-size:1.6rem;flex-shrink:0;line-height:1}
 .rut-prompt strong{display:block;font-size:.9rem;font-weight:700;letter-spacing:.01em}
 .rut-prompt span{display:block;font-size:.72rem;opacity:.75;margin-top:.1rem}
+/* Modal RUT */
+.rut-modal-velo{position:fixed;inset:0;background:rgba(12,25,36,.55);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem}
+.rut-modal-velo.abierto{display:flex}
+.rut-modal-box{background:#fff;border-radius:20px;padding:1.6rem 1.4rem;width:min(420px,100%);position:relative}
+.rut-modal-box h3{font-size:1.05rem;font-weight:800;margin-bottom:.25rem}
+.rut-modal-box p{font-size:.78rem;color:var(--gris);margin-bottom:.9rem}
 .form-caja select{
   border:1.5px solid #d8e4ec;border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.86rem;
   outline:none;width:100%;background:#fff;color:var(--tinta);appearance:none;
@@ -554,18 +562,13 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
     <div class="linea total"><span>Total con IVA</span><b id="c-total">$0</b></div>
 
     <div class="form-caja ver" id="form-checkout">
-      <div class="rut-prompt">
+      <button class="rut-prompt" id="btn-abrir-rut">
         <span class="rut-prompt-icon">🪪</span>
         <div>
-          <strong>Ingresa tu RUT para continuar</strong>
-          <span>Te identificamos y completamos tu pedido al instante</span>
+          <strong id="rut-btn-titulo">Ingresa tu RUT para continuar</strong>
+          <span id="rut-btn-sub">Te identificamos y completamos tu pedido al instante</span>
         </div>
-      </div>
-      <div class="rut-row">
-        <input id="f-rut" type="text" placeholder="76.123.456-7" autocomplete="off">
-        <button type="button" class="btn-buscar" id="btn-buscar-rut" style="display:none">Buscar</button>
-      </div>
-      <div id="rut-estado" class="rut-estado"></div>
+      </button>
 
       <div class="campos-extra" id="campos-cliente" style="display:none">
         <span class="form-label">Razón Social *</span>
@@ -614,6 +617,20 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
 </aside>
 
 <div class="toast" id="toast"></div>
+
+<!-- Modal identificación RUT -->
+<div class="rut-modal-velo" id="rut-modal-velo">
+  <div class="rut-modal-box">
+    <button class="cerrar" id="cerrar-rut-modal">✕</button>
+    <h3>Identificate para continuar</h3>
+    <p>Ingresá tu RUT — si ya tenemos tus datos los completamos automáticamente.</p>
+    <div class="rut-row">
+      <input id="f-rut" type="text" placeholder="76.123.456-7" autocomplete="off">
+    </div>
+    <div id="rut-estado" class="rut-estado"></div>
+    <button class="btn btn-rojo" id="btn-rut-continuar" style="display:none;margin-top:.6rem;justify-content:center">Continuar →</button>
+  </div>
+</div>
 
 <!-- ===== Modal confirmación ===== -->
 <div class="confirm-velo" id="confirm-velo">

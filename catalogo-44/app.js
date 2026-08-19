@@ -497,6 +497,8 @@ async function buscarClientePorRut() {
       setRutEstado("nuevo", "Cliente nuevo — completa los datos");
       mostrarCampos("nuevo");
     }
+    const btnCont = document.getElementById("btn-rut-continuar");
+    if (btnCont) btnCont.style.display = "flex";
     $("#btn-finalizar").style.display = "flex";
   } catch(e) {
     setRutEstado("error", "No se pudo verificar el RUT — revisa tu conexión");
@@ -504,7 +506,31 @@ async function buscarClientePorRut() {
   }
 }
 
-$("#btn-buscar-rut").onclick = buscarClientePorRut;
+/* ---- MODAL RUT ------------------------------------------- */
+function abrirRutModal() {
+  const btnCont = document.getElementById("btn-rut-continuar");
+  if (btnCont) btnCont.style.display = clienteBuscado ? "flex" : "none";
+  $("#rut-modal-velo").classList.add("abierto");
+  document.body.style.overflow = "hidden";
+  setTimeout(() => { const r = elRut(); if (r.focus) r.focus(); if (r.select) r.select(); }, 120);
+}
+function cerrarRutModal() {
+  $("#rut-modal-velo").classList.remove("abierto");
+  document.body.style.overflow = "";
+  if (clienteBuscado) {
+    const t = document.getElementById("rut-btn-titulo");
+    const s = document.getElementById("rut-btn-sub");
+    if (t) t.textContent = clienteBuscado.is_new
+      ? "Cliente nuevo — completá los datos abajo"
+      : "✔ " + (clienteBuscado.razon_social || clienteBuscado.rut);
+    if (s) s.textContent = clienteBuscado.rut + " · Tocá para cambiar";
+  }
+}
+$("#btn-abrir-rut").onclick = abrirRutModal;
+$("#cerrar-rut-modal").onclick = cerrarRutModal;
+$("#rut-modal-velo").addEventListener("click", e => { if (e.target === $("#rut-modal-velo")) cerrarRutModal(); });
+document.getElementById("btn-rut-continuar").onclick = cerrarRutModal;
+
 elRut().addEventListener("keydown", e => { if (e.key === "Enter") buscarClientePorRut(); });
 
 let rutDebounceT;
