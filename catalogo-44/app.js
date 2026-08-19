@@ -955,22 +955,24 @@ async function generarExcelConPlantilla44(quote, items) {
   const sh = wb.sheet(CONFIG44.sheet);
   if (!sh) throw new Error("No se encontró la hoja TOMA DE PEDIDOS");
 
+  // Usa formula("...") para reemplazar VLOOKUPs sin dejar XML sucio
   const setCelda = (ref, val) => {
     if (!ref || val == null || val === "") return;
-    sh.cell(ref).value(String(val));
+    sh.cell(ref).formula(`"${String(val).replace(/"/g, '""')}"`);
   };
 
-  sh.cell(CONFIG44.rutCell).value(quote.client_rut || "");
-  sh.cell(CONFIG44.dateCell).value(new Date(quote.created_at || Date.now()));
-  sh.cell(CONFIG44.phoneCell).value(quote.client_phone || "");
+  const fechaStr = new Date(quote.created_at || Date.now()).toLocaleDateString("es-CL");
+  setCelda(CONFIG44.rutCell,          quote.client_rut);
+  setCelda(CONFIG44.dateCell,         fechaStr);
+  setCelda(CONFIG44.phoneCell,        quote.client_phone);
   sh.cell(CONFIG44.idLabelCell).value("ID");
   sh.cell(CONFIG44.idValueCell).value(quote.id ? "COT-" + String(quote.id).slice(0,8).toUpperCase() : "");
-  setCelda(CONFIG44.razonSocialCell, quote.store_name);
-  setCelda(CONFIG44.giroCell,        quote.giro);
-  setCelda(CONFIG44.direccionCell,   quote.direccion);
-  setCelda(CONFIG44.nombreTiendaCell,quote.nombre_tienda);
-  setCelda(CONFIG44.comunaCell,      quote.comuna);
-  setCelda(CONFIG44.transporteCell,  quote.transporte);
+  setCelda(CONFIG44.razonSocialCell,  quote.store_name);
+  setCelda(CONFIG44.giroCell,         quote.giro);
+  setCelda(CONFIG44.direccionCell,    quote.direccion);
+  setCelda(CONFIG44.nombreTiendaCell, quote.nombre_tienda);
+  setCelda(CONFIG44.comunaCell,       quote.comuna);
+  setCelda(CONFIG44.transporteCell,   quote.transporte);
 
   for (let r = CONFIG44.firstRow; r <= CONFIG44.lastRow; r++) {
     sh.cell(`${CONFIG44.skuColumn}${r}`).value("");
