@@ -160,7 +160,7 @@ fetch("../stock-data-catalogo-44.json")
   .then(d => { stockData = d.items || {}; pintarGrid(); })
   .catch(() => {});
 function stockTotal(codigo) { return (stockData[codigo] && stockData[codigo].total) || 0; }
-function esDisponible(m)    { return !(m.codigo in stockData) || stockData[m.codigo].total > 30; }
+function esDisponible(m)    { return stockTotal(m.codigo) > 30; }
 let clienteBuscado = null;
 let adminToken = sessionStorage.getItem("dv44_admin_token") || "";
 let pedidoListo = null;
