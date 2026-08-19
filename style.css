@@ -1934,6 +1934,47 @@ box-shadow: 0 -10px 18px rgba(255,255,255,0.95), 0 10px 24px rgba(0,0,0,0.16);
   box-shadow:0 10px 24px rgba(17,17,17,0.16);
 }
 
+.cole44-new-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:10px 18px;
+  border-radius:999px;
+  background:linear-gradient(135deg,#d81f2a,#a3121b);
+  color:#fff;
+  font-weight:800;
+  font-size:13px;
+  letter-spacing:0.03em;
+  text-decoration:none;
+  white-space:nowrap;
+  box-shadow:0 4px 18px rgba(216,31,42,0.38);
+  animation:cole44pulse 2.4s ease-in-out infinite;
+  transition:transform .18s, box-shadow .18s;
+}
+.cole44-new-btn:hover{
+  transform:scale(1.05);
+  box-shadow:0 6px 24px rgba(216,31,42,0.52);
+}
+.cole44-new-btn .badge-nuevo{
+  background:#fff;
+  color:#d81f2a;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.06em;
+  padding:2px 6px;
+  border-radius:999px;
+  text-transform:uppercase;
+}
+.cole44-new-btn .badge-italic{
+  font-style:italic;
+  font-weight:700;
+  opacity:.9;
+}
+@keyframes cole44pulse{
+  0%,100%{box-shadow:0 4px 18px rgba(216,31,42,0.38)}
+  50%{box-shadow:0 4px 28px rgba(216,31,42,0.62)}
+}
+
 .promo-banner{
   width:min(820px, calc(100% - 40px));
   margin:0 auto 14px;
