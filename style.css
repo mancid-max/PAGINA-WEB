@@ -1934,45 +1934,85 @@ box-shadow: 0 -10px 18px rgba(255,255,255,0.95), 0 10px 24px rgba(0,0,0,0.16);
   box-shadow:0 10px 24px rgba(17,17,17,0.16);
 }
 
-.cole44-new-btn{
-  display:inline-flex;
+.cole44-banner-btn{
+  display:flex;
   align-items:center;
-  gap:7px;
-  padding:10px 18px;
-  border-radius:999px;
-  background:linear-gradient(135deg,#d81f2a,#a3121b);
-  color:#fff;
-  font-weight:800;
-  font-size:13px;
-  letter-spacing:0.03em;
+  justify-content:space-between;
+  width:min(760px,calc(100% - 40px));
+  margin:0 auto 10px;
+  height:110px;
+  border-radius:14px;
+  overflow:hidden;
   text-decoration:none;
-  white-space:nowrap;
-  box-shadow:0 4px 18px rgba(216,31,42,0.38);
-  animation:cole44pulse 2.4s ease-in-out infinite;
+  position:relative;
+  background-size:cover;
+  background-position:center top;
+  box-shadow:0 6px 28px rgba(13,27,62,0.28);
   transition:transform .18s, box-shadow .18s;
+  animation:cole44pulse 2.6s ease-in-out infinite;
 }
-.cole44-new-btn:hover{
-  transform:scale(1.05);
-  box-shadow:0 6px 24px rgba(216,31,42,0.52);
+.cole44-banner-btn:hover{
+  transform:translateY(-2px) scale(1.01);
+  box-shadow:0 10px 36px rgba(13,27,62,0.38);
 }
-.cole44-new-btn .badge-nuevo{
-  background:#fff;
-  color:#d81f2a;
+.cole44-banner-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(90deg,rgba(13,27,62,0.55) 0%,rgba(13,27,62,0.1) 60%,rgba(13,27,62,0.45) 100%);
+  pointer-events:none;
+}
+.cole44-banner-content{
+  position:relative;
+  z-index:1;
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 22px;
+  gap:12px;
+}
+.cole44-banner-left{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.cole44-banner-badge{
+  display:inline-block;
+  background:#d81f2a;
+  color:#fff;
   font-size:9px;
   font-weight:900;
-  letter-spacing:.06em;
-  padding:2px 6px;
-  border-radius:999px;
+  letter-spacing:.1em;
   text-transform:uppercase;
+  padding:3px 9px;
+  border-radius:999px;
+  width:fit-content;
 }
-.cole44-new-btn .badge-italic{
+.cole44-banner-title{
+  color:#fff;
+  font-size:18px;
+  font-weight:800;
+  line-height:1.1;
+  text-shadow:0 1px 4px rgba(0,0,0,.4);
+}
+.cole44-banner-title em{
   font-style:italic;
   font-weight:700;
-  opacity:.9;
+  color:#f0c040;
+}
+.cole44-banner-cta{
+  background:#d4a017;
+  color:#0d1b3e;
+  font-weight:900;
+  font-size:13px;
+  padding:10px 18px;
+  border-radius:999px;
+  white-space:nowrap;
+  box-shadow:0 2px 10px rgba(0,0,0,.25);
+  flex-shrink:0;
 }
 @keyframes cole44pulse{
-  0%,100%{box-shadow:0 4px 18px rgba(216,31,42,0.38)}
-  50%{box-shadow:0 4px 28px rgba(216,31,42,0.62)}
+  0%,100%{box-shadow:0 6px 28px rgba(13,27,62,0.28)}
+  50%{box-shadow:0 6px 36px rgba(216,31,42,0.35)}
 }
 
 .promo-banner{
