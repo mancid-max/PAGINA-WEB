@@ -3566,7 +3566,11 @@ function obtenerEstadoVisibilidadCatalogo44(producto = {}) {
 }
 
 function filtrarProductosPorVisibilidad(lista = []) {
-  return Array.isArray(lista) ? lista : [];
+  if (!Array.isArray(lista)) return [];
+  if (CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-2") {
+    return lista.filter(p => !esProductoAgotado(p));
+  }
+  return lista;
 }
 
 function renderCatalogCardHtml(p) {
