@@ -829,8 +829,9 @@ function esProductoAgotado(item) {
 
 function badgeCole42(p) {
   const sku = normalizarSkuCatalogo(p?._preferredSku || p?.family || "");
-  if (!sku || !Object.keys(stockBySku || {}).length) return "";
+  if (!sku) return "";
   const stock = obtenerStockParaSkuDesdeItems(sku, stockBySku);
+  if (!stock) return '<span class="catalog-visibility-badge is-available">Disponible</span>';
   const total = Number(stock?.total) || 0;
   if (total >= 10) return '<span class="catalog-visibility-badge is-available">Disponible</span>';
   return '<span class="catalog-visibility-badge is-consultar">Consultar stock</span>';
