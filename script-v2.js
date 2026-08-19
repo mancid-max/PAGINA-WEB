@@ -4725,9 +4725,9 @@ async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
 
   sheet.cell(config.idLabelCell).value("ID");
   sheet.cell(config.idValueCell).value(codigo);
-  sheet.cell(config.rutCell).value(quote?.client_rut || "");
-  sheet.cell(config.dateCell).value(new Date());
-  sheet.cell(config.phoneCell).value(quote?.client_phone || "");
+  setCelda(config.rutCell,   quote?.client_rut);
+  setCelda(config.dateCell,  new Date(quote?.created_at || Date.now()).toLocaleDateString("es-CL"));
+  setCelda(config.phoneCell, quote?.client_phone);
   setCelda(config.razonSocialCell, quote?.store_name);
   setCelda(config.giroCell,        quote?.giro);
   setCelda(config.direccionCell,   quote?.direccion);
