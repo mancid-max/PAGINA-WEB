@@ -274,6 +274,7 @@ function pintarTallasModal() {
       <span class="t">${t}</span>
       <input type="number" class="cant-input" id="cant-${t}"
              min="0" max="99" value="${selModal[t]||0}"
+             onfocus="this.select()"
              oninput="setCant('${t}',this.value)">
     </div>`).join("");
   actualizarTotalModal();
