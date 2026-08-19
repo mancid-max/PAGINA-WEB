@@ -298,12 +298,42 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
 .rut-prompt-icon{font-size:1.6rem;flex-shrink:0;line-height:1}
 .rut-prompt strong{display:block;font-size:.9rem;font-weight:700;letter-spacing:.01em}
 .rut-prompt span{display:block;font-size:.72rem;opacity:.75;margin-top:.1rem}
-/* Modal RUT */
-.rut-modal-velo{position:fixed;inset:0;background:rgba(12,25,36,.55);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem}
-.rut-modal-velo.abierto{display:flex}
-.rut-modal-box{background:#fff;border-radius:20px;padding:1.6rem 1.4rem;width:min(420px,100%);position:relative}
-.rut-modal-box h3{font-size:1.05rem;font-weight:800;margin-bottom:.25rem}
-.rut-modal-box p{font-size:.78rem;color:var(--gris);margin-bottom:.9rem}
+/* RUT inline zone */
+#zona-rut{padding:.15rem 0}
+#zona-rut .rut-row input{
+  flex:1;border:2px solid var(--rojo);border-radius:10px;
+  padding:.7rem .9rem;font-family:inherit;font-size:.9rem;font-weight:600;
+  outline:none;width:100%;color:var(--tinta);background:#fffbfb;
+  transition:border-color .2s, box-shadow .2s;
+}
+#zona-rut .rut-row input:focus{border-color:var(--rojo);box-shadow:0 0 0 3px rgba(216,31,42,.18)}
+#zona-rut .rut-row input.highlight{
+  border-color:var(--rojo);
+  box-shadow:0 0 0 4px rgba(216,31,42,.25);
+  animation:rutShake .45s;
+}
+@keyframes rutShake{
+  0%,100%{transform:translateX(0)}
+  18%{transform:translateX(-5px)}
+  36%{transform:translateX(5px)}
+  54%{transform:translateX(-4px)}
+  72%{transform:translateX(4px)}
+}
+/* Barra disponibilidad — fila separada */
+.barra-disp{
+  max-width:1200px;margin:.2rem auto .4rem;padding:0 1.2rem;
+  display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;justify-content:center;
+  border-top:1.5px dashed #d8e8f0;padding-top:.8rem;
+}
+.disp-label{font-size:.72rem;font-weight:700;color:var(--gris);text-transform:uppercase;letter-spacing:.1em}
+.chip-disp.activo[data-disp="disponible"]{background:#e8f7ef;border-color:#6bcf9e;color:#0c6b3d}
+.chip-disp.activo[data-disp="produccion"]{background:#fff3cd;border-color:#f0c050;color:#7a5800}
+.chip-disp.activo[data-disp="todos"]{background:var(--tinta);border-color:var(--tinta);color:#fff}
+/* Pills disponibilidad en cuerpo de card */
+.pill-disp,.pill-prod{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.05em;
+  padding:.22rem .65rem;border-radius:999px;text-transform:uppercase}
+.pill-disp{background:#e8f7ef;color:#0c6b3d}
+.pill-prod{background:#fff3cd;color:#7a5800}
 .form-caja select{
   border:1.5px solid #d8e4ec;border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.86rem;
   outline:none;width:100%;background:#fff;color:var(--tinta);appearance:none;
@@ -491,6 +521,9 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
 <div class="barra-filtros" id="filtros">
   <input class="busca" id="busca" type="search" placeholder="Buscar modelo o código…" autocomplete="new-password" spellcheck="false">
 </div>
+<div class="barra-disp" id="filtros-disp">
+  <span class="disp-label">Ver:</span>
+</div>
 
 <main>
   <div id="catalogo"></div>
@@ -532,8 +565,8 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
       <div class="total-modal"><span>Total prendas</span><span id="m-total">0</span></div>
       <p class="aviso-min" id="m-aviso">El mínimo por modelo es de <b>12 unidades</b>. Agrega más prendas para poder añadirlo al pedido.</p>
       <div class="curvas-row">
-        <button class="btn btn-borde" id="m-curva12">⚡ Curva 12 u.</button>
-        <button class="btn btn-borde" id="m-curva17">⚡ Curva 17 u.</button>
+        <button class="btn btn-borde" id="m-curva12">⚡ Agregar curva sugerida de 12</button>
+        <button class="btn btn-borde" id="m-curva17">⚡ Agregar curva sugerida de 17</button>
       </div>
       <button class="btn btn-rojo" id="m-agregar">Agregar al pedido</button>
     </div>
@@ -569,33 +602,39 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
           <span id="rut-btn-sub">Te identificamos y completamos tu pedido al instante</span>
         </div>
       </button>
-
-      <div class="campos-extra" id="campos-cliente" style="display:none">
-        <span class="form-label">Razón Social *</span>
-        <input id="f-nombre" type="text" placeholder="Ej: Comercial Andes SpA">
-        <span class="form-label">Teléfono *</span>
-        <input id="f-fono" type="tel" placeholder="+56 9 …">
-        <span class="form-label">Giro *</span>
-        <input id="f-giro" type="text" placeholder="Venta al por menor de ropa">
-        <span class="form-label">Dirección *</span>
-        <input id="f-dir" type="text" placeholder="Av. Ejemplo 123, oficina 4">
-        <span class="form-label">Nombre Tienda *</span>
-        <input id="f-tienda" type="text" placeholder="Mi Tienda">
-        <span class="form-label">Comuna *</span>
-        <input id="f-comuna" type="text" placeholder="Las Condes">
-        <span class="form-label">Transporte *</span>
-        <select id="f-transporte">
-          <option value="">— elige transporte —</option>
-          <option>Starken</option>
-          <option>Chilexpress</option>
-          <option>Bus</option>
-          <option>Retiro en bodega</option>
-          <option>Otro</option>
-        </select>
-        <span class="form-label">Comentario (opcional)</span>
-        <textarea id="f-nota" rows="2" placeholder="Observaciones, despacho, etc."></textarea>
+      <div id="zona-rut">
+        <div class="rut-row">
+          <input id="f-rut" type="text" placeholder="Ej: 76.123.456-7" autocomplete="off">
+        </div>
+        <div id="rut-estado" class="rut-estado"></div>
+        <div class="campos-extra" id="campos-cliente" style="display:none">
+          <span class="form-label">Razón Social *</span>
+          <input id="f-nombre" type="text" placeholder="Ej: Comercial Andes SpA">
+          <span class="form-label">Teléfono *</span>
+          <input id="f-fono" type="tel" placeholder="+56 9 …">
+          <span class="form-label">Giro *</span>
+          <input id="f-giro" type="text" placeholder="Venta al por menor de ropa">
+          <span class="form-label">Dirección *</span>
+          <input id="f-dir" type="text" placeholder="Av. Ejemplo 123, oficina 4">
+          <span class="form-label">Nombre Tienda *</span>
+          <input id="f-tienda" type="text" placeholder="Mi Tienda">
+          <span class="form-label">Comuna *</span>
+          <input id="f-comuna" type="text" placeholder="Las Condes">
+          <span class="form-label">Transporte *</span>
+          <select id="f-transporte">
+            <option value="">— elige transporte —</option>
+            <option>Starken</option>
+            <option>Chilexpress</option>
+            <option>Bus</option>
+            <option>Retiro en bodega</option>
+            <option>Otro</option>
+          </select>
+          <span class="form-label">Comentario (opcional)</span>
+          <textarea id="f-nota" rows="2" placeholder="Observaciones, despacho, etc."></textarea>
+        </div>
+        <div id="guardando-estado" class="guardando-overlay" style="display:none"></div>
+        <button class="btn btn-rojo" id="btn-finalizar" style="display:none;justify-content:center">Confirmar y enviar pedido</button>
       </div>
-      <div id="guardando-estado" class="guardando-overlay" style="display:none"></div>
     </div>
     <div class="exito" id="exito">
       <div class="exito-top">
@@ -611,26 +650,11 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
         <button class="btn" id="btn-cerrar-exito" style="justify-content:center;background:#edf3f7;color:#12283a;border:1.5px solid #c8dde8">✕ Cerrar carrito</button>
       </div>
     </div>
-    <button class="btn btn-rojo" id="btn-finalizar" style="justify-content:center;display:none">Confirmar y guardar pedido</button>
   </footer>
   </div><!-- /cajon-form -->
 </aside>
 
 <div class="toast" id="toast"></div>
-
-<!-- Modal identificación RUT -->
-<div class="rut-modal-velo" id="rut-modal-velo">
-  <div class="rut-modal-box">
-    <button class="cerrar" id="cerrar-rut-modal">✕</button>
-    <h3>Identificate para continuar</h3>
-    <p>Ingresá tu RUT — si ya tenemos tus datos los completamos automáticamente.</p>
-    <div class="rut-row">
-      <input id="f-rut" type="text" placeholder="76.123.456-7" autocomplete="off">
-    </div>
-    <div id="rut-estado" class="rut-estado"></div>
-    <button class="btn btn-rojo" id="btn-rut-continuar" style="display:none;margin-top:.6rem;justify-content:center">Continuar →</button>
-  </div>
-</div>
 
 <!-- ===== Modal confirmación ===== -->
 <div class="confirm-velo" id="confirm-velo">

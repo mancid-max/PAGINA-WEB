@@ -152,7 +152,15 @@ function formatRut(rut) {
 let carrito = {};
 let modeloAbierto = null;
 let selModal = {};
-let filtroSec = "todos";
+let filtroSec  = "todos";
+let filtroDisp = "todos";
+let stockData  = {};
+fetch("../stock-data-catalogo-44.json")
+  .then(r => r.json())
+  .then(d => { stockData = d.items || {}; pintarGrid(); })
+  .catch(() => {});
+function stockTotal(codigo) { return (stockData[codigo] && stockData[codigo].total) || 0; }
+function esDisponible(m)    { return stockTotal(m.codigo) > 80; }
 let clienteBuscado = null;
 let adminToken = sessionStorage.getItem("dv44_admin_token") || "";
 let pedidoListo = null;
@@ -175,11 +183,27 @@ const barra = $("#filtros");
   b.textContent = s.nombre;
   b.onclick = () => {
     filtroSec = s.id;
-    document.querySelectorAll(".chip").forEach(c => c.classList.remove("activo"));
+    document.querySelectorAll(".chip:not(.chip-disp)").forEach(c => c.classList.remove("activo"));
     b.classList.add("activo");
     pintarGrid();
   };
   barra.insertBefore(b, $("#busca"));
+});
+
+// Chips de disponibilidad — fila separada
+const barraDisp = document.getElementById("filtros-disp");
+[{id:"todos", label:"Todos"}, {id:"disponible", label:"✓ Disponible"}, {id:"produccion", label:"⏳ En producción"}].forEach(d => {
+  const b = document.createElement("button");
+  b.className = "chip chip-disp" + (d.id === "todos" ? " activo" : "");
+  b.dataset.disp = d.id;
+  b.textContent = d.label;
+  b.onclick = () => {
+    filtroDisp = d.id;
+    document.querySelectorAll(".chip-disp").forEach(c => c.classList.remove("activo"));
+    b.classList.add("activo");
+    pintarGrid();
+  };
+  barraDisp.appendChild(b);
 });
 const ADMIN_CODE = "DV44**";
 $("#busca").value = "";
@@ -196,19 +220,25 @@ $("#busca").addEventListener("input", () => {
 
 /* ---- GRID ------------------------------------------------- */
 function cardHTML(m) {
+  const disp    = esDisponible(m);
+  const dispHTML = disp
+    ? `<span class="pill-disp">✓ Disponible</span>`
+    : `<span class="pill-prod">⏳ En producción</span>`;
   return `
     <article class="card">
       <div class="marco" onclick="abrirModal('${m.codigo}')">
         <img src="img/${m.img}_0.webp" alt="${m.nombre} ${m.codigo}" loading="lazy">
-        <span class="lupa">👆 Ver modelo y curva</span>
       </div>
       <div class="cuerpo">
         <h3>${m.nombre}</h3>
         <p class="codigo">Código <b>${m.codigo}</b> · ${nombreSec(m.sec)}</p>
-        <p class="precio">${m.precio ? CLP(m.precio) : "A consultar"}<small>${m.precio ? "por unidad · IVA incluido" : "precio mayorista por WhatsApp"}</small></p>
+        ${dispHTML}
+        <p class="precio">${m.precio ? CLP(m.precio) : "A consultar"}<small>${m.precio ? "por unidad · IVA incluido" : "precio mayorista · consultar"}</small></p>
         <div class="botones">
           <div class="fila">
-            <button class="btn btn-rojo" onclick="abrirModal('${m.codigo}')">Armar curva</button>
+            ${disp
+              ? `<button class="btn btn-rojo" onclick="abrirModal('${m.codigo}')">Armar curva</button>`
+              : `<button class="btn btn-borde" onclick="abrirModal('${m.codigo}')">Ver modelo</button>`}
           </div>
         </div>
       </div>
@@ -220,6 +250,7 @@ function pintarGrid() {
   const q = $("#busca").value.trim().toLowerCase();
   const pasa = m =>
     (filtroSec === "todos" || m.sec === filtroSec) &&
+    (filtroDisp === "todos" || (filtroDisp === "disponible" ? esDisponible(m) : !esDisponible(m))) &&
     (!q || m.nombre.toLowerCase().includes(q) || m.codigo.includes(q));
   let html = "", visibles = 0;
   SECCIONES.forEach(s => {
@@ -497,8 +528,7 @@ async function buscarClientePorRut() {
       setRutEstado("nuevo", "Cliente nuevo — completa los datos");
       mostrarCampos("nuevo");
     }
-    const btnCont = document.getElementById("btn-rut-continuar");
-    if (btnCont) btnCont.style.display = "flex";
+    actualizarBotonRut();
     $("#btn-finalizar").style.display = "flex";
   } catch(e) {
     setRutEstado("error", "No se pudo verificar el RUT — revisa tu conexión");
@@ -506,30 +536,28 @@ async function buscarClientePorRut() {
   }
 }
 
-/* ---- MODAL RUT ------------------------------------------- */
-function abrirRutModal() {
-  const btnCont = document.getElementById("btn-rut-continuar");
-  if (btnCont) btnCont.style.display = clienteBuscado ? "flex" : "none";
-  $("#rut-modal-velo").classList.add("abierto");
-  document.body.style.overflow = "hidden";
-  setTimeout(() => { const r = elRut(); if (r.focus) r.focus(); if (r.select) r.select(); }, 120);
+/* ---- DESTACAR CAMPO RUT ---------------------------------- */
+function resaltarRut() {
+  const inp = elRut();
+  if (!inp || !inp.focus) return;
+  inp.classList.remove("highlight");
+  void inp.offsetWidth; // fuerza reflow para reiniciar animación
+  inp.classList.add("highlight");
+  setTimeout(() => inp.classList.remove("highlight"), 600);
+  inp.focus();
+  if (inp.select) inp.select();
+  document.getElementById("zona-rut").scrollIntoView({ behavior: "smooth", block: "center" });
 }
-function cerrarRutModal() {
-  $("#rut-modal-velo").classList.remove("abierto");
-  document.body.style.overflow = "";
-  if (clienteBuscado) {
-    const t = document.getElementById("rut-btn-titulo");
-    const s = document.getElementById("rut-btn-sub");
-    if (t) t.textContent = clienteBuscado.is_new
-      ? "Cliente nuevo — completá los datos abajo"
-      : "✔ " + (clienteBuscado.razon_social || clienteBuscado.rut);
-    if (s) s.textContent = clienteBuscado.rut + " · Tocá para cambiar";
-  }
+function actualizarBotonRut() {
+  if (!clienteBuscado) return;
+  const t = document.getElementById("rut-btn-titulo");
+  const s = document.getElementById("rut-btn-sub");
+  if (t) t.textContent = clienteBuscado.is_new
+    ? "Cliente nuevo — completá los datos"
+    : "✔ " + (clienteBuscado.razon_social || clienteBuscado.rut);
+  if (s) s.textContent = clienteBuscado.rut + " · Toca para cambiar";
 }
-$("#btn-abrir-rut").onclick = abrirRutModal;
-$("#cerrar-rut-modal").onclick = cerrarRutModal;
-$("#rut-modal-velo").addEventListener("click", e => { if (e.target === $("#rut-modal-velo")) cerrarRutModal(); });
-document.getElementById("btn-rut-continuar").onclick = cerrarRutModal;
+$("#btn-abrir-rut").onclick = resaltarRut;
 
 elRut().addEventListener("keydown", e => { if (e.key === "Enter") buscarClientePorRut(); });
 
@@ -673,11 +701,12 @@ $("#btn-finalizar").onclick = async () => {
     const wspLink = linkWsp(textoPedido(cliente, payload));
     // Vaciar carrito
     carrito = {}; guardar(); pintarCarrito();
-    // Mostrar éxito
+    // Mostrar éxito y cerrar carrito
     gEl.style.display = "none";
     $("#exito").classList.add("ver");
     $("#btn-wsp-pedido").href = wspLink;
     $("#btn-finalizar").style.display = "none";
+    setTimeout(cerrarCajon, 1800);
     toast("Pedido guardado y Excel descargado ⬇");
   } catch(err) {
     gEl.style.display = "none";
