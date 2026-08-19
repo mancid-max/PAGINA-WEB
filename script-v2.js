@@ -3568,7 +3568,7 @@ function obtenerEstadoVisibilidadCatalogo44(producto = {}) {
 
 function filtrarProductosPorVisibilidad(lista = []) {
   if (!Array.isArray(lista)) return [];
-  if (CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-2") {
+  if (CATALOG_SOURCE === "catalogo-43" || CATALOG_SOURCE === "catalogo-2" || CATALOG_SOURCE === "catalogo-1") {
     return lista.filter(p => !esProductoAgotado(p));
   }
   return lista;
@@ -3624,7 +3624,7 @@ function renderCatalogCardHtml(p) {
                       ? ""
                       : `<span class="catalog-visibility-badge ${estadoVisibilidad43 === "available" ? "is-available" : "is-production"}">${estadoVisibilidad43 === "available" ? "Disponible" : "En producción"}</span>`
                   )
-                : CATALOG_SOURCE === "catalogo-2"
+                : (CATALOG_SOURCE === "catalogo-2" || CATALOG_SOURCE === "catalogo-1")
                   ? badgeCole42(p)
                   : ""
           }
