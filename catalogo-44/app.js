@@ -252,7 +252,6 @@ window.abrirModal = function(codigo) {
   $("#m-nombre").textContent = m.nombre;
   $("#m-codigo").textContent = "Código " + m.codigo + " · " + nombreSec(m.sec) + " · Dolce Vita 44";
   $("#m-precio").innerHTML = m.precio ? CLP(m.precio) + "<small>por unidad · IVA incluido</small>" : "Precio a consultar<small>se cotiza por WhatsApp</small>";
-  $("#m-wsp").href = linkWsp(`¡Hola Mohicano! 👖 Quiero consultar por el modelo *${m.nombre} ${m.codigo}* de la colección DOLCE VITA 44.`);
   const fotos = [0, 1, 2].map(i => `img/${m.img}_${i}.webp`);
   $("#img-principal").src = fotos[0];
   $("#minis").innerHTML = fotos.map((f, i) => `<img src="${f}" class="${i===0?"activa":""}" onclick="cambiarFoto(this)" alt="vista ${i+1}">`).join("");
