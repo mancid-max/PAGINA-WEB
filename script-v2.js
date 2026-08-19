@@ -827,6 +827,15 @@ function esProductoAgotado(item) {
   return !itemTieneStockDisponible(item, stockBySku);
 }
 
+function badgeCole42(p) {
+  const sku = normalizarSkuCatalogo(p?._preferredSku || p?.family || "");
+  if (!sku || !Object.keys(stockBySku || {}).length) return "";
+  const stock = obtenerStockParaSkuDesdeItems(sku, stockBySku);
+  const total = Number(stock?.total) || 0;
+  if (total >= 10) return '<span class="catalog-visibility-badge is-available">Disponible</span>';
+  return '<span class="catalog-visibility-badge is-consultar">Consultar stock</span>';
+}
+
 function crearStockSinteticoAgotados() {
   const zeroSizes = Object.fromEntries(TALLAS_DISPONIBLES.map((size) => [size, 0]));
   const synthetic = {};
@@ -3610,7 +3619,9 @@ function renderCatalogCardHtml(p) {
                       ? ""
                       : `<span class="catalog-visibility-badge ${estadoVisibilidad43 === "available" ? "is-available" : "is-production"}">${estadoVisibilidad43 === "available" ? "Disponible" : "En producción"}</span>`
                   )
-                : ""
+                : CATALOG_SOURCE === "catalogo-2"
+                  ? badgeCole42(p)
+                  : ""
           }
           ${
             hantanBadges.length

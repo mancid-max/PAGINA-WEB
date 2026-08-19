@@ -705,6 +705,13 @@ img.catalog-image-loading{
   min-height:25px;
 }
 
+.catalog-visibility-badge.is-consultar{
+  background:rgba(210,130,0,0.90);
+  color:#fff;
+  padding:4px 9px;
+  min-height:25px;
+}
+
 @media (max-width: 1100px){
   .card-image-wrap{
     height:480px;
