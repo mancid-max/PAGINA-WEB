@@ -117,7 +117,7 @@ const MODELOS = [
 ];
 
 /* ============================================================ */
-const $     = s => document.querySelector(s);
+const $     = s => document.querySelector(s) || {};
 const CLP   = n => "$" + Number(n).toLocaleString("es-CL");
 const tallasDe  = m => m.tipo === "chaqueta" ? TALLAS_CHAQ : TALLAS_JEANS;
 const curvaDe   = m => m.tipo === "chaqueta" ? CURVA_CHAQ    : CURVA_JEANS;
