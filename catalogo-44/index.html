@@ -827,6 +827,7 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
         <h2>CRM · Faltantes Cole 44</h2>
         <div class="admin-top-acciones">
           <input id="crm-busca" type="search" placeholder="Nombre, ciudad o RUT…">
+          <button class="btn btn-borde" id="btn-crm-email-toggle" style="padding:.45rem 1rem;font-size:.82rem">📧 Correo masivo</button>
           <button class="btn btn-borde" id="btn-refresh-crm" style="padding:.45rem 1rem;font-size:.82rem">↺ Actualizar</button>
           <button class="btn btn-borde" onclick="mostrarSeccionAdmin('lista')" style="padding:.45rem 1rem;font-size:.82rem">← Pedidos</button>
         </div>
@@ -841,29 +842,6 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
       </div>
       <div class="crm-stats" id="crm-stats"></div>
       <div class="crm-lista" id="crm-lista"></div>
-      <!-- Detalle cliente CRM -->
-      <div class="crm-detalle" id="crm-detalle" style="display:none">
-        <div class="crm-det-header">
-          <button class="btn btn-borde" id="btn-cerrar-crm-det" style="padding:.35rem .8rem;font-size:.8rem">← Lista</button>
-          <h3 id="crm-det-nombre"></h3>
-        </div>
-        <div class="crm-det-info" id="crm-det-info"></div>
-        <div class="crm-det-estado" id="crm-det-estado"></div>
-        <p class="crm-hist-titulo">Historial de contacto</p>
-        <div class="crm-hist" id="crm-hist"></div>
-        <div class="crm-add-form">
-          <label>Registrar interacción</label>
-          <select id="crm-tipo" class="crm-select">
-            <option value="email">📧 Email enviado</option>
-            <option value="whatsapp">💬 WhatsApp</option>
-            <option value="llamada">📞 Llamada</option>
-            <option value="pagina_enviada">🔗 Página de catálogo enviada</option>
-            <option value="nota">📝 Nota interna</option>
-          </select>
-          <textarea id="crm-desc" class="crm-textarea" placeholder="Descripción (opcional)…"></textarea>
-          <button class="btn btn-rojo" id="btn-crm-add" style="justify-content:center">+ Registrar</button>
-        </div>
-      </div>
     </div>
 
     <!-- Detalle de un pedido -->
@@ -879,6 +857,52 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
         <a class="btn btn-wsp" id="det-wsp" href="#" target="_blank" rel="noopener" style="display:none;justify-content:center">💬 WhatsApp cliente</a>
       </div>
     </div>
+
+  <!-- CRM: Modal detalle cliente -->
+  <div id="crm-modal" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(12,25,36,.7);backdrop-filter:blur(3px);overflow-y:auto;padding:1rem">
+    <div id="crm-modal-box" style="background:#fff;border-radius:22px;width:100%;max-width:680px;margin:1.5rem auto;padding:1.8rem 1.6rem 1.6rem;min-height:10rem"></div>
+  </div>
+
+  <!-- CRM: Modal correo masivo -->
+  <div id="crm-email-modal" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(12,25,36,.7);backdrop-filter:blur(3px);overflow-y:auto;padding:1rem">
+    <div style="background:#fff;border-radius:22px;width:100%;max-width:680px;margin:1.5rem auto;padding:1.8rem 1.6rem 1.6rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
+        <span style="font-weight:800;font-size:1rem;color:var(--tinta)">📧 Correo masivo — faltantes Cole 44</span>
+        <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
+          <span id="crm-email-count" style="font-size:.75rem;color:var(--gris)"></span>
+          <button onclick="cerrarEmailModal()" class="btn btn-borde" style="padding:.4rem .9rem;font-size:.82rem">✕ Cerrar</button>
+        </div>
+      </div>
+      <label style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gris);display:block;margin-bottom:.3rem">Asunto</label>
+      <input id="crm-email-subject" type="text" style="width:100%;border:1.5px solid #d8e4ec;border-radius:8px;padding:.45rem .75rem;font-family:inherit;font-size:.85rem;margin-bottom:.7rem;box-sizing:border-box"
+        value="Catálogo Dolce Vita 44 ya disponible — Mohicano Jeans">
+      <label style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gris);display:block;margin-bottom:.3rem">Cuerpo del correo</label>
+      <textarea id="crm-email-body" rows="10" style="width:100%;border:1.5px solid #d8e4ec;border-radius:8px;padding:.6rem .75rem;font-family:inherit;font-size:.83rem;resize:vertical;box-sizing:border-box">Estimado cliente,
+
+Nos comunicamos desde Mohicano Jeans para informarle que ya está disponible nuestra nueva colección Dolce Vita 44 — Primavera-Verano 2026, inspirada en Italia.
+
+62 modelos en 14 líneas, con jeans dama en cortes, tiros y tallas para todos los estilos.
+
+Acceda al catálogo exclusivo para mayoristas aquí:
+👉 https://mohicanojeans.netlify.app/catalogo-44/
+
+Desde la página puede explorar todos los modelos, armar sus curvas por talla y enviar su pedido. Al finalizar se descarga automáticamente su planilla Excel con el detalle completo.
+
+Pedido mínimo: 12 unidades por modelo.
+
+Quedamos a su disposición para cualquier consulta.
+
+Saludos cordiales,
+Equipo Mohicano Jeans
++56 9 XXXX XXXX</textarea>
+      <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.8rem">
+        <button class="btn btn-borde" id="btn-copiar-bcc" style="padding:.45rem 1rem;font-size:.82rem">📋 Copiar BCC</button>
+        <button class="btn btn-borde" id="btn-abrir-gmail" style="padding:.45rem 1rem;font-size:.82rem">✉️ Abrir en Gmail</button>
+        <button class="btn btn-rojo" id="btn-marcar-enviados" style="padding:.45rem 1rem;font-size:.82rem;justify-content:center">✔ Marcar como enviado a todos</button>
+      </div>
+      <p style="font-size:.7rem;color:var(--gris);margin-top:.6rem">Al abrir Gmail: pega el BCC copiado en el campo BCC del correo.</p>
+    </div>
+  </div>
 
   </div>
 </div>

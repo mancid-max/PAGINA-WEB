@@ -1023,7 +1023,7 @@ function mostrarSeccionAdmin(seccion) {
     $("#admin-seccion-"+s).style.display = s === seccion ? "block" : "none";
   });
   if (seccion === "crm") {
-    $("#crm-detalle").style.display = "none";
+    const m = $("#crm-modal"); if (m) m.style.display = "none";
     $("#crm-lista").style.display = "flex";
     crmActual = null;
     if (!crmClientes.length) cargarCRM();
@@ -1386,12 +1386,68 @@ document.querySelectorAll("[data-crm-filtro]").forEach(btn => {
 
 $("#crm-busca").addEventListener("input", renderizarCRM);
 $("#btn-refresh-crm").onclick = cargarCRM;
-$("#btn-cerrar-crm-det").onclick = () => {
-  $("#crm-detalle").style.display = "none";
-  $("#crm-lista").style.display = "flex";
-  crmActual = null;
+
+$("#btn-crm-email-toggle").onclick = () => {
+  actualizarPanelEmail();
+  $("#crm-email-modal").style.display = "block";
 };
-$("#btn-crm-add").onclick = agregarInteraccion;
+
+window.cerrarEmailModal = function() {
+  $("#crm-email-modal").style.display = "none";
+};
+
+function actualizarPanelEmail() {
+  const conEmail = crmClientes.filter(c => c.email && c.email.length > 3 && (c.estado||"pendiente") !== "pedido_realizado" && c.estado !== "descartado");
+  const bcc = conEmail.map(c => c.email.toLowerCase()).join("; ");
+  $("#crm-email-modal").dataset.bcc = bcc;
+  $("#crm-email-count").textContent = `${conEmail.length} destinatarios (sin los que ya hicieron pedido)`;
+}
+
+$("#btn-copiar-bcc").onclick = () => {
+  const bcc = $("#crm-email-modal").dataset.bcc || "";
+  navigator.clipboard.writeText(bcc).then(() => {
+    $("#btn-copiar-bcc").textContent = "✔ ¡Copiado!";
+    setTimeout(() => { $("#btn-copiar-bcc").textContent = "📋 Copiar BCC"; }, 2500);
+  });
+};
+
+$("#btn-abrir-gmail").onclick = () => {
+  const subject = encodeURIComponent($("#crm-email-subject").value);
+  const body = encodeURIComponent($("#crm-email-body").value);
+  window.open(`https://mail.google.com/mail/?view=cm&su=${subject}&body=${body}`, "_blank");
+};
+
+$("#btn-marcar-enviados").onclick = async () => {
+  const conEmail = crmClientes.filter(c => c.email && c.email.length > 3 && (c.estado||"pendiente") !== "pedido_realizado" && c.estado !== "descartado");
+  if (!conEmail.length) { toast("Sin destinatarios"); return; }
+  const btn = $("#btn-marcar-enviados");
+  btn.disabled = true;
+  btn.textContent = "Registrando…";
+  let ok = 0;
+  for (const c of conEmail) {
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/crm_interacciones_v2`, {
+        method: "POST",
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}`, "Content-Type": "application/json", Prefer: "return=minimal" },
+        body: JSON.stringify({ client_rut: c.rut, tipo: "email", descripcion: "Correo masivo Dolce Vita 44" })
+      });
+      if ((c.estado||"pendiente") === "pendiente") {
+        c.estado = "contactado";
+        await fetch(`${SUPABASE_URL}/rest/v1/crm_clientes_44?rut=eq.${encodeURIComponent(c.rut)}`, {
+          method: "PATCH",
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}`, "Content-Type": "application/json", Prefer: "return=minimal" },
+          body: JSON.stringify({ estado: "contactado" })
+        });
+      }
+      ok++;
+    } catch(e) {}
+  }
+  toast(`✔ ${ok} clientes marcados como contactados`);
+  btn.disabled = false;
+  btn.textContent = "✔ Marcar como enviado a todos";
+  renderizarCRM();
+  actualizarPanelEmail();
+};
 
 async function cargarCRM() {
   const lista = $("#crm-lista");
@@ -1422,6 +1478,11 @@ async function cargarCRM() {
               method: "PATCH",
               headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}`, "Content-Type": "application/json", Prefer: "return=minimal" },
               body: JSON.stringify({ estado: "pedido_realizado" })
+            }).catch(() => {});
+            fetch(`${SUPABASE_URL}/rest/v1/crm_interacciones_v2`, {
+              method: "POST",
+              headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}`, "Content-Type": "application/json", Prefer: "return=minimal" },
+              body: JSON.stringify({ client_rut: c.rut, tipo: "pedido_realizado", descripcion: "Pedido Cole 44 detectado automáticamente" })
             }).catch(() => {});
           }
         }
@@ -1477,13 +1538,12 @@ window.abrirDetalleCRM = async function(rut) {
   crmActual = crmClientes.find(c => c.rut === rut);
   if (!crmActual) return;
 
-  $("#crm-lista").style.display = "none";
-  $("#crm-detalle").style.display = "block";
-  $("#crm-det-nombre").textContent = crmActual.nombre;
-
   const tieneEmail = crmActual.email && crmActual.email.length > 3;
   const tieneTel = crmActual.telefono && crmActual.telefono.length > 4;
   const coles = (crmActual.coles_compradas || []).join(", ");
+  const estado = crmActual.estado || "pendiente";
+  const yaHizoPedido = estado === "pedido_realizado";
+
   let infoHtml =
     `<div><b>RUT:</b> ${crmActual.rut}</div>` +
     `<div><b>Ciudad:</b> ${crmActual.ciudad||"—"}</div>` +
@@ -1500,10 +1560,48 @@ window.abrirDetalleCRM = async function(rut) {
     const wspHref = `https://wa.me/${tel}?text=${wspMsg}`;
     infoHtml += `<div><b>WhatsApp:</b> <a href="${wspHref}" target="_blank" rel="noopener" onclick="registrarWspCRM(event,'${wspHref}')">💬 Abrir chat (${crmActual.telefono})</a></div>`;
   }
-  $("#crm-det-info").innerHTML = infoHtml;
 
-  renderEstadoButtons(crmActual.estado || "pendiente");
+  const estados = [
+    { k:"pendiente", l:"Pendiente" }, { k:"contactado", l:"Contactado" },
+    { k:"en_negocio", l:"En negocio" }, { k:"pedido_realizado", l:"Hizo pedido ✔" }, { k:"descartado", l:"Descartado" },
+  ];
+  const estadoBtns = estados.map(e =>
+    `<button class="crm-pill crm-pill-${e.k}${e.k===estado?" activo-est":""}"
+       style="font-size:.75rem;padding:.3rem .75rem;${e.k===estado?"border-color:#333 !important;":""}"
+       onclick="cambiarEstadoCRM('${e.k}')">${e.l}</button>`
+  ).join("");
+
+  $("#crm-modal-box").innerHTML = `
+    <div class="crm-det-header">
+      <button onclick="cerrarCRMModal()" class="btn btn-borde" style="padding:.35rem .8rem;font-size:.8rem">← Lista</button>
+      <h3 style="margin:0;font-size:1rem;font-weight:800">${crmActual.nombre}</h3>
+    </div>
+    <div class="crm-det-info">${infoHtml}</div>
+    ${yaHizoPedido ? `<button class="btn btn-rojo" style="justify-content:center;margin-bottom:.8rem;width:100%" onclick="descargarExcelCRM('${crmActual.rut}')">⬇ Descargar Excel del pedido</button>` : ""}
+    <div class="crm-det-estado" id="crm-det-estado">${estadoBtns}</div>
+    <p class="crm-hist-titulo">Historial de contacto</p>
+    <div class="crm-hist" id="crm-hist"><p style="color:var(--gris);font-size:.8rem">Cargando…</p></div>
+    <div class="crm-add-form">
+      <label>Registrar interacción</label>
+      <select id="crm-tipo" class="crm-select">
+        <option value="email">📧 Email enviado</option>
+        <option value="whatsapp">💬 WhatsApp</option>
+        <option value="llamada">📞 Llamada</option>
+        <option value="pagina_enviada">🔗 Página de catálogo enviada</option>
+        <option value="nota">📝 Nota interna</option>
+      </select>
+      <textarea id="crm-desc" class="crm-textarea" placeholder="Descripción (opcional)…"></textarea>
+      <button class="btn btn-rojo" id="btn-crm-add" onclick="agregarInteraccion()" style="justify-content:center">+ Registrar</button>
+    </div>
+  `;
+
+  $("#crm-modal").style.display = "block";
   await cargarInteracciones(rut);
+};
+
+window.cerrarCRMModal = function() {
+  $("#crm-modal").style.display = "none";
+  crmActual = null;
 };
 
 function renderEstadoButtons(estadoActual) {
@@ -1526,7 +1624,7 @@ async function cargarInteracciones(rut) {
   hist.innerHTML = '<p style="color:var(--gris);font-size:.8rem">Cargando…</p>';
   try {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/crm_interacciones?client_rut=eq.${encodeURIComponent(rut)}&order=fecha.desc&limit=50`,
+      `${SUPABASE_URL}/rest/v1/crm_interacciones_v2?client_rut=eq.${encodeURIComponent(rut)}&order=fecha.desc&limit=50`,
       { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}` } }
     );
     if (!res.ok) throw new Error(res.status);
@@ -1535,7 +1633,7 @@ async function cargarInteracciones(rut) {
       hist.innerHTML = '<p style="color:var(--gris);font-size:.8rem;text-align:center">Sin interacciones aún</p>';
       return;
     }
-    const tipoLabel = { email:"📧 Email", whatsapp:"💬 WhatsApp", llamada:"📞 Llamada", pagina_enviada:"🔗 Catálogo enviado", nota:"📝 Nota" };
+    const tipoLabel = { email:"📧 Email", whatsapp:"💬 WhatsApp", llamada:"📞 Llamada", pagina_enviada:"🔗 Catálogo enviado", nota:"📝 Nota", pedido_realizado:"🛒 Hizo pedido Cole 44" };
     hist.innerHTML = items.map(it => {
       const f = new Date(it.fecha);
       const fStr = f.toLocaleDateString("es-CL",{day:"2-digit",month:"2-digit",year:"2-digit"}) + " " +
@@ -1555,7 +1653,7 @@ window.registrarWspCRM = function(e, href) {
   e.preventDefault();
   window.open(href, "_blank", "noopener");
   if (!crmActual) return;
-  fetch(`${SUPABASE_URL}/rest/v1/crm_interacciones`, {
+  fetch(`${SUPABASE_URL}/rest/v1/crm_interacciones_v2`, {
     method: "POST",
     headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}`, "Content-Type": "application/json", Prefer: "return=minimal" },
     body: JSON.stringify({ client_rut: crmActual.rut, tipo: "whatsapp", descripcion: "Catálogo enviado por WhatsApp" })
@@ -1584,6 +1682,28 @@ window.cambiarEstadoCRM = async function(nuevoEstado) {
   }
 };
 
+async function descargarExcelCRM(rut) {
+  toast("Buscando pedido…");
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/quotes?select=id,store_name,client_rut,client_phone,total_items,created_at,source,is_ready,giro,direccion,nombre_tienda,comuna,transporte&client_rut=eq.${encodeURIComponent(rut)}&order=created_at.desc&limit=1`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}` } }
+    );
+    if (!res.ok) throw new Error(res.status);
+    const quotes = await res.json();
+    if (!quotes.length) { toast("No se encontró pedido para este cliente"); return; }
+    const q = quotes[0];
+    if (!adminPedidos.find(p => p.id === q.id)) adminPedidos.push(q);
+    toast("Cargando ítems…");
+    const items = await resolverItems(q);
+    toast("Generando Excel…");
+    await generarExcelConPlantilla44(q, items);
+    toast("Excel descargado ⬇");
+  } catch(e) {
+    toast("Error: " + e.message);
+  }
+}
+
 async function agregarInteraccion() {
   if (!crmActual) return;
   const tipo = $("#crm-tipo").value;
@@ -1592,7 +1712,7 @@ async function agregarInteraccion() {
   btn.disabled = true;
   btn.textContent = "Guardando…";
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/crm_interacciones`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/crm_interacciones_v2`, {
       method: "POST",
       headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}`, "Content-Type": "application/json", Prefer: "return=minimal" },
       body: JSON.stringify({ client_rut: crmActual.rut, tipo, descripcion: desc || null })
