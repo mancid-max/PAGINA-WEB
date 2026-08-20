@@ -1019,9 +1019,15 @@ function cerrarAdmin() {
   document.body.style.overflow = "";
 }
 function mostrarSeccionAdmin(seccion) {
-  ["login","lista","detalle"].forEach(s => {
+  ["login","lista","detalle","crm"].forEach(s => {
     $("#admin-seccion-"+s).style.display = s === seccion ? "block" : "none";
   });
+  if (seccion === "crm") {
+    $("#crm-detalle").style.display = "none";
+    $("#crm-lista").style.display = "flex";
+    crmActual = null;
+    if (!crmClientes.length) cargarCRM();
+  }
 }
 
 $("#btn-admin").onclick = abrirAdmin;
@@ -1073,7 +1079,9 @@ document.querySelectorAll(".chip-estado").forEach(btn => {
   btn.onclick = () => {
     filtroEstadoAdmin = btn.dataset.filtro;
     document.querySelectorAll(".chip-estado").forEach(b => b.classList.remove("activo","activo-listo","activo-pend"));
-    btn.classList.add("activo", filtroEstadoAdmin === "listo" ? "activo-listo" : filtroEstadoAdmin === "pendiente" ? "activo-pend" : "");
+    btn.classList.add("activo");
+    if (filtroEstadoAdmin === "listo") btn.classList.add("activo-listo");
+    else if (filtroEstadoAdmin === "pendiente") btn.classList.add("activo-pend");
     renderizarTablaPedidos(adminPedidos);
   };
 });
@@ -1249,7 +1257,7 @@ window.eliminarPedido = async function(id) {
 };
 
 /* ---- ADMIN: DETALLE --------------------------------------- */
-window.verDetallePedido = function(id) {
+window.verDetallePedido = async function(id) {
   const q = adminPedidos.find(p => p.id === id);
   if (!q) return;
   adminPedidoActual = q;
@@ -1266,7 +1274,18 @@ window.verDetallePedido = function(id) {
     `<div><dt>${k}</dt><dd>${v}</dd></div>`
   ).join("");
 
-  const items = q._items || [];
+  $("#det-items").innerHTML = `<p style="color:var(--gris);font-size:.85rem;grid-column:1/-1">Cargando ítems…</p>`;
+
+  let items = q._items || [];
+  if (!items.length && q.total_items > 0) {
+    try {
+      const ir = await fetch(
+        `${SUPABASE_URL}/rest/v1/quote_items?select=quote_id,sku,size,quantity&quote_id=eq.${id}&limit=9999`,
+        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}` } }
+      );
+      if (ir.ok) { items = await ir.json(); q._items = items; }
+    } catch(e) {}
+  }
   const agrupado = {};
   items.forEach(it => {
     if (!agrupado[it.sku]) agrupado[it.sku] = {};
@@ -1350,6 +1369,248 @@ $("#btn-dl-excel").onclick = async () => {
     toast("Error: " + e.message);
   }
 };
+
+/* ---- ADMIN: CRM FALTANTES -------------------------------- */
+let crmClientes = [];
+let crmActual = null;
+let crmFiltroEstado = "todos";
+
+document.querySelectorAll("[data-crm-filtro]").forEach(btn => {
+  btn.onclick = () => {
+    crmFiltroEstado = btn.dataset.crmFiltro;
+    document.querySelectorAll("[data-crm-filtro]").forEach(b => b.classList.remove("activo"));
+    btn.classList.add("activo");
+    renderizarCRM();
+  };
+});
+
+$("#crm-busca").addEventListener("input", renderizarCRM);
+$("#btn-refresh-crm").onclick = cargarCRM;
+$("#btn-cerrar-crm-det").onclick = () => {
+  $("#crm-detalle").style.display = "none";
+  $("#crm-lista").style.display = "flex";
+  crmActual = null;
+};
+$("#btn-crm-add").onclick = agregarInteraccion;
+
+async function cargarCRM() {
+  const lista = $("#crm-lista");
+  lista.innerHTML = '<p style="color:var(--gris);font-size:.85rem;padding:1rem">Cargando clientes…</p>';
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/crm_clientes_44?select=*&order=ultima_cole.desc,nombre.asc&limit=200`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}` } }
+    );
+    if (!res.ok) throw new Error(await res.text() || res.status);
+    crmClientes = await res.json();
+
+    // Auto-detectar si algún faltante ya hizo un pedido Cole 44
+    const sinPedido = crmClientes.filter(c => c.estado !== "pedido_realizado");
+    if (sinPedido.length) {
+      const rutsQ = sinPedido.map(c => `"${c.rut}"`).join(",");
+      const qRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/quotes?select=client_rut&client_rut=in.(${rutsQ})&limit=500`,
+        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}` } }
+      );
+      if (qRes.ok) {
+        const ordenes = await qRes.json();
+        const conPedido = new Set(ordenes.map(o => o.client_rut));
+        for (const c of crmClientes) {
+          if (conPedido.has(c.rut) && c.estado !== "pedido_realizado") {
+            c.estado = "pedido_realizado";
+            fetch(`${SUPABASE_URL}/rest/v1/crm_clientes_44?rut=eq.${encodeURIComponent(c.rut)}`, {
+              method: "PATCH",
+              headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}`, "Content-Type": "application/json", Prefer: "return=minimal" },
+              body: JSON.stringify({ estado: "pedido_realizado" })
+            }).catch(() => {});
+          }
+        }
+      }
+    }
+
+    renderizarCRM();
+  } catch(e) {
+    lista.innerHTML = `<p style="color:var(--rojo-osc);padding:1rem">Error: ${e.message}</p>`;
+  }
+}
+
+function renderizarCRM() {
+  const q = ($("#crm-busca").value || "").trim().toLowerCase();
+  let filtrados = crmClientes;
+  if (q) filtrados = filtrados.filter(c =>
+    (c.nombre||"").toLowerCase().includes(q) ||
+    (c.ciudad||"").toLowerCase().includes(q) ||
+    (c.rut||"").includes(q)
+  );
+  if (crmFiltroEstado !== "todos") filtrados = filtrados.filter(c => (c.estado||"pendiente") === crmFiltroEstado);
+
+  const cnt = { pendiente:0, contactado:0, en_negocio:0, pedido_realizado:0, descartado:0 };
+  crmClientes.forEach(c => { const e = c.estado||"pendiente"; if (cnt[e] !== undefined) cnt[e]++; });
+  $("#crm-stats").innerHTML =
+    `<div class="crm-stat">${crmClientes.length}<span>total</span></div>` +
+    `<div class="crm-stat">${cnt.pedido_realizado}<span>con pedido ✔</span></div>` +
+    `<div class="crm-stat">${cnt.contactado+cnt.en_negocio}<span>en proceso</span></div>` +
+    `<div class="crm-stat">${cnt.pendiente}<span>pendientes</span></div>`;
+
+  const lista = $("#crm-lista");
+  if (!filtrados.length) {
+    lista.innerHTML = '<p style="color:var(--gris);font-size:.85rem;padding:1rem;text-align:center">Sin resultados</p>';
+    return;
+  }
+  const estadoLabel = { pendiente:"Pendiente", contactado:"Contactado", en_negocio:"En negocio", pedido_realizado:"Hizo pedido ✔", descartado:"Descartado" };
+  lista.innerHTML = filtrados.map(c => {
+    const estado = c.estado || "pendiente";
+    const tieneEmail = c.email && c.email.length > 3;
+    const tieneTel = c.telefono && c.telefono.length > 4;
+    return `<div class="crm-card" onclick="abrirDetalleCRM('${c.rut}')">
+      <div>
+        <div class="cn">${c.nombre}</div>
+        <div class="cc">${c.ciudad||""} · Última: Cole ${c.ultima_cole||"?"} · ${(c.vendedor||"s/v").split(" - ")[1]||c.vendedor||""}</div>
+        <div class="ce">${tieneEmail ? "📧 " + c.email : "✗ sin email"}${tieneTel ? " · 📞 " + c.telefono : ""}</div>
+      </div>
+      <div><span class="crm-pill crm-pill-${estado}">${estadoLabel[estado]||estado}</span></div>
+    </div>`;
+  }).join("");
+}
+
+window.abrirDetalleCRM = async function(rut) {
+  crmActual = crmClientes.find(c => c.rut === rut);
+  if (!crmActual) return;
+
+  $("#crm-lista").style.display = "none";
+  $("#crm-detalle").style.display = "block";
+  $("#crm-det-nombre").textContent = crmActual.nombre;
+
+  const tieneEmail = crmActual.email && crmActual.email.length > 3;
+  const tieneTel = crmActual.telefono && crmActual.telefono.length > 4;
+  const coles = (crmActual.coles_compradas || []).join(", ");
+  let infoHtml =
+    `<div><b>RUT:</b> ${crmActual.rut}</div>` +
+    `<div><b>Ciudad:</b> ${crmActual.ciudad||"—"}</div>` +
+    `<div><b>Vendedor:</b> ${crmActual.vendedor||"—"}</div>` +
+    `<div><b>Últimas coles:</b> ${coles||crmActual.ultima_cole}</div>`;
+  if (tieneEmail) {
+    infoHtml += `<div><b>Email:</b> <a href="mailto:${crmActual.email}">${crmActual.email}</a></div>`;
+  } else {
+    infoHtml += `<div><b>Email:</b> <em style="color:var(--gris)">sin email</em></div>`;
+  }
+  if (tieneTel) {
+    const tel = crmActual.telefono.replace(/\D/g,"");
+    const wspMsg = encodeURIComponent(`¡Hola! Te escribimos de Mohicano Jeans. Tenemos lista nuestra nueva colección Dolce Vita 44 — Primavera-Verano 2026. ¿Te la compartimos? https://mohicanojeans.netlify.app/catalogo-44/`);
+    const wspHref = `https://wa.me/${tel}?text=${wspMsg}`;
+    infoHtml += `<div><b>WhatsApp:</b> <a href="${wspHref}" target="_blank" rel="noopener" onclick="registrarWspCRM(event,'${wspHref}')">💬 Abrir chat (${crmActual.telefono})</a></div>`;
+  }
+  $("#crm-det-info").innerHTML = infoHtml;
+
+  renderEstadoButtons(crmActual.estado || "pendiente");
+  await cargarInteracciones(rut);
+};
+
+function renderEstadoButtons(estadoActual) {
+  const estados = [
+    { k:"pendiente",       l:"Pendiente" },
+    { k:"contactado",      l:"Contactado" },
+    { k:"en_negocio",      l:"En negocio" },
+    { k:"pedido_realizado",l:"Hizo pedido ✔" },
+    { k:"descartado",      l:"Descartado" },
+  ];
+  $("#crm-det-estado").innerHTML = estados.map(e =>
+    `<button class="crm-pill crm-pill-${e.k}${e.k===estadoActual?" activo-est":""}"
+       style="font-size:.75rem;padding:.3rem .75rem;${e.k===estadoActual?"border-color:#333 !important;":""}"
+       onclick="cambiarEstadoCRM('${e.k}')">${e.l}</button>`
+  ).join("");
+}
+
+async function cargarInteracciones(rut) {
+  const hist = $("#crm-hist");
+  hist.innerHTML = '<p style="color:var(--gris);font-size:.8rem">Cargando…</p>';
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/crm_interacciones?client_rut=eq.${encodeURIComponent(rut)}&order=fecha.desc&limit=50`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}` } }
+    );
+    if (!res.ok) throw new Error(res.status);
+    const items = await res.json();
+    if (!items.length) {
+      hist.innerHTML = '<p style="color:var(--gris);font-size:.8rem;text-align:center">Sin interacciones aún</p>';
+      return;
+    }
+    const tipoLabel = { email:"📧 Email", whatsapp:"💬 WhatsApp", llamada:"📞 Llamada", pagina_enviada:"🔗 Catálogo enviado", nota:"📝 Nota" };
+    hist.innerHTML = items.map(it => {
+      const f = new Date(it.fecha);
+      const fStr = f.toLocaleDateString("es-CL",{day:"2-digit",month:"2-digit",year:"2-digit"}) + " " +
+                   f.toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit"});
+      return `<div class="crm-hist-item">
+        <span class="ci-tipo">${tipoLabel[it.tipo]||it.tipo}</span>
+        <span class="ci-fecha">${fStr}</span>
+        ${it.descripcion ? `<div class="ci-desc">${it.descripcion}</div>` : ""}
+      </div>`;
+    }).join("");
+  } catch(e) {
+    hist.innerHTML = `<p style="color:var(--rojo-osc);font-size:.8rem">Error: ${e.message}</p>`;
+  }
+}
+
+window.registrarWspCRM = function(e, href) {
+  e.preventDefault();
+  window.open(href, "_blank", "noopener");
+  if (!crmActual) return;
+  fetch(`${SUPABASE_URL}/rest/v1/crm_interacciones`, {
+    method: "POST",
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}`, "Content-Type": "application/json", Prefer: "return=minimal" },
+    body: JSON.stringify({ client_rut: crmActual.rut, tipo: "whatsapp", descripcion: "Catálogo enviado por WhatsApp" })
+  }).then(() => {
+    if ((crmActual.estado||"pendiente") === "pendiente") cambiarEstadoCRM("contactado");
+    else cargarInteracciones(crmActual.rut);
+  }).catch(() => {});
+};
+
+window.cambiarEstadoCRM = async function(nuevoEstado) {
+  if (!crmActual) return;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/crm_clientes_44?rut=eq.${encodeURIComponent(crmActual.rut)}`, {
+      method: "PATCH",
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}`, "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify({ estado: nuevoEstado })
+    });
+    if (!res.ok) throw new Error(await res.text() || res.status);
+    crmActual.estado = nuevoEstado;
+    const idx = crmClientes.findIndex(c => c.rut === crmActual.rut);
+    if (idx >= 0) crmClientes[idx].estado = nuevoEstado;
+    renderEstadoButtons(nuevoEstado);
+    toast("Estado actualizado ✔");
+  } catch(e) {
+    toast("Error: " + e.message);
+  }
+};
+
+async function agregarInteraccion() {
+  if (!crmActual) return;
+  const tipo = $("#crm-tipo").value;
+  const desc = ($("#crm-desc").value || "").trim();
+  const btn = $("#btn-crm-add");
+  btn.disabled = true;
+  btn.textContent = "Guardando…";
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/crm_interacciones`, {
+      method: "POST",
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}`, "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify({ client_rut: crmActual.rut, tipo, descripcion: desc || null })
+    });
+    if (!res.ok) throw new Error(await res.text() || res.status);
+    $("#crm-desc").value = "";
+    toast("Interacción registrada ✔");
+    if ((crmActual.estado||"pendiente") === "pendiente" && tipo !== "nota") {
+      await cambiarEstadoCRM("contactado");
+    }
+    await cargarInteracciones(crmActual.rut);
+  } catch(e) {
+    toast("Error: " + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "+ Registrar";
+  }
+}
 
 /* ---- TOAST ------------------------------------------------ */
 let toastT;

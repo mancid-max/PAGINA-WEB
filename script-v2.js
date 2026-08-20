@@ -4757,7 +4757,7 @@ async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
   const firstUnusedRow = config.firstRow + grouped.length;
   for (let row = firstUnusedRow; row <= config.lastRow; row++) {
     (config.clearUnusedFormulaColumns || []).forEach((col) => {
-      sheet.cell(`${col}${row}`).value("");
+      sheet.cell(`${col}${row}`).formula('""');
     });
   }
 

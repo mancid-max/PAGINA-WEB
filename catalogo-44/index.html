@@ -82,6 +82,31 @@ header.hero{max-width:1200px;margin:0 auto;padding:2.2rem 1.2rem 1rem;text-align
 .bloque-catalogo p{color:var(--gris);font-size:.92rem;max-width:480px;margin:.6rem auto 1.2rem}
 .btn-catalogo{font-size:1.05rem;padding:.9rem 1.8rem}
 
+.bloque-compartir{
+  max-width:760px;margin:2rem auto 0;padding:2rem 1.5rem;text-align:center;
+  background:#fff;border-radius:22px;box-shadow:var(--sombra);
+}
+.bloque-compartir h3{color:var(--tinta);font-size:1rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:1.2rem;opacity:.7}
+.share-grid{display:flex;flex-wrap:wrap;gap:.75rem;justify-content:center}
+.share-btn{
+  display:flex;flex-direction:column;align-items:center;gap:.4rem;
+  padding:.8rem 1rem;border-radius:14px;border:none;cursor:pointer;
+  text-decoration:none;font-size:.7rem;font-weight:700;letter-spacing:.04em;
+  text-transform:uppercase;transition:transform .15s,box-shadow .15s;
+  min-width:72px;color:#fff;
+}
+.share-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.18)}
+.share-btn svg{width:28px;height:28px;flex-shrink:0}
+.share-btn.wsp{background:#25d366}
+.share-btn.fb{background:#1877f2}
+.share-btn.x{background:#000}
+.share-btn.email{background:#ea4335}
+.share-btn.sms{background:#5f6af7}
+.share-btn.copy{background:#555}
+.share-btn.copy.copiado{background:#25b563}
+@keyframes resaltar{0%{box-shadow:var(--sombra);background:#fff}20%{box-shadow:0 0 0 4px rgba(13,27,62,.12),0 20px 48px rgba(13,27,62,.15);background:#f0f5ff}100%{box-shadow:var(--sombra);background:#fff}}
+.bloque-compartir.resaltado{animation:resaltar 1.8s cubic-bezier(.4,0,.2,1)}
+
 .barra-filtros{max-width:1200px;margin:1.4rem auto .4rem;padding:0 1.2rem;display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;justify-content:center}
 .chip{
   border:1.5px solid #d8e4ec;background:#fff;border-radius:999px;padding:.45rem 1.1rem;
@@ -492,6 +517,46 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
 .btn-toggle-listo.marcar{background:var(--verde);color:#fff}
 .btn-toggle-listo.desmarcar{background:#e4edf3;color:var(--tinta)}
 .btn-toggle-listo:hover{opacity:.85}
+
+/* ===== CRM ===== */
+.crm-stats{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem}
+.crm-stat{background:var(--celeste);border-radius:10px;padding:.4rem .85rem;font-size:.75rem;font-weight:700;color:var(--tinta)}
+.crm-stat span{color:var(--gris);font-weight:500;margin-left:.3rem}
+.crm-lista{display:flex;flex-direction:column;gap:.5rem;max-height:58vh;overflow-y:auto}
+.crm-card{border:1.5px solid #e4edf3;border-radius:12px;padding:.75rem 1rem;cursor:pointer;
+  transition:all .15s;background:#fff;display:grid;grid-template-columns:1fr auto;gap:.15rem .8rem;align-items:start}
+.crm-card:hover{border-color:var(--tinta);background:var(--celeste)}
+.crm-card .cn{font-weight:700;font-size:.88rem;color:var(--tinta)}
+.crm-card .cc{font-size:.72rem;color:var(--gris);margin-top:.1rem}
+.crm-card .ce{font-size:.72rem;margin-top:.2rem}
+.crm-pill{display:inline-block;font-size:.62rem;font-weight:700;letter-spacing:.05em;
+  padding:.2rem .55rem;border-radius:999px;text-transform:uppercase;white-space:nowrap}
+.crm-pill-pendiente{background:#fff3cd;color:#7a5800}
+.crm-pill-contactado{background:#dbeafe;color:#1e40af}
+.crm-pill-en_negocio{background:#fef3c7;color:#92400e}
+.crm-pill-pedido_realizado{background:#d1fae5;color:#065f46}
+.crm-pill-descartado{background:#f3f4f6;color:#6b7280}
+.crm-detalle{border-top:2px solid #e4edf3;padding-top:1.1rem;margin-top:1rem}
+.crm-det-header{display:flex;align-items:center;gap:.8rem;margin-bottom:.8rem;flex-wrap:wrap}
+.crm-det-header h3{font-size:1.05rem;font-weight:800;color:var(--tinta);line-height:1.3}
+.crm-det-info{background:var(--celeste);border-radius:12px;padding:.75rem 1rem;font-size:.8rem;
+  margin-bottom:.8rem;display:flex;flex-direction:column;gap:.3rem}
+.crm-det-info a{color:var(--rojo);text-decoration:none}
+.crm-det-estado{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem}
+.crm-det-estado button{cursor:pointer;border:2px solid transparent;font-family:inherit;transition:all .12s}
+.crm-det-estado button.activo-est{border-color:#333 !important}
+.crm-hist-titulo{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--gris);margin-bottom:.6rem}
+.crm-hist{display:flex;flex-direction:column;gap:.4rem;margin-bottom:.9rem;max-height:180px;overflow-y:auto}
+.crm-hist-item{border:1.5px solid #e4edf3;border-radius:10px;padding:.45rem .75rem;font-size:.8rem}
+.crm-hist-item .ci-tipo{font-weight:700;color:var(--tinta)}
+.crm-hist-item .ci-fecha{font-size:.68rem;color:var(--gris);margin-left:.4rem}
+.crm-hist-item .ci-desc{color:var(--gris);margin-top:.2rem;font-size:.78rem}
+.crm-add-form{display:flex;flex-direction:column;gap:.55rem;background:var(--celeste);border-radius:12px;padding:.85rem 1rem}
+.crm-add-form label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gris)}
+.crm-select{border:1.5px solid #d8e4ec;border-radius:8px;padding:.45rem .7rem;font-family:inherit;font-size:.82rem;background:#fff;width:100%;cursor:pointer}
+.crm-textarea{border:1.5px solid #d8e4ec;border-radius:8px;padding:.45rem .7rem;font-family:inherit;font-size:.82rem;width:100%;resize:vertical;min-height:52px}
+.crm-select:focus,.crm-textarea:focus{outline:none;border-color:var(--rojo)}
 </style>
 </head>
 <body>
@@ -507,6 +572,12 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
   <a class="cta-colecciones" href="https://mohicanojeans.netlify.app/" target="_blank" rel="noopener">
     👆 CLICK AQUÍ PARA VER LAS OTRAS COLECCIONES
   </a>
+  <div style="margin-top:.9rem">
+    <a class="btn btn-borde" href="#compartir" onclick="var s=document.getElementById('compartir');s.scrollIntoView({behavior:'instant'});s.classList.remove('resaltado');void s.offsetWidth;s.classList.add('resaltado');return false;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      Compartir catálogo
+    </a>
+  </div>
 </header>
 
 <div class="italia-strip">
@@ -531,6 +602,37 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
   <h2>¿Quieres el catálogo completo?</h2>
   <p>Descarga o comparte el catálogo DOLCE VITA 44 en PDF, con los 62 modelos y todo el detalle de fits y telas.</p>
   <a class="btn btn-rojo btn-catalogo" href="https://drive.google.com/file/d/1RhHR0vk4G0fHxc8MnmvqjJP2fOGjcKAo/view?usp=sharing" target="_blank" rel="noopener">📕 Ver / descargar catálogo PDF</a>
+</section>
+
+<section class="bloque-compartir" id="compartir">
+  <h3>Compartir catálogo</h3>
+  <div class="share-grid">
+    <a class="share-btn wsp" href="#" onclick="compartirWsp(event)">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.143.568 4.148 1.555 5.878L.057 23.5l5.772-1.515A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.891 0-3.658-.523-5.168-1.427l-.368-.221-3.428.9.915-3.349-.24-.384A9.956 9.956 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+      WhatsApp
+    </a>
+    <a class="share-btn fb" href="#" onclick="compartirFb(event)">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073C24 5.41 18.627 0 12 0S0 5.41 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.791-4.697 4.533-4.697 1.312 0 2.686.235 2.686.235v2.97h-1.514c-1.491 0-1.956.93-1.956 1.886v2.268h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
+      Facebook
+    </a>
+    <a class="share-btn x" href="#" onclick="compartirX(event)">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.259 5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      X / Twitter
+    </a>
+    <a class="share-btn email" href="#" onclick="compartirEmail(event)">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+      Correo
+    </a>
+    <a class="share-btn sms" href="#" onclick="compartirSms(event)">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/></svg>
+      Mensaje
+    </a>
+    <button class="share-btn copy" id="btn-copiar-link" onclick="copiarLink(this)">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+      Copiar link
+    </button>
+  </div>
+  <p style="font-size:.72rem;color:#aaa;margin-top:1rem">Para compartir en Instagram o TikTok, copia el link y pégalo en tu historia o bio.</p>
 </section>
 
 <footer class="pie">
@@ -691,6 +793,7 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
         <div class="admin-top-acciones">
           <input id="a-busca" type="search" placeholder="RUT o cliente…">
           <button class="btn btn-borde" id="btn-refresh" style="padding:.45rem 1rem;font-size:.82rem">↺ Actualizar</button>
+          <button class="btn btn-borde" onclick="mostrarSeccionAdmin('crm')" style="padding:.45rem 1rem;font-size:.82rem">📋 CRM</button>
           <button class="btn btn-borde" id="btn-logout" style="padding:.45rem 1rem;font-size:.82rem">Salir</button>
         </div>
       </div>
@@ -718,6 +821,51 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
       <div id="a-vacio" class="a-vacio" style="display:none">No hay pedidos registrados aún.</div>
     </div>
 
+    <!-- CRM Faltantes Cole 44 -->
+    <div id="admin-seccion-crm" style="display:none">
+      <div class="admin-top">
+        <h2>CRM · Faltantes Cole 44</h2>
+        <div class="admin-top-acciones">
+          <input id="crm-busca" type="search" placeholder="Nombre, ciudad o RUT…">
+          <button class="btn btn-borde" id="btn-refresh-crm" style="padding:.45rem 1rem;font-size:.82rem">↺ Actualizar</button>
+          <button class="btn btn-borde" onclick="mostrarSeccionAdmin('lista')" style="padding:.45rem 1rem;font-size:.82rem">← Pedidos</button>
+        </div>
+      </div>
+      <div class="filtros-estado" id="crm-filtros">
+        <button class="chip-estado activo" data-crm-filtro="todos">Todos</button>
+        <button class="chip-estado" data-crm-filtro="pendiente">Pendientes</button>
+        <button class="chip-estado" data-crm-filtro="contactado">Contactados</button>
+        <button class="chip-estado" data-crm-filtro="en_negocio">En negocio</button>
+        <button class="chip-estado" data-crm-filtro="pedido_realizado">Hicieron pedido</button>
+        <button class="chip-estado" data-crm-filtro="descartado">Descartados</button>
+      </div>
+      <div class="crm-stats" id="crm-stats"></div>
+      <div class="crm-lista" id="crm-lista"></div>
+      <!-- Detalle cliente CRM -->
+      <div class="crm-detalle" id="crm-detalle" style="display:none">
+        <div class="crm-det-header">
+          <button class="btn btn-borde" id="btn-cerrar-crm-det" style="padding:.35rem .8rem;font-size:.8rem">← Lista</button>
+          <h3 id="crm-det-nombre"></h3>
+        </div>
+        <div class="crm-det-info" id="crm-det-info"></div>
+        <div class="crm-det-estado" id="crm-det-estado"></div>
+        <p class="crm-hist-titulo">Historial de contacto</p>
+        <div class="crm-hist" id="crm-hist"></div>
+        <div class="crm-add-form">
+          <label>Registrar interacción</label>
+          <select id="crm-tipo" class="crm-select">
+            <option value="email">📧 Email enviado</option>
+            <option value="whatsapp">💬 WhatsApp</option>
+            <option value="llamada">📞 Llamada</option>
+            <option value="pagina_enviada">🔗 Página de catálogo enviada</option>
+            <option value="nota">📝 Nota interna</option>
+          </select>
+          <textarea id="crm-desc" class="crm-textarea" placeholder="Descripción (opcional)…"></textarea>
+          <button class="btn btn-rojo" id="btn-crm-add" style="justify-content:center">+ Registrar</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Detalle de un pedido -->
     <div id="admin-seccion-detalle" style="display:none">
       <div class="det-header">
@@ -736,5 +884,41 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
 </div>
 
 <script src="app.js"></script>
+<script>
+var SHARE_URL = 'https://mohicanojeans.netlify.app/catalogo-44/';
+var SHARE_TEXT = '¡Mirá lo nuevo de Mohicano Jeans! Colección Dolce Vita 44 — Primavera-Verano 2026';
+
+function compartirWsp(e) {
+  e.preventDefault();
+  window.open('https://wa.me/?text=' + encodeURIComponent(SHARE_TEXT + '\n' + SHARE_URL), '_blank');
+}
+function compartirFb(e) {
+  e.preventDefault();
+  window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(SHARE_URL), '_blank');
+}
+function compartirX(e) {
+  e.preventDefault();
+  window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(SHARE_TEXT) + '&url=' + encodeURIComponent(SHARE_URL), '_blank');
+}
+function compartirEmail(e) {
+  e.preventDefault();
+  window.location.href = 'mailto:?subject=' + encodeURIComponent('¡Catálogo Dolce Vita 44 - Mohicano Jeans!') + '&body=' + encodeURIComponent(SHARE_TEXT + '\n\n' + SHARE_URL);
+}
+function compartirSms(e) {
+  e.preventDefault();
+  window.location.href = 'sms:?body=' + encodeURIComponent(SHARE_TEXT + '\n' + SHARE_URL);
+}
+
+function copiarLink(btn) {
+  navigator.clipboard.writeText(SHARE_URL).then(function() {
+    btn.classList.add('copiado');
+    btn.lastChild.textContent = ' ¡Copiado!';
+    setTimeout(function() {
+      btn.classList.remove('copiado');
+      btn.lastChild.textContent = ' Copiar link';
+    }, 2500);
+  });
+}
+</script>
 </body>
 </html>
