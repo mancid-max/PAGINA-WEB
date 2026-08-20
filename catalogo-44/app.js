@@ -1492,7 +1492,7 @@ async function cargarCRM() {
     // Detectar clientes nuevos con pedido Cole 44 que no están en la lista de seguimiento
     const rutsCRM = new Set(crmClientes.map(c => c.rut));
     const nuevosRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/quotes?select=client_rut,store_name,client_phone,created_at&source=eq.catalogo-44&order=created_at.desc&limit=200`,
+      `${SUPABASE_URL}/rest/v1/quotes?select=client_rut,store_name,client_phone,created_at&source=eq.dolce-vita-44&order=created_at.desc&limit=200`,
       { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}` } }
     );
     if (nuevosRes.ok) {
