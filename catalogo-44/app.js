@@ -1489,6 +1489,34 @@ async function cargarCRM() {
       }
     }
 
+    // Detectar clientes nuevos con pedido Cole 44 que no están en la lista de seguimiento
+    const rutsCRM = new Set(crmClientes.map(c => c.rut));
+    const nuevosRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/quotes?select=client_rut,store_name,client_phone,created_at&source=eq.catalogo-44&order=created_at.desc&limit=200`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}` } }
+    );
+    if (nuevosRes.ok) {
+      const nuevosQuotes = await nuevosRes.json();
+      const vistos = new Set();
+      for (const q of nuevosQuotes) {
+        if (q.client_rut && !rutsCRM.has(q.client_rut) && !vistos.has(q.client_rut)) {
+          vistos.add(q.client_rut);
+          crmClientes.push({
+            rut: q.client_rut,
+            nombre: q.store_name || q.client_rut,
+            ciudad: "—",
+            email: "",
+            telefono: q.client_phone || "",
+            vendedor: "—",
+            ultima_cole: 44,
+            coles_compradas: [44],
+            estado: "pedido_realizado",
+            tipo: "nuevo"
+          });
+        }
+      }
+    }
+
     renderizarCRM();
   } catch(e) {
     lista.innerHTML = `<p style="color:var(--rojo-osc);padding:1rem">Error: ${e.message}</p>`;
@@ -1523,11 +1551,12 @@ function renderizarCRM() {
     const estado = c.estado || "pendiente";
     const tieneEmail = c.email && c.email.length > 3;
     const tieneTel = c.telefono && c.telefono.length > 4;
+    const esNuevo = c.tipo === "nuevo";
     return `<div class="crm-card" onclick="abrirDetalleCRM('${c.rut}')">
       <div>
-        <div class="cn">${c.nombre}</div>
-        <div class="cc">${c.ciudad||""} · Última: Cole ${c.ultima_cole||"?"} · ${(c.vendedor||"s/v").split(" - ")[1]||c.vendedor||""}</div>
-        <div class="ce">${tieneEmail ? "📧 " + c.email : "✗ sin email"}${tieneTel ? " · 📞 " + c.telefono : ""}</div>
+        <div class="cn">${c.nombre}${esNuevo ? ' <span class="crm-pill crm-pill-nuevo" style="font-size:.6rem;padding:.15rem .45rem;vertical-align:middle;margin-left:.3rem">CLIENTE NUEVO</span>' : ""}</div>
+        <div class="cc">${esNuevo ? "Cole 44" : (c.ciudad||"") + " · Última: Cole " + (c.ultima_cole||"?") + " · " + ((c.vendedor||"s/v").split(" - ")[1]||c.vendedor||"")}</div>
+        <div class="ce">${tieneTel ? "📞 " + c.telefono : (tieneEmail ? "📧 " + c.email : "✗ sin contacto")}</div>
       </div>
       <div><span class="crm-pill crm-pill-${estado}">${estadoLabel[estado]||estado}</span></div>
     </div>`;
@@ -1538,21 +1567,23 @@ window.abrirDetalleCRM = async function(rut) {
   crmActual = crmClientes.find(c => c.rut === rut);
   if (!crmActual) return;
 
-  const tieneEmail = crmActual.email && crmActual.email.length > 3;
+  const esNuevo = crmActual.tipo === "nuevo";
   const tieneTel = crmActual.telefono && crmActual.telefono.length > 4;
-  const coles = (crmActual.coles_compradas || []).join(", ");
   const estado = crmActual.estado || "pendiente";
-  const yaHizoPedido = estado === "pedido_realizado";
 
-  let infoHtml =
-    `<div><b>RUT:</b> ${crmActual.rut}</div>` +
-    `<div><b>Ciudad:</b> ${crmActual.ciudad||"—"}</div>` +
-    `<div><b>Vendedor:</b> ${crmActual.vendedor||"—"}</div>` +
-    `<div><b>Últimas coles:</b> ${coles||crmActual.ultima_cole}</div>`;
-  if (tieneEmail) {
-    infoHtml += `<div><b>Email:</b> <a href="mailto:${crmActual.email}">${crmActual.email}</a></div>`;
-  } else {
-    infoHtml += `<div><b>Email:</b> <em style="color:var(--gris)">sin email</em></div>`;
+  let infoHtml = `<div><b>RUT:</b> ${crmActual.rut}</div>`;
+  if (!esNuevo) {
+    const tieneEmail = crmActual.email && crmActual.email.length > 3;
+    const coles = (crmActual.coles_compradas || []).join(", ");
+    infoHtml +=
+      `<div><b>Ciudad:</b> ${crmActual.ciudad||"—"}</div>` +
+      `<div><b>Vendedor:</b> ${crmActual.vendedor||"—"}</div>` +
+      `<div><b>Últimas coles:</b> ${coles||crmActual.ultima_cole}</div>`;
+    if (tieneEmail) {
+      infoHtml += `<div><b>Email:</b> <a href="mailto:${crmActual.email}">${crmActual.email}</a></div>`;
+    } else {
+      infoHtml += `<div><b>Email:</b> <em style="color:var(--gris)">sin email</em></div>`;
+    }
   }
   if (tieneTel) {
     const tel = crmActual.telefono.replace(/\D/g,"");
@@ -1561,42 +1592,57 @@ window.abrirDetalleCRM = async function(rut) {
     infoHtml += `<div><b>WhatsApp:</b> <a href="${wspHref}" target="_blank" rel="noopener" onclick="registrarWspCRM(event,'${wspHref}')">💬 Abrir chat (${crmActual.telefono})</a></div>`;
   }
 
-  const estados = [
-    { k:"pendiente", l:"Pendiente" }, { k:"contactado", l:"Contactado" },
-    { k:"en_negocio", l:"En negocio" }, { k:"pedido_realizado", l:"Hizo pedido ✔" }, { k:"descartado", l:"Descartado" },
-  ];
-  const estadoBtns = estados.map(e =>
-    `<button class="crm-pill crm-pill-${e.k}${e.k===estado?" activo-est":""}"
-       style="font-size:.75rem;padding:.3rem .75rem;${e.k===estado?"border-color:#333 !important;":""}"
-       onclick="cambiarEstadoCRM('${e.k}')">${e.l}</button>`
-  ).join("");
+  let bodyHtml;
+  if (esNuevo) {
+    bodyHtml = `
+      <div class="crm-det-info">${infoHtml}</div>
+      <p style="font-size:.78rem;color:var(--gris);background:#f5f3ff;border-radius:8px;padding:.6rem .85rem;margin:.5rem 0 1rem">
+        Cliente nuevo — realizó su primer pedido Cole 44 directamente desde el catálogo.
+      </p>
+      <button class="btn btn-rojo" style="justify-content:center;width:100%;margin-bottom:.5rem" onclick="descargarExcelCRM('${crmActual.rut}')">⬇ Descargar Excel del pedido</button>
+    `;
+  } else {
+    const yaHizoPedido = estado === "pedido_realizado";
+    const estados = [
+      { k:"pendiente", l:"Pendiente" }, { k:"contactado", l:"Contactado" },
+      { k:"en_negocio", l:"En negocio" }, { k:"pedido_realizado", l:"Hizo pedido ✔" }, { k:"descartado", l:"Descartado" },
+    ];
+    const estadoBtns = estados.map(e =>
+      `<button class="crm-pill crm-pill-${e.k}${e.k===estado?" activo-est":""}"
+         style="font-size:.75rem;padding:.3rem .75rem;${e.k===estado?"border-color:#333 !important;":""}"
+         onclick="cambiarEstadoCRM('${e.k}')">${e.l}</button>`
+    ).join("");
+    bodyHtml = `
+      <div class="crm-det-info">${infoHtml}</div>
+      ${yaHizoPedido ? `<button class="btn btn-rojo" style="justify-content:center;margin-bottom:.8rem;width:100%" onclick="descargarExcelCRM('${crmActual.rut}')">⬇ Descargar Excel del pedido</button>` : ""}
+      <div class="crm-det-estado" id="crm-det-estado">${estadoBtns}</div>
+      <p class="crm-hist-titulo">Historial de contacto</p>
+      <div class="crm-hist" id="crm-hist"><p style="color:var(--gris);font-size:.8rem">Cargando…</p></div>
+      <div class="crm-add-form">
+        <label>Registrar interacción</label>
+        <select id="crm-tipo" class="crm-select">
+          <option value="email">📧 Email enviado</option>
+          <option value="whatsapp">💬 WhatsApp</option>
+          <option value="llamada">📞 Llamada</option>
+          <option value="pagina_enviada">🔗 Página de catálogo enviada</option>
+          <option value="nota">📝 Nota interna</option>
+        </select>
+        <textarea id="crm-desc" class="crm-textarea" placeholder="Descripción (opcional)…"></textarea>
+        <button class="btn btn-rojo" id="btn-crm-add" onclick="agregarInteraccion()" style="justify-content:center">+ Registrar</button>
+      </div>
+    `;
+  }
 
   $("#crm-modal-box").innerHTML = `
     <div class="crm-det-header">
       <button onclick="cerrarCRMModal()" class="btn btn-borde" style="padding:.35rem .8rem;font-size:.8rem">← Lista</button>
-      <h3 style="margin:0;font-size:1rem;font-weight:800">${crmActual.nombre}</h3>
+      <h3 style="margin:0;font-size:1rem;font-weight:800">${crmActual.nombre}${esNuevo ? ' <span class="crm-pill crm-pill-nuevo" style="font-size:.6rem;padding:.15rem .45rem;vertical-align:middle;margin-left:.4rem">NUEVO</span>' : ""}</h3>
     </div>
-    <div class="crm-det-info">${infoHtml}</div>
-    ${yaHizoPedido ? `<button class="btn btn-rojo" style="justify-content:center;margin-bottom:.8rem;width:100%" onclick="descargarExcelCRM('${crmActual.rut}')">⬇ Descargar Excel del pedido</button>` : ""}
-    <div class="crm-det-estado" id="crm-det-estado">${estadoBtns}</div>
-    <p class="crm-hist-titulo">Historial de contacto</p>
-    <div class="crm-hist" id="crm-hist"><p style="color:var(--gris);font-size:.8rem">Cargando…</p></div>
-    <div class="crm-add-form">
-      <label>Registrar interacción</label>
-      <select id="crm-tipo" class="crm-select">
-        <option value="email">📧 Email enviado</option>
-        <option value="whatsapp">💬 WhatsApp</option>
-        <option value="llamada">📞 Llamada</option>
-        <option value="pagina_enviada">🔗 Página de catálogo enviada</option>
-        <option value="nota">📝 Nota interna</option>
-      </select>
-      <textarea id="crm-desc" class="crm-textarea" placeholder="Descripción (opcional)…"></textarea>
-      <button class="btn btn-rojo" id="btn-crm-add" onclick="agregarInteraccion()" style="justify-content:center">+ Registrar</button>
-    </div>
+    ${bodyHtml}
   `;
 
   $("#crm-modal").style.display = "block";
-  await cargarInteracciones(rut);
+  if (!esNuevo) await cargarInteracciones(rut);
 };
 
 window.cerrarCRMModal = function() {
