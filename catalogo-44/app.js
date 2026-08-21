@@ -475,7 +475,29 @@ function mostrarCampos(modo) {
 function limpiarForm() {
   [elNombre(), elFono(), elGiro(), elDir(), elTienda(), elComuna(), elNota()].forEach(e => { if (e) e.value = ""; });
   if (elTransp()) elTransp().value = "";
+  const ot = $("#f-transporte-otro"); if (ot) { ot.value = ""; ot.style.display = "none"; }
 }
+
+function setTranspValue(val) {
+  if (!val) return;
+  const sel = elTransp();
+  const known = ["Starken","Chilexpress","Bus","Retiro en bodega"];
+  if (known.includes(val)) {
+    sel.value = val;
+  } else {
+    sel.value = "Otro";
+    const inp = $("#f-transporte-otro");
+    inp.style.display = "block";
+    inp.value = val;
+  }
+}
+
+window.toggleTranspOtro = function(sel) {
+  const inp = $("#f-transporte-otro");
+  const esOtro = sel.value === "Otro";
+  inp.style.display = esOtro ? "block" : "none";
+  if (!esOtro) inp.value = "";
+};
 
 async function buscarClientePorRut() {
   const rawRut = elRut().value.trim();
@@ -511,18 +533,16 @@ async function buscarClientePorRut() {
       if (row.direccion)              elDir().value    = row.direccion;
       if (row.nombre_tienda)          elTienda().value = row.nombre_tienda;
       if (row.comuna)                 elComuna().value = row.comuna;
-      // transporte: intentar del RPC, si no del localStorage
       const transpGuardado = row.transporte || localStorage.getItem("dv44_transp_" + norm) || "";
-      if (transpGuardado) elTransp().value = transpGuardado;
+      setTranspValue(transpGuardado);
       setRutEstado("ok", "✔ Cliente encontrado: " + row.razon_social);
       mostrarCampos("existente");
     } else {
       clienteBuscado = { rut: formatRut(norm), rut_normalized: norm, razon_social: "", is_new: true };
       limpiarForm();
       elNombre().readOnly = false;
-      // transporte recordado para clientes nuevos también
       const transpGuardado = localStorage.getItem("dv44_transp_" + norm) || "";
-      if (transpGuardado) elTransp().value = transpGuardado;
+      setTranspValue(transpGuardado);
       setRutEstado("nuevo", "Cliente nuevo — completa los datos");
       mostrarCampos("nuevo");
     }
@@ -589,6 +609,12 @@ function validarCamposForm() {
       return false;
     }
   }
+  // Validar "Otro transporte" si está visible
+  if (elTransp().value === "Otro" && !$("#f-transporte-otro").value.trim()) {
+    toast("Indica cuál es el transporte");
+    $("#f-transporte-otro").focus();
+    return false;
+  }
   return true;
 }
 
@@ -602,7 +628,9 @@ function obtenerDatosCliente() {
     direccion:    elDir().value.trim(),
     nombre_tienda: elTienda().value.trim(),
     comuna:       elComuna().value.trim(),
-    transporte:   elTransp().value.trim(),
+    transporte:   elTransp().value === "Otro"
+                    ? ($("#f-transporte-otro").value.trim() || "Otro")
+                    : elTransp().value.trim(),
     nota:         elNota().value.trim(),
     is_new:       clienteBuscado?.is_new ?? true,
   };

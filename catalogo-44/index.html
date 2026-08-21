@@ -721,7 +721,7 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
           <span class="form-label">Comuna *</span>
           <input id="f-comuna" type="text" placeholder="Las Condes">
           <span class="form-label">Transporte *</span>
-          <select id="f-transporte">
+          <select id="f-transporte" onchange="toggleTranspOtro(this)">
             <option value="">— elige transporte —</option>
             <option>Starken</option>
             <option>Chilexpress</option>
@@ -729,6 +729,8 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
             <option>Retiro en bodega</option>
             <option>Otro</option>
           </select>
+          <input id="f-transporte-otro" type="text" placeholder="¿Cuál transporte?" autocomplete="off"
+            style="display:none;margin-top:.35rem;width:100%;box-sizing:border-box">
           <span class="form-label">Comentario (opcional)</span>
           <textarea id="f-nota" rows="2" placeholder="Observaciones, despacho, etc."></textarea>
         </div>
