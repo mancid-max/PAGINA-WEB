@@ -409,7 +409,7 @@ function pintarCarrito() {
   }
 }
 window.quitar = async function(c) {
-  const ok = await customConfirm("¿Quitar artículo?", "Se eliminará este modelo del pedido.");
+  const ok = await customConfirm("¿Quitar artículo?", "Se eliminará este modelo del pedido.", { okTexto: "Sí, quitar", ico: "🗑" });
   if (!ok) return;
   const el = document.querySelector(`.item-c[data-sku="${c}"]`);
   if (el) {
@@ -717,7 +717,8 @@ $("#btn-finalizar").onclick = async () => {
   const totalUnidades = codigos.reduce((s,c) => s + Object.values(carrito[c].t).reduce((a,b)=>a+b,0), 0);
   const confirmar = await customConfirm(
     "¿Enviar pedido?",
-    `${codigos.length} modelo${codigos.length!==1?"s":""} · ${totalUnidades} unidades. Una vez enviado se descarga el Excel automáticamente.`
+    `${codigos.length} modelo${codigos.length!==1?"s":""} · ${totalUnidades} unidades. Una vez enviado se descarga el Excel automáticamente.`,
+    { okTexto: "Sí, enviar", ico: "📤" }
   );
   if (!confirmar) return;
 
@@ -1256,10 +1257,12 @@ window.toggleListo = async function(id, nuevoEstado) {
   }
 };
 
-function customConfirm(titulo, mensaje) {
+function customConfirm(titulo, mensaje, { okTexto = "Sí, eliminar", ico = "🗑" } = {}) {
   return new Promise(resolve => {
     $("#confirm-titulo").textContent = titulo;
     $("#confirm-msg").textContent = mensaje;
+    $("#confirm-ok").textContent = okTexto;
+    $("#confirm-ico").textContent = ico;
     $("#confirm-velo").classList.add("abierto");
     const cerrar = (val) => {
       $("#confirm-velo").classList.remove("abierto");
