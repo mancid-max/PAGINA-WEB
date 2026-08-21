@@ -485,7 +485,8 @@ function mostrarCampos(modo) {
 function limpiarForm() {
   [elNombre(), elFono(), elGiro(), elDir(), elTienda(), elComuna(), elNota()].forEach(e => { if (e) e.value = ""; });
   if (elTransp()) elTransp().value = "";
-  const ot = $("#f-transporte-otro"); if (ot) { ot.value = ""; ot.style.display = "none"; }
+  const ot = $("#f-transporte-otro"); if (ot) ot.value = "";
+  const ow = $("#f-transporte-otro-wrap"); if (ow) ow.style.display = "none";
 }
 
 function setTranspValue(val) {
@@ -496,17 +497,16 @@ function setTranspValue(val) {
     sel.value = val;
   } else {
     sel.value = "Otro";
-    const inp = $("#f-transporte-otro");
-    inp.style.display = "block";
-    inp.value = val;
+    $("#f-transporte-otro-wrap").style.display = "block";
+    $("#f-transporte-otro").value = val;
   }
 }
 
 window.toggleTranspOtro = function(sel) {
-  const inp = $("#f-transporte-otro");
   const esOtro = sel.value === "Otro";
-  inp.style.display = esOtro ? "block" : "none";
-  if (!esOtro) inp.value = "";
+  $("#f-transporte-otro-wrap").style.display = esOtro ? "block" : "none";
+  if (!esOtro) { $("#f-transporte-otro").value = ""; return; }
+  setTimeout(() => $("#f-transporte-otro").focus(), 30);
 };
 
 async function buscarClientePorRut() {

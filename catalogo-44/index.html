@@ -730,8 +730,11 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
             <option>Retiro en bodega</option>
             <option>Otro</option>
           </select>
-          <input id="f-transporte-otro" type="text" placeholder="¿Cuál transporte?" autocomplete="off"
-            style="display:none;margin-top:.35rem;width:100%;box-sizing:border-box">
+          <div id="f-transporte-otro-wrap" style="display:none;margin-top:.4rem;background:#fff3f3;border:1.5px solid var(--rojo);border-radius:10px;padding:.5rem .65rem">
+            <span style="font-size:.7rem;font-weight:700;color:var(--rojo);display:block;margin-bottom:.3rem">↳ Escribe el nombre del transporte</span>
+            <input id="f-transporte-otro" type="text" placeholder="Ej: Correos de Chile, Turbus…" autocomplete="off"
+              style="width:100%;box-sizing:border-box;border:none;background:transparent;font-size:.9rem;outline:none;font-family:inherit">
+          </div>
           <span class="form-label">Comentario (opcional)</span>
           <textarea id="f-nota" rows="2" placeholder="Observaciones, despacho, etc."></textarea>
         </div>
