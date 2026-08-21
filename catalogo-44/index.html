@@ -255,7 +255,8 @@ main{max-width:1200px;margin:0 auto;padding:1rem 1.2rem 4rem}
 .cajon .items{padding:.8rem 1.2rem;display:flex;flex-direction:column;gap:.8rem}
 /* Form fijo abajo */
 .cajon-form{flex-shrink:0;overflow-y:auto;max-height:58vh;border-top:2px solid #edf3f7;-webkit-overflow-scrolling:touch}
-.item-c{border:1.5px solid #e4edf3;border-radius:12px;padding:.75rem;display:flex;gap:.75rem;background:#fff}
+.item-c{border:1.5px solid #e4edf3;border-radius:12px;padding:.75rem;display:flex;gap:.75rem;background:#fff;transition:opacity .28s ease,transform .28s ease,max-height .32s ease,padding .32s ease,margin .32s ease}
+.item-c.saliendo{opacity:0;transform:translateX(30px) scale(.95);max-height:0;padding:0;margin:0;overflow:hidden;pointer-events:none}
 .item-c img{width:64px;height:auto;border-radius:8px;align-self:flex-start;flex-shrink:0}
 .item-c .info{flex:1;min-width:0}
 .item-c .info h4{font-size:.92rem;font-weight:700;margin-bottom:.1rem}

@@ -377,7 +377,7 @@ function pintarCarrito() {
       const n = Object.values(v.t).reduce((a,b) => a+b, 0);
       const sub = m.precio ? CLP(n * m.precio) : "A consultar";
       const bajo = n < MIN_POR_MODELO ? `<p class="falta">⚠ Faltan ${MIN_POR_MODELO-n} u. para el mínimo</p>` : "";
-      return `<div class="item-c">
+      return `<div class="item-c" data-sku="${c}">
         <img src="img/${m.img}_0.webp" alt="${m.nombre}">
         <div class="info">
           <h4>${m.nombre}</h4>
@@ -408,7 +408,17 @@ function pintarCarrito() {
     $("#c-total").textContent = CLP(d.total);
   }
 }
-window.quitar = function(c) { delete carrito[c]; guardar(); pintarCarrito(); };
+window.quitar = async function(c) {
+  const ok = await customConfirm("¿Quitar artículo?", "Se eliminará este modelo del pedido.");
+  if (!ok) return;
+  const el = document.querySelector(`.item-c[data-sku="${c}"]`);
+  if (el) {
+    el.classList.add("saliendo");
+    await new Promise(r => setTimeout(r, 320));
+  }
+  delete carrito[c]; guardar(); pintarCarrito();
+  toast("Artículo eliminado del pedido");
+};
 pintarCarrito();
 
 function abrirCajon(resetForm = true) {
@@ -703,6 +713,13 @@ $("#btn-finalizar").onclick = async () => {
 
   if (!clienteBuscado) { toast("Ingresa y verifica el RUT del cliente"); elRut().focus(); return; }
   if (!validarCamposForm()) return;
+
+  const totalUnidades = codigos.reduce((s,c) => s + Object.values(carrito[c].t).reduce((a,b)=>a+b,0), 0);
+  const confirmar = await customConfirm(
+    "¿Enviar pedido?",
+    `${codigos.length} modelo${codigos.length!==1?"s":""} · ${totalUnidades} unidades. Una vez enviado se descarga el Excel automáticamente.`
+  );
+  if (!confirmar) return;
 
   const cliente = obtenerDatosCliente();
   pedidoListo = { ...cliente, fecha: new Date() };
