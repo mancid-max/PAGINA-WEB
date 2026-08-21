@@ -63,6 +63,8 @@ header.hero{max-width:1200px;margin:0 auto;padding:2.2rem 1.2rem 1rem;text-align
 .btn-rojo:hover{background:var(--rojo-osc)}
 .btn-borde{background:#fff;color:var(--tinta);border:1.5px solid #d8e4ec}
 .btn-borde:hover{border-color:var(--tinta)}
+.btn-video{background:#0f0f0f;color:#fff;border:none}
+.btn-video:hover{background:#333}
 .btn-wsp{background:#25d366;color:#fff;box-shadow:0 8px 20px rgba(37,211,102,.35)}
 .btn-wsp:hover{background:#1fb457}
 .cta-colecciones{
@@ -951,5 +953,16 @@ function copiarLink(btn) {
   });
 }
 </script>
+
+<!-- Modal video -->
+<div id="video-modal" onclick="if(event.target===this)cerrarVideo()" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.88);align-items:center;justify-content:center;flex-direction:column;padding:1rem">
+  <div style="width:100%;max-width:700px;background:#000;border-radius:16px;overflow:hidden;position:relative">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:.7rem 1rem;background:#1a1a1a">
+      <span id="video-titulo" style="color:#fff;font-size:.9rem;font-weight:600;font-family:'Poppins',sans-serif"></span>
+      <button onclick="cerrarVideo()" style="background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer;line-height:1;padding:.2rem .4rem">✕</button>
+    </div>
+    <video id="video-player" controls playsinline style="width:100%;display:block;max-height:75vh;background:#000"></video>
+  </div>
+</div>
 </body>
 </html>

@@ -114,6 +114,27 @@ const MODELOS = [
   {nombre:"Aurelia Denim",codigo:"4465-01", precio:null,  img:"m265", tipo:"chaqueta", sec:"chaquetas"},
 ];
 
+/* ---- VIDEOS ----------------------------------------------- */
+const VIDEOS = {
+  "4402-00":"4402.mp4",   "4412-00":"4412.mp4",   "4413-00":"4413.mp4",
+  "4414-00":"4414.mp4",   "4416-00":"4416.mp4",   "4417-00":"4417.mp4",
+  "4418-00":"4418.mp4",   "4421-38":"4421-38.mp4","4426-00":"4426.mp4",
+  "4430-00":"4430.mp4",   "4431-00":"4431.mp4",   "4431-01":"4431-01.mp4",
+  "4432-00":"4432.mp4",   "4435-00":"4435.mp4",   "4438-00":"4438.mp4",
+  "4440-00":"4440.mp4",   "4440-60":"4440-60.mp4","4441-00":"4441.mp4",
+  "4442-00":"4442.mp4",   "4443-00":"4443.mp4",   "4444-00":"4444.mp4",
+  "4448-00":"4448.mp4",   "4453-01":"4453-01.mp4","4454-00":"4454.mp4",
+  "4455-00":"4455.mp4",   "4459-00":"4459.mp4",   "4465-00":"4465.mp4",
+  "4465-01":"4465-01.mp4","4471-00":"4471.mp4",   "4472-00":"4472.mp4",
+  "4472-01":"4472-01.mp4","4473-00":"4473.mp4",   "4474-00":"4474.mp4",
+  "4475-00":"4475.mp4",   "4481-00":"4481.mp4",   "4484-00":"4484.mp4",
+  "4486-00":"4486.mp4",   "4486-01":"4486-01.mp4","4488-00":"4488.mp4",
+  "4492-00":"4492.mp4",   "4493-00":"4493.mp4",   "4493-01":"4493-01.mp4",
+  "4493-09":"4493-09.mp4","4494-04":"4494-04.mp4","4495-24":"4495-24.mp4",
+  "4496-09":"4496-09.mp4",
+};
+const videoSrc = c => VIDEOS[c] ? `../44/videos/video/${VIDEOS[c]}` : null;
+
 /* ============================================================ */
 const $     = s => document.querySelector(s) || {};
 const CLP   = n => "$" + Number(n).toLocaleString("es-CL");
@@ -237,6 +258,7 @@ function cardHTML(m) {
             ${disp
               ? `<button class="btn btn-rojo" onclick="abrirModal('${m.codigo}')">Armar curva</button>`
               : `<button class="btn btn-borde" onclick="abrirModal('${m.codigo}')">Ver modelo</button>`}
+            ${videoSrc(m.codigo) ? `<button class="btn btn-video" onclick="abrirVideo('${m.codigo}')">▶ Video</button>` : ""}
           </div>
         </div>
       </div>
@@ -353,6 +375,25 @@ function cerrarModal() {
 }
 $("#cerrar-modal").onclick = cerrarModal;
 $("#velo-modal").addEventListener("click", e => { if (e.target === $("#velo-modal")) cerrarModal(); });
+
+/* ---- VIDEO MODAL ------------------------------------------ */
+window.abrirVideo = function(codigo) {
+  const src = videoSrc(codigo);
+  if (!src) return;
+  const m = buscar(codigo);
+  const vv = document.getElementById("video-player");
+  const vt = document.getElementById("video-titulo");
+  if (vt) vt.textContent = m ? `${m.nombre} · ${m.codigo}` : codigo;
+  if (vv) { vv.src = src; vv.play().catch(() => {}); }
+  document.getElementById("video-modal").style.display = "flex";
+  document.body.style.overflow = "hidden";
+};
+window.cerrarVideo = function() {
+  const vv = document.getElementById("video-player");
+  if (vv) { vv.pause(); vv.src = ""; }
+  document.getElementById("video-modal").style.display = "none";
+  document.body.style.overflow = "";
+};
 
 /* ---- CARRITO --------------------------------------------- */
 function datosCarrito() {
