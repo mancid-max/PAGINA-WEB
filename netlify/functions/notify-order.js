@@ -5,7 +5,7 @@ exports.handler = async function(event) {
   try { order = JSON.parse(event.body); } catch { return { statusCode: 400, body: "Bad JSON" }; }
 
   const TOKEN = process.env.TELEGRAM_TOKEN;
-  const CHAT  = process.env.TELEGRAM_CHAT_ID;
+  const CHAT  = process.env.TELEGRAM_CHAT_ID || "-5261495560";
 
   const ref  = order.quoteId ? "DV44-" + order.quoteId.slice(-6).toUpperCase() : "DV44-???";
   const link = order.quoteId
