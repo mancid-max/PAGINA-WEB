@@ -753,6 +753,7 @@ function notificarPedido(cliente, payload) {
   }).filter(i => i.totalUnidades > 0);
   const totalUnidades = items.reduce((s, i) => s + i.totalUnidades, 0);
   const body = {
+    quoteId:     payload?.quote?.id || "",
     storeName:   cliente.razon_social || cliente.nombre_tienda || "",
     rut:         cliente.rut || "",
     phone:       cliente.client_phone || "",
@@ -1115,6 +1116,8 @@ async function generarExcelConPlantilla44(quote, items) {
 }
 
 /* ---- ADMIN: LOGIN ----------------------------------------- */
+const _pedidoUrlId = new URLSearchParams(location.search).get("pedido") || null;
+
 function abrirAdmin() {
   $("#admin-velo").classList.add("abierto");
   document.body.style.overflow = "hidden";
@@ -1142,6 +1145,9 @@ function mostrarSeccionAdmin(seccion) {
 }
 
 $("#btn-admin").onclick = abrirAdmin;
+
+// Si la URL tiene ?pedido=<id> (link desde Telegram), abrir admin directo
+if (_pedidoUrlId && adminToken) setTimeout(abrirAdmin, 300);
 $("#cerrar-admin").onclick = cerrarAdmin;
 $("#admin-velo").addEventListener("click", e => { if (e.target === $("#admin-velo")) cerrarAdmin(); });
 
@@ -1276,7 +1282,7 @@ function renderizarTablaPedidos(lista) {
     const listo = !!p.is_ready;
     const iconListo = listo ? "✔" : "○";
     const titleListo = listo ? "Desmarcar listo" : "Marcar como listo";
-    return `<tr>
+    return `<tr data-id="${p.id}">
       <td>${fecha}</td>
       <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${p.store_name||""}">${p.store_name||"—"}</td>
       <td style="white-space:nowrap">${p.client_rut||"—"}</td>
@@ -1292,6 +1298,16 @@ function renderizarTablaPedidos(lista) {
       </td>
     </tr>`;
   }).join("");
+
+  // Si se abrió desde link de Telegram, resaltar ese pedido
+  if (_pedidoUrlId) {
+    const fila = document.querySelector(`tr[data-id="${_pedidoUrlId}"]`);
+    if (fila) {
+      fila.style.background = "#fffbdd";
+      fila.style.outline = "2px solid #f0c000";
+      setTimeout(() => fila.scrollIntoView({ behavior: "smooth", block: "center" }), 200);
+    }
+  }
 }
 
 $("#btn-refresh").onclick = cargarPedidosAdmin;
