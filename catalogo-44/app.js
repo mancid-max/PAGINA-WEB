@@ -746,6 +746,28 @@ async function guardarEnSupabase(payload) {
   return payload.quote.id;
 }
 
+function notificarPedido(cliente, payload) {
+  const items = Object.entries(carrito).map(([codigo, v]) => {
+    const total = Object.values(v.t).reduce((s, n) => s + (Number(n) || 0), 0);
+    return { codigo, nombre: v.nombre || "", totalUnidades: total };
+  }).filter(i => i.totalUnidades > 0);
+  const totalUnidades = items.reduce((s, i) => s + i.totalUnidades, 0);
+  const body = {
+    storeName:   cliente.razon_social || cliente.nombre_tienda || "",
+    rut:         cliente.rut || "",
+    phone:       cliente.client_phone || "",
+    transporte:  cliente.transporte || "",
+    ciudad:      cliente.comuna || "",
+    items,
+    totalUnidades,
+  };
+  fetch("/.netlify/functions/notify-order", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  }).catch(() => {});
+}
+
 $("#btn-finalizar").onclick = async () => {
   const codigos = Object.keys(carrito);
   if (!codigos.length) { toast("Tu pedido está vacío"); return; }
@@ -780,6 +802,8 @@ $("#btn-finalizar").onclick = async () => {
     // Snapshot del carrito antes de vaciarlo (para re-descarga)
     snapshotCarrito = JSON.parse(JSON.stringify(carrito));
     payloadListo = payload;
+    // Notificar pedido por Telegram
+    notificarPedido(cliente, payload);
     // Generar Excel (lee carrito sincrónicamente antes del primer await interno)
     generarExcel(pedidoListo, payload);
     // Link WhatsApp antes de vaciar (usa carrito)
