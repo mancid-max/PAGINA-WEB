@@ -1,0 +1,6 @@
+# Local Netlify folder
+.netlify
+
+# SQL con datos de clientes (no subir a GitHub)
+crm-setup.sql
+clients-import.sql
