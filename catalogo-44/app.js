@@ -1503,6 +1503,7 @@ $("#btn-dl-excel").onclick = async () => {
 let crmClientes = [];
 let crmActual = null;
 let crmFiltroEstado = "todos";
+let crmFunnel = {}; // rut → {email_enviado, email_abierto, link_visitado, pedido_realizado}
 
 document.querySelectorAll("[data-crm-filtro]").forEach(btn => {
   btn.onclick = () => {
@@ -1558,7 +1559,7 @@ $("#btn-marcar-enviados").onclick = async () => {
       await fetch(`${SUPABASE_URL}/rest/v1/crm_interacciones_v2`, {
         method: "POST",
         headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}`, "Content-Type": "application/json", Prefer: "return=minimal" },
-        body: JSON.stringify({ client_rut: c.rut, tipo: "email", descripcion: "Correo masivo Dolce Vita 44" })
+        body: JSON.stringify({ client_rut: c.rut, tipo: "email_enviado", descripcion: "Correo masivo Dolce Vita 44" })
       });
       if ((c.estado||"pendiente") === "pendiente") {
         c.estado = "contactado";
@@ -1646,6 +1647,23 @@ async function cargarCRM() {
       }
     }
 
+    // Cargar interacciones en batch para mostrar funnel
+    const todosRuts = crmClientes.map(c => `"${c.rut}"`).join(",");
+    if (todosRuts) {
+      const intRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/crm_interacciones_v2?client_rut=in.(${todosRuts})&select=client_rut,tipo&order=fecha.asc&limit=2000`,
+        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}` } }
+      );
+      if (intRes.ok) {
+        const ints = await intRes.json();
+        crmFunnel = {};
+        for (const i of ints) {
+          if (!crmFunnel[i.client_rut]) crmFunnel[i.client_rut] = {};
+          crmFunnel[i.client_rut][i.tipo] = true;
+        }
+      }
+    }
+
     renderizarCRM();
   } catch(e) {
     lista.innerHTML = `<p style="color:var(--rojo-osc);padding:1rem">Error: ${e.message}</p>`;
@@ -1676,16 +1694,28 @@ function renderizarCRM() {
     return;
   }
   const estadoLabel = { pendiente:"Pendiente", contactado:"Contactado", en_negocio:"En negocio", pedido_realizado:"Hizo pedido ✔", descartado:"Descartado" };
+  const PASOS = [
+    { tipo: "email_enviado",  icono: "📧", label: "Enviado"  },
+    { tipo: "email_abierto",  icono: "👁",  label: "Abrió"   },
+    { tipo: "link_visitado",  icono: "🔗", label: "Entró"   },
+    { tipo: "pedido_realizado", icono: "✅", label: "Pidió"  },
+  ];
   lista.innerHTML = filtrados.map(c => {
     const estado = c.estado || "pendiente";
     const tieneEmail = c.email && c.email.length > 3;
     const tieneTel = c.telefono && c.telefono.length > 4;
     const esNuevo = c.tipo === "nuevo";
+    const funnel = crmFunnel[c.rut] || {};
+    const funnelHtml = PASOS.map(p => {
+      const ok = funnel[p.tipo] || (p.tipo === "pedido_realizado" && estado === "pedido_realizado");
+      return `<span class="crm-paso${ok ? " ok" : ""}" title="${p.label}">${p.icono}</span>`;
+    }).join("");
     return `<div class="crm-card" onclick="abrirDetalleCRM('${c.rut}')">
       <div>
         <div class="cn">${c.nombre}${esNuevo ? ' <span class="crm-pill crm-pill-nuevo" style="font-size:.6rem;padding:.15rem .45rem;vertical-align:middle;margin-left:.3rem">CLIENTE NUEVO</span>' : ""}</div>
         <div class="cc">${esNuevo ? "Cole 44" : (c.ciudad||"") + " · Última: Cole " + (c.ultima_cole||"?") + " · " + ((c.vendedor||"s/v").split(" - ")[1]||c.vendedor||"")}</div>
         <div class="ce">${tieneTel ? "📞 " + c.telefono : (tieneEmail ? "📧 " + c.email : "✗ sin contacto")}</div>
+        <div class="crm-funnel">${funnelHtml}</div>
       </div>
       <div><span class="crm-pill crm-pill-${estado}">${estadoLabel[estado]||estado}</span></div>
     </div>`;
