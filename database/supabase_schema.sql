@@ -55,6 +55,7 @@ alter table public.clients add column if not exists giro          text;
 alter table public.clients add column if not exists nombre_tienda text;
 alter table public.clients add column if not exists direccion     text;
 alter table public.clients add column if not exists comuna        text;
+alter table public.clients add column if not exists email         text;
 
 create index if not exists idx_clients_rut_normalized on public.clients(rut_normalized);
 
