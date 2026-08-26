@@ -1504,6 +1504,7 @@ let crmClientes = [];
 let crmActual = null;
 let crmFiltroEstado = "todos";
 let crmFunnel = {}; // rut → {email_enviado, email_abierto, link_visitado, pedido_realizado}
+let crmEmailTargets = null; // null = masivo (todos pendientes con email), array = individual
 
 document.querySelectorAll("[data-crm-filtro]").forEach(btn => {
   btn.onclick = () => {
@@ -1518,8 +1519,18 @@ $("#crm-busca").addEventListener("input", renderizarCRM);
 $("#btn-refresh-crm").onclick = cargarCRM;
 
 $("#btn-crm-email-toggle").onclick = () => {
+  crmEmailTargets = null;
   actualizarPanelEmail();
   $("#crm-email-modal").style.display = "block";
+};
+
+window.abrirEmailIndividual = function(rut) {
+  const c = crmClientes.find(x => x.rut === rut);
+  if (!c || !c.email) { toast("Este cliente no tiene email"); return; }
+  crmEmailTargets = [c];
+  $("#crm-email-count").textContent = `1 destinatario: ${c.nombre} (${c.email})`;
+  $("#crm-email-modal").style.display = "block";
+  cerrarCRMModal();
 };
 
 window.cerrarEmailModal = function() {
@@ -1534,12 +1545,14 @@ function actualizarPanelEmail() {
 }
 
 $("#btn-enviar-resend").onclick = async () => {
-  const conEmail = crmClientes.filter(c => c.email && c.email.length > 3 && (c.estado||"pendiente") !== "pedido_realizado" && c.estado !== "descartado");
+  const conEmail = crmEmailTargets ||
+    crmClientes.filter(c => c.email && c.email.length > 3 && (c.estado||"pendiente") !== "pedido_realizado" && c.estado !== "descartado");
   if (!conEmail.length) { toast("Sin destinatarios con email"); return; }
   const asunto = $("#crm-email-subject").value.trim();
   const textoPlano = $("#crm-email-body").value.trim();
   if (!asunto || !textoPlano) { toast("Completá asunto y cuerpo"); return; }
-  if (!confirm(`¿Enviar a ${conEmail.length} clientes vía Resend?`)) return;
+  const dest = conEmail.length === 1 ? conEmail[0].nombre : `${conEmail.length} clientes`;
+  if (!confirm(`¿Enviar a ${dest} vía Resend?`)) return;
 
   const btn = $("#btn-enviar-resend");
   const status = $("#crm-email-status");
@@ -1826,6 +1839,7 @@ window.abrirDetalleCRM = async function(rut) {
       <div class="crm-det-info">${infoHtml}</div>
       ${yaHizoPedido ? `<button class="btn btn-rojo" style="justify-content:center;margin-bottom:.8rem;width:100%" onclick="descargarExcelCRM('${crmActual.rut}')">⬇ Descargar Excel del pedido</button>` : ""}
       <div class="crm-det-estado" id="crm-det-estado">${estadoBtns}</div>
+      ${crmActual.email ? `<button class="btn btn-rojo" style="justify-content:center;width:100%;margin-bottom:.5rem" onclick="abrirEmailIndividual('${crmActual.rut}')">📧 Enviar email a este cliente</button>` : ""}
       <p class="crm-hist-titulo">Historial de contacto</p>
       <div class="crm-hist" id="crm-hist"><p style="color:var(--gris);font-size:.8rem">Cargando…</p></div>
       <div class="crm-add-form">
