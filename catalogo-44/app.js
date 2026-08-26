@@ -1533,6 +1533,57 @@ function actualizarPanelEmail() {
   $("#crm-email-count").textContent = `${conEmail.length} destinatarios (sin los que ya hicieron pedido)`;
 }
 
+$("#btn-enviar-resend").onclick = async () => {
+  const conEmail = crmClientes.filter(c => c.email && c.email.length > 3 && (c.estado||"pendiente") !== "pedido_realizado" && c.estado !== "descartado");
+  if (!conEmail.length) { toast("Sin destinatarios con email"); return; }
+  const asunto = $("#crm-email-subject").value.trim();
+  const textoPlano = $("#crm-email-body").value.trim();
+  if (!asunto || !textoPlano) { toast("Completá asunto y cuerpo"); return; }
+  if (!confirm(`¿Enviar a ${conEmail.length} clientes vía Resend?`)) return;
+
+  const btn = $("#btn-enviar-resend");
+  const status = $("#crm-email-status");
+  btn.disabled = true; btn.textContent = "Enviando…";
+  status.textContent = "";
+
+  // Convertir texto plano a HTML con link personalizado
+  const htmlTemplate = `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#222;max-width:600px">
+    ${textoPlano.replace(/\n/g,"<br>").replace(/\{\{link\}\}/g,'<a href="{{link}}" style="background:#c8102e;color:#fff;padding:10px 22px;border-radius:6px;text-decoration:none;display:inline-block;margin:12px 0;font-weight:700">Ver catálogo Dolce Vita 44</a>')}
+    <hr style="border:none;border-top:1px solid #eee;margin:20px 0">
+    <p style="font-size:12px;color:#888">Mohicano Jeans · ventas@mohicanojeans.cl</p>
+  </div>`;
+
+  try {
+    const res = await fetch("/.netlify/functions/send-campaign", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ clientes: conEmail, asunto, html: htmlTemplate }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || res.status);
+
+    // Registrar en CRM como email_enviado
+    for (const c of conEmail) {
+      crmFunnel[c.rut] = crmFunnel[c.rut] || {};
+      crmFunnel[c.rut]["email_enviado"] = true;
+      fetch(`${SUPABASE_URL}/rest/v1/crm_interacciones_v2`, {
+        method: "POST",
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}`, "Content-Type": "application/json", Prefer: "return=minimal" },
+        body: JSON.stringify({ client_rut: c.rut, tipo: "email_enviado", descripcion: `Campaña: ${asunto}` })
+      }).catch(() => {});
+      if ((c.estado||"pendiente") === "pendiente") c.estado = "contactado";
+    }
+
+    status.style.color = "#065f46";
+    status.textContent = `✔ ${data.enviados} emails enviados correctamente`;
+    renderizarCRM();
+  } catch(e) {
+    status.style.color = "#c8102e";
+    status.textContent = `Error: ${e.message}`;
+  }
+  btn.disabled = false; btn.textContent = "📧 Enviar campaña con Resend";
+};
+
 $("#btn-copiar-bcc").onclick = () => {
   const bcc = $("#crm-email-modal").dataset.bcc || "";
   navigator.clipboard.writeText(bcc).then(() => {
