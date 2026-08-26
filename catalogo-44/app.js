@@ -1742,15 +1742,27 @@ function renderizarCRM() {
     (c.ciudad||"").toLowerCase().includes(q) ||
     (c.rut||"").includes(q)
   );
-  if (crmFiltroEstado !== "todos") filtrados = filtrados.filter(c => (c.estado||"pendiente") === crmFiltroEstado);
+  if (crmFiltroEstado !== "todos") {
+    filtrados = filtrados.filter(c => {
+      const f = crmFunnel[c.rut] || {};
+      if (crmFiltroEstado === "email_enviado")  return f.email_enviado;
+      if (crmFiltroEstado === "email_abierto")  return f.email_abierto;
+      if (crmFiltroEstado === "link_visitado")  return f.link_visitado;
+      if (crmFiltroEstado === "pedido_realizado") return (c.estado||"") === "pedido_realizado";
+      if (crmFiltroEstado === "sin_contacto")   return !f.email_enviado && (c.estado||"pendiente") !== "pedido_realizado";
+      return true;
+    });
+  }
 
-  const cnt = { pendiente:0, contactado:0, en_negocio:0, pedido_realizado:0, descartado:0 };
-  crmClientes.forEach(c => { const e = c.estado||"pendiente"; if (cnt[e] !== undefined) cnt[e]++; });
+  const total = crmClientes.length;
+  const conPedido = crmClientes.filter(c => (c.estado||"") === "pedido_realizado").length;
+  const conCorreo = crmClientes.filter(c => crmFunnel[c.rut]?.email_enviado).length;
+  const sinContacto = crmClientes.filter(c => !(crmFunnel[c.rut]?.email_enviado) && (c.estado||"pendiente") !== "pedido_realizado").length;
   $("#crm-stats").innerHTML =
-    `<div class="crm-stat">${crmClientes.length}<span>total</span></div>` +
-    `<div class="crm-stat">${cnt.pedido_realizado}<span>con pedido ✔</span></div>` +
-    `<div class="crm-stat">${cnt.contactado+cnt.en_negocio}<span>en proceso</span></div>` +
-    `<div class="crm-stat">${cnt.pendiente}<span>pendientes</span></div>`;
+    `<div class="crm-stat">${total}<span>total</span></div>` +
+    `<div class="crm-stat">${conPedido}<span>con pedido ✔</span></div>` +
+    `<div class="crm-stat">${conCorreo}<span>correo enviado</span></div>` +
+    `<div class="crm-stat">${sinContacto}<span>sin contacto</span></div>`;
 
   const lista = $("#crm-lista");
   if (!filtrados.length) {
