@@ -11,6 +11,7 @@ exports.handler = async function(event) {
     const SUPABASE_URL = process.env.SUPABASE_URL;
     const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
+    console.log(`SUPABASE_URL ok: ${!!SUPABASE_URL} | SERVICE_KEY ok: ${!!SUPABASE_SERVICE_KEY}`);
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/crm_interacciones_v2`, {
         method: "POST",
