@@ -1836,7 +1836,19 @@ function renderizarCRM() {
         <div class="ce">${tieneTel ? "📞 " + c.telefono : (tieneEmail ? "📧 " + c.email : "✗ sin contacto")}</div>
         <div class="crm-funnel">${funnelHtml}</div>
       </div>
-      <div><span class="crm-pill crm-pill-${estado}">${estadoLabel[estado]||estado}</span></div>
+      <div><span class="crm-pill crm-pill-${
+        estado === "pedido_realizado" ? "pedido_realizado"
+        : funnel.link_visitado ? "link_visitado"
+        : funnel.email_abierto ? "email_abierto"
+        : funnel.email_enviado ? "email_enviado"
+        : "pendiente"
+      }">${
+        estado === "pedido_realizado" ? "Hizo pedido ✔"
+        : funnel.link_visitado ? "Visitó landing"
+        : funnel.email_abierto ? "Abrió correo"
+        : funnel.email_enviado ? "Correo enviado"
+        : "Sin contacto"
+      }</span></div>
     </div>`;
   }).join("");
 }
