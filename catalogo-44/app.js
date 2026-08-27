@@ -1788,9 +1788,9 @@ function renderizarCRM() {
   if (crmFiltroEstado !== "todos") {
     filtrados = filtrados.filter(c => {
       const f = crmFunnel[c.rut] || {};
-      if (crmFiltroEstado === "email_enviado")  return f.email_enviado;
-      if (crmFiltroEstado === "email_abierto")  return f.email_abierto;
-      if (crmFiltroEstado === "link_visitado")  return f.link_visitado;
+      if (crmFiltroEstado === "email_enviado")  return f.email_enviado && !f.email_abierto;
+      if (crmFiltroEstado === "email_abierto")  return f.email_abierto && !f.link_visitado;
+      if (crmFiltroEstado === "link_visitado")  return f.link_visitado && (c.estado||"") !== "pedido_realizado";
       if (crmFiltroEstado === "pedido_realizado") return (c.estado||"") === "pedido_realizado";
       if (crmFiltroEstado === "sin_contacto")   return !f.email_enviado && (c.estado||"pendiente") !== "pedido_realizado";
       return true;
