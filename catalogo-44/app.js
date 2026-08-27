@@ -1577,10 +1577,20 @@ $("#btn-enviar-resend").onclick = async () => {
   const textoPlano = $("#crm-email-body").value.trim();
   if (!asunto || !textoPlano) { toast("Completá asunto y cuerpo"); return; }
   const dest = conEmail.length === 1 ? conEmail[0].nombre : `${conEmail.length} clientes`;
-  if (!confirm(`¿Enviar a ${dest} vía Resend?`)) return;
+  // Confirmación inline en vez del confirm() del navegador
+  const status = $("#crm-email-status");
+  const confirmed = await new Promise(resolve => {
+    status.style.color = "var(--tinta)";
+    status.innerHTML = `¿Enviar a <b>${dest}</b>?
+      <button style="margin-left:.5rem;background:var(--rojo);color:#fff;border:none;border-radius:6px;padding:.25rem .7rem;cursor:pointer;font-size:.78rem" id="_conf_si">Sí, enviar</button>
+      <button style="margin-left:.3rem;background:none;border:1px solid #ccc;border-radius:6px;padding:.25rem .7rem;cursor:pointer;font-size:.78rem" id="_conf_no">Cancelar</button>`;
+    $("#_conf_si").onclick = () => resolve(true);
+    $("#_conf_no").onclick = () => resolve(false);
+  });
+  status.innerHTML = "";
+  if (!confirmed) return;
 
   const btn = $("#btn-enviar-resend");
-  const status = $("#crm-email-status");
   btn.disabled = true; btn.textContent = "Enviando…";
   status.textContent = "";
 
