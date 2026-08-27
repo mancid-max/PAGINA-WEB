@@ -10,20 +10,30 @@ exports.handler = async function(event) {
   if (rut) {
     const SUPABASE_URL = process.env.SUPABASE_URL;
     const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
-    await fetch(`${SUPABASE_URL}/rest/v1/crm_interacciones_v2`, {
-      method: "POST",
-      headers: {
-        apikey: SUPABASE_SERVICE_KEY,
-        Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
-        "Content-Type": "application/json",
-        Prefer: "return=minimal",
-      },
-      body: JSON.stringify({
-        client_rut: rut,
-        tipo: "email_abierto",
-        descripcion: "Abrió el email (pixel de tracking)",
-      }),
-    }).catch(() => {});
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/crm_interacciones_v2`, {
+        method: "POST",
+        headers: {
+          apikey: SUPABASE_SERVICE_KEY,
+          Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+          "Content-Type": "application/json",
+          Prefer: "return=minimal",
+        },
+        body: JSON.stringify({
+          client_rut: rut,
+          tipo: "email_abierto",
+          descripcion: "Abrió el email (pixel de tracking)",
+        }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        console.error(`track-open INSERT falló: ${res.status} — ${text}`);
+      }
+    } catch(e) {
+      console.error(`track-open fetch error: ${e.message}`);
+    }
   }
 
   return {
