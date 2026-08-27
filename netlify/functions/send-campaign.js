@@ -37,6 +37,7 @@ exports.handler = async function(event) {
           subject: asunto,
           html: htmlPersonalizado,
           tags: [{ name: "rut", value: rutNorm }],
+          click_tracking: false,
         }),
       });
       const data = await res.json();
