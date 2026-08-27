@@ -182,6 +182,31 @@ function stockTotal(codigo) { return (stockData[codigo] && stockData[codigo].tot
 function esDisponible(m)    { return stockTotal(m.codigo) > 30; }
 let clienteBuscado = null;
 let adminToken = sessionStorage.getItem("dv44_admin_token") || "";
+
+function sesionExpirada() {
+  adminToken = "";
+  sessionStorage.removeItem("dv44_admin_token");
+  // Mostrar mensaje amigable sobre la sesión expirada
+  const panel = $("#admin-panel");
+  if (panel && panel.style.display !== "none") {
+    panel.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--tinta)">
+      <p style="font-size:1.1rem;font-weight:700;margin-bottom:.5rem">⏱ Sesión expirada</p>
+      <p style="color:var(--gris);margin-bottom:1.2rem">Por seguridad, tu sesión admin se cerró. Volvé a iniciar sesión.</p>
+      <button class="btn btn-rojo" onclick="location.reload()" style="justify-content:center">🔑 Volver a ingresar</button>
+    </div>`;
+  } else {
+    toast("⏱ Sesión expirada — volvé a ingresar como admin");
+  }
+}
+
+async function adminFetch(url, opts = {}) {
+  if (!adminToken) { sesionExpirada(); return null; }
+  opts.headers = { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}`, ...(opts.headers || {}) };
+  const res = await fetch(url, opts);
+  if (res.status === 401 || res.status === 403) { sesionExpirada(); return null; }
+  return res;
+}
+
 let pedidoListo = null;
 let snapshotCarrito = null;
 let payloadListo = null;
@@ -1647,10 +1672,10 @@ async function cargarCRM() {
   const lista = $("#crm-lista");
   lista.innerHTML = '<p style="color:var(--gris);font-size:.85rem;padding:1rem">Cargando clientes…</p>';
   try {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/crm_clientes_44?select=*&order=ultima_cole.desc,nombre.asc&limit=200`,
-      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${adminToken}` } }
+    const res = await adminFetch(
+      `${SUPABASE_URL}/rest/v1/crm_clientes_44?select=*&order=ultima_cole.desc,nombre.asc&limit=200`
     );
+    if (!res) return;
     if (!res.ok) throw new Error(await res.text() || res.status);
     crmClientes = await res.json();
 
