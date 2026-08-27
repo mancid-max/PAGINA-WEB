@@ -21,8 +21,9 @@ const SUPABASE_KEY = "sb_publishable_37ce4uK_RG8o9pP-Jdf2Xw_3eWgqJQy";
 /* ---- TRACKING DE VISITA DESDE EMAIL ----------------------- */
 (function(){
   const p = new URLSearchParams(location.search);
-  if (p.get("src") === "email" && p.get("cli")) {
-    fetch(`/.netlify/functions/track-visit?cli=${encodeURIComponent(p.get("cli"))}&noredirect=1`).catch(()=>{});
+  const cli = p.get("cli");
+  if (cli && !document.referrer.includes("mohicanojeans")) {
+    fetch(`/.netlify/functions/track-visit?cli=${encodeURIComponent(cli)}&noredirect=1`).catch(()=>{});
   }
 })();
 
