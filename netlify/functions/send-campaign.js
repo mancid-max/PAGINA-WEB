@@ -10,7 +10,7 @@ exports.handler = async function(event) {
   }
 
   const RESEND_KEY = process.env.RESEND_API_KEY;
-  const FROM = "ventas@mohicanojeans.cl";
+  const FROM = "Venta Mohicano <ventas@mohicanojeans.cl>";
 
   const resultados = [];
   for (const c of clientes) {
