@@ -1,6 +1,6 @@
 exports.handler = async function(event) {
   const rut = event.queryStringParameters?.cli;
-  const dest = `https://mohicanojeans.netlify.app/catalogo-44/${rut ? "?cli=" + rut : ""}`;
+  const noredirect = event.queryStringParameters?.noredirect;
 
   if (rut) {
     const SUPABASE_URL = (process.env.SUPABASE_URL || "").trim();
@@ -25,6 +25,11 @@ exports.handler = async function(event) {
     }
   }
 
+  if (noredirect) {
+    return { statusCode: 200, body: "ok" };
+  }
+
+  const dest = `https://mohicanojeans.netlify.app/catalogo-44/${rut ? "?cli=" + rut : ""}`;
   return {
     statusCode: 302,
     headers: { Location: dest },

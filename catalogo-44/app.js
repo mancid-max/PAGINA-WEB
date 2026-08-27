@@ -18,6 +18,14 @@ const SOURCE_PEDIDO  = "dolce-vita-44";
 const SUPABASE_URL = "https://kdtydxihrflhziclgiof.supabase.co";
 const SUPABASE_KEY = "sb_publishable_37ce4uK_RG8o9pP-Jdf2Xw_3eWgqJQy";
 
+/* ---- TRACKING DE VISITA DESDE EMAIL ----------------------- */
+(function(){
+  const p = new URLSearchParams(location.search);
+  if (p.get("src") === "email" && p.get("cli")) {
+    fetch(`/.netlify/functions/track-visit?cli=${encodeURIComponent(p.get("cli"))}&noredirect=1`).catch(()=>{});
+  }
+})();
+
 /* ---- SECCIONES -------------------------------------------- */
 const SECCIONES = [
   {id:"flare",     nombre:"Flare Jeans",                      cover:"c6"},
