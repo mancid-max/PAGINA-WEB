@@ -18,9 +18,11 @@ exports.handler = async function(event) {
 
     // Link personalizado con RUT para tracking de visita
     const rutNorm = (c.rut || "").replace(/[^0-9K]/gi, "").toUpperCase();
-    const htmlPersonalizado = html
+    const trackingPixel = `<img src="https://mohicanojeans.netlify.app/.netlify/functions/track-open?cli=${rutNorm}" width="1" height="1" style="display:none;border:0" alt="">`;
+    const htmlPersonalizado = (html
       .replace(/\{\{nombre\}\}/g, c.nombre || "cliente")
-      .replace(/\{\{link\}\}/g, `https://mohicanojeans.netlify.app/catalogo-44/?cli=${rutNorm}`);
+      .replace(/\{\{link\}\}/g, `https://mohicanojeans.netlify.app/.netlify/functions/track-visit?cli=${rutNorm}`))
+      + trackingPixel;
 
     try {
       const res = await fetch("https://api.resend.com/emails", {
