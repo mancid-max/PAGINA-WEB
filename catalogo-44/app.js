@@ -1747,7 +1747,14 @@ async function cargarCRM() {
     }
 
     // Cargar interacciones en batch para mostrar funnel
-    const todosRuts = crmClientes.map(c => `"${c.rut}"`).join(",");
+    // Incluir ambos formatos de RUT (original y normalizado) para compatibilidad con webhook
+    const rutMap = {};
+    for (const c of crmClientes) {
+      const norm = (c.rut||"").replace(/[^0-9K]/gi,"").toUpperCase();
+      rutMap[c.rut] = c.rut;
+      rutMap[norm] = c.rut;
+    }
+    const todosRuts = [...new Set(Object.keys(rutMap))].map(r => `"${r}"`).join(",");
     if (todosRuts) {
       const intRes = await fetch(
         `${SUPABASE_URL}/rest/v1/crm_interacciones_v2?client_rut=in.(${todosRuts})&select=client_rut,tipo&order=fecha.asc&limit=2000`,
@@ -1757,8 +1764,9 @@ async function cargarCRM() {
         const ints = await intRes.json();
         crmFunnel = {};
         for (const i of ints) {
-          if (!crmFunnel[i.client_rut]) crmFunnel[i.client_rut] = {};
-          crmFunnel[i.client_rut][i.tipo] = true;
+          const key = rutMap[i.client_rut] || i.client_rut;
+          if (!crmFunnel[key]) crmFunnel[key] = {};
+          crmFunnel[key][i.tipo] = true;
         }
       }
     }
