@@ -21,7 +21,7 @@ exports.handler = async function(event) {
     const trackingPixel = `<img src="https://mohicanojeans.netlify.app/.netlify/functions/track-open?cli=${rutNorm}" width="1" height="1" style="border:0" alt="">`;
     const htmlPersonalizado = (html
       .replace(/\{\{nombre\}\}/g, c.nombre || "cliente")
-      .replace(/\{\{link\}\}/g, `https&#58;//mohicanojeans.netlify.app/catalogo-44/?cli=${rutNorm}`))
+      .replace(/\{\{link\}\}/g, `https://mohicanojeans.netlify.app/catalogo-44/?cli=${rutNorm}`))
       + trackingPixel;
 
     try {
