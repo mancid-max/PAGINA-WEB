@@ -892,7 +892,7 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
       <input id="crm-email-subject" type="text" style="width:100%;border:1.5px solid #d8e4ec;border-radius:8px;padding:.45rem .75rem;font-family:inherit;font-size:.85rem;margin-bottom:.7rem;box-sizing:border-box"
         value="🔥 ¡No te pierdas lo último de Mohicano!">
       <label style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gris);display:block;margin-bottom:.3rem">Cuerpo del correo</label>
-      <textarea id="crm-email-body" rows="10" style="width:100%;border:1.5px solid #d8e4ec;border-radius:8px;padding:.6rem .75rem;font-family:inherit;font-size:.83rem;resize:vertical;box-sizing:border-box"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0f0f0;padding:20px 0"><tr><td align="center">
+      <textarea id="crm-email-body" rows="6" style="width:100%;border:1.5px solid #d8e4ec;border-radius:8px;padding:.6rem .75rem;font-family:inherit;font-size:.83rem;resize:vertical;box-sizing:border-box"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0f0f0;padding:20px 0"><tr><td align="center">
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background:#ffffff;overflow:hidden;font-family:Arial,Helvetica,sans-serif">
 <tr><td style="background:#0c1e35;padding:16px 24px;text-align:center"><p style="color:#aaa;font-size:10px;letter-spacing:5px;text-transform:uppercase;margin:0 0 3px">PV 2026 &bull; Inspirada en Italia</p><p style="color:#ffffff;font-size:20px;font-weight:900;letter-spacing:5px;text-transform:uppercase;margin:0">MOHICANO JEANS</p></td></tr>
 <tr><td style="padding:0;line-height:0"><img src="https://mohicanojeans.netlify.app/catalogo-44/email/hero1.jpg" width="560" style="width:100%;display:block;border:0" alt="Dolce Vita 44 - Duomo di Milano"></td></tr>
@@ -902,13 +902,13 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
 <tr><td style="background:#0c1e35;padding:14px 28px;text-align:center"><p style="color:#7a90a4;font-size:11px;margin:0">Mohicano Jeans &bull; ventas@mohicanojeans.cl</p></td></tr>
 </table>
 </td></tr></table></textarea>
-      <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.8rem">
-        <button class="btn btn-rojo" id="btn-enviar-resend" style="padding:.45rem 1rem;font-size:.82rem;justify-content:center">&#128247; Enviar campaña con Resend</button>
-        <button class="btn btn-borde" id="btn-preview-email" style="padding:.45rem 1rem;font-size:.82rem">&#128065; Preview</button>
-        <button class="btn btn-borde" id="btn-copiar-bcc" style="padding:.45rem 1rem;font-size:.82rem">&#128203; Copiar BCC (Gmail)</button>
-        <button class="btn btn-borde" id="btn-abrir-gmail" style="padding:.45rem 1rem;font-size:.82rem">&#9993; Abrir Gmail</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.8rem">
+        <button class="btn btn-rojo" id="btn-enviar-resend" style="padding:.5rem .8rem;font-size:.8rem;justify-content:center;grid-column:1/-1">&#128247; Enviar campaña con Resend</button>
+        <button class="btn btn-borde" id="btn-preview-email" style="padding:.5rem .8rem;font-size:.8rem">&#128065; Preview</button>
+        <button class="btn btn-borde" id="btn-copiar-bcc" style="padding:.5rem .8rem;font-size:.8rem">&#128203; Copiar BCC</button>
+        <button class="btn btn-borde" id="btn-abrir-gmail" style="padding:.5rem .8rem;font-size:.8rem;grid-column:1/-1">&#9993; Abrir Gmail</button>
       </div>
-      <p id="crm-email-status" style="font-size:.75rem;color:var(--gris);margin-top:.6rem"></p>
+      <p id="crm-email-status" style="font-size:.82rem;font-weight:600;margin-top:.5rem;text-align:center;min-height:1.2em"></p>
     </div>
   </div>
 
