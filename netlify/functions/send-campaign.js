@@ -16,13 +16,17 @@ exports.handler = async function(event) {
   for (const c of clientes) {
     if (!c.email || c.email.length < 5) continue;
 
-    // Link personalizado con RUT para tracking de visita
     const rutNorm = (c.rut || "").replace(/[^0-9K]/gi, "").toUpperCase();
+    const catalogUrl = `https://mohicanojeans.netlify.app/catalogo-44/?cli=${rutNorm}`;
     const trackingPixel = `<img src="https://mohicanojeans.netlify.app/.netlify/functions/track-open?cli=${rutNorm}" width="1" height="1" style="border:0" alt="">`;
     const htmlPersonalizado = (html
       .replace(/\{\{nombre\}\}/g, c.nombre || "cliente")
-      .replace(/\{\{link\}\}/g, `https://mohicanojeans.netlify.app/catalogo-44/?cli=${rutNorm}`))
+      .replace(/\{\{link\}\}/g, catalogUrl))
       + trackingPixel;
+
+    // DIAG: loguear snippet del href para verificar que {{link}} fue reemplazado
+    const hrefMatch = htmlPersonalizado.match(/href="([^"]{0,120})"/);
+    console.log(`[DIAG] ${c.email} | URL catalogo: ${catalogUrl} | primer href: ${hrefMatch ? hrefMatch[1] : "no encontrado"}`);
 
     try {
       const res = await fetch("https://api.resend.com/emails", {
@@ -37,12 +41,13 @@ exports.handler = async function(event) {
           subject: asunto,
           html: htmlPersonalizado,
           tags: [{ name: "rut", value: rutNorm }],
-          click_tracking: false,
         }),
       });
       const data = await res.json();
-      resultados.push({ rut: c.rut, email: c.email, ok: res.ok, id: data.id });
+      console.log(`[DIAG] Resend response: ok=${res.ok} id=${data.id} err=${JSON.stringify(data.name||data.message||"")}`);
+      resultados.push({ rut: c.rut, email: c.email, ok: res.ok, id: data.id, diagUrl: catalogUrl });
     } catch(e) {
+      console.error(`[DIAG] fetch error: ${e.message}`);
       resultados.push({ rut: c.rut, email: c.email, ok: false, error: e.message });
     }
   }

@@ -1655,6 +1655,21 @@ $("#btn-abrir-gmail").onclick = () => {
   window.open(`https://mail.google.com/mail/?view=cm&su=${subject}&body=${body}`, "_blank");
 };
 
+$("#btn-preview-email").onclick = () => {
+  const html = $("#crm-email-body").value;
+  const clientes = crmEmailTargets || crmClientes.filter(c => c.email && c.email.length > 3);
+  const c = (clientes && clientes[0]) || {};
+  const rutNorm = (c.rut || "TEST").replace(/[^0-9K]/gi, "").toUpperCase();
+  const url = `https://mohicanojeans.netlify.app/catalogo-44/?cli=${rutNorm}`;
+  const htmlPrev = html
+    .replace(/\{\{nombre\}\}/g, c.nombre || "Cliente")
+    .replace(/\{\{link\}\}/g, url);
+  const w = window.open("", "_blank", "width=620,height=860,scrollbars=yes");
+  w.document.open();
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Preview email</title><style>body{margin:0;padding:20px;background:#f0f0f0;font-family:sans-serif}</style></head><body>${htmlPrev}<hr style="margin-top:20px"><p style="font-size:12px;color:#666">⬆ Preview sin Resend. Si el botón funciona aquí → Resend está rompiendo el link.</p></body></html>`);
+  w.document.close();
+};
+
 $("#btn-marcar-enviados").onclick = async () => {
   const conEmail = crmClientes.filter(c => c.email && c.email.length > 3 && (c.estado||"pendiente") !== "pedido_realizado" && c.estado !== "descartado");
   if (!conEmail.length) { toast("Sin destinatarios"); return; }
