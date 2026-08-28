@@ -1603,18 +1603,11 @@ $("#btn-enviar-resend").onclick = async () => {
   btn.disabled = true; btn.textContent = "Enviando…";
   status.textContent = "";
 
-  // Convertir texto plano a HTML con link personalizado
-  const htmlTemplate = `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#222;max-width:600px">
-    ${textoPlano.replace(/\n/g,"<br>").replace(/\{\{link\}\}/g,'<a href="{{link}}" style="background:#c8102e;color:#fff;padding:10px 22px;border-radius:6px;text-decoration:none;display:inline-block;margin:12px 0;font-weight:700">Ver catálogo Dolce Vita 44</a>')}
-    <hr style="border:none;border-top:1px solid #eee;margin:20px 0">
-    <p style="font-size:12px;color:#888">Mohicano Jeans · ventas@mohicanojeans.cl</p>
-  </div>`;
-
   try {
     const res = await fetch("/.netlify/functions/send-campaign", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ clientes: conEmail, asunto, html: htmlTemplate }),
+      body: JSON.stringify({ clientes: conEmail, asunto, html: textoPlano }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || res.status);
