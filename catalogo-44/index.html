@@ -857,7 +857,6 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
         <button class="chip-estado" data-crm-filtro="sin_contacto">Sin contacto</button>
       </div>
       <div class="crm-stats" id="crm-stats"></div>
-      <div id="crm-reporte-panel" style="display:none;background:#f8fafc;border-radius:14px;padding:1.2rem 1.4rem;margin-bottom:1rem;border:1.5px solid #e2ecf5"></div>
       <div class="crm-lista" id="crm-lista"></div>
     </div>
 
@@ -878,6 +877,17 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
   <!-- CRM: Modal detalle cliente -->
   <div id="crm-modal" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(12,25,36,.7);backdrop-filter:blur(3px);overflow-y:auto;padding:1rem">
     <div id="crm-modal-box" style="background:#fff;border-radius:22px;width:100%;max-width:680px;margin:1.5rem auto;padding:1.8rem 1.6rem 1.6rem;min-height:10rem"></div>
+  </div>
+
+  <!-- CRM: Modal reporte -->
+  <div id="crm-reporte-modal" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(12,25,36,.7);backdrop-filter:blur(3px);overflow-y:auto;padding:1rem">
+    <div style="background:#fff;border-radius:22px;width:100%;max-width:560px;margin:2rem auto;padding:1.8rem 1.6rem 1.6rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem">
+        <span style="font-weight:800;font-size:1rem;color:var(--tinta)">📊 Reporte Campaña Cole 44</span>
+        <button onclick="document.getElementById('crm-reporte-modal').style.display='none'" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--gris)">✕</button>
+      </div>
+      <div id="crm-reporte-contenido"></div>
+    </div>
   </div>
 
   <!-- CRM: Modal correo masivo -->

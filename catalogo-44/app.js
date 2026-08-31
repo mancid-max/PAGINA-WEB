@@ -1559,8 +1559,6 @@ $("#btn-crm-email-toggle").onclick = () => {
 };
 
 $("#btn-crm-reporte").onclick = () => {
-  const panel = $("#crm-reporte-panel");
-  if (panel.style.display !== "none") { panel.style.display = "none"; return; }
   const total = crmClientes.length;
   const enviados = crmClientes.filter(c => crmFunnel[c.rut]?.email_enviado).length;
   const abrieron = crmClientes.filter(c => crmFunnel[c.rut]?.email_abierto).length;
@@ -1568,40 +1566,28 @@ $("#btn-crm-reporte").onclick = () => {
   const pidieron = crmClientes.filter(c => (c.estado||"") === "pedido_realizado").length;
   const sinContacto = crmClientes.filter(c => !crmFunnel[c.rut]?.email_enviado && (c.estado||"pendiente") !== "pedido_realizado").length;
   const pct = (n, d) => d ? Math.round(n/d*100) + "%" : "—";
-  panel.innerHTML = `
-    <div style="font-weight:800;font-size:.95rem;color:var(--tinta);margin-bottom:.9rem;letter-spacing:.03em">📊 Reporte Campaña Cole 44</div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:1rem">
-      <div style="background:#fff;border-radius:10px;padding:.7rem .9rem;border:1px solid #e2ecf5;text-align:center">
-        <div style="font-size:1.5rem;font-weight:800;color:var(--tinta)">${total}</div>
-        <div style="font-size:.72rem;color:var(--gris);margin-top:.15rem">Total clientes</div>
-      </div>
-      <div style="background:#fff;border-radius:10px;padding:.7rem .9rem;border:1px solid #e2ecf5;text-align:center">
-        <div style="font-size:1.5rem;font-weight:800;color:#2563eb">${enviados}</div>
-        <div style="font-size:.72rem;color:var(--gris);margin-top:.15rem">Correo enviado</div>
-      </div>
-      <div style="background:#fff;border-radius:10px;padding:.7rem .9rem;border:1px solid #e2ecf5;text-align:center">
-        <div style="font-size:1.5rem;font-weight:800;color:#7c3aed">${abrieron}</div>
-        <div style="font-size:.72rem;color:var(--gris);margin-top:.15rem">Abrieron correo</div>
-      </div>
-      <div style="background:#fff;border-radius:10px;padding:.7rem .9rem;border:1px solid #e2ecf5;text-align:center">
-        <div style="font-size:1.5rem;font-weight:800;color:#0891b2">${visitaron}</div>
-        <div style="font-size:.72rem;color:var(--gris);margin-top:.15rem">Visitaron catálogo</div>
-      </div>
-      <div style="background:#fff;border-radius:10px;padding:.7rem .9rem;border:1px solid #e2ecf5;text-align:center">
-        <div style="font-size:1.5rem;font-weight:800;color:var(--verde)">${pidieron}</div>
-        <div style="font-size:.72rem;color:var(--gris);margin-top:.15rem">Hicieron pedido</div>
-      </div>
-      <div style="background:#fff;border-radius:10px;padding:.7rem .9rem;border:1px solid #e2ecf5;text-align:center">
-        <div style="font-size:1.5rem;font-weight:800;color:var(--gris)">${sinContacto}</div>
-        <div style="font-size:.72rem;color:var(--gris);margin-top:.15rem">Sin contacto</div>
-      </div>
+  const stat = (num, label, color) => `<div style="background:#f8fafc;border-radius:12px;padding:.8rem 1rem;border:1px solid #e2ecf5;text-align:center">
+    <div style="font-size:2rem;font-weight:800;color:${color}">${num}</div>
+    <div style="font-size:.72rem;color:var(--gris);margin-top:.2rem">${label}</div>
+  </div>`;
+  $("#crm-reporte-contenido").innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:1.1rem">
+      ${stat(total, "Total clientes", "var(--tinta)")}
+      ${stat(enviados, "Correo enviado", "#2563eb")}
+      ${stat(abrieron, "Abrieron correo", "#7c3aed")}
+      ${stat(visitaron, "Visitaron catálogo", "#0891b2")}
+      ${stat(pidieron, "Hicieron pedido", "var(--verde)")}
+      ${stat(sinContacto, "Sin contacto", "var(--gris)")}
     </div>
-    <div style="font-size:.78rem;color:var(--gris);display:flex;gap:1.2rem;flex-wrap:wrap">
-      <span>Tasa apertura: <b style="color:var(--tinta)">${pct(abrieron, enviados)}</b></span>
-      <span>Tasa visita: <b style="color:var(--tinta)">${pct(visitaron, abrieron)}</b></span>
-      <span>Tasa conversión: <b style="color:var(--tinta)">${pct(pidieron, enviados)}</b></span>
+    <div style="background:#f8fafc;border-radius:12px;padding:.9rem 1.1rem;border:1px solid #e2ecf5">
+      <div style="font-size:.78rem;font-weight:700;color:var(--tinta);margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.06em">Tasas de conversión</div>
+      <div style="display:flex;flex-direction:column;gap:.4rem;font-size:.84rem;color:var(--gris)">
+        <div style="display:flex;justify-content:space-between"><span>Apertura (abrieron / enviados)</span><b style="color:var(--tinta)">${pct(abrieron, enviados)}</b></div>
+        <div style="display:flex;justify-content:space-between"><span>Visita (visitaron / abrieron)</span><b style="color:var(--tinta)">${pct(visitaron, abrieron)}</b></div>
+        <div style="display:flex;justify-content:space-between"><span>Conversión (pedido / enviados)</span><b style="color:var(--verde)">${pct(pidieron, enviados)}</b></div>
+      </div>
     </div>`;
-  panel.style.display = "block";
+  $("#crm-reporte-modal").style.display = "block";
 };
 
 window.abrirEmailIndividual = function(rut) {
