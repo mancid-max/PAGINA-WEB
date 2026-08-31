@@ -1912,6 +1912,52 @@ function renderizarCRM() {
   }).join("");
 }
 
+window.descargarListaCRM = function() {
+  const q = ($("#crm-search")?.value || "").trim().toLowerCase();
+  let filtrados = crmClientes;
+  if (q) filtrados = filtrados.filter(c =>
+    (c.nombre||"").toLowerCase().includes(q) ||
+    (c.ciudad||"").toLowerCase().includes(q) ||
+    (c.rut||"").includes(q)
+  );
+  if (crmFiltroEstado !== "todos") {
+    filtrados = filtrados.filter(c => {
+      const f = crmFunnel[c.rut] || {};
+      if (crmFiltroEstado === "email_enviado")    return f.email_enviado && !f.email_abierto;
+      if (crmFiltroEstado === "email_abierto")    return f.email_abierto && !f.link_visitado;
+      if (crmFiltroEstado === "link_visitado")    return f.link_visitado && (c.estado||"") !== "pedido_realizado";
+      if (crmFiltroEstado === "pedido_realizado") return (c.estado||"") === "pedido_realizado";
+      if (crmFiltroEstado === "sin_contacto")     return !f.email_enviado && (c.estado||"pendiente") !== "pedido_realizado";
+      return true;
+    });
+  }
+  if (!filtrados.length) { alert("No hay clientes en esta vista."); return; }
+
+  const filtroLabel = {
+    todos:"todos", email_enviado:"correo-enviado", email_abierto:"abrio-correo",
+    link_visitado:"visito-landing", pedido_realizado:"hicieron-pedido", sin_contacto:"sin-contacto"
+  }[crmFiltroEstado] || "lista";
+
+  const rows = [["Nombre","RUT","Teléfono","Email","Ciudad","Vendedor","Última Cole","Estado"]];
+  for (const c of filtrados) {
+    const f = crmFunnel[c.rut] || {};
+    const estado = c.estado === "pedido_realizado" ? "Hizo pedido" :
+      f.link_visitado ? "Visitó landing" : f.email_abierto ? "Abrió correo" :
+      f.email_enviado ? "Correo enviado" : "Sin contacto";
+    rows.push([
+      c.nombre||"", c.rut||"", c.telefono||"", c.email||"",
+      c.ciudad||"", c.vendedor||"", c.ultima_cole||"", estado
+    ]);
+  }
+
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `CRM_Cole44_${filtroLabel}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+};
+
 window.abrirDetalleCRM = async function(rut) {
   crmActual = crmClientes.find(c => c.rut === rut);
   if (!crmActual) return;
