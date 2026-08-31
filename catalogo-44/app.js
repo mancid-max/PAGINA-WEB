@@ -1934,27 +1934,99 @@ window.descargarListaCRM = function() {
   if (!filtrados.length) { alert("No hay clientes en esta vista."); return; }
 
   const filtroLabel = {
-    todos:"todos", email_enviado:"correo-enviado", email_abierto:"abrio-correo",
-    link_visitado:"visito-landing", pedido_realizado:"hicieron-pedido", sin_contacto:"sin-contacto"
-  }[crmFiltroEstado] || "lista";
+    todos:"Todos", email_enviado:"Correo enviado", email_abierto:"Abrió correo",
+    link_visitado:"Visitó landing", pedido_realizado:"Hicieron pedido", sin_contacto:"Sin contacto"
+  }[crmFiltroEstado] || "Lista";
 
-  const rows = [["Nombre","RUT","Teléfono","Email","Ciudad","Vendedor","Última Cole","Estado"]];
+  const hoy = new Date().toLocaleDateString("es-CL");
+  const nombreArchivo = `CRM_Cole44_${(filtroLabel).replace(/\s/g,"-")}_${new Date().toISOString().slice(0,10)}`;
+
+  // Resumen por ciudad y por vendedor
+  const porCiudad = {}, porVendedor = {}, porCole = {};
   for (const c of filtrados) {
-    const f = crmFunnel[c.rut] || {};
-    const estado = c.estado === "pedido_realizado" ? "Hizo pedido" :
-      f.link_visitado ? "Visitó landing" : f.email_abierto ? "Abrió correo" :
-      f.email_enviado ? "Correo enviado" : "Sin contacto";
-    rows.push([
-      c.nombre||"", c.rut||"", c.telefono||"", c.email||"",
-      c.ciudad||"", c.vendedor||"", c.ultima_cole||"", estado
-    ]);
+    const ciudad = c.ciudad || "Sin ciudad";
+    const vendedor = (c.vendedor||"Sin vendedor").split(" - ")[1] || c.vendedor || "Sin vendedor";
+    const cole = c.ultima_cole || "?";
+    porCiudad[ciudad] = (porCiudad[ciudad]||0) + 1;
+    porVendedor[vendedor] = (porVendedor[vendedor]||0) + 1;
+    porCole[cole] = (porCole[cole]||0) + 1;
   }
 
-  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
-  const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+  const filasCiudad = Object.entries(porCiudad).sort((a,b)=>b[1]-a[1]).slice(0,10)
+    .map(([k,v]) => `<tr><td>${k}</td><td style="text-align:center;font-weight:600">${v}</td></tr>`).join("");
+  const filasVendedor = Object.entries(porVendedor).sort((a,b)=>b[1]-a[1])
+    .map(([k,v]) => `<tr><td>${k}</td><td style="text-align:center;font-weight:600">${v}</td></tr>`).join("");
+  const filasCole = Object.entries(porCole).sort((a,b)=>b[1]-a[1])
+    .map(([k,v]) => `<tr><td>Cole ${k}</td><td style="text-align:center;font-weight:600">${v}</td></tr>`).join("");
+
+  const filasClientes = filtrados.map((c, i) => {
+    const f = crmFunnel[c.rut] || {};
+    const estado = c.estado === "pedido_realizado" ? "Hizo pedido ✔" :
+      f.link_visitado ? "Visitó landing" : f.email_abierto ? "Abrió correo" :
+      f.email_enviado ? "Correo enviado" : "Sin contacto";
+    const bg = i % 2 === 0 ? "#ffffff" : "#f8f9fb";
+    return `<tr style="background:${bg}">
+      <td>${c.nombre||""}</td>
+      <td>${c.rut||""}</td>
+      <td>${c.telefono||""}</td>
+      <td>${c.email||""}</td>
+      <td>${c.ciudad||""}</td>
+      <td>${(c.vendedor||"").split(" - ")[1]||c.vendedor||""}</td>
+      <td style="text-align:center">Cole ${c.ultima_cole||"?"}</td>
+      <td style="font-weight:600;color:${c.estado==="pedido_realizado"?"#166534":"#374151"}">${estado}</td>
+    </tr>`;
+  }).join("");
+
+  const html = `
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="UTF-8">
+<style>
+  body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; }
+  h1 { font-size:16pt; color:#12283a; margin:0 0 4px; }
+  .subtitulo { font-size:10pt; color:#6b7280; margin:0 0 16px; }
+  .cuadro { border-collapse:collapse; margin-bottom:20px; }
+  .cuadro th { background:#12283a; color:#fff; padding:6px 12px; text-align:left; font-size:10pt; }
+  .cuadro td { padding:5px 12px; border-bottom:1px solid #e5e7eb; font-size:10pt; }
+  .resumen-wrap { display:flex; gap:24px; margin-bottom:24px; }
+  .resumen-box { border:1px solid #e5e7eb; border-radius:6px; overflow:hidden; min-width:180px; }
+  .resumen-box .box-title { background:#12283a; color:#fff; font-weight:700; padding:6px 12px; font-size:10pt; }
+  table.datos { border-collapse:collapse; width:100%; }
+  table.datos th { background:#12283a; color:#fff; padding:7px 10px; font-size:10pt; text-align:left; }
+  table.datos td { padding:6px 10px; font-size:10pt; border-bottom:1px solid #f0f0f0; }
+  .badge { background:#dcfce7; color:#166534; padding:2px 8px; border-radius:12px; font-size:9pt; }
+</style>
+</head><body>
+<h1>📊 Reporte CRM — Cole 44 Dolce Vita</h1>
+<p class="subtitulo">Filtro: <b>${filtroLabel}</b> &nbsp;·&nbsp; ${filtrados.length} clientes &nbsp;·&nbsp; Generado: ${hoy}</p>
+
+<div class="resumen-wrap">
+  <div class="resumen-box">
+    <div class="box-title">Por Ciudad</div>
+    <table class="cuadro"><tbody>${filasCiudad}</tbody></table>
+  </div>
+  <div class="resumen-box">
+    <div class="box-title">Por Vendedor</div>
+    <table class="cuadro"><tbody>${filasVendedor}</tbody></table>
+  </div>
+  <div class="resumen-box">
+    <div class="box-title">Por Colección</div>
+    <table class="cuadro"><tbody>${filasCole}</tbody></table>
+  </div>
+</div>
+
+<table class="datos">
+  <thead><tr>
+    <th>Nombre</th><th>RUT</th><th>Teléfono</th><th>Email</th>
+    <th>Ciudad</th><th>Vendedor</th><th>Última Cole</th><th>Estado</th>
+  </tr></thead>
+  <tbody>${filasClientes}</tbody>
+</table>
+</body></html>`;
+
+  const blob = new Blob([html], { type: "application/vnd.ms-excel;charset=utf-8;" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `CRM_Cole44_${filtroLabel}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.download = `${nombreArchivo}.xls`;
   a.click();
 };
 
