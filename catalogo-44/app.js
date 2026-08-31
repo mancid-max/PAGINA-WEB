@@ -1848,9 +1848,9 @@ function renderizarCRM() {
 
   const total = crmClientes.length;
   const conPedido = crmClientes.filter(c => (c.estado||"") === "pedido_realizado").length;
-  const conCorreo = crmClientes.filter(c => crmFunnel[c.rut]?.email_enviado).length;
-  const conAbierto = crmClientes.filter(c => crmFunnel[c.rut]?.email_abierto).length;
-  const conVisita = crmClientes.filter(c => crmFunnel[c.rut]?.link_visitado).length;
+  const conCorreo = crmClientes.filter(c => crmFunnel[c.rut]?.email_enviado && !crmFunnel[c.rut]?.email_abierto && (c.estado||"") !== "pedido_realizado").length;
+  const conAbierto = crmClientes.filter(c => crmFunnel[c.rut]?.email_abierto && !crmFunnel[c.rut]?.link_visitado && (c.estado||"") !== "pedido_realizado").length;
+  const conVisita = crmClientes.filter(c => crmFunnel[c.rut]?.link_visitado && (c.estado||"") !== "pedido_realizado").length;
   const sinContacto = crmClientes.filter(c => !(crmFunnel[c.rut]?.email_enviado) && (c.estado||"pendiente") !== "pedido_realizado").length;
   $("#crm-stats").innerHTML =
     `<div class="crm-stat">${total}<span>total</span></div>` +
