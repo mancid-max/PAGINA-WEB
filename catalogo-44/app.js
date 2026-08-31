@@ -1558,6 +1558,52 @@ $("#btn-crm-email-toggle").onclick = () => {
   $("#crm-email-modal").style.display = "block";
 };
 
+$("#btn-crm-reporte").onclick = () => {
+  const panel = $("#crm-reporte-panel");
+  if (panel.style.display !== "none") { panel.style.display = "none"; return; }
+  const total = crmClientes.length;
+  const enviados = crmClientes.filter(c => crmFunnel[c.rut]?.email_enviado).length;
+  const abrieron = crmClientes.filter(c => crmFunnel[c.rut]?.email_abierto).length;
+  const visitaron = crmClientes.filter(c => crmFunnel[c.rut]?.link_visitado).length;
+  const pidieron = crmClientes.filter(c => (c.estado||"") === "pedido_realizado").length;
+  const sinContacto = crmClientes.filter(c => !crmFunnel[c.rut]?.email_enviado && (c.estado||"pendiente") !== "pedido_realizado").length;
+  const pct = (n, d) => d ? Math.round(n/d*100) + "%" : "—";
+  panel.innerHTML = `
+    <div style="font-weight:800;font-size:.95rem;color:var(--tinta);margin-bottom:.9rem;letter-spacing:.03em">📊 Reporte Campaña Cole 44</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:1rem">
+      <div style="background:#fff;border-radius:10px;padding:.7rem .9rem;border:1px solid #e2ecf5;text-align:center">
+        <div style="font-size:1.5rem;font-weight:800;color:var(--tinta)">${total}</div>
+        <div style="font-size:.72rem;color:var(--gris);margin-top:.15rem">Total clientes</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;padding:.7rem .9rem;border:1px solid #e2ecf5;text-align:center">
+        <div style="font-size:1.5rem;font-weight:800;color:#2563eb">${enviados}</div>
+        <div style="font-size:.72rem;color:var(--gris);margin-top:.15rem">Correo enviado</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;padding:.7rem .9rem;border:1px solid #e2ecf5;text-align:center">
+        <div style="font-size:1.5rem;font-weight:800;color:#7c3aed">${abrieron}</div>
+        <div style="font-size:.72rem;color:var(--gris);margin-top:.15rem">Abrieron correo</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;padding:.7rem .9rem;border:1px solid #e2ecf5;text-align:center">
+        <div style="font-size:1.5rem;font-weight:800;color:#0891b2">${visitaron}</div>
+        <div style="font-size:.72rem;color:var(--gris);margin-top:.15rem">Visitaron catálogo</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;padding:.7rem .9rem;border:1px solid #e2ecf5;text-align:center">
+        <div style="font-size:1.5rem;font-weight:800;color:var(--verde)">${pidieron}</div>
+        <div style="font-size:.72rem;color:var(--gris);margin-top:.15rem">Hicieron pedido</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;padding:.7rem .9rem;border:1px solid #e2ecf5;text-align:center">
+        <div style="font-size:1.5rem;font-weight:800;color:var(--gris)">${sinContacto}</div>
+        <div style="font-size:.72rem;color:var(--gris);margin-top:.15rem">Sin contacto</div>
+      </div>
+    </div>
+    <div style="font-size:.78rem;color:var(--gris);display:flex;gap:1.2rem;flex-wrap:wrap">
+      <span>Tasa apertura: <b style="color:var(--tinta)">${pct(abrieron, enviados)}</b></span>
+      <span>Tasa visita: <b style="color:var(--tinta)">${pct(visitaron, abrieron)}</b></span>
+      <span>Tasa conversión: <b style="color:var(--tinta)">${pct(pidieron, enviados)}</b></span>
+    </div>`;
+  panel.style.display = "block";
+};
+
 window.abrirEmailIndividual = function(rut) {
   const c = crmClientes.find(x => x.rut === rut);
   if (!c || !c.email) { toast("Este cliente no tiene email"); return; }
@@ -1817,12 +1863,22 @@ function renderizarCRM() {
   const total = crmClientes.length;
   const conPedido = crmClientes.filter(c => (c.estado||"") === "pedido_realizado").length;
   const conCorreo = crmClientes.filter(c => crmFunnel[c.rut]?.email_enviado).length;
+  const conAbierto = crmClientes.filter(c => crmFunnel[c.rut]?.email_abierto).length;
+  const conVisita = crmClientes.filter(c => crmFunnel[c.rut]?.link_visitado).length;
   const sinContacto = crmClientes.filter(c => !(crmFunnel[c.rut]?.email_enviado) && (c.estado||"pendiente") !== "pedido_realizado").length;
   $("#crm-stats").innerHTML =
     `<div class="crm-stat">${total}<span>total</span></div>` +
     `<div class="crm-stat">${conPedido}<span>con pedido ✔</span></div>` +
     `<div class="crm-stat">${conCorreo}<span>correo enviado</span></div>` +
     `<div class="crm-stat">${sinContacto}<span>sin contacto</span></div>`;
+
+  // Conteos en botones de filtro
+  const crmCounts = { todos: total, email_enviado: conCorreo, email_abierto: conAbierto, link_visitado: conVisita, pedido_realizado: conPedido, sin_contacto: sinContacto };
+  const crmLabels = { todos:"Todos", email_enviado:"📧 Correo enviado", email_abierto:"👁 Abrió correo", link_visitado:"🔗 Visitó landing", pedido_realizado:"✅ Hicieron pedido", sin_contacto:"Sin contacto" };
+  document.querySelectorAll("[data-crm-filtro]").forEach(btn => {
+    const k = btn.dataset.crmFiltro;
+    btn.textContent = `${crmLabels[k]} (${crmCounts[k]})`;
+  });
 
   const lista = $("#crm-lista");
   if (!filtrados.length) {

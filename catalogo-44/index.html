@@ -843,6 +843,7 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
         <div class="admin-top-acciones">
           <input id="crm-busca" type="search" placeholder="Nombre, ciudad o RUT…">
           <button class="btn btn-borde" id="btn-crm-email-toggle" style="padding:.45rem 1rem;font-size:.82rem">📧 Correo masivo</button>
+          <button class="btn btn-borde" id="btn-crm-reporte" style="padding:.45rem 1rem;font-size:.82rem">📊 Reporte</button>
           <button class="btn btn-borde" id="btn-refresh-crm" style="padding:.45rem 1rem;font-size:.82rem">↺ Actualizar</button>
           <button class="btn btn-borde" onclick="mostrarSeccionAdmin('lista')" style="padding:.45rem 1rem;font-size:.82rem">← Pedidos</button>
         </div>
@@ -856,6 +857,7 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
         <button class="chip-estado" data-crm-filtro="sin_contacto">Sin contacto</button>
       </div>
       <div class="crm-stats" id="crm-stats"></div>
+      <div id="crm-reporte-panel" style="display:none;background:#f8fafc;border-radius:14px;padding:1.2rem 1.4rem;margin-bottom:1rem;border:1.5px solid #e2ecf5"></div>
       <div class="crm-lista" id="crm-lista"></div>
     </div>
 
