@@ -4446,7 +4446,7 @@ const ORDER_TEMPLATE_CONFIGS = {
   },
   "catalogo-44": {
     file: "PLANILLA 44 LISTA PRECIO FINAL.xlsx",
-    version: "20260730cole44-nohide",
+    version: "20260831cole44-bd2",
     sheet: ORDER_TEMPLATE_SHEET,
     firstRow: 15,
     lastRow: 59,
