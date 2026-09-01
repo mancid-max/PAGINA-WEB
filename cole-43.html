@@ -27,7 +27,1244 @@
 <meta name="twitter:image" content="https://mohicanojeans.netlify.app/Imagenes/Logo/app-icon.png?v=3">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20260525admin-mobile">
+<link rel="stylesheet" href="style.css?v=20260831o">
+<style>
+  /* Reserva espacio del scrollbar siempre — evita el salto de layout al abrir/cerrar modal */
+  html { scrollbar-gutter: stable; }
+
+  .hero-title { display: none !important; }
+  .hero-cta-43-wrap { display: none !important; }
+
+  /* Ocultar switcher 42|43 y encabezado "Colección 43 Modelos Disponibles" */
+  .collection-switch-row { display: none !important; }
+  .catalog-section-divider { display: none !important; }
+
+  /* ===== Cole 43 desktop: 4 columnas, estilo igual que Cole 42 ===== */
+  .product-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 16px !important;
+    max-width: 1380px !important;
+    padding: 16px 20px 30px !important;
+  }
+  /* Imagen arriba, info abajo */
+  .product-grid .card-image-wrap {
+    order: -1 !important;
+    height: 300px !important;
+    width: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+  }
+  .product-grid .card-image-wrap img {
+    object-position: center top !important;
+  }
+  .product-grid .card-title-row {
+    order: 1 !important;
+    padding: 8px 10px 10px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 2px !important;
+  }
+  .product-grid .card-title { font-size: 0.72rem !important; }
+  .product-grid .card-price { font-size: 0.82rem !important; color: #1e2d3d !important; }
+  /* Ocultar banner promo y elementos extra */
+  .product-grid .card-hantan-stack,
+  .product-grid .card-cta-hint,
+  .product-grid .card-model-meta { display: none !important; }
+
+  /* Chips estilo Falabella — tarjetas con icono + etiqueta */
+  #cole-filter-chips {
+    display: flex !important;
+    gap: 10px;
+    padding: 14px 16px 12px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    /* Sticky: se queda fijo al hacer scroll (solo en mobile, en desktop está oculto) */
+    position: sticky;
+    top: 56px; /* justo debajo del header sticky (~56px) */
+    z-index: 90;
+  }
+  #cole-filter-chips::-webkit-scrollbar { display: none; }
+
+  .cole-chip {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    padding: 0;
+    border: 2px solid #e5e5e5;
+    border-radius: 12px;
+    background: #fff;
+    cursor: pointer;
+    min-width: 68px;
+    overflow: hidden;
+    transition: border-color .15s, box-shadow .15s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .cole-chip:hover {
+    border-color: #ccc;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  }
+  .cole-chip-icon {
+    width: 100%;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    background: #f3f4f6;
+    color: #4b5563;
+    transition: background .15s, color .15s;
+  }
+  .cole-chip-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    padding: 5px 6px 6px;
+    white-space: nowrap;
+    transition: color .15s;
+  }
+
+  /* Activo: un solo tono — slate oscuro */
+  .cole-chip.active { border-color: #1e2d3d; box-shadow: 0 2px 8px rgba(30,45,61,0.18); }
+  .cole-chip.active .cole-chip-icon { background: #1e2d3d !important; color: #fff !important; }
+  .cole-chip.active .cole-chip-label { color: #1e2d3d; font-weight: 700; }
+
+  /* Encabezados de sección Cole — tono neutro unificado */
+  .cole-seccion-header {
+    padding: 18px 16px 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-left: 3px solid #1e2d3d;
+    margin-left: 16px;
+  }
+  .cole-seccion-label {
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: #1e2d3d;
+  }
+
+  /* Carruseles Cole — selectores por ID para máxima especificidad */
+  #cole-40-carousel, #cole-41-carousel, #cole-42-carousel {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    gap: 10px !important;
+    padding: 8px 12px 16px !important;
+    scroll-snap-type: x mandatory !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+  #cole-40-carousel::-webkit-scrollbar,
+  #cole-41-carousel::-webkit-scrollbar,
+  #cole-42-carousel::-webkit-scrollbar { display: none !important; }
+
+  #cole-40-carousel .card,
+  #cole-41-carousel .card,
+  #cole-42-carousel .card {
+    flex: 0 0 200px !important;
+    width: 200px !important;
+    min-width: 200px !important;
+    max-width: 200px !important;
+    scroll-snap-align: start !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: #fff !important;
+    border-radius: 10px !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08) !important;
+    border: 1px solid #ebebeb !important;
+    overflow: hidden !important;
+    cursor: pointer !important;
+    transform: none !important;
+    transition: box-shadow .15s !important;
+  }
+  #cole-40-carousel .card:hover,
+  #cole-41-carousel .card:hover,
+  #cole-42-carousel .card:hover {
+    box-shadow: 0 3px 12px rgba(0,0,0,0.14) !important;
+  }
+  #cole-40-carousel .card-image-wrap,
+  #cole-41-carousel .card-image-wrap,
+  #cole-42-carousel .card-image-wrap {
+    order: -1 !important;
+    width: 100% !important;
+    height: 240px !important;
+    min-height: 240px !important;
+    max-height: 240px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    background: #f8f8f8 !important;
+    overflow: hidden !important;
+    position: relative !important;
+  }
+  #cole-40-carousel .card-image-wrap img,
+  #cole-41-carousel .card-image-wrap img,
+  #cole-42-carousel .card-image-wrap img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    object-position: center top !important;
+    display: block !important;
+  }
+  /* Ocultar badge DISPONIBLE en los carruseles — si aparece es porque está disponible */
+  #cole-40-carousel .catalog-visibility-badge.is-available,
+  #cole-41-carousel .catalog-visibility-badge.is-available,
+  #cole-42-carousel .catalog-visibility-badge.is-available { display: none !important; }
+  #cole-40-carousel .card-title-row,
+  #cole-41-carousel .card-title-row,
+  #cole-42-carousel .card-title-row {
+    order: 1 !important;
+    padding: 6px 8px 8px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    flex: 1 !important;
+  }
+  #cole-40-carousel .card-title,
+  #cole-41-carousel .card-title,
+  #cole-42-carousel .card-title {
+    font-size: 0.7rem !important;
+    line-height: 1.3 !important;
+    font-weight: 600 !important;
+    color: #374151 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  #cole-40-carousel .card-price,
+  #cole-41-carousel .card-price,
+  #cole-42-carousel .card-price {
+    font-size: 0.8rem !important;
+    font-weight: 800 !important;
+    color: #1e2d3d !important;
+  }
+  /* Ocultar elementos del card que no aplican */
+  #cole-40-carousel .card-hantan-stack, #cole-41-carousel .card-hantan-stack, #cole-42-carousel .card-hantan-stack,
+  #cole-40-carousel .card-cta-hint, #cole-41-carousel .card-cta-hint, #cole-42-carousel .card-cta-hint,
+  #cole-40-carousel .card-model-meta, #cole-41-carousel .card-model-meta, #cole-42-carousel .card-model-meta,
+  #cole-40-carousel .card-title-block > *:not(.card-title):not(.card-price),
+  #cole-41-carousel .card-title-block > *:not(.card-title):not(.card-price),
+  #cole-42-carousel .card-title-block > *:not(.card-title):not(.card-price) { display: none !important; }
+
+  #cole-40-carousel .catalog-visibility-badge,
+  #cole-41-carousel .catalog-visibility-badge,
+  #cole-42-carousel .catalog-visibility-badge {
+    position: absolute !important;
+    top: 5px !important; right: 5px !important; left: auto !important;
+    font-size: 8px !important;
+    padding: 2px 5px !important;
+    border-radius: 4px !important;
+  }
+
+  @media (max-width: 768px) {
+    /* === ESTILO FALABELLA: carousel horizontal con scroll lateral === */
+
+    /* Buscador compacto: input | Buscar | Limpiar en una sola fila */
+    .model-search {
+      grid-template-columns: 1fr auto auto !important;
+      gap: 6px !important;
+      margin: 10px auto 6px !important;
+    }
+    .model-search input {
+      padding: 10px 12px !important;
+      font-size: 13px !important;
+      border-radius: 10px !important;
+    }
+    .model-search #modelSearchBtn {
+      padding: 10px 14px !important;
+      font-size: 13px !important;
+      border-radius: 10px !important;
+      min-height: auto !important;
+      width: auto !important;
+    }
+    .model-search .ghost-btn {
+      grid-column: auto !important;
+      padding: 10px 12px !important;
+      font-size: 13px !important;
+      border-radius: 10px !important;
+      min-height: auto !important;
+      width: auto !important;
+      opacity: 0.65 !important;
+    }
+
+    /* Ocultar encabezado principal "Colección 43 - Modelos Disponibles" */
+    .catalog-section-divider:first-of-type { display: none !important; }
+
+    /* Encabezados de sección internos: compactos, tipo Falabella */
+    .catalog-section-divider {
+      display: block !important;
+      margin: 20px 0 2px !important;
+      padding: 0 12px !important;
+    }
+    .catalog-section-divider-copy {
+      background: none !important;
+      box-shadow: none !important;
+      border: none !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+    }
+    .catalog-section-divider-kicker {
+      font-size: 10px !important;
+      letter-spacing: 0.1em !important;
+      color: #d81f2a !important;
+    }
+    .catalog-section-divider-copy h2 {
+      font-size: 1.15rem !important;
+      font-weight: 700 !important;
+      margin: 2px 0 0 !important;
+      color: #111 !important;
+    }
+    .catalog-section-divider-copy p {
+      display: none !important;
+    }
+
+    /* Grid Cole 43 → carousel horizontal */
+    .product-grid,
+    .catalog-grid-section-grid {
+      display: flex !important;
+      flex-direction: row !important;
+      flex-wrap: nowrap !important;
+      overflow-x: auto !important;
+      overflow-y: visible !important;
+      gap: 10px !important;
+      padding: 8px 12px 16px !important;
+      scroll-snap-type: x mandatory !important;
+      -webkit-overflow-scrolling: touch !important;
+      scrollbar-width: none !important;
+    }
+    .product-grid::-webkit-scrollbar,
+    .catalog-grid-section-grid::-webkit-scrollbar { display: none !important; }
+
+    /* Card: ancho fijo, scroll snap */
+    .card {
+      flex: 0 0 170px !important;
+      width: 170px !important;
+      min-width: 170px !important;
+      scroll-snap-align: start !important;
+      background: #fff !important;
+      border-radius: 12px !important;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.10) !important;
+      border: none !important;
+      overflow: hidden !important;
+    }
+    .card:hover {
+      transform: none !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.14) !important;
+    }
+
+    /* Imagen cuadrada fondo blanco, producto completo */
+    .card-image-wrap,
+    .card .img-wrap {
+      width: 100% !important;
+      height: 200px !important;
+      margin: 0 !important;
+      border-radius: 0 !important;
+      background: #f5f5f5 !important;
+      overflow: hidden !important;
+    }
+    .card-image-wrap img,
+    .card .img-wrap img {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: contain !important;
+      object-position: center top !important;
+    }
+
+    /* Card: flex column, imagen ARRIBA como Falabella */
+    .card {
+      display: flex !important;
+      flex-direction: column !important;
+    }
+    .card-image-wrap,
+    .card .img-wrap { order: -1 !important; }
+    .card-title-row  { order: 1 !important; }
+
+    /* Texto compacto al estilo Falabella */
+    .card-title-row {
+      padding: 6px 7px 8px !important;
+      gap: 1px !important;
+      flex-direction: column !important;
+      align-items: flex-start !important;
+    }
+    .card-title {
+      font-size: 0.68rem !important;
+      line-height: 1.3 !important;
+      font-weight: 500 !important;
+      color: #333 !important;
+      display: -webkit-box !important;
+      -webkit-line-clamp: 2 !important;
+      -webkit-box-orient: vertical !important;
+      overflow: hidden !important;
+    }
+    .card-price {
+      font-size: 0.82rem !important;
+      font-weight: 800 !important;
+      color: #d81f2a !important;
+      margin-top: 3px !important;
+    }
+
+    /* Ocultar todo lo que sobra — body. gana al style inyectado por JS */
+    .card-hantan-stack { display: none !important; }
+    body .card-cta-hint { display: none !important; }
+    .card-model-meta   { display: none !important; }
+
+    /* Badge disponible: pequeño, esquina superior derecha */
+    .catalog-visibility-badge {
+      font-size: 8px !important;
+      padding: 2px 5px !important;
+      min-height: 16px !important;
+      top: 4px !important;
+      right: 4px !important;
+      left: auto !important;
+      border-radius: 4px !important;
+      max-width: 75px !important;
+    }
+
+    /* ===== MODAL ESTILO FALABELLA ===== */
+
+    /* Full screen, scrolleable como una sola página */
+    .modal-content {
+      width: 100% !important;
+      height: 100dvh !important;
+      max-width: none !important;
+      border-radius: 0 !important;
+      background: #fff !important;
+      display: flex !important;
+      flex-direction: column !important;
+      grid-template-columns: none !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      overscroll-behavior: contain !important;
+    }
+
+    /* Botón X circular */
+    #closeModal.close-modal {
+      position: absolute !important;
+      top: 10px !important;
+      right: 10px !important;
+      width: 36px !important;
+      height: 36px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      background: rgba(255,255,255,0.92) !important;
+      border-radius: 50% !important;
+      font-size: 13px !important;
+      font-weight: 700 !important;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.18) !important;
+      z-index: 200 !important;
+      cursor: pointer !important;
+      touch-action: manipulation !important;
+    }
+
+    /* Imagen: fluye junto al contenido en móvil (no sticky) */
+    .modal-left {
+      position: relative !important;
+      top: auto !important;
+      z-index: 2 !important;
+      flex: none !important;
+      height: 62vh !important;
+      min-height: 0 !important;
+      max-height: 520px !important;
+      padding: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      background: #f5f5f5 !important;
+    }
+    .image-viewer {
+      flex: 1 !important;
+      min-height: 0 !important;
+      border-radius: 0 !important;
+      background: #f5f5f5 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      position: relative !important;
+      overflow: hidden !important;
+    }
+    .image-viewer img {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: contain !important;
+      object-position: center !important;
+    }
+    /* Botón zoom: pequeño, esquina superior izquierda */
+    #openImageGalleryBtn {
+      display: flex !important;
+      position: absolute !important;
+      top: 8px !important;
+      left: 8px !important;
+      right: auto !important;
+      font-size: 11px !important;
+      padding: 5px 10px !important;
+      border-radius: 20px !important;
+      background: rgba(255,255,255,0.88) !important;
+      color: #333 !important;
+      border: none !important;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15) !important;
+      font-weight: 600 !important;
+      cursor: pointer !important;
+      z-index: 10 !important;
+    }
+    /* Thumbnails como puntos horizontales */
+    #thumbContainer.thumbnails {
+      flex: none !important;
+      display: flex !important;
+      flex-direction: row !important;
+      justify-content: center !important;
+      gap: 5px !important;
+      padding: 8px 0 6px !important;
+      background: #f5f5f5 !important;
+      overflow-x: auto !important;
+      margin: 0 !important;
+    }
+    #thumbContainer.thumbnails img {
+      width: 36px !important;
+      height: 36px !important;
+      object-fit: cover !important;
+      border-radius: 4px !important;
+      flex: 0 0 36px !important;
+    }
+
+    /* Thumbnails: ocultos en mobile — reemplazados por carrusel swipeable */
+    #thumbContainer.thumbnails { display: none !important; }
+    #openImageGalleryBtn { display: none !important; }
+
+    /* Slider de imágenes swipeable */
+    #mobile-img-slider {
+      position: absolute !important;
+      inset: 0 !important;
+      overflow: hidden !important;
+      touch-action: pan-y !important;
+    }
+    #mobile-img-track {
+      display: flex !important;
+      height: 100% !important;
+      will-change: transform !important;
+      transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+    }
+    #mobile-img-track img {
+      flex: 0 0 100% !important;
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: contain !important;
+      user-select: none !important;
+      pointer-events: none !important;
+    }
+    #mobile-img-counter {
+      position: absolute !important;
+      bottom: 12px !important;
+      right: 16px !important;
+      background: rgba(0,0,0,0.45) !important;
+      color: #fff !important;
+      font-size: 12px !important;
+      font-weight: 600 !important;
+      padding: 3px 10px !important;
+      border-radius: 20px !important;
+      pointer-events: none !important;
+      letter-spacing: 0.02em !important;
+    }
+    /* Ocultar viewerImg una vez que el slider está activo */
+    #modal.modal-slider-active .image-viewer > img { display: none !important; }
+
+    /* Panel info: fluye debajo de la imagen sticky */
+    .modal-right {
+      flex: none !important;
+      overflow-y: visible !important;
+      padding: 14px 16px 100px !important;
+      border-top: 1px solid #eee !important;
+      background: #fff !important;
+    }
+    /* Título estilo Falabella: colección pequeña arriba, nombre grande */
+    #modalTitle {
+      font-size: 1rem !important;
+      font-weight: 600 !important;
+      line-height: 1.35 !important;
+      color: #111 !important;
+      margin-bottom: 4px !important;
+    }
+    #modalTitle::before {
+      content: "Cole 43" !important;
+      display: block !important;
+      font-size: 0.72rem !important;
+      font-weight: 500 !important;
+      color: #888 !important;
+      margin-bottom: 2px !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.05em !important;
+    }
+    .product-description {
+      font-size: 0.72rem !important;
+      color: #777 !important;
+      margin-bottom: 6px !important;
+      line-height: 1.3 !important;
+    }
+    /* Características: sin recuadro, solo texto en línea */
+    .product-characteristics {
+      display: flex !important;
+      flex-wrap: wrap !important;
+      gap: 4px 14px !important;
+      margin-bottom: 10px !important;
+    }
+    .product-characteristics > * {
+      padding: 0 !important;
+      border-radius: 0 !important;
+      font-size: 0.7rem !important;
+      background: none !important;
+      border: none !important;
+      box-shadow: none !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 4px !important;
+    }
+    .product-characteristics .char-label {
+      font-size: 0.68rem !important;
+      color: #888 !important;
+      text-transform: uppercase !important;
+      font-weight: 600 !important;
+      margin-bottom: 0 !important;
+    }
+    .product-characteristics .char-value {
+      font-size: 0.7rem !important;
+      font-weight: 700 !important;
+      color: #222 !important;
+    }
+    /* Ocultar icono checkmark en mobile */
+    .product-characteristics .char-check,
+    .product-characteristics svg { display: none !important; }
+    .sizes-divider {
+      font-size: 0.75rem !important;
+      font-weight: 600 !important;
+      color: #444 !important;
+      margin: 10px 0 6px !important;
+    }
+    .sizes {
+      grid-template-columns: repeat(3, 1fr) !important;
+      gap: 6px !important;
+    }
+    .sizes label {
+      font-size: 0.75rem !important;
+    }
+
+    /* Botón Agregar: centrado, redondeado, no ocupa todo el ancho */
+    #addBtn {
+      position: fixed !important;
+      bottom: 20px !important;
+      left: 50% !important;
+      right: auto !important;
+      transform: translateX(-50%) !important;
+      width: auto !important;
+      min-width: 220px !important;
+      max-width: calc(100% - 48px) !important;
+      border-radius: 50px !important;
+      background: #12283a !important;
+      color: #fff !important;
+      font-size: 1rem !important;
+      font-weight: 700 !important;
+      padding: 15px 32px !important;
+      z-index: 30 !important;
+      box-shadow: 0 4px 16px rgba(18,40,58,0.28) !important;
+      letter-spacing: 0.02em !important;
+      touch-action: manipulation !important;
+      white-space: nowrap !important;
+    }
+
+    /* ===== CARRITO MOBILE: full-height, botón sticky, divisores ===== */
+    .cart-sidebar {
+      display: flex !important;
+      flex-direction: column !important;
+      height: 100dvh !important;
+      max-height: 100dvh !important;
+      overflow: hidden !important;
+      border-radius: 0 !important;
+      width: 100vw !important;
+      top: 0 !important;
+    }
+    #closeCart.cart-close {
+      position: absolute !important;
+      top: 12px !important;
+      left: 12px !important;
+      z-index: 10 !important;
+      width: 30px !important;
+      height: 30px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border-radius: 50% !important;
+      background: #f0f0f0 !important;
+      font-size: 12px !important;
+      font-weight: 700 !important;
+      color: #333 !important;
+      border: none !important;
+    }
+    .cart-header {
+      flex: none !important;
+      display: flex !important;
+      align-items: center !important;
+      padding: 12px 16px 10px 50px !important;
+      border-bottom: 2px solid #f0f0f0 !important;
+      background: #fff !important;
+    }
+    .cart-header h2 {
+      font-size: 1rem !important;
+      font-weight: 700 !important;
+      margin: 0 !important;
+      color: #111 !important;
+    }
+    .cart-jump-send-btn { display: none !important; }
+    .cart-layout {
+      flex: 1 !important;
+      overflow-y: auto !important;
+      display: block !important;
+      -webkit-overflow-scrolling: touch !important;
+      padding: 0 !important;
+    }
+    .cart-summary-column {
+      padding: 12px 14px !important;
+      border-bottom: 1.5px solid #f0f0f0 !important;
+    }
+    .cart-section-label {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 2px !important;
+      margin-bottom: 8px !important;
+    }
+    .cart-section-label span {
+      font-size: 0.62rem !important;
+      letter-spacing: 0.1em !important;
+      text-transform: uppercase !important;
+      color: #aaa !important;
+      font-weight: 700 !important;
+    }
+    .cart-section-label strong {
+      font-size: 0.75rem !important;
+      color: #555 !important;
+      font-weight: 500 !important;
+    }
+    .cart-form-column {
+      padding: 0 !important;
+    }
+    #cartTotalsSlot {
+      padding: 12px 14px !important;
+      border-bottom: 1.5px solid #f0f0f0 !important;
+    }
+    .cart-client-panel {
+      padding: 12px 14px 8px !important;
+      border-bottom: 1.5px solid #f0f0f0 !important;
+    }
+    .cart-field-label {
+      font-size: 0.62rem !important;
+      letter-spacing: 0.08em !important;
+      text-transform: uppercase !important;
+      color: #aaa !important;
+      font-weight: 700 !important;
+      margin-bottom: 4px !important;
+    }
+    input#clientRut, input#clientName, input#clientPhone {
+      font-size: 0.85rem !important;
+      padding: 8px 12px !important;
+      border-radius: 8px !important;
+    }
+    #sendRequest {
+      position: sticky !important;
+      bottom: 0 !important;
+      width: 100% !important;
+      border-radius: 0 !important;
+      margin: 0 !important;
+      padding: 15px !important;
+      font-size: 1rem !important;
+      font-weight: 700 !important;
+      background: #12283a !important;
+      color: #fff !important;
+      letter-spacing: 0.02em !important;
+      z-index: 5 !important;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.15) !important;
+    }
+
+    /* === MOBILE: ESTILO PARIS === */
+
+    /* Buscador compacto — sin botón Limpiar */
+    #modelSearchClear { display: none !important; }
+    .model-search { grid-template-columns: 1fr auto !important; }
+    .model-search input { font-size: 13px !important; padding: 9px 12px !important; }
+    .model-search #modelSearchBtn { font-size: 13px !important; padding: 9px 14px !important; }
+
+    /* Ocultar chips, sidebar permanente y chips viejos */
+    #cole-filter-chips { display: none !important; }
+    #desktop-sidebar { display: none !important; }
+    #catalog-desktop-wrap { display: block !important; }
+
+    /* Ocultar catalog-explorer en mobile (buscador reemplazado por sticky search) */
+    .catalog-explorer { display: none !important; }
+
+    /* Reducir padding del hero en mobile */
+    .hero { padding: 10px 16px 12px !important; }
+
+    /* Panel de sugerencias mobile dedicado */
+    #mobileSuggestionsPanel:not([hidden]) {
+      position: fixed !important;
+      left: 0 !important;
+      right: 0 !important;
+      top: var(--mobile-search-bottom, 170px) !important;
+      z-index: 92 !important;
+      background: #fff !important;
+      max-height: 55vh !important;
+      overflow-y: auto !important;
+      border-bottom: 1px solid #eee !important;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.14) !important;
+    }
+    #mobileSuggestionsPanel .msug-item {
+      display: flex !important;
+      align-items: center !important;
+      gap: 10px !important;
+      padding: 12px 16px !important;
+      border-bottom: 1px solid #f0f0f0 !important;
+      cursor: pointer !important;
+      background: none !important;
+      width: 100% !important;
+      text-align: left !important;
+    }
+    #mobileSuggestionsPanel .msug-item:active { background: #f5f5f5 !important; }
+    #mobileSuggestionsPanel .msug-num { font-size: 15px !important; font-weight: 700 !important; color: #111 !important; }
+    #mobileSuggestionsPanel .msug-cole { font-size: 12px !important; color: #9ca3af !important; }
+
+    /* Buscador que reemplaza la barra de filtros al presionar lupa */
+    #mobile-sticky-search {
+      position: fixed !important;
+      left: 0 !important; right: 0 !important;
+      top: var(--hdr-h, 80px);
+      background: #fff !important;
+      border-bottom: 1px solid #eee !important;
+      padding: 8px 12px !important;
+      display: none !important;
+      align-items: center !important;
+      gap: 8px !important;
+      z-index: 91 !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
+    }
+    body.search-revealed #mobile-sticky-search { display: flex !important; }
+
+    #mobile-sticky-search input {
+      flex: 1 !important;
+      border: 1.5px solid #e5e7eb !important;
+      border-radius: 20px !important;
+      padding: 9px 14px !important;
+      font-size: 13px !important;
+      outline: none !important;
+      background: #f9fafb !important;
+    }
+    #mobile-sticky-search input:focus { border-color: #1e2d3d !important; background: #fff !important; }
+    #mobile-sticky-search button {
+      padding: 9px 16px !important;
+      background: #1e2d3d !important;
+      color: #fff !important;
+      border: none !important;
+      border-radius: 20px !important;
+      font-size: 13px !important;
+      font-weight: 600 !important;
+      cursor: pointer !important;
+      white-space: nowrap !important;
+    }
+
+    /* Lupa en el filtro bar */
+    #mobile-lupa-btn {
+      margin-left: auto !important;
+      background: none !important;
+      border: none !important;
+      font-size: 1.15rem !important;
+      cursor: pointer !important;
+      padding: 6px 8px !important;
+      border-radius: 50% !important;
+      transition: background .12s !important;
+      color: #374151 !important;
+    }
+    #mobile-lupa-btn:active { background: #f0f0f0 !important; }
+    body.search-revealed #mobile-lupa-btn { color: #1e2d3d !important; }
+
+    /* Barra de filtro sticky tipo Paris */
+    #mobile-filter-bar {
+      display: flex !important;
+      align-items: center !important;
+      padding: 8px 14px !important;
+      background: #fff !important;
+      border-bottom: 1px solid #eee !important;
+      position: sticky !important;
+      top: var(--hdr-h, 80px) !important;
+      z-index: 90 !important;
+      transition: transform .22s ease, opacity .22s ease !important;
+    }
+    #mobile-filter-bar.bar-oculta {
+      transform: translateY(-110%) !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+    #mobile-filter-btn {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 7px !important;
+      padding: 8px 16px !important;
+      border: 1.5px solid #d1d5db !important;
+      border-radius: 20px !important;
+      background: #fff !important;
+      font-size: 0.82rem !important;
+      font-weight: 600 !important;
+      color: #374151 !important;
+      cursor: pointer !important;
+      transition: all .18s !important;
+    }
+    #mobile-filter-btn.is-filtered {
+      border-color: #1e2d3d !important;
+      background: #1e2d3d !important;
+      color: #fff !important;
+    }
+    #mobile-filter-active-label {
+      font-size: 0.75rem !important;
+      background: #1e2d3d !important;
+      color: #fff !important;
+      border-radius: 10px !important;
+      padding: 1px 8px !important;
+      font-weight: 700 !important;
+      display: none !important;
+    }
+    #mobile-filter-btn.is-filtered #mobile-filter-active-label { display: inline !important; }
+
+    /* Backdrop */
+    #mobile-filter-backdrop {
+      position: fixed !important;
+      inset: 0 !important;
+      background: rgba(0,0,0,0.45) !important;
+      z-index: 290 !important;
+      display: none !important;
+    }
+    #mobile-filter-backdrop.open { display: block !important; }
+
+    /* Bottom sheet */
+    #mobile-filter-sheet {
+      position: fixed !important;
+      bottom: 0 !important; left: 0 !important; right: 0 !important;
+      background: #fff !important;
+      border-radius: 18px 18px 0 0 !important;
+      z-index: 295 !important;
+      transform: translateY(100%) !important;
+      transition: transform .28s cubic-bezier(0.32,0.72,0,1) !important;
+      padding-bottom: 24px !important;
+    }
+    #mobile-filter-sheet.open { transform: translateY(0) !important; }
+    .fsheet-header {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      padding: 16px 20px 14px !important;
+      border-bottom: 1px solid #f0f0f0 !important;
+    }
+    .fsheet-title { font-size: 1rem !important; font-weight: 700 !important; color: #111 !important; }
+    .fsheet-close {
+      width: 30px !important; height: 30px !important;
+      border-radius: 50% !important; border: none !important;
+      background: #f0f0f0 !important;
+      font-size: 13px !important; font-weight: 700 !important; color: #555 !important;
+      display: flex !important; align-items: center !important; justify-content: center !important;
+      cursor: pointer !important;
+    }
+    .fsheet-opt {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      padding: 15px 20px !important;
+      border-bottom: 1px solid #f5f5f5 !important;
+      cursor: pointer !important;
+      font-size: 0.95rem !important;
+      color: #374151 !important;
+    }
+    .fsheet-opt.active { color: #1e2d3d !important; font-weight: 600 !important; }
+    .fcheck {
+      width: 22px !important; height: 22px !important;
+      border-radius: 50% !important; border: 2px solid #d1d5db !important;
+      display: flex !important; align-items: center !important; justify-content: center !important;
+      flex: 0 0 22px !important; transition: all .15s !important;
+    }
+    .fsheet-opt.active .fcheck { border-color: #1e2d3d !important; background: #1e2d3d !important; }
+    .fcheck::after {
+      content: '' !important;
+      width: 8px !important; height: 8px !important;
+      border-radius: 50% !important; background: #fff !important;
+      display: none !important;
+    }
+    .fsheet-opt.active .fcheck::after { display: block !important; }
+
+    /* GRID 2 COLUMNAS en mobile (en vez de carousel horizontal) */
+    .product-grid,
+    .catalog-grid-section-grid {
+      flex-wrap: wrap !important;
+      overflow-x: visible !important;
+      overflow-y: visible !important;
+      gap: 8px !important;
+      padding: 10px 12px 16px !important;
+      scroll-snap-type: none !important;
+    }
+    .card {
+      flex: 0 0 calc(50% - 4px) !important;
+      width: calc(50% - 4px) !important;
+      min-width: 0 !important;
+      max-width: none !important;
+      scroll-snap-align: none !important;
+    }
+    .card-image-wrap, .card .img-wrap { height: 190px !important; }
+
+    /* Carruseles Cole 40/41/42: también 2 columnas en mobile */
+    #cole-40-carousel,
+    #cole-41-carousel,
+    #cole-42-carousel {
+      flex-wrap: wrap !important;
+      overflow-x: visible !important;
+      overflow-y: visible !important;
+      gap: 8px !important;
+      padding: 10px 12px 16px !important;
+      scroll-snap-type: none !important;
+    }
+    #cole-40-carousel .card,
+    #cole-41-carousel .card,
+    #cole-42-carousel .card {
+      flex: 0 0 calc(50% - 4px) !important;
+      width: calc(50% - 4px) !important;
+      min-width: 0 !important;
+      max-width: none !important;
+    }
+    #cole-40-carousel .card-image-wrap,
+    #cole-41-carousel .card-image-wrap,
+    #cole-42-carousel .card-image-wrap {
+      height: 190px !important;
+      min-height: 190px !important;
+      max-height: 190px !important;
+    }
+  }
+
+  /* Ocultar badge DISPONIBLE en tarjetas y modal — si el producto aparece, está disponible */
+  .catalog-visibility-badge.is-available { display: none !important; }
+
+  /* DESKTOP: sidebar izquierdo + grid multi-fila */
+  @media (min-width: 769px) {
+    /* Chips horizontales y barra mobile → ocultos en desktop */
+    #cole-filter-chips { display: none !important; }
+    #mobile-filter-bar { display: none !important; }
+    #mobile-filter-sheet { display: none !important; }
+    #mobile-filter-backdrop { display: none !important; }
+    #mobile-sticky-search { display: none !important; }
+
+    /* Layout principal: sidebar fijo + área de contenido */
+    #catalog-desktop-wrap {
+      display: flex;
+      align-items: flex-start;
+    }
+
+    /* Sidebar */
+    #desktop-sidebar {
+      width: 190px;
+      flex: 0 0 190px;
+      position: sticky;
+      top: 56px;
+      height: calc(100vh - 56px);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      background: #f9fafb;
+      border-right: 1px solid #e5e7eb;
+      padding: 16px 0 24px;
+    }
+    .sidebar-title {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: #9ca3af;
+      padding: 0 16px 12px;
+      border-bottom: 1px solid #e5e7eb;
+      margin-bottom: 6px;
+    }
+    .sidebar-cole-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 16px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: #4b5563;
+      width: 100%;
+      text-align: left;
+      transition: background .12s, color .12s;
+      border-left: 3px solid transparent;
+    }
+    .sidebar-cole-btn:hover {
+      background: #f0f2f5;
+      color: #111827;
+    }
+    .sidebar-cole-btn.active {
+      border-left-color: #1e2d3d;
+      background: #edf1f5;
+      color: #1e2d3d;
+      font-weight: 700;
+    }
+    .sidebar-cole-num {
+      font-size: 0.7rem;
+      font-weight: 700;
+      background: #e5e7eb;
+      color: #6b7280;
+      border-radius: 10px;
+      padding: 1px 8px;
+      margin-left: auto;
+      transition: background .12s, color .12s;
+    }
+    .sidebar-cole-btn.active .sidebar-cole-num {
+      background: #1e2d3d;
+      color: #fff;
+    }
+
+    /* Área de contenido */
+    #catalog-content-area {
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* Cole 40/41/42: misma grilla 4 columnas que Cole 43 */
+    #cole-40-carousel,
+    #cole-41-carousel,
+    #cole-42-carousel {
+      display: grid !important;
+      grid-template-columns: repeat(4, 1fr) !important;
+      gap: 16px !important;
+      max-width: 1380px !important;
+      padding: 16px 20px 30px !important;
+      overflow-x: visible !important;
+      overflow-y: visible !important;
+      flex-wrap: unset !important;
+      scroll-snap-type: none !important;
+    }
+
+    /* Tarjetas igual que Cole 43 */
+    #cole-40-carousel .card,
+    #cole-41-carousel .card,
+    #cole-42-carousel .card {
+      flex: unset !important;
+      width: unset !important;
+      min-width: unset !important;
+      max-width: unset !important;
+    }
+    #cole-40-carousel .card-image-wrap,
+    #cole-41-carousel .card-image-wrap,
+    #cole-42-carousel .card-image-wrap {
+      order: -1 !important;
+      height: 300px !important;
+      min-height: unset !important;
+      max-height: unset !important;
+      width: 100% !important;
+      margin: 0 !important;
+      border-radius: 0 !important;
+      padding: 0 !important;
+    }
+    #cole-40-carousel .card-image-wrap img,
+    #cole-41-carousel .card-image-wrap img,
+    #cole-42-carousel .card-image-wrap img {
+      object-position: center top !important;
+    }
+    #cole-40-carousel .card-title-row,
+    #cole-41-carousel .card-title-row,
+    #cole-42-carousel .card-title-row {
+      order: 1 !important;
+      padding: 8px 10px 10px !important;
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 2px !important;
+    }
+    #cole-40-carousel .card-title,
+    #cole-41-carousel .card-title,
+    #cole-42-carousel .card-title {
+      font-size: 0.72rem !important;
+    }
+    #cole-40-carousel .card-price,
+    #cole-41-carousel .card-price,
+    #cole-42-carousel .card-price {
+      font-size: 0.82rem !important;
+      color: #1e2d3d !important;
+    }
+    #cole-40-carousel .card-hantan-stack,
+    #cole-41-carousel .card-hantan-stack,
+    #cole-42-carousel .card-hantan-stack,
+    #cole-40-carousel .card-cta-hint,
+    #cole-41-carousel .card-cta-hint,
+    #cole-42-carousel .card-cta-hint,
+    #cole-40-carousel .card-model-meta,
+    #cole-41-carousel .card-model-meta,
+    #cole-42-carousel .card-model-meta {
+      display: none !important;
+    }
+
+    /* Header de sección sin sangría lateral */
+    .cole-seccion-header {
+      padding: 20px 20px 8px !important;
+      margin-left: 0 !important;
+    }
+
+    /* Buscador dentro del sidebar — siempre visible al scrollear */
+    .model-search-section { position: static !important; }
+    #modelSearchClear { display: none !important; }
+    #catalog-explorer-section {
+      padding: 10px 12px 12px !important;
+    }
+    .sidebar-search-card {
+      background: #f3f6f9;
+      border-radius: 10px;
+      padding: 10px 10px 8px;
+      border: 1px solid #e2e8f0;
+    }
+    .sidebar-search-label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #6b7280;
+      margin-bottom: 7px;
+    }
+    #desktop-sidebar .model-search {
+      display: flex !important;
+      flex-direction: column !important;
+      grid-template-columns: unset !important;
+      gap: 5px !important;
+      margin: 0 !important;
+      max-width: none !important;
+    }
+    #desktop-sidebar .model-search-box { width: 100% !important; }
+    #desktop-sidebar .model-search input {
+      font-size: 12px !important;
+      padding: 7px 9px !important;
+      width: 100% !important;
+      border-radius: 7px !important;
+      border: 1px solid #d1d5db !important;
+      background: #fff !important;
+    }
+    #desktop-sidebar .model-search #modelSearchBtn {
+      font-size: 12px !important;
+      padding: 7px 10px !important;
+      width: 100% !important;
+      border-radius: 7px !important;
+    }
+
+  }
+</style>
 <!-- Meta Pixel Code -->
 <script>
 !function(f,b,e,v,n,t,s)
@@ -80,6 +1317,56 @@ src="https://www.facebook.com/tr?id=2136280953641446&ev=PageView&noscript=1"
     </div>
 </header>
 
+<!-- Barra de filtro mobile (estilo Paris) — oculta en desktop via CSS -->
+<div id="mobile-filter-bar">
+  <button id="mobile-filter-btn" type="button">
+    <span>≡</span>
+    <span>Colecciones</span>
+    <span id="mobile-filter-active-label"></span>
+  </button>
+  <button id="mobile-lupa-btn" type="button" aria-label="Buscar">🔍</button>
+</div>
+
+<!-- Buscador sticky mobile — aparece debajo del filtro al presionar lupa o scrollear arriba -->
+<div id="mobile-sticky-search">
+  <input id="mobileStickyInput" type="text" inputmode="numeric" autocomplete="new-password" placeholder="Buscar modelo (ej: 4309)">
+  <button id="mobileStickyBtn" type="button">Buscar</button>
+</div>
+
+<!-- Panel de sugerencias para el buscador mobile -->
+<div id="mobileSuggestionsPanel" hidden></div>
+
+<!-- Backdrop del bottom sheet -->
+<div id="mobile-filter-backdrop"></div>
+
+<!-- Bottom sheet de colecciones -->
+<div id="mobile-filter-sheet">
+  <div class="fsheet-header">
+    <span class="fsheet-title">Colecciones</span>
+    <button class="fsheet-close" id="fsheet-close-btn">✕</button>
+  </div>
+  <div class="fsheet-opt active" data-cole="todos">
+    <span>Todas las colecciones</span>
+    <span class="fcheck"></span>
+  </div>
+  <div class="fsheet-opt" data-cole="43">
+    <span>Cole 43</span>
+    <span class="fcheck"></span>
+  </div>
+  <div class="fsheet-opt" data-cole="42">
+    <span>Cole 42</span>
+    <span class="fcheck"></span>
+  </div>
+  <div class="fsheet-opt" data-cole="41">
+    <span>Cole 41</span>
+    <span class="fcheck"></span>
+  </div>
+  <div class="fsheet-opt" data-cole="40">
+    <span>Cole 40</span>
+    <span class="fcheck"></span>
+  </div>
+</div>
+
 <section class="hero">
   <a class="cole44-banner-btn" href="catalogo-44/">
     <div class="cole44-banner-overlay"></div>
@@ -101,25 +1388,100 @@ src="https://www.facebook.com/tr?id=2136280953641446&ev=PageView&noscript=1"
   <h1 class="hero-title">Cole 43</h1>
 </section>
 
-<section class="catalog-explorer" aria-label="Secci&oacute;n de modelos">
-  <div class="catalog-section-divider">
-    <div class="catalog-section-divider-copy">
-      <span class="catalog-section-divider-kicker">Colecci&oacute;n 43</span>
-      <h2>Modelos Disponibles</h2>
-      <p>Explora la vitrina y abre cada modelo para pedir por talla.</p>
-    </div>
-  </div>
-  <div class="model-search model-search-section">
-    <div class="model-search-box">
-      <input id="modelSearchInput" type="text" inputmode="numeric" autocomplete="off" placeholder="Buscar modelo (ej: 4309)">
-      <div id="modelSuggestionsPanel" class="model-suggestions-panel" hidden></div>
-    </div>
-    <button id="modelSearchBtn" type="button">Buscar</button>
-    <button id="modelSearchClear" type="button" class="ghost-btn">Limpiar</button>
-  </div>
-</section>
 
-<section id="grid" class="product-grid"></section>
+<div id="catalog-desktop-wrap">
+  <!-- Chips: sticky en mobile (se queda fijo mientras scrolleas productos), oculto en desktop -->
+  <div id="cole-filter-chips">
+    <button class="cole-chip active" data-cole="todos">
+      <div class="cole-chip-icon">☰</div>
+      <span class="cole-chip-label">Todos</span>
+    </button>
+    <button class="cole-chip" data-cole="43">
+      <div class="cole-chip-icon">43</div>
+      <span class="cole-chip-label">Cole 43</span>
+    </button>
+    <button class="cole-chip" data-cole="42">
+      <div class="cole-chip-icon">42</div>
+      <span class="cole-chip-label">Cole 42</span>
+    </button>
+    <button class="cole-chip" data-cole="41">
+      <div class="cole-chip-icon">41</div>
+      <span class="cole-chip-label">Cole 41</span>
+    </button>
+    <button class="cole-chip" data-cole="40">
+      <div class="cole-chip-icon">40</div>
+      <span class="cole-chip-label">Cole 40</span>
+    </button>
+  </div>
+
+  <nav id="desktop-sidebar" aria-label="Filtrar colección">
+    <div class="sidebar-title">Colecciones</div>
+    <!-- Buscador integrado al sidebar — solo desktop -->
+    <section class="catalog-explorer" id="catalog-explorer-section" hidden>
+      <div class="sidebar-search-card">
+        <div class="sidebar-search-label">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Buscar modelo
+        </div>
+        <div class="model-search model-search-section">
+          <div class="model-search-box">
+            <input id="modelSearchInput" type="text" inputmode="numeric" autocomplete="off" placeholder="Ej: 4309">
+            <div id="modelSuggestionsPanel" class="model-suggestions-panel" hidden></div>
+          </div>
+          <button id="modelSearchBtn" type="button">Buscar</button>
+          <button id="modelSearchClear" type="button" class="ghost-btn">Limpiar</button>
+        </div>
+      </div>
+    </section>
+    <button class="sidebar-cole-btn active" data-cole="todos">
+      <span>Todas</span>
+      <span class="sidebar-cole-num">≡</span>
+    </button>
+    <button class="sidebar-cole-btn" data-cole="43">
+      <span>Cole 43</span>
+      <span class="sidebar-cole-num">43</span>
+    </button>
+    <button class="sidebar-cole-btn" data-cole="42">
+      <span>Cole 42</span>
+      <span class="sidebar-cole-num">42</span>
+    </button>
+    <button class="sidebar-cole-btn" data-cole="41">
+      <span>Cole 41</span>
+      <span class="sidebar-cole-num">41</span>
+    </button>
+    <button class="sidebar-cole-btn" data-cole="40">
+      <span>Cole 40</span>
+      <span class="sidebar-cole-num">40</span>
+    </button>
+  </nav>
+
+  <div id="catalog-content-area">
+    <div class="cole-seccion-header" id="cole-43-header">
+      <span class="cole-seccion-label">Cole 43</span>
+    </div>
+    <section id="grid" class="product-grid"></section>
+
+    <!-- Secciones Cole 42/41/40 estáticas — pobladas por JS -->
+    <div id="cole-42-wrapper" class="cole-seccion-mobile" data-cole="42" style="display:none">
+      <div class="cole-seccion-header">
+        <span class="cole-seccion-label">Cole 42</span>
+      </div>
+      <div id="cole-42-carousel" class="catalog-grid-section-grid"></div>
+    </div>
+    <div id="cole-41-wrapper" class="cole-seccion-mobile" data-cole="41" style="display:none">
+      <div class="cole-seccion-header">
+        <span class="cole-seccion-label">Cole 41</span>
+      </div>
+      <div id="cole-41-carousel" class="catalog-grid-section-grid"></div>
+    </div>
+    <div id="cole-40-wrapper" class="cole-seccion-mobile" data-cole="40" style="display:none">
+      <div class="cole-seccion-header">
+        <span class="cole-seccion-label">Cole 40</span>
+      </div>
+      <div id="cole-40-carousel" class="catalog-grid-section-grid"></div>
+    </div>
+  </div>
+</div>
 
 <div id="cartSidebar" class="cart-sidebar">
     <button id="closeCart" class="cart-close">X</button>
@@ -356,5 +1718,819 @@ src="https://www.facebook.com/tr?id=2136280953641446&ev=PageView&noscript=1"
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="script-v2.js?v=20260803-filomena"></script>
+
+<script>
+/* Medir altura real del header y setear --hdr-h para posicionar elementos mobile */
+(function() {
+  function aplicarAlturaHeader() {
+    var hdr = document.querySelector('.header');
+    if (!hdr) return;
+    // Usar .bottom para incluir el offset del urgency bar (position:fixed encima)
+    var h = Math.round(hdr.getBoundingClientRect().height);
+    if (h > 0) document.documentElement.style.setProperty('--hdr-h', h + 'px');
+  }
+  aplicarAlturaHeader();
+  requestAnimationFrame(aplicarAlturaHeader);
+  window.addEventListener('load', aplicarAlturaHeader);
+  window.addEventListener('resize', aplicarAlturaHeader);
+})();
+
+/* catalog-explorer: hidden por defecto (attr HTML), se muestra solo en desktop */
+(function() {
+  if (window.innerWidth > 768) {
+    var ce = document.getElementById('catalog-explorer-section');
+    if (ce) ce.removeAttribute('hidden');
+  }
+})();
+
+/* Filtro de chips (móvil) + sidebar (desktop) — sincronizados */
+(function() {
+  var chipsEl = document.getElementById('cole-filter-chips');
+  var sidebarEl = document.getElementById('desktop-sidebar');
+  var filtroActivo = 'todos';
+
+  window._aplicarFiltroCole = function() {
+    var gridEl = document.getElementById('grid');
+    var cole43Hdr = document.getElementById('cole-43-header');
+    var showCole43 = (filtroActivo === 'todos' || filtroActivo === '43');
+    // Mostrar/ocultar sección Cole 43 principal + su encabezado estático
+    if (gridEl) gridEl.style.display = showCole43 ? '' : 'none';
+    if (cole43Hdr) cole43Hdr.style.display = showCole43 ? '' : 'none';
+    // Mostrar/ocultar Cole 40/41/42
+    document.querySelectorAll('.cole-seccion-mobile').forEach(function(sec) {
+      var cole = sec.dataset.cole;
+      sec.style.display = (filtroActivo === 'todos' || filtroActivo === cole) ? '' : 'none';
+    });
+    // Sincronizar chips
+    if (chipsEl) {
+      chipsEl.querySelectorAll('.cole-chip').forEach(function(c) {
+        c.classList.toggle('active', c.dataset.cole === filtroActivo);
+      });
+    }
+    // Sincronizar sidebar
+    if (sidebarEl) {
+      sidebarEl.querySelectorAll('.sidebar-cole-btn').forEach(function(btn) {
+        btn.classList.toggle('active', btn.dataset.cole === filtroActivo);
+      });
+    }
+  };
+
+  window._filtrarCole = function(cole) {
+    filtroActivo = cole;
+    window._aplicarFiltroCole();
+    setTimeout(function() {
+      var target;
+      if (filtroActivo === 'todos' || filtroActivo === '43') {
+        target = document.getElementById('catalog-content-area') || document.getElementById('grid');
+      } else {
+        target = document.querySelector('.cole-seccion-mobile[data-cole="' + filtroActivo + '"]');
+      }
+      if (target) {
+        var hdrH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--hdr-h')) || 80;
+        var filterBar = document.getElementById('mobile-filter-bar');
+        var filterH = filterBar ? filterBar.getBoundingClientRect().height : 44;
+        var offset = hdrH + filterH + 8;
+        var rect = target.getBoundingClientRect();
+        window.scrollTo({ top: window.pageYOffset + rect.top - offset, behavior: 'smooth' });
+      }
+    }, 80);
+  };
+  var alFiltrar = window._filtrarCole;
+
+  if (chipsEl) {
+    chipsEl.addEventListener('click', function(e) {
+      var btn = e.target.closest('.cole-chip');
+      if (btn) alFiltrar(btn.dataset.cole);
+    });
+  }
+
+  if (sidebarEl) {
+    sidebarEl.addEventListener('click', function(e) {
+      var btn = e.target.closest('.sidebar-cole-btn');
+      if (btn) alFiltrar(btn.dataset.cole);
+    });
+  }
+})();
+</script>
+
+<script>
+/* Reorganización Cole 43 en carrusel (móvil) + carga Cole 40/41/42 (todos los viewports) */
+(function() {
+  function aplicarFiltro() {
+    if (typeof window._aplicarFiltroCole === 'function') window._aplicarFiltroCole();
+  }
+
+  var grid = document.getElementById('grid');
+
+  // El MutationObserver reorganiza Cole 43 solo en móvil;
+  // cargarColeccion carga Cole 40/41/42 en todos los viewports
+  if (grid && window.innerWidth <= 768) {
+    var timer = null;
+    var observer = new MutationObserver(function() {
+      clearTimeout(timer);
+      timer = setTimeout(reorganizar, 300);
+    });
+    observer.observe(grid, { childList: true, subtree: false });
+  } else {
+    // En desktop: cargar Cole 40/41/42 (DOM ya está listo, solo esperar script-v2.js)
+    setTimeout(function() {
+      Promise.all([
+        fetch('price-data.json').then(function(r){ return r.json(); }).catch(function(){ return {}; }),
+        fetch('stock-data-catalogo-43.json').then(function(r){ return r.json(); }).catch(function(){ return {}; })
+      ]).then(function(shared) {
+        var priceItems = (shared[0] && shared[0].items) ? shared[0].items : {};
+        var stockItems = (shared[1] && shared[1].items) ? shared[1].items : {};
+        cargarColeccion('42', 'data-catalogo-42.json', priceItems, stockItems);
+        cargarColeccion('41', 'data-catalogo-41.json', priceItems, stockItems);
+        cargarColeccion('40', 'data-catalogo-40.json', priceItems, stockItems);
+      });
+    }, 200);
+  }
+
+  function crearSeccion(cole, cards) {
+    var sec = document.createElement('div');
+    sec.className = 'cole-seccion-mobile';
+    sec.dataset.cole = cole;
+
+    var hdr = document.createElement('div');
+    hdr.className = 'cole-seccion-header';
+    hdr.innerHTML = '<span class="cole-seccion-label">Cole ' + cole + '</span>';
+
+    var carousel = document.createElement('div');
+    carousel.className = 'catalog-grid-section-grid';
+    if (Array.isArray(cards)) cards.forEach(function(c) { carousel.appendChild(c); });
+
+    sec.appendChild(hdr);
+    sec.appendChild(carousel);
+    return sec;
+  }
+
+  function setupLazyImgs(container, startIndex) {
+    container.querySelectorAll('img[data-image-src]').forEach(function(img, i) {
+      img.addEventListener('error', function() {
+        var card = img.closest('.card');
+        if (card) card.remove(); else img.remove();
+      }, { once: true });
+      if (typeof asignarImagenCatalogo === 'function') {
+        asignarImagenCatalogo(img, img.dataset.imageSrc, {
+          eager: (startIndex + i) < 4,
+          fetchPriority: (startIndex + i) < 2 ? 'high' : 'low',
+          preferOriginal: false
+        });
+      }
+    });
+  }
+
+  function reorganizar() {
+    // Excluir agotados del carousel
+    var cards = Array.from(grid.querySelectorAll('.card[data-collection]:not(.card-sold-out)'));
+    if (!cards.length) return;
+    if (grid.querySelector('.cole-seccion-mobile')) return;
+
+    var grupos = { '43': [], '42': [] };
+    cards.forEach(function(card) {
+      var col = card.dataset.collection || '43';
+      if (grupos[col]) grupos[col].push(card);
+    });
+
+    grid.innerHTML = '';
+    grid.style.display = 'block';
+    grid.style.padding = '0';
+
+    // Cole 43: sección sin header propio — #cole-43-header (estático) ya lo tiene
+    if (grupos['43'] && grupos['43'].length) {
+      var sec43 = document.createElement('div');
+      sec43.className = 'cole-seccion-mobile';
+      sec43.dataset.cole = '43';
+      var car43 = document.createElement('div');
+      car43.className = 'catalog-grid-section-grid';
+      grupos['43'].forEach(function(c) { car43.appendChild(c); });
+      sec43.appendChild(car43);
+      grid.appendChild(sec43);
+    }
+    // Cole 42: sección con header (las demás colecciones usan este patrón)
+    if (grupos['42'] && grupos['42'].length) {
+      grid.appendChild(crearSeccion('42', grupos['42']));
+    }
+
+    aplicarFiltro();
+    observer.disconnect();
+    // Cargar en orden visual: 42 con filtro stock, 41 y 40 sin filtro
+    Promise.all([
+      fetch('price-data.json').then(function(r){ return r.json(); }).catch(function(){ return {}; }),
+      fetch('stock-data-catalogo-43.json').then(function(r){ return r.json(); }).catch(function(){ return {}; })
+    ]).then(function(shared) {
+      var priceItems = (shared[0] && shared[0].items) ? shared[0].items : {};
+      var stockItems = (shared[1] && shared[1].items) ? shared[1].items : {};
+      cargarColeccion('42', 'data-catalogo-42.json', priceItems, stockItems);
+      cargarColeccion('41', 'data-catalogo-41.json', priceItems, stockItems);
+      cargarColeccion('40', 'data-catalogo-40.json', priceItems, stockItems);
+    });
+  }
+
+  function cargarColeccion(cole, catalogFile, priceItems, stockItems) {
+    var wrapper = document.getElementById('cole-' + cole + '-wrapper');
+    var carousel = document.getElementById('cole-' + cole + '-carousel');
+    if (!wrapper || !carousel || carousel.children.length) return;
+
+    fetch(catalogFile).then(function(r) { return r.json(); }).then(function(catalogo) {
+      if (!Array.isArray(catalogo) || !catalogo.length) return;
+
+      var objs = [];
+      catalogo.forEach(function(p) {
+        var img = p.main_image || (p.gallery && p.gallery[0]);
+        if (!img) return;
+        if (stockItems) {
+          var hasStock = ((stockItems[p.family] || {}).total || 0) > 0;
+          if (!hasStock) return;
+        }
+        if (typeof esProductoAgotado === 'function' && esProductoAgotado(p)) return;
+        var precio = priceItems[p.family] || priceItems[p.family.split('-')[0]] || null;
+        objs.push(Object.assign({}, p, {
+          _baseFamily: p.family.replace(/-\d+$/, ''),
+          _safeCardImage: img,
+          isSoldOut: false,
+          _precio: precio
+        }));
+      });
+
+      if (!objs.length) return;
+
+      if (typeof productos !== 'undefined' && Array.isArray(productos)) {
+        objs.forEach(function(p) { productos.push(p); });
+      }
+
+      // Registrar para búsqueda multi-colección
+      if (!window._productosOtrasColecciones) window._productosOtrasColecciones = [];
+      objs.forEach(function(p) {
+        window._productosOtrasColecciones.push(Object.assign({}, p, { _cole: cole }));
+      });
+
+      function fmtPrecio(v) {
+        if (typeof formatearPrecioCLP === 'function') return formatearPrecioCLP(v);
+        return '$' + Number(v).toLocaleString('es-CL');
+      }
+
+      carousel.innerHTML = objs.map(function(p) {
+        var bota = p.bota ? p.bota.charAt(0).toUpperCase() + p.bota.slice(1).toLowerCase() : '';
+        var titulo = bota || ('Mod. ' + p.family);
+        return '<div class="card" data-family="' + p.family + '" data-collection="' + cole + '"' +
+          ' onclick="verProductoDesdeCard(\'' + p._baseFamily + '\',\'' + p.family + '\')">' +
+          '<div class="card-image-wrap">' +
+          '<img data-image-src="' + p._safeCardImage + '" alt="' + titulo + '">' +
+          '</div>' +
+          '<div class="card-title-row"><div class="card-title-block">' +
+          '<div class="card-title">' + titulo + '</div>' +
+          '<div class="card-subtitle" style="font-size:0.65rem;color:#9ca3af;margin-top:1px">Cole ' + cole + ' · ' + p.family + '</div>' +
+          (p._precio ? '<div class="card-price"><span class="card-price-current">' + fmtPrecio(p._precio) + '</span></div>' : '') +
+          '</div></div>' +
+          '</div>';
+      }).join('');
+
+      wrapper.style.display = '';
+      setupLazyImgs(carousel, 0);
+      aplicarFiltro();
+    }).catch(function(e) { console.error('cargarColeccion cole' + cole + ':', e); });
+  }
+})();
+</script>
+
+<script>
+// Fallback: carga Cole 42/41/40 si el IIFE no lo hizo (viewport > 768px al cargar)
+(function() {
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      var configs = [
+        { cole: '42', file: 'data-catalogo-42.json', useStock: true },
+        { cole: '41', file: 'data-catalogo-41.json', useStock: true },
+        { cole: '40', file: 'data-catalogo-40.json', useStock: true }
+      ];
+      Promise.all([
+        fetch('price-data.json').then(function(r){ return r.json(); }).catch(function(){ return {}; }),
+        fetch('stock-data-catalogo-43.json').then(function(r){ return r.json(); }).catch(function(){ return {}; })
+      ]).then(function(shared) {
+        var priceItems = (shared[0]&&shared[0].items)||{};
+        var stockItems = (shared[1]&&shared[1].items)||{};
+        configs.forEach(function(cfg) {
+          var wrapper = document.getElementById('cole-'+cfg.cole+'-wrapper');
+          var carousel = document.getElementById('cole-'+cfg.cole+'-carousel');
+          if (!wrapper || !carousel || carousel.children.length) return;
+          fetch(cfg.file).then(function(r){ return r.json(); }).then(function(cat) {
+            if (!Array.isArray(cat)) return;
+            var objs = [];
+            cat.forEach(function(p) {
+              var img = p.main_image || (p.gallery&&p.gallery[0]);
+              if (!img) return;
+              if (cfg.useStock && ((stockItems[p.family]||{}).total||0) === 0) return;
+              if (typeof esProductoAgotado === 'function' && esProductoAgotado(p)) return;
+              var precio = priceItems[p.family] || priceItems[p.family.split('-')[0]] || null;
+              objs.push(Object.assign({},p,{_baseFamily:p.family.replace(/-\d+$/,''),isSoldOut:false,_safeCardImage:img,_precio:precio}));
+            });
+            if (!objs.length) return;
+            if (typeof productos!=='undefined'&&Array.isArray(productos)) objs.forEach(function(p){productos.push(p);});
+            function fmtP(v){ return typeof formatearPrecioCLP==='function'?formatearPrecioCLP(v):'$'+Number(v).toLocaleString('es-CL'); }
+            var cole = cfg.cole;
+            carousel.innerHTML = objs.map(function(p) {
+              var bota = p.bota?p.bota.charAt(0).toUpperCase()+p.bota.slice(1).toLowerCase():'';
+              var titulo = bota||('Mod. '+p.family);
+              return '<div class="card" data-family="'+p.family+'" data-collection="'+cole+'" onclick="verProductoDesdeCard(\''+p._baseFamily+'\',\''+p.family+'\')">' +
+                '<div class="card-image-wrap"><img data-image-src="'+p._safeCardImage+'" alt="'+titulo+'"></div>' +
+                '<div class="card-title-row"><div class="card-title-block"><div class="card-title">'+titulo+'</div>' +
+                '<div style="font-size:0.65rem;color:#9ca3af;margin-top:1px">Cole '+cole+' · '+p.family+'</div>' +
+                (p._precio?'<div class="card-price"><span class="card-price-current">'+fmtP(p._precio)+'</span></div>':'') +
+                '</div></div></div>';
+            }).join('');
+            wrapper.style.display = '';
+            carousel.querySelectorAll('img[data-image-src]').forEach(function(img,i){
+              img.addEventListener('error',function(){var c=img.closest('.card');if(c)c.remove();},{once:true});
+              if(typeof asignarImagenCatalogo==='function') asignarImagenCatalogo(img,img.dataset.imageSrc,{eager:i<2,fetchPriority:i<2?'high':'low',preferOriginal:false});
+            });
+          }).catch(function(e){console.error('fallback cole'+cfg.cole+':',e);});
+        });
+      });
+    }, 1500);
+  });
+})();
+</script>
+
+<script>
+/* Validación: avisa si el Giro parece un RUT */
+(function() {
+  function init() {
+    var giroInput = document.getElementById('clientGiro');
+    if (!giroInput || document.getElementById('giro-rut-confirm')) return;
+
+    var box = document.createElement('div');
+    box.id = 'giro-rut-confirm';
+    box.style.cssText = [
+      'display:none',
+      'margin-top:6px',
+      'padding:10px 12px',
+      'background:#fffbea',
+      'border:1.5px solid #f0a500',
+      'border-radius:8px',
+      'font-size:0.82rem',
+      'color:#78350f',
+      'line-height:1.4'
+    ].join(';');
+    box.innerHTML =
+      '<div style="margin-bottom:7px;font-weight:600;">¿Tu giro es tu RUT?</div>' +
+      '<button id="giro-rut-si" style="padding:5px 14px;border-radius:20px;border:none;background:#2d6a4f;color:#fff;font-size:0.8rem;cursor:pointer;font-weight:700;margin-right:6px;">Sí, está correcto</button>' +
+      '<button id="giro-rut-no" style="padding:5px 14px;border-radius:20px;border:1.5px solid #bbb;background:#fff;color:#333;font-size:0.8rem;cursor:pointer;font-weight:600;">No, lo cambio</button>';
+
+    giroInput.parentNode.appendChild(box);
+
+    function esRut(v) {
+      var limpio = v.replace(/[\.\s]/g, '').replace(/-[\dkK]$/, '');
+      return /^\d{7,8}$/.test(limpio);
+    }
+
+    function igualAlRut(v) {
+      var rutEl = document.getElementById('clientRut');
+      if (!rutEl || !rutEl.value.trim()) return false;
+      var norm = function(s){ return s.toLowerCase().replace(/[\.\-\s]/g, ''); };
+      return norm(v) === norm(rutEl.value);
+    }
+
+    giroInput.addEventListener('blur', function() {
+      var val = giroInput.value.trim();
+      if (val && (esRut(val) || igualAlRut(val))) {
+        box.style.display = 'block';
+      }
+    });
+
+    document.getElementById('giro-rut-si').addEventListener('click', function() {
+      box.style.display = 'none';
+    });
+
+    document.getElementById('giro-rut-no').addEventListener('click', function() {
+      giroInput.value = '';
+      box.style.display = 'none';
+      giroInput.focus();
+    });
+  }
+
+  // El carrito se inyecta dinámicamente, esperar a que exista el input
+  if (document.getElementById('clientGiro')) {
+    init();
+  } else {
+    var obs = new MutationObserver(function() {
+      if (document.getElementById('clientGiro')) { obs.disconnect(); init(); }
+    });
+    obs.observe(document.body, { childList: true, subtree: true });
+  }
+})();
+</script>
+<script>
+/* Buscador sticky mobile: lupa + scroll-reveal */
+(function() {
+  var lupaBtn = document.getElementById('mobile-lupa-btn');
+  var stickyInput = document.getElementById('mobileStickyInput');
+  var stickyBtn = document.getElementById('mobileStickyBtn');
+  var revealed = false;
+  var lastY = 0;
+
+  function showSearch() {
+    if (revealed) return;
+    revealed = true;
+    // Medir posición exacta del filter bar en este momento
+    var filterBar = document.getElementById('mobile-filter-bar');
+    var searchEl = document.getElementById('mobile-sticky-search');
+    if (filterBar && searchEl) {
+      var rect = filterBar.getBoundingClientRect();
+      searchEl.style.top = Math.round(rect.bottom) + 'px';
+    }
+    document.body.classList.add('search-revealed');
+    // Medir posición real del search bar después de que sea visible
+    requestAnimationFrame(function() {
+      var s = document.getElementById('mobile-sticky-search');
+      if (s) document.documentElement.style.setProperty('--mobile-search-bottom', Math.round(s.getBoundingClientRect().bottom) + 'px');
+    });
+    setTimeout(function() { if (stickyInput) stickyInput.focus(); }, 80);
+  }
+  function hideSearch() {
+    if (!revealed) return;
+    revealed = false;
+    document.body.classList.remove('search-revealed');
+    if (stickyInput) stickyInput.blur();
+    var sp = document.getElementById('mobileSuggestionsPanel');
+    if (sp) sp.hidden = true;
+  }
+
+  // Lupa: toggle el buscador
+  if (lupaBtn) {
+    lupaBtn.addEventListener('click', function() { revealed ? hideSearch() : showSearch(); });
+  }
+
+  // Scroll hacia arriba → revelar; scroll hacia abajo → ocultar
+  var filterBarEl = document.getElementById('mobile-filter-bar');
+  window.addEventListener('scroll', function() {
+    var y = window.scrollY;
+
+    // Buscador: cerrar al tope o al bajar; solo se abre con la lupa
+    if (y < 100 && revealed) { hideSearch(); }
+    else if (y > lastY + 8 && revealed) { hideSearch(); }
+
+    // Barra Colecciones: ocultar al bajar (> 150px), mostrar al subir
+    if (filterBarEl && window.innerWidth <= 768) {
+      if (y > lastY + 10 && y > 150) {
+        filterBarEl.classList.add('bar-oculta');
+        if (revealed) hideSearch();
+      } else if (y < lastY - 5) {
+        filterBarEl.classList.remove('bar-oculta');
+      }
+    }
+
+    lastY = y;
+  }, { passive: true });
+
+  // Wiring: sticky search → real search (modelSearchInput + modelSearchBtn)
+  if (stickyBtn) {
+    stickyBtn.addEventListener('click', function() {
+      var realInput = document.getElementById('modelSearchInput');
+      var realBtn = document.getElementById('modelSearchBtn');
+      if (realInput && realBtn && stickyInput) {
+        realInput.value = stickyInput.value;
+        realBtn.click();
+      }
+    });
+  }
+  if (stickyInput) {
+    var mSugPanel = document.getElementById('mobileSuggestionsPanel');
+
+    function actualizarSugerenciasMobile(term) {
+      if (!mSugPanel) return;
+      var termU = (term || '').trim().toUpperCase();
+      var termD = termU.replace(/\D/g, '');
+      if (termD.length < 2) { mSugPanel.hidden = true; return; }
+
+      var seen = {}, results = [];
+      // Cards de Cole 43 ya renderizadas
+      document.querySelectorAll('.card[data-family]').forEach(function(card) {
+        var fam = (card.dataset.family || '').toUpperCase();
+        var famD = fam.replace(/\D/g, '');
+        if (fam.includes(termU) || famD.startsWith(termD)) {
+          if (!seen[fam]) { seen[fam] = true; results.push({ family: card.dataset.family, cole: '43' }); }
+        }
+      });
+      // Cole 42/41/40
+      (window._productosOtrasColecciones || []).forEach(function(p) {
+        var fam = (p.family || '').toUpperCase();
+        var famD = fam.replace(/\D/g, '');
+        if (fam.includes(termU) || famD.startsWith(termD)) {
+          if (!seen[fam]) { seen[fam] = true; results.push({ family: p.family, cole: p._cole || '' }); }
+        }
+      });
+      results = results.slice(0, 10);
+      if (!results.length) { mSugPanel.hidden = true; return; }
+
+      mSugPanel.innerHTML = results.map(function(r) {
+        var num = r.family.split('-')[0];
+        return '<button type="button" class="msug-item" data-family="' + r.family + '" data-cole="' + r.cole + '">' +
+          '<span class="msug-num">' + num + '</span>' +
+          '<span class="msug-cole">Cole ' + r.cole + ' · ' + r.family + '</span>' +
+          '</button>';
+      }).join('');
+      mSugPanel.hidden = false;
+    }
+
+    stickyInput.addEventListener('input', function() { actualizarSugerenciasMobile(stickyInput.value); });
+    stickyInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { mSugPanel.hidden = true; if (stickyBtn) stickyBtn.click(); }
+    });
+
+    if (mSugPanel) {
+      mSugPanel.addEventListener('click', function(e) {
+        var btn = e.target.closest('.msug-item');
+        if (!btn) return;
+        mSugPanel.hidden = true;
+        stickyInput.value = btn.dataset.family;
+        if (typeof verProductoDesdeCard === 'function') {
+          verProductoDesdeCard(btn.dataset.family, btn.dataset.family);
+        } else {
+          var realInput = document.getElementById('modelSearchInput');
+          var realBtn = document.getElementById('modelSearchBtn');
+          if (realInput && realBtn) { realInput.value = btn.dataset.family; realBtn.click(); }
+        }
+      });
+    }
+  }
+})();
+
+/* Fix iOS scroll freeze cuando el modal del producto abre y cierra */
+(function() {
+  var modal = document.getElementById('modal');
+  if (!modal) return;
+  var savedY = 0;
+  new MutationObserver(function() {
+    if (window.innerWidth > 900) return;
+    var isOpen = modal.classList.contains('active');
+    if (isOpen && !document.body.dataset.modalLocked) {
+      savedY = window.scrollY || window.pageYOffset;
+      document.body.style.position = 'fixed';
+      document.body.style.top = '-' + savedY + 'px';
+      document.body.style.width = '100%';
+      document.body.dataset.modalLocked = '1';
+    } else if (!isOpen && document.body.dataset.modalLocked) {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      delete document.body.dataset.modalLocked;
+      window.scrollTo(0, savedY);
+    }
+  }).observe(modal, { attributes: true, attributeFilter: ['class'] });
+})();
+
+/* Bottom sheet de colecciones — mobile style Paris */
+(function() {
+  var btn = document.getElementById('mobile-filter-btn');
+  var sheet = document.getElementById('mobile-filter-sheet');
+  var backdrop = document.getElementById('mobile-filter-backdrop');
+  var closeBtn = document.getElementById('fsheet-close-btn');
+  var activeLabel = document.getElementById('mobile-filter-active-label');
+  if (!btn || !sheet) return;
+
+  var labelMap = { todos: '', '43': 'Cole 43', '42': 'Cole 42', '41': 'Cole 41', '40': 'Cole 40' };
+  var filtroActual = 'todos';
+
+  function openSheet() {
+    sheet.classList.add('open');
+    backdrop.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeSheet() {
+    sheet.classList.remove('open');
+    backdrop.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  btn.addEventListener('click', openSheet);
+  backdrop.addEventListener('click', closeSheet);
+  if (closeBtn) closeBtn.addEventListener('click', closeSheet);
+
+  sheet.addEventListener('click', function(e) {
+    var opt = e.target.closest('.fsheet-opt');
+    if (!opt) return;
+    var cole = opt.dataset.cole;
+    filtroActual = cole;
+
+    // Actualizar activo en sheet
+    sheet.querySelectorAll('.fsheet-opt').forEach(function(o) {
+      o.classList.toggle('active', o.dataset.cole === cole);
+    });
+
+    // Actualizar botón
+    var isTodos = cole === 'todos';
+    btn.classList.toggle('is-filtered', !isTodos);
+    if (activeLabel) activeLabel.textContent = isTodos ? '' : labelMap[cole] || cole;
+
+    // Aplicar filtro
+    if (typeof window._filtrarCole === 'function') {
+      window._filtrarCole(cole);
+    }
+
+    closeSheet();
+  });
+})();
+
+/* ===== CARRUSEL SWIPEABLE DE IMÁGENES EN MODAL (SOLO MOBILE) ===== */
+(function() {
+  var sliderEl = null;
+  var trackEl = null;
+  var counterEl = null;
+  var curIdx = 0;
+  var totalImgs = 0;
+  var touchStartX = 0;
+
+  var tapStartY = 0;
+
+  function buildSlider() {
+    if (window.innerWidth > 768) return;
+
+    var viewerImg = document.getElementById('viewerImg');
+    var thumbContainer = document.getElementById('thumbContainer');
+    var imageViewer = document.querySelector('#modal .image-viewer');
+    if (!viewerImg || !imageViewer) return;
+
+    // Leer dataset.originalSrc (seteado sincrónicamente por asignarImagenCatalogo)
+    // img.src puede estar vacío porque la carga es asíncrona
+    var srcs = [];
+    var mainSrc = viewerImg.dataset.originalSrc || viewerImg.src;
+    if (mainSrc && mainSrc !== window.location.href) srcs.push(mainSrc);
+    if (thumbContainer) {
+      thumbContainer.querySelectorAll('img').forEach(function(img) {
+        var s = img.dataset.originalSrc || img.src;
+        if (s && s !== window.location.href && srcs.indexOf(s) === -1) srcs.push(s);
+      });
+    }
+    if (srcs.length === 0) return;
+
+    // Crear elementos del slider solo una vez
+    if (!sliderEl) {
+      sliderEl = document.createElement('div');
+      sliderEl.id = 'mobile-img-slider';
+      trackEl = document.createElement('div');
+      trackEl.id = 'mobile-img-track';
+      counterEl = document.createElement('div');
+      counterEl.id = 'mobile-img-counter';
+      sliderEl.appendChild(trackEl);
+      sliderEl.appendChild(counterEl);
+
+      sliderEl.addEventListener('touchstart', function(e) {
+        touchStartX = e.touches[0].clientX;
+        tapStartY = e.touches[0].clientY;
+      }, { passive: true });
+
+      sliderEl.addEventListener('touchend', function(e) {
+        var dx = e.changedTouches[0].clientX - touchStartX;
+        var dy = e.changedTouches[0].clientY - tapStartY;
+        var isTap = Math.abs(dx) < 10 && Math.abs(dy) < 10;
+        if (isTap) {
+          // Tap en imagen → sincronizar índice y abrir zoom
+          var tc = document.getElementById('thumbContainer');
+          if (tc) { var ti = tc.querySelectorAll('img'); if (ti[curIdx]) ti[curIdx].click(); }
+          if (typeof window.abrirVisorImagenes === 'function') window.abrirVisorImagenes();
+        } else if (Math.abs(dx) > 40) {
+          goTo(dx < 0 ? curIdx + 1 : curIdx - 1);
+        }
+      }, { passive: true });
+    }
+
+    // Llenar imágenes en el track
+    trackEl.innerHTML = '';
+    srcs.forEach(function(src) {
+      var img = document.createElement('img');
+      img.src = src;
+      img.draggable = false;
+      trackEl.appendChild(img);
+    });
+
+    totalImgs = srcs.length;
+    curIdx = 0;
+    trackEl.style.transform = 'translateX(0)';
+    counterEl.textContent = '1/' + totalImgs;
+    counterEl.style.display = totalImgs > 1 ? '' : 'none';
+
+    // Insertar slider en image-viewer si no está ya
+    if (!imageViewer.contains(sliderEl)) {
+      imageViewer.insertBefore(sliderEl, imageViewer.firstChild);
+    }
+
+    // Marcar modal como slider activo para ocultar viewerImg via CSS
+    var modal = document.getElementById('modal');
+    if (modal) modal.classList.add('modal-slider-active');
+  }
+
+  function goTo(idx) {
+    curIdx = Math.max(0, Math.min(idx, totalImgs - 1));
+    if (trackEl) trackEl.style.transform = 'translateX(-' + (curIdx * 100) + '%)';
+    if (counterEl) counterEl.textContent = (curIdx + 1) + '/' + totalImgs;
+    // Sincronizar viewerImg para compatibilidad con el script principal
+    var viewerImg = document.getElementById('viewerImg');
+    if (viewerImg && trackEl && trackEl.children[curIdx]) {
+      viewerImg.src = trackEl.children[curIdx].src;
+    }
+  }
+
+  // Observar cuando el modal abre/cierra
+  var modalEl = document.getElementById('modal');
+  if (!modalEl) return;
+
+  // Solo funciona en mobile — en desktop no hace nada para evitar freeze
+  if (window.innerWidth <= 768) {
+    new MutationObserver(function() {
+      if (modalEl.classList.contains('active')) {
+        setTimeout(buildSlider, 100);
+      } else {
+        modalEl.classList.remove('modal-slider-active');
+      }
+    }).observe(modalEl, { attributes: true, attributeFilter: ['class'] });
+  }
+})();
+
+/* ===== BUSCADOR MULTI-COLECCIÓN: extiende sugerencias a Cole 42/41/40 ===== */
+(function() {
+  var panel = document.getElementById('modelSuggestionsPanel');
+  var input = document.getElementById('modelSearchInput');
+  if (!panel || !input) return;
+
+  // Inyectar estilos chip una sola vez
+  if (!document.getElementById('sug-chip-style')) {
+    var s = document.createElement('style');
+    s.id = 'sug-chip-style';
+    s.textContent = '.sug-chip-grid{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px}' +
+      '.sug-chip{display:flex;flex-direction:column;align-items:center;padding:6px 12px;' +
+      'border-radius:8px;border:1px solid #e5e7eb;background:#fff;cursor:pointer;' +
+      'transition:background .12s;min-width:64px}' +
+      '.sug-chip strong{font-size:13px;font-weight:700;color:#111;line-height:1.2}' +
+      '.sug-chip span{font-size:10px;color:#9ca3af;font-weight:400;margin-top:2px}' +
+      '.sug-chip:hover{background:#f3f4f6}';
+    document.head.appendChild(s);
+  }
+
+  new MutationObserver(function() {
+    if (panel.hidden || !panel.querySelector('.model-suggestion-empty')) return;
+    var term = (input.value || '').trim();
+    if (!term || term.length < 2) return;
+
+    var otros = window._productosOtrasColecciones || [];
+    if (!otros.length) return;
+
+    var termUp = term.toUpperCase();
+    var termDigits = term.replace(/\D/g, '');
+
+    var grupos = {};
+    otros.forEach(function(p) {
+      var fam = (p.family || '').toUpperCase();
+      var famDigits = fam.replace(/\D/g, '');
+      var coincide = fam.includes(termUp) ||
+        (termDigits.length >= 2 && famDigits.startsWith(termDigits));
+      if (!coincide) return;
+      var base = p._baseFamily || p.family;
+      if (!grupos[base]) grupos[base] = p;
+    });
+
+    var items = Object.values(grupos).slice(0, 12);
+    if (!items.length) return;
+
+    var chips = items.map(function(p) {
+      var num = (p._baseFamily || p.family).replace(/-.*/, '');
+      return '<button type="button" class="sug-chip"' +
+        ' data-other-cole="' + p._cole + '"' +
+        ' data-other-family="' + p.family + '">' +
+        '<strong>' + num + '</strong>' +
+        '<span>Cole ' + p._cole + '</span>' +
+        '</button>';
+    }).join('');
+
+    panel.innerHTML = '<div class="sug-chip-grid">' + chips + '</div>';
+    panel.hidden = false;
+  }).observe(panel, { childList: true, subtree: true, characterData: true });
+
+  // Click en sugerencia de otra colección
+  panel.addEventListener('click', function(e) {
+    var btn = e.target.closest('[data-other-cole]');
+    if (!btn) return;
+    var cole = btn.dataset.otherCole;
+    var family = btn.dataset.otherFamily;
+    panel.hidden = true;
+    panel.innerHTML = '';
+
+    // Cambiar filtro a esa colección y abrir el card
+    if (typeof window._filtrarCole === 'function') window._filtrarCole(cole);
+    setTimeout(function() {
+      var card = document.querySelector(
+        '#cole-' + cole + '-carousel .card[data-family="' + family + '"]'
+      );
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(function() { card.click(); }, 300);
+      }
+    }, 150);
+  });
+})();
+
+</script>
 </body>
 </html>
