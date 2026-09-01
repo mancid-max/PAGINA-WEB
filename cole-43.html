@@ -473,17 +473,15 @@
       top: auto !important;
       z-index: 2 !important;
       flex: none !important;
-      height: 62vh !important;
-      min-height: 0 !important;
-      max-height: 520px !important;
       padding: 0 !important;
       display: flex !important;
       flex-direction: column !important;
       background: #f5f5f5 !important;
     }
     .image-viewer {
-      flex: 1 !important;
-      min-height: 0 !important;
+      height: 62vh !important;
+      max-height: 500px !important;
+      min-height: 220px !important;
       border-radius: 0 !important;
       background: #f5f5f5 !important;
       margin: 0 !important;
@@ -497,84 +495,53 @@
       object-fit: contain !important;
       object-position: center !important;
     }
-    /* Botón zoom: pequeño, esquina superior izquierda */
-    #openImageGalleryBtn {
+    /* Botón "Ver fotos": esquina inferior derecha sobre la imagen */
+    #openImageGalleryBtn:not([hidden]) {
       display: flex !important;
       position: absolute !important;
-      top: 8px !important;
-      left: 8px !important;
-      right: auto !important;
-      font-size: 11px !important;
-      padding: 5px 10px !important;
+      bottom: 10px !important;
+      right: 10px !important;
+      top: auto !important;
+      left: auto !important;
+      font-size: 12px !important;
+      padding: 6px 12px !important;
       border-radius: 20px !important;
-      background: rgba(255,255,255,0.88) !important;
-      color: #333 !important;
+      background: rgba(0,0,0,0.52) !important;
+      color: #fff !important;
       border: none !important;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.15) !important;
-      font-weight: 600 !important;
+      font-weight: 700 !important;
       cursor: pointer !important;
       z-index: 10 !important;
+      gap: 4px !important;
     }
-    /* Thumbnails como puntos horizontales */
+    /* Thumbnails: strip horizontal debajo de la imagen principal */
     #thumbContainer.thumbnails {
       flex: none !important;
       display: flex !important;
       flex-direction: row !important;
-      justify-content: center !important;
-      gap: 5px !important;
-      padding: 8px 0 6px !important;
-      background: #f5f5f5 !important;
+      gap: 6px !important;
+      padding: 8px 10px !important;
+      background: #f0f0f0 !important;
       overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      scrollbar-width: none !important;
       margin: 0 !important;
     }
+    #thumbContainer.thumbnails::-webkit-scrollbar { display: none !important; }
     #thumbContainer.thumbnails img {
-      width: 36px !important;
-      height: 36px !important;
+      width: 54px !important;
+      height: 70px !important;
       object-fit: cover !important;
-      border-radius: 4px !important;
-      flex: 0 0 36px !important;
+      border-radius: 6px !important;
+      flex: 0 0 54px !important;
+      border: 2px solid transparent !important;
+      cursor: pointer !important;
+      opacity: 0.75 !important;
     }
-
-    /* Thumbnails: ocultos en mobile — reemplazados por carrusel swipeable */
-    #thumbContainer.thumbnails { display: none !important; }
-    #openImageGalleryBtn { display: none !important; }
-
-    /* Slider de imágenes swipeable */
-    #mobile-img-slider {
-      position: absolute !important;
-      inset: 0 !important;
-      overflow: hidden !important;
-      touch-action: pan-y !important;
+    #thumbContainer.thumbnails img.active-thumb {
+      border-color: #12283a !important;
+      opacity: 1 !important;
     }
-    #mobile-img-track {
-      display: flex !important;
-      height: 100% !important;
-      will-change: transform !important;
-      transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-    }
-    #mobile-img-track img {
-      flex: 0 0 100% !important;
-      width: 100% !important;
-      height: 100% !important;
-      object-fit: contain !important;
-      user-select: none !important;
-      pointer-events: none !important;
-    }
-    #mobile-img-counter {
-      position: absolute !important;
-      bottom: 12px !important;
-      right: 16px !important;
-      background: rgba(0,0,0,0.45) !important;
-      color: #fff !important;
-      font-size: 12px !important;
-      font-weight: 600 !important;
-      padding: 3px 10px !important;
-      border-radius: 20px !important;
-      pointer-events: none !important;
-      letter-spacing: 0.02em !important;
-    }
-    /* Ocultar viewerImg una vez que el slider está activo */
-    #modal.modal-slider-active .image-viewer > img { display: none !important; }
 
     /* Panel info: fluye debajo de la imagen sticky */
     .modal-right {
@@ -2334,119 +2301,15 @@ src="https://www.facebook.com/tr?id=2136280953641446&ev=PageView&noscript=1"
   });
 })();
 
-/* ===== CARRUSEL SWIPEABLE DE IMÁGENES EN MODAL (SOLO MOBILE) ===== */
+/* Tap en imagen del modal (mobile) -> abrir visor pantalla completa */
 (function() {
-  var sliderEl = null;
-  var trackEl = null;
-  var counterEl = null;
-  var curIdx = 0;
-  var totalImgs = 0;
-  var touchStartX = 0;
-
-  var tapStartY = 0;
-
-  function buildSlider() {
-    if (window.innerWidth > 768) return;
-
-    var viewerImg = document.getElementById('viewerImg');
-    var thumbContainer = document.getElementById('thumbContainer');
-    var imageViewer = document.querySelector('#modal .image-viewer');
-    if (!viewerImg || !imageViewer) return;
-
-    // Leer dataset.originalSrc (seteado sincrónicamente por asignarImagenCatalogo)
-    // img.src puede estar vacío porque la carga es asíncrona
-    var srcs = [];
-    var mainSrc = viewerImg.dataset.originalSrc || viewerImg.src;
-    if (mainSrc && mainSrc !== window.location.href) srcs.push(mainSrc);
-    if (thumbContainer) {
-      thumbContainer.querySelectorAll('img').forEach(function(img) {
-        var s = img.dataset.originalSrc || img.src;
-        if (s && s !== window.location.href && srcs.indexOf(s) === -1) srcs.push(s);
-      });
-    }
-    if (srcs.length === 0) return;
-
-    // Crear elementos del slider solo una vez
-    if (!sliderEl) {
-      sliderEl = document.createElement('div');
-      sliderEl.id = 'mobile-img-slider';
-      trackEl = document.createElement('div');
-      trackEl.id = 'mobile-img-track';
-      counterEl = document.createElement('div');
-      counterEl.id = 'mobile-img-counter';
-      sliderEl.appendChild(trackEl);
-      sliderEl.appendChild(counterEl);
-
-      sliderEl.addEventListener('touchstart', function(e) {
-        touchStartX = e.touches[0].clientX;
-        tapStartY = e.touches[0].clientY;
-      }, { passive: true });
-
-      sliderEl.addEventListener('touchend', function(e) {
-        var dx = e.changedTouches[0].clientX - touchStartX;
-        var dy = e.changedTouches[0].clientY - tapStartY;
-        var isTap = Math.abs(dx) < 10 && Math.abs(dy) < 10;
-        if (isTap) {
-          // Tap en imagen → sincronizar índice y abrir zoom
-          var tc = document.getElementById('thumbContainer');
-          if (tc) { var ti = tc.querySelectorAll('img'); if (ti[curIdx]) ti[curIdx].click(); }
-          if (typeof window.abrirVisorImagenes === 'function') window.abrirVisorImagenes();
-        } else if (Math.abs(dx) > 40) {
-          goTo(dx < 0 ? curIdx + 1 : curIdx - 1);
-        }
-      }, { passive: true });
-    }
-
-    // Llenar imágenes en el track
-    trackEl.innerHTML = '';
-    srcs.forEach(function(src) {
-      var img = document.createElement('img');
-      img.src = src;
-      img.draggable = false;
-      trackEl.appendChild(img);
-    });
-
-    totalImgs = srcs.length;
-    curIdx = 0;
-    trackEl.style.transform = 'translateX(0)';
-    counterEl.textContent = '1/' + totalImgs;
-    counterEl.style.display = totalImgs > 1 ? '' : 'none';
-
-    // Insertar slider en image-viewer si no está ya
-    if (!imageViewer.contains(sliderEl)) {
-      imageViewer.insertBefore(sliderEl, imageViewer.firstChild);
-    }
-
-    // Marcar modal como slider activo para ocultar viewerImg via CSS
-    var modal = document.getElementById('modal');
-    if (modal) modal.classList.add('modal-slider-active');
-  }
-
-  function goTo(idx) {
-    curIdx = Math.max(0, Math.min(idx, totalImgs - 1));
-    if (trackEl) trackEl.style.transform = 'translateX(-' + (curIdx * 100) + '%)';
-    if (counterEl) counterEl.textContent = (curIdx + 1) + '/' + totalImgs;
-    // Sincronizar viewerImg para compatibilidad con el script principal
-    var viewerImg = document.getElementById('viewerImg');
-    if (viewerImg && trackEl && trackEl.children[curIdx]) {
-      viewerImg.src = trackEl.children[curIdx].src;
-    }
-  }
-
-  // Observar cuando el modal abre/cierra
-  var modalEl = document.getElementById('modal');
-  if (!modalEl) return;
-
-  // Solo funciona en mobile — en desktop no hace nada para evitar freeze
-  if (window.innerWidth <= 768) {
-    new MutationObserver(function() {
-      if (modalEl.classList.contains('active')) {
-        setTimeout(buildSlider, 100);
-      } else {
-        modalEl.classList.remove('modal-slider-active');
-      }
-    }).observe(modalEl, { attributes: true, attributeFilter: ['class'] });
-  }
+  var imageViewer = document.querySelector('#modal .image-viewer');
+  if (!imageViewer) return;
+  imageViewer.addEventListener('click', function() {
+    if (window.innerWidth > 900) return;
+    var btn = document.getElementById('openImageGalleryBtn');
+    if (btn && !btn.hidden) btn.click();
+  });
 })();
 
 /* ===== BUSCADOR MULTI-COLECCIÓN: extiende sugerencias a Cole 42/41/40 ===== */
