@@ -289,28 +289,7 @@ const HANTAN_BY_SKU = {
   "4377-01": ["universal.png"],
   "4378-00": ["power strech.png"],
 };
-const LOCAL_CLIENT_OVERRIDES = [
-  {
-    rut: "77.886.495-9",
-    rut_normalized: "77886495-9",
-    razon_social: "IMPORTADORA HIPOLIS CHRISTOPHER MORALES EIRL",
-  },
-  {
-    rut: "14.905.682-3",
-    rut_normalized: "14905682-3",
-    razon_social: "CLAUDIO VIGUERAS TORRES",
-  },
-  {
-    rut: "21.423.987-6",
-    rut_normalized: "21423987-6",
-    razon_social: "THAI TUCKI PAOA",
-  },
-  {
-    rut: "78.082.214-7",
-    rut_normalized: "78082214-7",
-    razon_social: "CAROLINA PARKAS",
-  },
-];
+const LOCAL_CLIENT_OVERRIDES = [];
 
 function inferirCatalogoDesdeSku(value) {
   const sku = normalizarSkuCatalogo(value || "");
@@ -800,6 +779,8 @@ function esProductoAgotado(item) {
     // Cole 42 en cotización: usa stock normal (fall-through)
   }
   if (CATALOG_SOURCE === "catalogo-43") {
+    const _src43 = inferirCatalogoDesdeSku(item?.family || "");
+    if (_src43 !== "catalogo-43") return false; // Cole 40/41/42 en cole-43.html → disponible
     return obtenerEstadoVisibilidadCatalogo43(item) === "soldout";
   }
   if (CATALOG_SOURCE === "catalogo-44") {
@@ -3042,9 +3023,15 @@ function actualizarEstadoCotizacionProducto(producto, sku) {
     titleEl.innerText = agotado ? `${tituloPrefix} ${skuLabel} - ${CATALOG_SOURCE === "catalogo-44" ? "En producción" : "Agotado"}` : `${tituloPrefix} ${skuLabel}`;
   }
   if (quotePanelModelTitle) quotePanelModelTitle.innerText = `${tituloPrefix} ${skuLabel}`;
-  if (descriptionEl && detallePrecio && CATALOG_SOURCE !== "catalogo-43") {
+  const detallePrecioFallback = detallePrecio ||
+    (producto?._precio ? { lista: producto._precio, final: producto._precio } : null);
+  if (producto?._precio && detallePrecioFallback) {
+    // Cole 42/41/40: usar misma presentación de chips que Cole 43
+    const charList = document.getElementById("characteristics");
+    if (charList) renderizarInfoProductoCatalogo43(charList, producto, detallePrecioFallback);
+  } else if (descriptionEl && detallePrecioFallback) {
     const textoBase = normalizarTextoVisible(producto?.description || "");
-    descriptionEl.innerText = `${textoBase}${textoBase ? " · " : ""}Precio mayor s/iva: ${formatearPrecioCLP(detallePrecio.final)}`;
+    descriptionEl.innerText = `${textoBase}${textoBase ? " · " : ""}Precio mayor s/iva: ${formatearPrecioCLP(detallePrecioFallback.final)}`;
   }
   const mostrarOverlay = agotado && CATALOG_SOURCE !== "catalogo-44";
   if (imageViewerEl) {
@@ -3502,6 +3489,7 @@ function renderizarInfoProductoCatalogo43(charList, producto, detallePrecio) {
   [
     crearItemInfoCatalogo43("Tipo", meta43?.tipo),
     crearItemInfoCatalogo43("Tiro", meta43?.tiro),
+    crearItemInfoCatalogo43("Precio mayor s/iva", detallePrecio ? formatearPrecioCLP(detallePrecio.final) : null),
   ].filter(Boolean).forEach((li) => ul.appendChild(li));
 
   charList.appendChild(ul);
