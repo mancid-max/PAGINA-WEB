@@ -87,11 +87,6 @@
   status = 301
 
 [[redirects]]
-  from = "/"
-  to = "/cole-44"
-  status = 301
-
-[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
