@@ -1487,6 +1487,7 @@ function copiarLink(btn) {
   bar.parentNode.insertBefore(sentinel, bar);
 
   var lastScrollY = window.scrollY;
+  var catalogoEl = document.getElementById('catalogo');
 
   window.addEventListener('scroll', function() {
     var cur = window.scrollY;
@@ -1494,6 +1495,19 @@ function copiarLink(btn) {
     if (document.body.classList.contains('cajon-abierto')) { lastScrollY = cur; return; }
     /* sticky mode = el sentinel ya pasó el tope del viewport */
     var isSticky = sentinel.getBoundingClientRect().top <= 10;
+
+    /* Ya pasamos el final del catálogo (PDF, compartir, footer) → esconder siempre */
+    if (catalogoEl && isSticky) {
+      var catBottom = catalogoEl.getBoundingClientRect().bottom;
+      var barBottom = bar.getBoundingClientRect().bottom;
+      if (catBottom <= barBottom) {
+        bar.style.opacity = '0';
+        bar.style.transform = 'translateY(-16px)';
+        bar.style.pointerEvents = 'none';
+        lastScrollY = cur;
+        return;
+      }
+    }
 
     if (isSticky && cur < lastScrollY) {
       /* Subiendo en modo sticky → esconder */
