@@ -278,7 +278,7 @@ function cardHTML(m) {
     ? `<span class="pill-disp">✓ Disponible</span>`
     : `<span class="pill-prod">⏳ En producción</span>`;
   return `
-    <article class="card">
+    <article class="card${videoSrc(m.codigo) ? " has-video" : ""}">
       <div class="marco" onclick="abrirModal('${m.codigo}')">
         <img src="img/${m.img}_0.webp" alt="${m.nombre} ${m.codigo}" loading="lazy">
       </div>
@@ -337,6 +337,13 @@ window.abrirModal = function(codigo) {
   $("#m-nombre").textContent = m.nombre;
   $("#m-codigo").textContent = "Código " + m.codigo + " · " + nombreSec(m.sec) + " · Dolce Vita 44";
   $("#m-precio").innerHTML = m.precio ? CLP(m.precio) + "<small>por unidad · IVA incluido</small>" : "Precio a consultar<small>se cotiza por WhatsApp</small>";
+  /* Botón de video dentro del modal (en mobile las cards no muestran botones) */
+  const vbtn = $("#m-video-btn");
+  if (vbtn) {
+    const tieneVideo = !!videoSrc(m.codigo);
+    vbtn.style.display = tieneVideo ? "inline-flex" : "none";
+    vbtn.onclick = () => abrirVideo(m.codigo);
+  }
   const fotos = [0, 1, 2].map(i => `img/${m.img}_${i}.webp`);
   $("#img-principal").src = fotos[0];
   $("#minis").innerHTML = fotos.map((f, i) => `<img src="${f}" class="${i===0?"activa":""}" onclick="cambiarFoto(this)" alt="vista ${i+1}">`).join("");
@@ -426,7 +433,9 @@ window.cerrarVideo = function() {
   const vv = document.getElementById("video-player");
   if (vv) { vv.pause(); vv.src = ""; }
   document.getElementById("video-modal").style.display = "none";
-  document.body.style.overflow = "";
+  /* Si el modal de producto sigue abierto, mantener el scroll del body bloqueado */
+  const modalAbierto = $("#velo-modal").classList.contains("abierto");
+  document.body.style.overflow = modalAbierto ? "hidden" : "";
 };
 
 /* ---- CARRITO --------------------------------------------- */
@@ -1083,6 +1092,18 @@ function skuNumerico(sku) {
   return Number(limpio) || sku;
 }
 
+/* CORTE de respaldo por sección (mismo vocabulario que la BD jeans Dama) */
+const CORTE_POR_SEC = {
+  flare:"FLARE", skinny:"PITILLO", wideleg:"WIDE LEG", balloon:"BALLON", oxford:"OXFORD",
+  crop:"CROP", rectos:"RECTO", palazzo:"PALAZZO", smart:"SMART DENIM", faja:"FAJA", chaquetas:"CHAQUETA",
+};
+function buscarModeloPorSku(sku) {
+  const s = String(sku || "").trim();
+  return MODELOS.find(m => m.codigo === s)
+      || MODELOS.find(m => skuNumerico(m.codigo) === skuNumerico(s))
+      || null;
+}
+
 const CONFIG44 = {
   sheet: "TOMA DE PEDIDOS",
   skuColumn: "B",
@@ -1128,6 +1149,7 @@ async function generarExcelConPlantilla44(quote, items) {
     if (!agrupado[it.sku]) agrupado[it.sku] = {};
     agrupado[it.sku][it.size] = (agrupado[it.sku][it.size]||0) + (it.quantity||0);
   });
+  const modeloPorFila = {};
   Object.entries(agrupado).forEach(([sku, tallas], idx) => {
     const row = CONFIG44.firstRow + idx;
     if (row > CONFIG44.lastRow) return;
@@ -1136,7 +1158,25 @@ async function generarExcelConPlantilla44(quote, items) {
       const col = CONFIG44.sizeColumns[size];
       if (col) sh.cell(`${col}${row}`).value(qty);
     });
+    modeloPorFila[row] = buscarModeloPorSku(sku);
   });
+
+  // ARTÍCULO (C) / TIRO (D) / CORTE (E) / VALOR (S):
+  //  - Se mantiene el VLOOKUP de la plantilla, pero con respaldo desde la página
+  //    (nombre y corte) para los códigos que no están en la BD → sin #N/D.
+  //  - El VALOR sale SIEMPRE de la página (MODELOS.precio) cuando existe.
+  //  - Se reescriben todas las filas para no dejar fórmulas compartidas huérfanas.
+  const esc = s => String(s == null ? "" : s).replace(/"/g, '""');
+  for (let r = CONFIG44.firstRow; r <= CONFIG44.lastRow; r++) {
+    const m  = modeloPorFila[r] || null;
+    const lk = (cj, cj2) => `IF(A${r}<>"",VLOOKUP(A${r},jeans,${cj},FALSE),VLOOKUP(B${r},jeans2,${cj2},FALSE))`;
+    const fb = (orig, val) => `IFERROR(IF(${orig}=0,"${esc(val)}",${orig}),"${esc(val)}")`;
+    sh.cell(`C${r}`).formula(fb(lk(3,2), m ? m.nombre.toUpperCase() : ""));
+    sh.cell(`D${r}`).formula(fb(lk(4,3), ""));
+    sh.cell(`E${r}`).formula(fb(lk(5,4), m ? (CORTE_POR_SEC[m.sec] || "") : ""));
+    if (m && m.precio) sh.cell(`S${r}`).value(m.precio);
+    else sh.cell(`S${r}`).formula(fb(lk(6,5), ""));
+  }
 
   const blob = await wb.outputAsync();
   const url = URL.createObjectURL(new Blob([blob], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));

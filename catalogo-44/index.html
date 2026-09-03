@@ -324,6 +324,7 @@ main{max-width:1200px;margin:0 auto;padding:1rem 1.2rem 4rem}
 .modal .datos h2{color:var(--rojo);font-size:1.7rem;font-weight:800;letter-spacing:.04em}
 .modal .datos .cod{color:var(--gris);font-weight:600;margin-top:-.6rem}
 .modal .datos .precio-g{font-size:1.35rem;font-weight:800}
+#m-video-btn{align-self:flex-start;padding:.55rem 1.1rem;font-size:.82rem;margin-top:-.2rem}
 .modal .datos .precio-g small{font-size:.72rem;color:var(--gris);font-weight:500;display:block}
 .tallas-caja{border:1.5px solid #e4edf3;border-radius:14px;padding:1rem}
 .tallas-caja h4{font-size:.8rem;text-transform:uppercase;letter-spacing:.12em;color:var(--gris);margin-bottom:.7rem}
@@ -788,7 +789,12 @@ body.cajon-abierto #abrir-carrito { display:none !important; }
   .card .precio small{font-size:.6rem}
 
   /* Ocultar botones en la tarjeta — el tap en la imagen abre el modal */
+  /* Mobile: la card abre el modal al tocarla, así que solo se muestra el botón ▶ Video */
   .card .botones{display:none}
+  .card.has-video .botones{display:flex;margin-top:.45rem}
+  .card.has-video .botones .btn-rojo,
+  .card.has-video .botones .btn-borde{display:none}
+  .card.has-video .btn-video{width:100%;padding:.5rem .8rem;font-size:.78rem}
 
   /* Strip de fotos Italia: 2 columnas */
   .italia-strip{grid-template-columns:repeat(2,1fr);gap:6px}
@@ -1054,6 +1060,7 @@ body.cajon-abierto #abrir-carrito { display:none !important; }
       <h2 id="m-nombre"></h2>
       <p class="cod" id="m-codigo"></p>
       <p class="precio-g" id="m-precio"></p>
+      <button id="m-video-btn" class="btn btn-video" type="button" style="display:none">▶ Ver video</button>
       <div id="curva-toast" class="curva-toast" style="display:none"></div>
       <div class="tallas-caja">
         <h4>Cantidades por talla</h4>
@@ -1329,7 +1336,7 @@ body.cajon-abierto #abrir-carrito { display:none !important; }
   </div>
 </div>
 
-<script src="app.js"></script>
+<script src="app.js?v=20260903"></script>
 <script>
 var SHARE_URL = 'https://mohicanojeans.netlify.app/catalogo-44/';
 var SHARE_TEXT = '¡Mirá lo nuevo de Mohicano Jeans! Colección Dolce Vita 44 — Primavera-Verano 2026';
