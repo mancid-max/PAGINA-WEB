@@ -71,7 +71,7 @@ const MODELOS = [
   {nombre:"Èze",          codigo:"4443-00", precio:25990, img:"m79",  tipo:"jeans", sec:"oxford"},
   {nombre:"Provence",     codigo:"4478-00", precio:25990, img:"m83",  tipo:"jeans", sec:"oxford"},
   // CROP
-  {nombre:"Sole",         codigo:"4438-00", precio:28990, img:"m88",  tipo:"jeans", sec:"crop"},
+  {nombre:"Sole",         codigo:"4458-00", precio:28990, img:"m88",  tipo:"jeans", sec:"crop"},
   {nombre:"Piemonte",     codigo:"4486-00", precio:25990, img:"m92",  tipo:"jeans", sec:"crop"},
   {nombre:"Piemonte",     codigo:"4486-01", precio:25990, img:"m96",  tipo:"jeans", sec:"crop"},
   // RECTOS

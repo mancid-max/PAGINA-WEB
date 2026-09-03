@@ -430,6 +430,24 @@
       max-width: 75px !important;
     }
 
+    /* ===== NAV FLECHAS EN IMAGEN MODAL ===== */
+    #c43-img-nav{
+      position:absolute;bottom:10px;left:0;right:0;
+      display:flex;align-items:center;justify-content:center;gap:10px;z-index:12;
+    }
+    #c43-img-nav.hidden{ display:none !important; }
+    #c43-prev,#c43-next{
+      width:2rem;height:2rem;border-radius:50%;border:none;
+      background:rgba(0,0,0,.42);color:#fff;
+      font-size:1.25rem;line-height:1;cursor:pointer;
+      backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;
+    }
+    #c43-counter{
+      color:#fff;font-size:.78rem;font-weight:700;
+      background:rgba(0,0,0,.42);padding:3px 10px;border-radius:20px;
+      backdrop-filter:blur(4px);
+    }
+
     /* ===== MODAL ESTILO FALABELLA ===== */
 
     /* Full screen, scrolleable como una sola página */
@@ -479,9 +497,9 @@
       background: #f5f5f5 !important;
     }
     .image-viewer {
-      height: 62vh !important;
-      max-height: 500px !important;
-      min-height: 220px !important;
+      height: 72vh !important;
+      max-height: 600px !important;
+      min-height: 260px !important;
       border-radius: 0 !important;
       background: #f5f5f5 !important;
       margin: 0 !important;
@@ -495,9 +513,9 @@
       object-fit: contain !important;
       object-position: center !important;
     }
-    /* Botón "Ver fotos": esquina inferior derecha sobre la imagen */
+    /* Botón "Ver fotos": oculto en mobile (las flechas lo reemplazan) */
     #openImageGalleryBtn:not([hidden]) {
-      display: flex !important;
+      display: none !important;
       position: absolute !important;
       bottom: 10px !important;
       right: 10px !important;
@@ -514,10 +532,9 @@
       z-index: 10 !important;
       gap: 4px !important;
     }
-    /* Thumbnails: strip horizontal debajo de la imagen principal */
+    /* Thumbnails: ocultos en mobile (las flechas ‹›  los reemplazan) */
     #thumbContainer.thumbnails {
-      flex: none !important;
-      display: flex !important;
+      display: none !important;
       flex-direction: row !important;
       gap: 6px !important;
       padding: 8px 10px !important;
@@ -1540,6 +1557,11 @@ src="https://www.facebook.com/tr?id=2136280953641446&ev=PageView&noscript=1"
             <div id="imageSoldOutOverlay" class="image-sold-out-overlay" hidden>AGOTADO</div>
             <div id="modalHantanStack" class="modal-hantan-stack" hidden></div>
             <img id="viewerImg">
+            <div id="c43-img-nav" class="hidden">
+              <button id="c43-prev" type="button">‹</button>
+              <span id="c43-counter"></span>
+              <button id="c43-next" type="button">›</button>
+            </div>
         </div>
         <div id="thumbContainer" class="thumbnails"></div>
     </div>
@@ -2396,6 +2418,54 @@ src="https://www.facebook.com/tr?id=2136280953641446&ev=PageView&noscript=1"
   });
 })();
 
+</script>
+
+<script>
+/* ===== NAV FLECHAS + SWIPE EN IMAGEN MODAL COLE 43 ===== */
+(function() {
+  var nav     = document.getElementById('c43-img-nav');
+  var counter = document.getElementById('c43-counter');
+  var btnPrev = document.getElementById('c43-prev');
+  var btnNext = document.getElementById('c43-next');
+  var thumbs  = document.getElementById('thumbContainer');
+  var viewer  = document.querySelector('.image-viewer');
+  if (!nav || !thumbs || !btnPrev || !btnNext) return;
+
+  function getThumbs() { return Array.from(thumbs.querySelectorAll('img')); }
+  function getCur() {
+    var imgs = getThumbs(), i;
+    for (i = 0; i < imgs.length; i++) { if (imgs[i].classList.contains('active-thumb')) return i; }
+    return 0;
+  }
+  function update() {
+    var imgs = getThumbs();
+    if (imgs.length <= 1) { nav.classList.add('hidden'); return; }
+    nav.classList.remove('hidden');
+    counter.textContent = (getCur() + 1) + ' / ' + imgs.length;
+  }
+  function navigate(dir) {
+    var imgs = getThumbs();
+    if (!imgs.length) return;
+    var n = ((getCur() + dir) % imgs.length + imgs.length) % imgs.length;
+    imgs[n].click();
+  }
+
+  btnPrev.addEventListener('click', function(e) { e.stopPropagation(); navigate(-1); });
+  btnNext.addEventListener('click', function(e) { e.stopPropagation(); navigate(1); });
+
+  /* Swipe táctil en la imagen */
+  var sx = 0;
+  if (viewer) {
+    viewer.addEventListener('touchstart', function(e) { sx = e.touches[0].clientX; }, { passive: true });
+    viewer.addEventListener('touchend', function(e) {
+      var dx = e.changedTouches[0].clientX - sx;
+      if (Math.abs(dx) > 40) navigate(dx < 0 ? 1 : -1);
+    }, { passive: true });
+  }
+
+  /* Sincronizar cuando script-v2.js inyecta o cambia los thumbnails */
+  new MutationObserver(update).observe(thumbs, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+})();
 </script>
 </body>
 </html>

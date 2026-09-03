@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Colección 44 | Mohicano Jeans — Pedidos Mayoristas</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23d81f2a'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='16' font-weight='bold' fill='white' text-anchor='middle'%3E44%3C/text%3E%3C/svg%3E">
-<script src="xlsx.full.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <style>
 :root{
   --rojo:#d81f2a;--rojo-osc:#a3121b;--verde:#00923f;
@@ -49,6 +49,9 @@ header.hero{max-width:1100px;margin:0 auto;padding:2.2rem 1.2rem 1rem;text-align
 .barra-filtros{max-width:1100px;margin:1.4rem auto .4rem;padding:0 1.2rem;display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;justify-content:center}
 .chip{border:1.5px solid #d8e4ec;background:#fff;border-radius:999px;padding:.45rem 1.1rem;font-family:inherit;font-size:.82rem;font-weight:600;color:var(--gris);cursor:pointer;transition:all .15s}
 .chip.activo{background:var(--tinta);border-color:var(--tinta);color:#fff}
+.barra-corte{margin-top:-.1rem}
+.chip-corte{font-size:.76rem;padding:.35rem .9rem}
+.chip-corte.activo{background:var(--celeste2);border-color:var(--celeste2);color:#fff}
 .busca{border:1.5px solid #d8e4ec;border-radius:999px;padding:.5rem 1.1rem;font-family:inherit;font-size:.85rem;min-width:220px;outline:none;background:#fff}
 .busca:focus{border-color:var(--rojo)}
 
@@ -150,9 +153,88 @@ footer.pie{text-align:center;color:var(--gris);font-size:.8rem;padding:2rem 1rem
 .pie-flag i:nth-child(2){background:#fff}
 .pie-flag i:nth-child(3){background:var(--rojo)}
 
+/* características en modal */
+.m-tags{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:-.2rem}
+.m-tag{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:.28rem .65rem;border-radius:999px;border:1.5px solid}
+.m-tag-corte{background:#eef6fe;color:#1a4d8a;border-color:#c4ddf7}
+.m-tag-tela{background:#fdf3e8;color:#7a4a12;border-color:#f5d7a8}
+.m-tag-ajuste{background:#edf9f1;color:#1a6b3c;border-color:#b8e6cc}
+.m-desc{font-size:.78rem;color:var(--gris);line-height:1.55;border-left:2.5px solid var(--celeste2);padding-left:.7rem}
+
 /* toast */
 .toast{position:fixed;left:50%;bottom:5.5rem;transform:translateX(-50%) translateY(20px);background:var(--tinta);color:#fff;padding:.65rem 1.2rem;border-radius:999px;font-size:.83rem;font-weight:600;opacity:0;pointer-events:none;transition:all .25s;z-index:100;box-shadow:0 10px 28px rgba(0,0,0,.3)}
 .toast.ver{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* botón zoom en modal */
+.modal .principal{position:relative;overflow:hidden}
+.modal .principal img{display:block;width:100%;cursor:zoom-in}
+.modal .principal::after{content:'🔍 Ampliar';position:absolute;bottom:.6rem;right:.6rem;background:rgba(255,255,255,.9);border-radius:999px;padding:.25rem .7rem;font-size:.68rem;font-weight:600;color:var(--tinta);pointer-events:none}
+
+/* lightbox */
+.lightbox{
+  position:fixed;inset:0;background:rgba(4,10,18,.96);
+  z-index:200;display:none;flex-direction:column;
+  align-items:center;justify-content:center;gap:.9rem;
+}
+.lightbox.abierto{display:flex}
+.lightbox-cerrar{
+  position:absolute;top:.9rem;right:.9rem;
+  background:rgba(255,255,255,.1);border:none;color:#fff;
+  font-size:1rem;width:2.1rem;height:2.1rem;border-radius:999px;
+  cursor:pointer;display:grid;place-items:center;z-index:5;
+  transition:background .13s;
+}
+.lightbox-cerrar:hover{background:rgba(255,255,255,.22)}
+
+/* área imagen + lupa */
+.lb-zona{
+  position:relative;display:flex;align-items:center;justify-content:center;
+  flex:1;min-height:0;width:100%;max-width:860px;padding:0 3.5rem;
+}
+.lb-zona img#lb-img{
+  max-width:100%;max-height:74vh;
+  object-fit:contain;border-radius:6px;
+  display:block;cursor:crosshair;user-select:none;
+}
+.lb-lupa{
+  position:fixed;pointer-events:none;
+  width:200px;height:200px;border-radius:50%;
+  border:2.5px solid rgba(255,255,255,.55);
+  box-shadow:0 0 0 1px rgba(0,0,0,.5),0 8px 32px rgba(0,0,0,.6);
+  background-repeat:no-repeat;
+  display:none;z-index:10;overflow:hidden;
+}
+.lb-lupa.activa{display:block}
+
+/* nav flechas */
+.lb-nav{
+  position:absolute;top:50%;transform:translateY(-50%);
+  background:rgba(255,255,255,.1);border:none;color:#fff;
+  font-size:1.8rem;width:2.6rem;height:5rem;border-radius:8px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .13s;z-index:3;
+}
+.lb-nav:hover{background:rgba(255,255,255,.22)}
+.lb-prev{left:.5rem}
+.lb-next{right:.5rem}
+
+/* miniaturas abajo */
+.lb-thumbs{
+  display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;
+  padding:.1rem 1rem .8rem;max-width:860px;
+}
+.lb-thumbs img{
+  width:70px;height:70px;object-fit:cover;border-radius:7px;
+  cursor:pointer;opacity:.55;border:2.5px solid transparent;
+  transition:opacity .15s,border-color .15s;flex-shrink:0;
+}
+.lb-thumbs img.activa{opacity:1;border-color:#fff}
+.lb-thumbs img:hover{opacity:.88}
+.lb-counter{
+  position:absolute;top:.95rem;left:50%;transform:translateX(-50%);
+  color:rgba(255,255,255,.45);font-size:.72rem;font-weight:600;
+  letter-spacing:.1em;
+}
 </style>
 </head>
 <body>
@@ -176,6 +258,18 @@ footer.pie{text-align:center;color:var(--gris);font-size:.8rem;padding:2rem 1rem
   <button class="chip" data-filtro="disponible">✅ Disponibles</button>
   <button class="chip" data-filtro="produccion">🔧 En producción</button>
   <input class="busca" id="busca" type="search" placeholder="Buscar modelo (ej: 4431)…">
+</div>
+<div class="barra-filtros barra-corte">
+  <button class="chip chip-corte activo" data-corte="todos">Todos los cortes</button>
+  <button class="chip chip-corte" data-corte="flare">Flare</button>
+  <button class="chip chip-corte" data-corte="wide">Wide Leg</button>
+  <button class="chip chip-corte" data-corte="palazzo">Palazzo</button>
+  <button class="chip chip-corte" data-corte="pitillo">Pitillo</button>
+  <button class="chip chip-corte" data-corte="oxford">Oxford</button>
+  <button class="chip chip-corte" data-corte="recto">Recto</button>
+  <button class="chip chip-corte" data-corte="ballon">Ballon</button>
+  <button class="chip chip-corte" data-corte="tobillero">Tobillero</button>
+  <button class="chip chip-corte" data-corte="cropp">Cropp</button>
 </div>
 
 <main>
@@ -203,18 +297,33 @@ footer.pie{text-align:center;color:var(--gris);font-size:.8rem;padding:2rem 1rem
 
 <button class="fab-carrito" id="abrir-carrito">🛒 Tu pedido <span class="num" id="num-carrito">0</span></button>
 
+<!-- lightbox -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-cerrar" id="lb-cerrar">✕</button>
+  <span class="lb-counter" id="lb-counter"></span>
+  <div class="lb-zona">
+    <button class="lb-nav lb-prev" id="lb-prev">‹</button>
+    <img id="lb-img" src="" alt="">
+    <button class="lb-nav lb-next" id="lb-next">›</button>
+    <div class="lb-lupa" id="lb-lupa"></div>
+  </div>
+  <div class="lb-thumbs" id="lb-thumbs"></div>
+</div>
+
 <!-- modal producto -->
 <div class="velo" id="velo-modal">
   <div class="modal">
     <button class="cerrar" id="cerrar-modal">✕</button>
     <div class="galeria">
-      <div class="principal"><img id="img-principal" src="" alt=""></div>
+      <div class="principal"><img id="img-principal" src="" alt="" title="Click para ampliar"></div>
       <div class="minis" id="minis"></div>
     </div>
     <div class="datos">
       <h2 id="m-nombre"></h2>
       <p class="cod" id="m-codigo"></p>
       <p class="precio-g" id="m-precio"></p>
+      <div class="m-tags" id="m-tags"></div>
+      <p class="m-desc" id="m-desc"></p>
       <div class="tallas-caja">
         <h4>Cantidades por talla</h4>
         <div id="m-tallas"></div>
@@ -261,13 +370,146 @@ footer.pie{text-align:center;color:var(--gris);font-size:.8rem;padding:2rem 1rem
 
 <script>
 // ── DATOS CATÁLOGO ──────────────────────────────────────────────
-const CATALOGO = [{"family":"4484-00","main_image":"44/4484/editar/1.jpg","gallery":["44/4484/editar/1.jpg","44/4484/editar/2.jpg","44/4484/editar/3.jpg"],"price":25990,"disponible":true},{"family":"4430-00","main_image":"44/4430/editar/1.jpg","gallery":["44/4430/editar/1.jpg","44/4430/editar/2.jpg","44/4430/editar/3.jpg"],"price":25990,"disponible":true},{"family":"4455-00","main_image":"44/4455/editar/1.jpg","gallery":["44/4455/editar/1.jpg","44/4455/editar/2.jpg","44/4455/editar/3.jpg","44/4455/editar/4.jpg","44/4455/editar/5.jpg"],"price":26990,"disponible":true},{"family":"4431-00","main_image":"44/4431-00/editar/1.jpg","gallery":["44/4431-00/editar/1.jpg","44/4431-00/editar/2.jpg","44/4431-00/editar/3.jpg","44/4431-00/editar/4.jpg","44/4431-00/editar/5.jpg"],"price":26990,"disponible":true},{"family":"4431-01","main_image":"44/4431-01/editar/1.jpg","gallery":["44/4431-01/editar/1.jpg","44/4431-01/editar/2.jpg","44/4431-01/editar/3.jpg","44/4431-01/editar/4.jpg","44/4431-01/editar/5.jpg"],"price":26990,"disponible":true},{"family":"4479-00","main_image":"43/43/4309/editar/Mohicano-86 copie.jpg","gallery":["43/43/4309/editar/Mohicano-86 copie.jpg","43/43/4309/editar/Mohicano-88.jpg","43/43/4309/editar/Mohicano-90.jpg","43/43/4309/editar/Mohicano-93.jpg","43/43/4309/editar/Mohicano-100.jpg"],"price":25990,"disponible":true},{"family":"4454-00","main_image":"44/4454/editar/1.jpg","gallery":["44/4454/editar/1.jpg","44/4454/editar/2.jpg","44/4454/editar/3.jpg","44/4454/editar/4.jpg","44/4454/editar/5.jpg"],"price":25990,"disponible":true},{"family":"4418-00","main_image":"44/4418/editar/1.jpg","gallery":["44/4418/editar/1.jpg","44/4418/editar/2.jpg","44/4418/editar/3.jpg"],"price":26990,"disponible":true},{"family":"4448-00","main_image":"44/4448/1.jpg","gallery":["44/4448/1.jpg","44/4448/2.jpg","44/4448/3.jpg"],"price":25990,"disponible":true},{"family":"4485-00","main_image":"44/4485/editar/1.jpg","gallery":["44/4485/editar/1.jpg","44/4485/editar/2.jpg","44/4485/editar/3.jpg"],"price":25990,"disponible":true},{"family":"4476-00","main_image":"43/43/4329/editar/Mohicano-197.jpg","gallery":["43/43/4329/editar/Mohicano-197.jpg","43/43/4329/editar/Mohicano-200.jpg","43/43/4329/editar/Mohicano-201.jpg","43/43/4329/editar/Mohicano-203.jpg","43/43/4329/editar/Mohicano-206 copie.jpg"],"price":25990,"disponible":true},{"family":"4402-00","main_image":"44/4402/editar/1.jpg","gallery":["44/4402/editar/1.jpg","44/4402/editar/2.jpg","44/4402/editar/3.jpg","44/4402/editar/4.jpg","44/4402/editar/5.jpg"],"price":26990,"disponible":false},{"family":"4412-00","main_image":"44/4412/editar/1.jpg","gallery":["44/4412/editar/1.jpg","44/4412/editar/2.jpg","44/4412/editar/3.jpg","44/4412/editar/4.jpg","44/4412/editar/5.jpg"],"price":26990,"disponible":false},{"family":"4413-00","main_image":"44/4413/editar/1.jpg","gallery":["44/4413/editar/1.jpg","44/4413/editar/2.jpg","44/4413/editar/3.jpg","44/4413/editar/4.jpg","44/4413/editar/5.jpg"],"price":24990,"disponible":false},{"family":"4414-00","main_image":"44/4414/editar/1.jpg","gallery":["44/4414/editar/1.jpg","44/4414/editar/2.jpg","44/4414/editar/3.jpg","44/4414/editar/4.jpg","44/4414/editar/5.jpg"],"price":25990,"disponible":false},{"family":"4416-00","main_image":"44/4416/editar/1.jpg","gallery":["44/4416/editar/1.jpg","44/4416/editar/2.jpg","44/4416/editar/3.jpg","44/4416/editar/4.jpg","44/4416/editar/5.jpg"],"price":26990,"disponible":false},{"family":"4417-00","main_image":"44/4417/editar/1.jpg","gallery":["44/4417/editar/1.jpg","44/4417/editar/2.jpg","44/4417/editar/3.jpg","44/4417/editar/4.jpg","44/4417/editar/5.jpg"],"price":26990,"disponible":false},{"family":"4426-00","main_image":"44/4426/editar/1.jpg","gallery":["44/4426/editar/1.jpg","44/4426/editar/2.jpg","44/4426/editar/3.jpg","44/4426/editar/4.jpg","44/4426/editar/5.jpg"],"price":26990,"disponible":false},{"family":"4431-02","main_image":"44/4431/editar/1.jpg","gallery":["44/4431/editar/1.jpg","44/4431/editar/2.jpg","44/4431/editar/3.jpg","44/4431/editar/4.jpg","44/4431/editar/5.jpg"],"price":26990,"disponible":false},{"family":"4441-00","main_image":"44/4441/editar/1.jpg","gallery":["44/4441/editar/1.jpg","44/4441/editar/2.jpg","44/4441/editar/3.jpg","44/4441/editar/4.jpg","44/4441/editar/5.jpg"],"price":24990,"disponible":false},{"family":"4450-00","main_image":"44/4450/editar/1.jpg","gallery":["44/4450/editar/1.jpg","44/4450/editar/2.jpg","44/4450/editar/3.jpg","44/4450/editar/4.jpg","44/4450/editar/5.jpg"],"price":null,"disponible":false},{"family":"4454-01","main_image":"44/4454-01/editar/1.jpg","gallery":["44/4454-01/editar/1.jpg","44/4454-01/editar/2.jpg","44/4454-01/editar/3.jpg","44/4454-01/editar/4.jpg","44/4454-01/editar/5.jpg"],"price":25990,"disponible":false},{"family":"4458-00","main_image":"44/4458/editar/1.jpg","gallery":["44/4458/editar/1.jpg","44/4458/editar/2.jpg","44/4458/editar/3.jpg","44/4458/editar/4.jpg","44/4458/editar/5.jpg"],"price":25990,"disponible":false},{"family":"4459-00","main_image":"44/4459/editar/1.jpg","gallery":["44/4459/editar/1.jpg","44/4459/editar/2.jpg","44/4459/editar/3.jpg","44/4459/editar/4.jpg","44/4459/editar/5.jpg"],"price":25990,"disponible":false},{"family":"4478-00","main_image":"44/4478/Mohicano-197 copia.jpg","gallery":["44/4478/Mohicano-197 copia.jpg","44/4478/Mohicano-200 copia.jpg","44/4478/Mohicano-206 copie copia.jpg"],"price":25990,"disponible":false},{"family":"4480-00","main_image":"44/4480/Mohicano-190.jpg","gallery":["44/4480/Mohicano-190.jpg","44/4480/Mohicano-193.jpg","44/4480/Mohicano-195.jpg","44/4480/Mohicano-198.jpg"],"price":25990,"disponible":false},{"family":"4481-00","main_image":"44/4481/final 1.jpg","gallery":["44/4481/final 1.jpg","44/4481/final calce .jpg","44/4481/SIN ECOC UERO.jpg"],"price":25990,"disponible":false},{"family":"4407-00","main_image":"44/4407/editar/1.jpg","gallery":["44/4407/editar/1.jpg","44/4407/editar/2.jpg","44/4407/editar/3.jpg"],"price":26990,"disponible":false},{"family":"4415-00","main_image":"44/4415/editar/1.jpg","gallery":["44/4415/editar/1.jpg","44/4415/editar/2.jpg","44/4415/editar/3.jpg","44/4415/editar/4.jpg","44/4415/editar/5.jpg"],"price":28990,"disponible":false},{"family":"4421-00","main_image":"44/4421/editar/1.jpg","gallery":["44/4421/editar/1.jpg","44/4421/editar/2.jpg","44/4421/editar/3.jpg"],"price":26990,"disponible":false},{"family":"4422-00","main_image":"44/4422/editar/1.jpg","gallery":["44/4422/editar/1.jpg","44/4422/editar/2.jpg","44/4422/editar/3.jpg"],"price":25990,"disponible":false},{"family":"4432-00","main_image":"44/4432/editar/1.jpg","gallery":["44/4432/editar/1.jpg","44/4432/editar/2.jpg","44/4432/editar/3.jpg","44/4432/editar/4.jpg","44/4432/editar/5.jpg"],"price":24990,"disponible":false},{"family":"4434-00","main_image":"44/4434/editar/1.jpg","gallery":["44/4434/editar/1.jpg","44/4434/editar/2.jpg","44/4434/editar/3.jpg"],"price":25990,"disponible":false},{"family":"4435-00","main_image":"44/4435/editar/1.jpg","gallery":["44/4435/editar/1.jpg","44/4435/editar/2.jpg","44/4435/editar/3.jpg","44/4435/editar/4.jpg","44/4435/editar/5.jpg"],"price":25990,"disponible":false},{"family":"4438-00","main_image":"44/4438/editar/1.jpg","gallery":["44/4438/editar/1.jpg","44/4438/editar/2.jpg","44/4438/editar/3.jpg","44/4438/editar/4.jpg","44/4438/editar/5.jpg"],"price":28990,"disponible":false},{"family":"4440-00","main_image":"44/4440/editar/1.jpg","gallery":["44/4440/editar/1.jpg","44/4440/editar/2.jpg","44/4440/editar/3.jpg"],"price":25990,"disponible":false},{"family":"4440-60","main_image":"44/4440-60/editar/1.jpg","gallery":["44/4440-60/editar/1.jpg","44/4440-60/editar/2.jpg","44/4440-60/editar/3.jpg","44/4440-60/editar/4.jpg","44/4440-60/editar/5.jpg"],"price":25990,"disponible":false},{"family":"4442-00","main_image":"44/4442/editar/1.jpg","gallery":["44/4442/editar/1.jpg","44/4442/editar/2.jpg","44/4442/editar/3.jpg","44/4442/editar/4.jpg","44/4442/editar/5.jpg"],"price":25990,"disponible":false},{"family":"4443-00","main_image":"44/4443/editar/1.jpg","gallery":["44/4443/editar/1.jpg","44/4443/editar/2.jpg","44/4443/editar/3.jpg"],"price":25990,"disponible":false},{"family":"4444-00","main_image":"44/4444/editar/1.jpg","gallery":["44/4444/editar/1.jpg","44/4444/editar/2.jpg","44/4444/editar/3.jpg"],"price":25990,"disponible":false},{"family":"4453-01","main_image":"44/4453-01/editar/1.jpg","gallery":["44/4453-01/editar/1.jpg","44/4453-01/editar/2.jpg","44/4453-01/editar/3.jpg","44/4453-01/editar/4.jpg","44/4453-01/editar/5.jpg"],"price":25990,"disponible":false},{"family":"4457-38","main_image":"44/4457-38/editar/CRI_6756.jpg","gallery":["44/4457-38/editar/CRI_6756.jpg","44/4457-38/editar/CRI_6757.jpg","44/4457-38/editar/CRI_6760.jpg"],"price":26990,"disponible":false},{"family":"4471-00","main_image":"44/4471/editar/1.jpg","gallery":["44/4471/editar/1.jpg","44/4471/editar/2.jpg","44/4471/editar/3.jpg","44/4471/editar/4.jpg","44/4471/editar/5.jpg"],"price":25990,"disponible":false},{"family":"4472-00","main_image":"44/4472/editar/1.jpg","gallery":["44/4472/editar/1.jpg","44/4472/editar/2.jpg","44/4472/editar/3.jpg"],"price":25990,"disponible":false},{"family":"4472-01","main_image":"44/4472-01/editar/1.jpg","gallery":["44/4472-01/editar/1.jpg","44/4472-01/editar/2.jpg","44/4472-01/editar/3.jpg","44/4472-01/editar/4.jpg","44/4472-01/editar/5.jpg"],"price":25990,"disponible":false},{"family":"4473-00","main_image":"44/4473/editar/1.jpg","gallery":["44/4473/editar/1.jpg","44/4473/editar/2.jpg","44/4473/editar/3.jpg"],"price":24990,"disponible":false},{"family":"4474-00","main_image":"44/4474/editar/1.jpg","gallery":["44/4474/editar/1.jpg","44/4474/editar/2.jpg","44/4474/editar/3.jpg"],"price":24990,"disponible":false},{"family":"4475-00","main_image":"44/4475/editar/1.jpg","gallery":["44/4475/editar/1.jpg","44/4475/editar/2.jpg","44/4475/editar/3.jpg","44/4475/editar/4.jpg","44/4475/editar/5.jpg"],"price":26990,"disponible":false},{"family":"4482-00","main_image":"44/4482/editar/1.jpg","gallery":["44/4482/editar/1.jpg","44/4482/editar/2.jpg","44/4482/editar/3.jpg"],"price":26990,"disponible":false},{"family":"4486-00","main_image":"44/4486-00/editar/1.jpg","gallery":["44/4486-00/editar/1.jpg","44/4486-00/editar/2.jpg","44/4486-00/editar/3.jpg","44/4486-00/editar/4.jpg"],"price":25990,"disponible":false},{"family":"4486-01","main_image":"44/4486-01/editar/1.jpg","gallery":["44/4486-01/editar/1.jpg","44/4486-01/editar/2.jpg","44/4486-01/editar/3.jpg","44/4486-01/editar/4.jpg"],"price":25990,"disponible":false},{"family":"4488-00","main_image":"44/4488/editar/1.jpg","gallery":["44/4488/editar/1.jpg","44/4488/editar/2.jpg","44/4488/editar/3.jpg","44/4488/editar/4.jpg","44/4488/editar/5.jpg"],"price":26990,"disponible":false},{"family":"4489-00","main_image":"44/4489/editar/1.jpg","gallery":["44/4489/editar/1.jpg","44/4489/editar/2.jpg","44/4489/editar/3.jpg"],"price":26990,"disponible":false},{"family":"4492-00","main_image":"44/4492/editar/1.jpg","gallery":["44/4492/editar/1.jpg","44/4492/editar/2.jpg","44/4492/editar/3.jpg"],"price":25990,"disponible":false},{"family":"4493-00","main_image":"44/4493/editar/1.jpg","gallery":["44/4493/editar/1.jpg","44/4493/editar/2.jpg","44/4493/editar/3.jpg","44/4493/editar/4.jpg","44/4493/editar/5.jpg"],"price":25990,"disponible":false},{"family":"4493-01","main_image":"44/4493-01/editar/1.jpg","gallery":["44/4493-01/editar/1.jpg","44/4493-01/editar/2.jpg","44/4493-01/editar/3.jpg"],"price":26990,"disponible":false},{"family":"4493-09","main_image":"44/4493-09/editar/1.jpg","gallery":["44/4493-09/editar/1.jpg","44/4493-09/editar/2.jpg","44/4493-09/editar/3.jpg"],"price":25990,"disponible":false},{"family":"4494-00","main_image":"44/4494/editar/1.jpg","gallery":["44/4494/editar/1.jpg","44/4494/editar/2.jpg","44/4494/editar/3.jpg"],"price":26990,"disponible":false},{"family":"4494-04","main_image":"44/4494-04/editar/1.jpg","gallery":["44/4494-04/editar/1.jpg","44/4494-04/editar/2.jpg","44/4494-04/editar/3.jpg","44/4494-04/editar/4.jpg","44/4494-04/editar/5.jpg"],"price":26990,"disponible":false},{"family":"4495-24","main_image":"44/4495-24/editar/1.jpg","gallery":["44/4495-24/editar/1.jpg","44/4495-24/editar/2.jpg","44/4495-24/editar/3.jpg","44/4495-24/editar/4.jpg"],"price":26990,"disponible":false},{"family":"4496-09","main_image":"44/4496-09/editar/1.jpg","gallery":["44/4496-09/editar/1.jpg","44/4496-09/editar/2.jpg","44/4496-09/editar/3.jpg"],"price":26990,"disponible":false},{"family":"4477-00","main_image":"43/4318/editar/1Mohicano-150.jpg","gallery":["43/4318/editar/1Mohicano-150.jpg","43/4318/editar/Mohicano-145 copie.jpg","43/4318/editar/Mohicano-149 copie.jpg","43/4318/editar/Mohicano-153.jpg","43/4318/editar/Mohicano-156.jpg"],"price":24990,"disponible":false}];
+const DESC = {
+  '4402-00':{corte:'CINTURA FLARE',tela:'MISSY PLUS',ajuste:'POWER STRECH',desc:'Bio medio focalizado, trenza en pretina, 5 bolsillos, doble pasador delanteros, relojero con corte horizontal, bolsillos trasero rectos, 3 pinzas doble pasador trasero.'},
+  '4407-00':{corte:'CINTURA PALAZZO',tela:'MISSY PLUS',ajuste:'POWER STRECH',desc:'Bio celeste focalizado, bolsillos delanteros parche, ojetillo metalico en pretina, bolsillos trasero rectos, 2 pinzas doble pasador trasero.'},
+  '4412-00':{corte:'CINTURA BALLON',tela:'NEW GLUE / PATRICIA DARK',ajuste:'POWER STRECH',desc:'Bio medio con aplicaciones delanteras, 4 bolsillos delanteros (3 parche, 1 carpintero, 1 de costado con tapeta), bolsillos traseros rectos, 3 pinzas un pasador con cristal.'},
+  '4413-00':{corte:'CINTURA PITILLO',tela:'NEW GLUE',ajuste:'POWER STRECH',desc:'Bio medio focalizado, 6 bolsillos, ambos bolsillos delanteros con relojero de tope, pasador simple, 2 bolsillos trasero rectos con corte, 3 pinzas, pasador trasero simple con cristal.'},
+  '4414-00':{corte:'CINTURA OXFORD',tela:'NEW GLUE MIX BLACK',ajuste:'POWER STRECH',desc:'Gris focalizado, Smart Denim, 2 bolsillos delanteros con relojero parche, pasador simple pierna derecha y doble en izquierda, bolsillos traseros rectos, 3 pinzas, pasador doble trasero.'},
+  '4415-00':{corte:'WIDE LEG',tela:'NEW GLUE MIX BLACK',ajuste:'POWER STRECH',desc:'Negro con pasadores simples, 2 bolsillos delanteros cada uno con relojero, detalle de pasador hasta relojero, 2 bolsillos traseros rectos, 3 pinzas, pasador simple con cristal.'},
+  '4416-00':{corte:'CADERA FLARE',tela:'NEW GLUE BLACK',ajuste:'POWER STRECH',desc:'Azul industrial, cierre al tono, bolsillos delanteros parche con tapeta y boton, sin pretina, pasadores simples delanteros. Bolsillos traseros rectos divididos verticalmente, pasador doble trasero, costuras blancas.'},
+  '4417-00':{corte:'CADERA FLARE',tela:'NEW GLUE BLACK',ajuste:'POWER STRECH',desc:'Azul industrial, cierre al tono, bolsillos delanteros parche con tapeta y boton, sin pretina, pasadores simples delanteros. Bolsillos traseros rectos divididos verticalmente, pasador doble trasero, costuras blancas.'},
+  '4418-00':{corte:'CINTURA PALAZZO',tela:'MISSY PLUS',ajuste:'POWER STRECH',desc:'Bio medio focalizado, pretina y bota desflecada, 5 bolsillos tradicionales, pasadores delanteros simples, bolsillos traseros rectos, 3 pinzas pasador trasero simple con cristal.'},
+  '4421-00':{corte:'CINTURA WIDE LEG',tela:'CHLOE',ajuste:'PERFECT FIT',desc:'Beige, 5 bolsillos tradicionales, pasadores simples, bolsillos traseros rectos, 3 pinzas pasador trasero simple con cristal.'},
+  '4422-00':{corte:'CINTURA CROPP',tela:'CHLOE',ajuste:'PERFECT FIT',desc:'Blanco, bolsillos carpintero con cinturon, bolsillos traseros rectos, pasador trasero simple con cristal.'},
+  '4426-00':{corte:'CINTURA OXFORD',tela:'NEW GLUE MIX BLACK',ajuste:'POWER STRECH',desc:'Gris focalizado, cierres en vista, pasadores en X, push in push up, bolsillos rectos, 3 pinzas, pasador en X con cristal.'},
+  '4430-00':{corte:'CINTURA FLARE',tela:'NEW GLUE',ajuste:'POWER STRECH',desc:'Bio medio focalizado, relojero con corte horizontal, pasadores delanteros simples, bolsillos traseros rectos con corte y bordado, pasador trasero simple con cristal.'},
+  '4431-00':{corte:'CINTURA WIDE LEG',tela:'MISSY PLUS',ajuste:'POWER STRECH',desc:'Bio oscuro focalizado, 6 bolsillos, relojero de tope en ambos bolsillos, pasadores delanteros simples, bolsillos traseros curvo con detalles bordados, doble pasador trasero.'},
+  '4431-01':{corte:'CINTURA WIDE LEG',tela:'MISSY PLUS',ajuste:'POWER STRECH',desc:'Bio oscuro focalizado, 6 bolsillos, relojero de tope en ambos bolsillos, pasadores delanteros simples, bolsillos traseros curvo con detalles bordados, doble pasador trasero.'},
+  '4431-02':{corte:'CINTURA WIDE LEG',tela:'MISSY PLUS',ajuste:'POWER STRECH',desc:'Bio oscuro focalizado, 6 bolsillos, relojero de tope en ambos bolsillos, pasadores delanteros simples, bolsillos traseros curvo con detalles bordados, doble pasador trasero.'},
+  '4432-00':{corte:'CINTURA PITILLO',tela:'AYLA',ajuste:'PERFECT FIT',desc:'Bio oscuro, cierre en vista derecha y aplicacion en vista izquierda, pasadores simples delanteros, bolsillos traseros rectos con division horizontal y aplicacion de tela, pasador simple trasero con cristal, 2 pinzas.'},
+  '4434-00':{corte:'CINTURA RECTO',tela:'PATRICIA DARK',ajuste:'PERFECT FIT',desc:'Bio medio focalizado, relojero con tapeta y boton, pasadores anchos, bolsillos traseros ovalados, 3 pinzas, pasador trasero ancho con cristal.'},
+  '4435-00':{corte:'CINTURA RECTO',tela:'PATRICIA DARK',ajuste:'PERFECT FIT',desc:'Bio medio focalizado, pasadores simples, delantero pierna izquierda en V, bolsillos traseros ovalados, 3 pinzas, pasador trasero en V con cristal.'},
+  '4438-00':{corte:'CINTURA PALAZZO CAPRI',tela:'',ajuste:'POWER STRECH',desc:'Vistas delanteras con relojero de tope ambas, pasadores delanteros simples, bolsillos traseros rectos, 3 pinzas, pasador trasero doble.'},
+  '4440-00':{corte:'CINTURA OXFORD',tela:'PATRICIA DARK',ajuste:'PERFECT FIT',desc:'Bio medio focalizado, ambas vistas con relojeros, bolsillos traseros rectos, 2 pinzas mas una al costado, pasador trasero simple mas cristal.'},
+  '4440-60':{corte:'',tela:'PATRICIA DARK',ajuste:'PERFECT FIT',desc:'Bio medio focalizado, 5 bolsillos tradicionales, pasadores delanteros simples, tachas en pretina, bolsillos traseros rectos con scalo M, 2 pinzas, pasador trasero doble.'},
+  '4441-00':{corte:'CINTURA PITILLO',tela:'NEW GLUE BLACK',ajuste:'POWER STRECH',desc:'Negro grabillado, pretina con corte, ambas vistas con relojero oval, pasadores delanteros simples, bolsillos traseros ovalados, 3 pinzas, pasador trasero simple con cristal.'},
+  '4442-00':{corte:'CINTURA BALLON',tela:'X 2068-1',ajuste:'CONFORT',desc:'Marengo focalizado, corte lateral, 5 bolsillos tradicionales, pasadores delanteros simples, bolsillos traseros rectos, una pinza, pasador trasero doble.'},
+  '4443-00':{corte:'CINTURA OXFORD',tela:'MISSY PLUS',ajuste:'POWER STRECH',desc:'Bio oscuro focalizado, 5 bolsillos tradicionales, pasadores delanteros simples, bolsillos traseros rectos con bordado scalo, 3 pinzas, pasador trasero con cristal.'},
+  '4444-00':{corte:'CINTURA RECTO',tela:'PATRICIA DARK',ajuste:'PERFECT FIT',desc:'Bio medio focalizado, ambas vistas con relojero de tope, pasadores delanteros simples, bolsillos traseros rectos, 3 pinzas, pasador trasero doble.'},
+  '4448-00':{corte:'MEDIO FLARE',tela:'NEW GLUE',ajuste:'POWER STRECH',desc:'Bio medio focalizado, relojero con sesgo, vistas sobre la pretina, pasadores delanteros simples, bolsillos traseros con cortes, 3 pinzas, pasador trasero con cristal.'},
+  '4453-01':{corte:'CINTURA RECTO',tela:'NEW GLUE',ajuste:'POWER STRECH',desc:'Bio medio focalizado, 5 bolsillos tradicionales, pasadores delanteros tradicionales, bolsillos traseros cuadrados, 3 pinzas, pasador trasero simple con cristal.'},
+  '4454-00':{corte:'CINTURA FLARE',tela:'NEW GLUE',ajuste:'POWER STRECH',desc:'Bio medio focalizado, 5 bolsillos, luneta en vista izquierda, pasadores delanteros simples, bolsillos traseros rectos, 3 pinzas, strass de cristales en bolsillos traseros, pasador trasero simple con cristal.'},
+  '4454-01':{corte:'CINTURA FLARE',tela:'NEW GLUE',ajuste:'POWER STRECH',desc:'Bio medio focalizado, 5 bolsillos, pasadores delanteros simples, bolsillos traseros rectos, 3 pinzas, strass de cristales en bolsillos traseros, pasador trasero simple con cristal.'},
+  '4455-00':{corte:'CINTURA PALAZZO',tela:'MISSY PLUS',ajuste:'POWER STRECH',desc:'Bio medio focalizado, 5 bolsillos tradicionales, pasadores delanteros tradicionales, bolsillos traseros rectos, una pinza, pasador trasero en V con cristal.'},
+  '4457-38':{corte:'CINTURA WIDE LEG',tela:'CHLOE',ajuste:'PERFECT FIT',desc:'Tono ostra, trenza en pretina, 5 bolsillos, pasadores delanteros simples, bolsillos traseros rectos, 3 pinzas, pasador trasero simple con cristal.'},
+  '4459-00':{corte:'CINTURA PITIRECTO',tela:'AYLA',ajuste:'PERFECT FIT',desc:'Bio celeste focalizado, pinzas en vistas y relojero oval, pasadores delanteros simples, bolsillos traseros ovalados, pasador trasero doble.'},
+  '4471-00':{corte:'CINTURA OXFORD CROPP',tela:'AYLA',ajuste:'PERFECT FIT',desc:'Bio medio focalizado, 5 bolsillos tradicionales, pasadores delanteros simples, bolsillos traseros rectos con corte, 2 pinzas, pasador trasero en V con cristal.'},
+  '4472-00':{corte:'CINTURA FLARE',tela:'NEW GLUE',ajuste:'POWER STRECH',desc:'Bio medio focalizado, relojeros en ambas vistas, relojero izquierdo a tope, pasadores delanteros simples, bolsillos traseros rectos con corte en M, 3 pinzas, pasador trasero en V con cristal.'},
+  '4472-01':{corte:'CINTURA FLARE',tela:'NEW GLUE',ajuste:'POWER STRECH',desc:'Grabillado, relojeros en ambas vistas, relojero izquierdo a tope, pasadores delanteros simples, bolsillos traseros rectos con corte en M, 3 pinzas, pasador trasero en V con cristal.'},
+  '4473-00':{corte:'CINTURA TOBILLERO',tela:'PATRICIA DARK',ajuste:'PERFECT FIT',desc:'Bio medio focalizado, 5 bolsillos, atraque en vista, pasadores delanteros simples, bolsillos traseros rectos, 3 pinzas, pasador trasero simple con cristal.'},
+  '4474-00':{corte:'CINTURA PITILLO',tela:'NEW GLUE MIX BLACK',ajuste:'POWER STRECH',desc:'Negro suavizado, 5 bolsillos, relojero de tope, pasadores delanteros simples, bolsillos traseros ovalados, 3 pinzas, pasador trasero en V con cristal.'},
+  '4475-00':{corte:'CINTURA WIDE LEG',tela:'MISSY PLUS',ajuste:'POWER STRECH',desc:'Bio medio focalizado, 5 bolsillos, pasadores simples (pierna izquierda lleva dos juntos), bolsillos traseros rectos con strass de brillos, 2 pinzas, elastico en pretina.'},
+  '4478-00':{corte:'MEDIO OXFORD',tela:'NEW GLUE',ajuste:'POWER STRECH',desc:'Bio medio focalizado, 5 bolsillos, pasadores simples, bolsillos traseros con tapeta y boton, 1 pinza mas pinza en costado, pasadores traseros simples.'},
+  '4480-00':{corte:'CINTURA OXFORD',tela:'NEW GLUE MIX BLACK',ajuste:'POWER STRECH',desc:'Bio medio focalizado, 6 bolsillos, cierre en vista izquierda y relojero normal en vista derecha, pasadores delanteros en X, bolsillos traseros ovalados, 3 pinzas, pasador trasero en X.'},
+  '4481-00':{corte:'CINTURA RECTO',tela:'AYLA',ajuste:'PERFECT FIT',desc:'Bio medio focalizado, relojero de ojal con aplicacion de ecocuero en ambas vistas, bolsillos traseros rectos, 3 pinzas, pasadores simples.'},
+  '4482-00':{corte:'CINTURA PALAZZO',tela:'MISSY PLUS',ajuste:'POWER STRECH',desc:'Bio oscuro focalizado, pasadores anchos, relojero en ambas vistas, bolsillos traseros rectos con corte vertical en medio, 3 pinzas, pasador trasero ancho con cristal.'},
+  '4484-00':{corte:'MEDIO FLARE',tela:'MISSY PLUS',ajuste:'POWER STRECH',desc:'Bio medio focalizado, 5 bolsillos, relojero con tapeta y boton en vista derecha, pasadores simples, bolsillos traseros rectos, 3 pinzas, pasadores dobles trasero.'},
+  '4485-00':{corte:'CINTURA RECTO',tela:'PATRICIA DARK',ajuste:'PERFECT FIT',desc:'Bio medio focalizado, 5 bolsillos, pasadores simples, bolsillos traseros rectos, 3 pinzas, botones de ajuste presilla en pretina trasera.'},
+  '4486-00':{corte:'CINTURA WIDE CROOP',tela:'PUGLIA',ajuste:'PERFECT FIT',desc:'Bio medio gravillado focalizado, 5 bolsillos, pasadores simples, bolsillos traseros rectos, una pinza, pasador doble trasero.'},
+  '4486-01':{corte:'CINTURA WIDE CROOP',tela:'PUGLIA',ajuste:'PERFECT FIT',desc:'Bio claro gravillado focalizado, 5 bolsillos, pasadores simples, rotura bajo vista izquierda, bolsillos traseros rectos con roturas, una pinza, pasador trasero doble.'},
+  '4488-00':{corte:'CINTURA PITILLO',tela:'MISSY PLUS',ajuste:'POWER STRECH',desc:'Full moda, bio medio, laser diseno rayas vertical, 5 bolsillos, relojero de ojal en vista derecha con rotura, rotura bajo vista izquierda, bolsillos trasero rectos con atraque, roturas en ambos, pasador trasero doble.'},
+  '4489-00':{corte:'CINTURA PITILLO',tela:'MISSY PLUS',ajuste:'POWER STRECH',desc:'Full moda, bio gravillado, laser diseno lunares grandes, 5 bolsillos, relojero util en corte, bolsillos traseros rectos, 3 pinzas, pasador trasero en M.'},
+  '4492-00':{corte:'CINTURA FLARE',tela:'MISSY PLUS',ajuste:'POWER STRECH',desc:'Full moda, bio celeste oxidado pardo, laser diseno flores, 5 bolsillos, pasadores simples (pierna izquierda con pasador doble), bolsillos traseros ovalados, 2 pinzas, elastico en pretina.'},
+  '4493-00':{corte:'CINTURA FLARE',tela:'CHLOE',ajuste:'PERFECT FIT',desc:'Full moda, tenido chocolate, laser diseno animal print, 6 bolsillos, relojero vista derecha de parche y vista izquierda de tope, pasadores simples, bolsillos traseros ovalados, 2 pinzas, pasador trasero en V con cristal.'},
+  '4493-01':{corte:'CINTURA FLARE',tela:'CHLOE',ajuste:'PERFECT FIT',desc:'Full moda, tenido beige, laser diseno lineas verticales, 6 bolsillos, relojero vista derecha de parche y vista izquierda de tope, pasadores simples, bolsillos traseros ovalados, 2 pinzas.'},
+  '4493-09':{corte:'CINTURA FLARE',tela:'CHLOE',ajuste:'PERFECT FIT',desc:'Tenido verde oliva, 5 bolsillos, pasadores simples, pretina y basta desflecados, bolsillos traseros rectos, 2 pinzas, pasador trasero simple con cristal.'},
+  '4494-00':{corte:'CINTURA RECTO',tela:'CHLOE',ajuste:'PERFECT FIT',desc:'Full moda, tenido beige, laser diseno lunares medianos, 6 bolsillos, relojero vista derecha de parche y vista izquierda de tope, bolsillos traseros ovalados, 2 pinzas, pasadores traseros simples.'},
+  '4495-24':{corte:'CINTURA PALAZZO',tela:'CHLOE',ajuste:'PERFECT FIT',desc:'Tenido rojo, 5 bolsillos, pasadores simples, bolsillos traseros ovalados, 2 pinzas, pasador trasero simple con cristal.'},
+  '4496-09':{corte:'CINTURA TOBILLERO',tela:'CHLOE',ajuste:'PERFECT FIT',desc:'Tenido verde oliva, 5 bolsillos, relojero de ojal, pasadores simples, bolsillos traseros rectos, 3 pinzas, pasador trasero simple con cristal.'},
+};
 
+const CATALOGO = [
+  {family:'4484-00',main_image:'44/4484/editar/1.jpg',gallery:['44/4484/editar/1.jpg','44/4484/editar/2.jpg','44/4484/editar/3.jpg'],price:25990,disponible:true},
+  {family:'4430-00',main_image:'44/4430/editar/1.jpg',gallery:['44/4430/editar/1.jpg','44/4430/editar/2.jpg','44/4430/editar/3.jpg'],price:25990,disponible:true},
+  {family:'4455-00',main_image:'44/4455/editar/1.jpg',gallery:['44/4455/editar/1.jpg','44/4455/editar/2.jpg','44/4455/editar/3.jpg','44/4455/editar/4.jpg','44/4455/editar/5.jpg'],price:26990,disponible:true},
+  {family:'4431-00',main_image:'44/4431-00/editar/1.jpg',gallery:['44/4431-00/editar/1.jpg','44/4431-00/editar/2.jpg','44/4431-00/editar/3.jpg','44/4431-00/editar/4.jpg','44/4431-00/editar/5.jpg'],price:26990,disponible:true},
+  {family:'4431-01',main_image:'44/4431-01/editar/1.jpg',gallery:['44/4431-01/editar/1.jpg','44/4431-01/editar/2.jpg','44/4431-01/editar/3.jpg','44/4431-01/editar/4.jpg','44/4431-01/editar/5.jpg'],price:26990,disponible:true},
+  {family:'4479-00',main_image:'43/43/4309/editar/Mohicano-86 copie.jpg',gallery:['43/43/4309/editar/Mohicano-86 copie.jpg','43/43/4309/editar/Mohicano-88.jpg','43/43/4309/editar/Mohicano-90.jpg','43/43/4309/editar/Mohicano-93.jpg','43/43/4309/editar/Mohicano-100.jpg'],price:25990,disponible:true},
+  {family:'4454-00',main_image:'44/4454/editar/1.jpg',gallery:['44/4454/editar/1.jpg','44/4454/editar/2.jpg','44/4454/editar/3.jpg','44/4454/editar/4.jpg','44/4454/editar/5.jpg'],price:25990,disponible:true},
+  {family:'4418-00',main_image:'44/4418/editar/1.jpg',gallery:['44/4418/editar/1.jpg','44/4418/editar/2.jpg','44/4418/editar/3.jpg'],price:26990,disponible:true},
+  {family:'4448-00',main_image:'44/4448/1.jpg',gallery:['44/4448/1.jpg','44/4448/2.jpg','44/4448/3.jpg'],price:25990,disponible:true},
+  {family:'4485-00',main_image:'44/4485/editar/1.jpg',gallery:['44/4485/editar/1.jpg','44/4485/editar/2.jpg','44/4485/editar/3.jpg'],price:25990,disponible:true},
+  {family:'4476-00',main_image:'43/43/4329/editar/Mohicano-197.jpg',gallery:['43/43/4329/editar/Mohicano-197.jpg','43/43/4329/editar/Mohicano-200.jpg','43/43/4329/editar/Mohicano-201.jpg','43/43/4329/editar/Mohicano-203.jpg','43/43/4329/editar/Mohicano-206 copie.jpg'],price:25990,disponible:true},
+  {family:'4402-00',main_image:'44/4402/editar/1.jpg',gallery:['44/4402/editar/1.jpg','44/4402/editar/2.jpg','44/4402/editar/3.jpg','44/4402/editar/4.jpg','44/4402/editar/5.jpg'],price:26990,disponible:false},
+  {family:'4412-00',main_image:'44/4412/editar/1.jpg',gallery:['44/4412/editar/1.jpg','44/4412/editar/2.jpg','44/4412/editar/3.jpg','44/4412/editar/4.jpg','44/4412/editar/5.jpg'],price:26990,disponible:false},
+  {family:'4413-00',main_image:'44/4413/editar/1.jpg',gallery:['44/4413/editar/1.jpg','44/4413/editar/2.jpg','44/4413/editar/3.jpg','44/4413/editar/4.jpg','44/4413/editar/5.jpg'],price:24990,disponible:false},
+  {family:'4414-00',main_image:'44/4414/editar/1.jpg',gallery:['44/4414/editar/1.jpg','44/4414/editar/2.jpg','44/4414/editar/3.jpg','44/4414/editar/4.jpg','44/4414/editar/5.jpg'],price:25990,disponible:false},
+  {family:'4416-00',main_image:'44/4416/editar/1.jpg',gallery:['44/4416/editar/1.jpg','44/4416/editar/2.jpg','44/4416/editar/3.jpg','44/4416/editar/4.jpg','44/4416/editar/5.jpg'],price:26990,disponible:false},
+  {family:'4417-00',main_image:'44/4417/editar/1.jpg',gallery:['44/4417/editar/1.jpg','44/4417/editar/2.jpg','44/4417/editar/3.jpg','44/4417/editar/4.jpg','44/4417/editar/5.jpg'],price:26990,disponible:false},
+  {family:'4426-00',main_image:'44/4426/editar/1.jpg',gallery:['44/4426/editar/1.jpg','44/4426/editar/2.jpg','44/4426/editar/3.jpg','44/4426/editar/4.jpg','44/4426/editar/5.jpg'],price:26990,disponible:false},
+  {family:'4431-02',main_image:'44/4431/editar/1.jpg',gallery:['44/4431/editar/1.jpg','44/4431/editar/2.jpg','44/4431/editar/3.jpg','44/4431/editar/4.jpg','44/4431/editar/5.jpg'],price:26990,disponible:false},
+  {family:'4441-00',main_image:'44/4441/editar/1.jpg',gallery:['44/4441/editar/1.jpg','44/4441/editar/2.jpg','44/4441/editar/3.jpg','44/4441/editar/4.jpg','44/4441/editar/5.jpg'],price:24990,disponible:false},
+  {family:'4450-00',main_image:'44/4450/editar/1.jpg',gallery:['44/4450/editar/1.jpg','44/4450/editar/2.jpg','44/4450/editar/3.jpg','44/4450/editar/4.jpg','44/4450/editar/5.jpg'],price:null,disponible:false},
+  {family:'4454-01',main_image:'44/4454-01/editar/1.jpg',gallery:['44/4454-01/editar/1.jpg','44/4454-01/editar/2.jpg','44/4454-01/editar/3.jpg','44/4454-01/editar/4.jpg','44/4454-01/editar/5.jpg'],price:25990,disponible:false},
+  {family:'4458-00',main_image:'44/4458/editar/1.jpg',gallery:['44/4458/editar/1.jpg','44/4458/editar/2.jpg','44/4458/editar/3.jpg','44/4458/editar/4.jpg','44/4458/editar/5.jpg'],price:25990,disponible:false},
+  {family:'4459-00',main_image:'44/4459/editar/1.jpg',gallery:['44/4459/editar/1.jpg','44/4459/editar/2.jpg','44/4459/editar/3.jpg','44/4459/editar/4.jpg','44/4459/editar/5.jpg'],price:25990,disponible:false},
+  {family:'4478-00',main_image:'44/4478/Mohicano-197 copia.jpg',gallery:['44/4478/Mohicano-197 copia.jpg','44/4478/Mohicano-200 copia.jpg','44/4478/Mohicano-206 copie copia.jpg'],price:25990,disponible:false},
+  {family:'4480-00',main_image:'44/4480/Mohicano-190.jpg',gallery:['44/4480/Mohicano-190.jpg','44/4480/Mohicano-193.jpg','44/4480/Mohicano-195.jpg','44/4480/Mohicano-198.jpg'],price:25990,disponible:false},
+  {family:'4481-00',main_image:'44/4481/final 1.jpg',gallery:['44/4481/final 1.jpg','44/4481/final calce .jpg','44/4481/SIN ECOC UERO.jpg'],price:25990,disponible:false},
+  {family:'4407-00',main_image:'44/4407/editar/1.jpg',gallery:['44/4407/editar/1.jpg','44/4407/editar/2.jpg','44/4407/editar/3.jpg'],price:26990,disponible:false},
+  {family:'4415-00',main_image:'44/4415/editar/1.jpg',gallery:['44/4415/editar/1.jpg','44/4415/editar/2.jpg','44/4415/editar/3.jpg','44/4415/editar/4.jpg','44/4415/editar/5.jpg'],price:28990,disponible:false},
+  {family:'4421-00',main_image:'44/4421/editar/1.jpg',gallery:['44/4421/editar/1.jpg','44/4421/editar/2.jpg','44/4421/editar/3.jpg'],price:26990,disponible:false},
+  {family:'4422-00',main_image:'44/4422/editar/1.jpg',gallery:['44/4422/editar/1.jpg','44/4422/editar/2.jpg','44/4422/editar/3.jpg'],price:25990,disponible:false},
+  {family:'4432-00',main_image:'44/4432/editar/1.jpg',gallery:['44/4432/editar/1.jpg','44/4432/editar/2.jpg','44/4432/editar/3.jpg','44/4432/editar/4.jpg','44/4432/editar/5.jpg'],price:24990,disponible:false},
+  {family:'4434-00',main_image:'44/4434/editar/1.jpg',gallery:['44/4434/editar/1.jpg','44/4434/editar/2.jpg','44/4434/editar/3.jpg'],price:25990,disponible:false},
+  {family:'4435-00',main_image:'44/4435/editar/1.jpg',gallery:['44/4435/editar/1.jpg','44/4435/editar/2.jpg','44/4435/editar/3.jpg','44/4435/editar/4.jpg','44/4435/editar/5.jpg'],price:25990,disponible:false},
+  {family:'4438-00',main_image:'44/4438/editar/1.jpg',gallery:['44/4438/editar/1.jpg','44/4438/editar/2.jpg','44/4438/editar/3.jpg','44/4438/editar/4.jpg','44/4438/editar/5.jpg'],price:28990,disponible:false},
+  {family:'4440-00',main_image:'44/4440/editar/1.jpg',gallery:['44/4440/editar/1.jpg','44/4440/editar/2.jpg','44/4440/editar/3.jpg'],price:25990,disponible:false},
+  {family:'4440-60',main_image:'44/4440-60/editar/1.jpg',gallery:['44/4440-60/editar/1.jpg','44/4440-60/editar/2.jpg','44/4440-60/editar/3.jpg','44/4440-60/editar/4.jpg','44/4440-60/editar/5.jpg'],price:25990,disponible:false},
+  {family:'4442-00',main_image:'44/4442/editar/1.jpg',gallery:['44/4442/editar/1.jpg','44/4442/editar/2.jpg','44/4442/editar/3.jpg','44/4442/editar/4.jpg','44/4442/editar/5.jpg'],price:25990,disponible:false},
+  {family:'4443-00',main_image:'44/4443/editar/1.jpg',gallery:['44/4443/editar/1.jpg','44/4443/editar/2.jpg','44/4443/editar/3.jpg'],price:25990,disponible:false},
+  {family:'4444-00',main_image:'44/4444/editar/1.jpg',gallery:['44/4444/editar/1.jpg','44/4444/editar/2.jpg','44/4444/editar/3.jpg'],price:25990,disponible:false},
+  {family:'4453-01',main_image:'44/4453-01/editar/1.jpg',gallery:['44/4453-01/editar/1.jpg','44/4453-01/editar/2.jpg','44/4453-01/editar/3.jpg','44/4453-01/editar/4.jpg','44/4453-01/editar/5.jpg'],price:25990,disponible:false},
+  {family:'4457-38',main_image:'44/4457-38/editar/CRI_6756.jpg',gallery:['44/4457-38/editar/CRI_6756.jpg','44/4457-38/editar/CRI_6757.jpg','44/4457-38/editar/CRI_6760.jpg'],price:26990,disponible:false},
+  {family:'4471-00',main_image:'44/4471/editar/1.jpg',gallery:['44/4471/editar/1.jpg','44/4471/editar/2.jpg','44/4471/editar/3.jpg','44/4471/editar/4.jpg','44/4471/editar/5.jpg'],price:25990,disponible:false},
+  {family:'4472-00',main_image:'44/4472/editar/1.jpg',gallery:['44/4472/editar/1.jpg','44/4472/editar/2.jpg','44/4472/editar/3.jpg'],price:25990,disponible:false},
+  {family:'4472-01',main_image:'44/4472-01/editar/1.jpg',gallery:['44/4472-01/editar/1.jpg','44/4472-01/editar/2.jpg','44/4472-01/editar/3.jpg','44/4472-01/editar/4.jpg','44/4472-01/editar/5.jpg'],price:25990,disponible:false},
+  {family:'4473-00',main_image:'44/4473/editar/1.jpg',gallery:['44/4473/editar/1.jpg','44/4473/editar/2.jpg','44/4473/editar/3.jpg'],price:24990,disponible:false},
+  {family:'4474-00',main_image:'44/4474/editar/1.jpg',gallery:['44/4474/editar/1.jpg','44/4474/editar/2.jpg','44/4474/editar/3.jpg'],price:24990,disponible:false},
+  {family:'4475-00',main_image:'44/4475/editar/1.jpg',gallery:['44/4475/editar/1.jpg','44/4475/editar/2.jpg','44/4475/editar/3.jpg','44/4475/editar/4.jpg','44/4475/editar/5.jpg'],price:26990,disponible:false},
+  {family:'4482-00',main_image:'44/4482/editar/1.jpg',gallery:['44/4482/editar/1.jpg','44/4482/editar/2.jpg','44/4482/editar/3.jpg'],price:26990,disponible:false},
+  {family:'4486-00',main_image:'44/4486-00/editar/1.jpg',gallery:['44/4486-00/editar/1.jpg','44/4486-00/editar/2.jpg','44/4486-00/editar/3.jpg','44/4486-00/editar/4.jpg'],price:25990,disponible:false},
+  {family:'4486-01',main_image:'44/4486-01/editar/1.jpg',gallery:['44/4486-01/editar/1.jpg','44/4486-01/editar/2.jpg','44/4486-01/editar/3.jpg','44/4486-01/editar/4.jpg'],price:25990,disponible:false},
+  {family:'4488-00',main_image:'44/4488/editar/1.jpg',gallery:['44/4488/editar/1.jpg','44/4488/editar/2.jpg','44/4488/editar/3.jpg','44/4488/editar/4.jpg','44/4488/editar/5.jpg'],price:26990,disponible:false},
+  {family:'4489-00',main_image:'44/4489/editar/1.jpg',gallery:['44/4489/editar/1.jpg','44/4489/editar/2.jpg','44/4489/editar/3.jpg'],price:26990,disponible:false},
+  {family:'4492-00',main_image:'44/4492/editar/1.jpg',gallery:['44/4492/editar/1.jpg','44/4492/editar/2.jpg','44/4492/editar/3.jpg'],price:25990,disponible:false},
+  {family:'4493-00',main_image:'44/4493/editar/1.jpg',gallery:['44/4493/editar/1.jpg','44/4493/editar/2.jpg','44/4493/editar/3.jpg','44/4493/editar/4.jpg','44/4493/editar/5.jpg'],price:25990,disponible:false},
+  {family:'4493-01',main_image:'44/4493-01/editar/1.jpg',gallery:['44/4493-01/editar/1.jpg','44/4493-01/editar/2.jpg','44/4493-01/editar/3.jpg'],price:26990,disponible:false},
+  {family:'4493-09',main_image:'44/4493-09/editar/1.jpg',gallery:['44/4493-09/editar/1.jpg','44/4493-09/editar/2.jpg','44/4493-09/editar/3.jpg'],price:25990,disponible:false},
+  {family:'4494-00',main_image:'44/4494/editar/1.jpg',gallery:['44/4494/editar/1.jpg','44/4494/editar/2.jpg','44/4494/editar/3.jpg'],price:26990,disponible:false},
+  {family:'4494-04',main_image:'44/4494-04/editar/1.jpg',gallery:['44/4494-04/editar/1.jpg','44/4494-04/editar/2.jpg','44/4494-04/editar/3.jpg','44/4494-04/editar/4.jpg','44/4494-04/editar/5.jpg'],price:26990,disponible:false},
+  {family:'4495-24',main_image:'44/4495-24/editar/1.jpg',gallery:['44/4495-24/editar/1.jpg','44/4495-24/editar/2.jpg','44/4495-24/editar/3.jpg','44/4495-24/editar/4.jpg'],price:26990,disponible:false},
+  {family:'4496-09',main_image:'44/4496-09/editar/1.jpg',gallery:['44/4496-09/editar/1.jpg','44/4496-09/editar/2.jpg','44/4496-09/editar/3.jpg'],price:26990,disponible:false},
+  {family:'4477-00',main_image:'43/4318/editar/1Mohicano-150.jpg',gallery:['43/4318/editar/1Mohicano-150.jpg','43/4318/editar/Mohicano-145 copie.jpg','43/4318/editar/Mohicano-149 copie.jpg','43/4318/editar/Mohicano-153.jpg','43/4318/editar/Mohicano-156.jpg'],price:24990,disponible:false},
+];
 const TALLAS = ['36','38','40','42','44','46'];
 const MIN_UNIDADES = 12;
 let carrito = {};
 let productoActual = null;
 let filtroActual = 'todos';
+let filtroCorte = 'todos';
+const CORTE_KEYS = {
+  'flare':     c => c.includes('FLARE'),
+  'wide':      c => c.includes('WIDE'),
+  'palazzo':   c => c.includes('PALAZZO'),
+  'pitillo':   c => c.includes('PITILLO') || c.includes('PITIRECTO'),
+  'oxford':    c => c.includes('OXFORD'),
+  'recto':     c => c === 'CINTURA RECTO',
+  'ballon':    c => c.includes('BALLON'),
+  'tobillero': c => c.includes('TOBILLERO'),
+  'cropp':     c => c.includes('CROPP') && !c.includes('WIDE'),
+};
 
 // ── HELPERS ─────────────────────────────────────────────────────
 function imgUrl(p){ return '/' + p.split('/').map(s=>encodeURIComponent(s)).join('/'); }
@@ -309,6 +551,10 @@ function renderGrid(filtro, busqueda){
     if (filtro === 'disponible' && !p.disponible) return false;
     if (filtro === 'produccion' && p.disponible) return false;
     if (q && !p.family.toLowerCase().includes(q)) return false;
+    if (filtroCorte !== 'todos') {
+      const corte = ((DESC[p.family] || {}).corte || '').toUpperCase();
+      if (!CORTE_KEYS[filtroCorte](corte)) return false;
+    }
     return true;
   });
   const disp = lista.filter(p=>p.disponible);
@@ -332,8 +578,19 @@ function abrirModal(family){
   document.getElementById('m-nombre').textContent = 'Modelo ' + p.family;
   document.getElementById('m-codigo').textContent = 'Código: ' + p.family;
   document.getElementById('m-precio').innerHTML = fmtPrecio(p.price) + '<small>Precio lista con IVA incluido</small>';
+  const info = DESC[p.family] || {};
+  const tags = [
+    info.corte  ? `<span class="m-tag m-tag-corte">${info.corte}</span>`  : '',
+    info.tela   ? `<span class="m-tag m-tag-tela">${info.tela}</span>`    : '',
+    info.ajuste ? `<span class="m-tag m-tag-ajuste">${info.ajuste}</span>`: '',
+  ].join('');
+  document.getElementById('m-tags').innerHTML = tags;
+  const descEl = document.getElementById('m-desc');
+  descEl.textContent = info.desc || '';
+  descEl.style.display = info.desc ? '' : 'none';
 
   // galería
+  lbImagenes = p.gallery && p.gallery.length ? p.gallery : [p.main_image];
   const imgP = document.getElementById('img-principal');
   imgP.src = imgUrl(p.main_image); imgP.alt = 'Modelo ' + p.family;
   const minis = document.getElementById('minis');
@@ -363,6 +620,90 @@ function cambiarImg(src, el){
   document.querySelectorAll('#minis img').forEach(i=>i.classList.remove('activa'));
   el.classList.add('activa');
 }
+
+// ── LIGHTBOX ────────────────────────────────────────────────────
+let lbImagenes = [];
+let lbIndex = 0;
+
+function lbSetImg(idx){
+  lbIndex = (idx + lbImagenes.length) % lbImagenes.length;
+  const url = imgUrl(lbImagenes[lbIndex]);
+  document.getElementById('lb-img').src = url;
+  document.getElementById('lb-counter').textContent = `${lbIndex+1} / ${lbImagenes.length}`;
+  // actualizar lupa con nueva src
+  const lupa = document.getElementById('lb-lupa');
+  lupa.style.backgroundImage = `url("${url}")`;
+  // thumbs activa
+  document.querySelectorAll('#lb-thumbs img').forEach((t,i)=>t.classList.toggle('activa',i===lbIndex));
+}
+
+function renderLbThumbs(){
+  const cont = document.getElementById('lb-thumbs');
+  cont.innerHTML = lbImagenes.map((g,i)=>
+    `<img src="${imgUrl(g)}" class="${i===lbIndex?'activa':''}" onclick="lbSetImg(${i})" loading="lazy" alt="">`
+  ).join('');
+}
+
+function abrirLightbox(idx){
+  if (!lbImagenes.length) return;
+  lbIndex = idx;
+  const lb = document.getElementById('lightbox');
+  lb.classList.add('abierto');
+  document.body.style.overflow = 'hidden';
+  renderLbThumbs();
+  lbSetImg(lbIndex);
+}
+
+function cerrarLightbox(){
+  document.getElementById('lightbox').classList.remove('abierto');
+  document.getElementById('lb-lupa').classList.remove('activa');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('lb-cerrar').onclick = cerrarLightbox;
+document.getElementById('lightbox').onclick = e => { if(e.target===e.currentTarget) cerrarLightbox(); };
+document.getElementById('lb-prev').onclick = e => { e.stopPropagation(); lbSetImg(lbIndex-1); };
+document.getElementById('lb-next').onclick = e => { e.stopPropagation(); lbSetImg(lbIndex+1); };
+
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('lightbox').classList.contains('abierto')) return;
+  if (e.key==='Escape') cerrarLightbox();
+  if (e.key==='ArrowLeft') lbSetImg(lbIndex-1);
+  if (e.key==='ArrowRight') lbSetImg(lbIndex+1);
+});
+
+// lupa magnifier
+const lbImg = document.getElementById('lb-img');
+const lupa  = document.getElementById('lb-lupa');
+const ZOOM  = 2.8;
+const LSIZE = 200;
+
+lbImg.addEventListener('mouseenter', () => lupa.classList.add('activa'));
+lbImg.addEventListener('mouseleave', () => lupa.classList.remove('activa'));
+lbImg.addEventListener('mousemove', e => {
+  const r = lbImg.getBoundingClientRect();
+  const cx = e.clientX, cy = e.clientY;
+  // posición de la lupa centrada en cursor
+  lupa.style.left = (cx - LSIZE/2) + 'px';
+  lupa.style.top  = (cy - LSIZE/2) + 'px';
+  // fracción de posición dentro de la imagen
+  const fx = (cx - r.left)  / r.width;
+  const fy = (cy - r.top)   / r.height;
+  // tamaño de la imagen dentro de la lupa (zoomeada)
+  const bw = r.width  * ZOOM;
+  const bh = r.height * ZOOM;
+  const bx = fx * bw - LSIZE/2;
+  const by = fy * bh - LSIZE/2;
+  lupa.style.backgroundSize     = `${bw}px ${bh}px`;
+  lupa.style.backgroundPosition = `-${bx}px -${by}px`;
+});
+
+document.getElementById('img-principal').onclick = () => {
+  const src = document.getElementById('img-principal').src;
+  const decoded = decodeURIComponent(src.replace(location.origin+'/', ''));
+  const idx = lbImagenes.findIndex(g => decodeURIComponent(g) === decoded);
+  abrirLightbox(Math.max(0, idx));
+};
 
 function cambiarTalla(t, delta){
   const el = document.getElementById('cant-'+t);
@@ -522,11 +863,20 @@ document.getElementById('btn-excel-otra').onclick = () => {
 };
 
 // ── FILTROS Y BÚSQUEDA ───────────────────────────────────────────
-document.querySelectorAll('.chip').forEach(chip => {
+document.querySelectorAll('.chip:not(.chip-corte)').forEach(chip => {
   chip.onclick = () => {
-    document.querySelectorAll('.chip').forEach(c=>c.classList.remove('activo'));
+    document.querySelectorAll('.chip:not(.chip-corte)').forEach(c=>c.classList.remove('activo'));
     chip.classList.add('activo');
     filtroActual = chip.dataset.filtro;
+    renderGrid(filtroActual, document.getElementById('busca').value);
+  };
+});
+
+document.querySelectorAll('.chip-corte').forEach(chip => {
+  chip.onclick = () => {
+    document.querySelectorAll('.chip-corte').forEach(c=>c.classList.remove('activo'));
+    chip.classList.add('activo');
+    filtroCorte = chip.dataset.corte;
     renderGrid(filtroActual, document.getElementById('busca').value);
   };
 });

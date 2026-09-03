@@ -369,11 +369,49 @@ display:none !important;
 
 @media (max-width: 650px){
   .product-grid{
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 16px 12px;
   }
 
   .catalog-grid-section-grid{
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  /* Buscador fijo en móvil */
+  .model-search-section{
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    background: #fff;
+    padding: 8px 12px;
+    margin: 0;
+    border-bottom: 1px solid #e5e7eb;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .model-search{
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* Banner Cole 44 más compacto en móvil */
+  .cole44-banner-btn{
+    padding: 12px 14px;
+    margin: 0 auto 14px;
+    border-radius: 12px;
+  }
+  .cole44-banner-title{
+    font-size: 13px;
+  }
+  .cole44-banner-badge{
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+  .cole44-banner-cta{
+    font-size: 12px;
+    padding: 8px 12px;
+    white-space: nowrap;
   }
 }
 
@@ -720,15 +758,21 @@ img.catalog-image-loading{
 
 @media (max-width: 650px){
   .card-title-row{
-    padding:12px 12px 8px;
+    padding:8px 8px 6px;
   }
   .card-title-row .card-title{
-    font-size:15px;
+    font-size:13px;
+  }
+  .card-price-current{
+    font-size:14px;
   }
   .card-image-wrap{
-    width: calc(100% - 24px);
-    height:430px;
-    margin: 0 12px 12px;
+    width: calc(100% - 12px);
+    height:220px;
+    margin: 0 6px 8px;
+  }
+  .card .img-wrap{
+    height: 220px;
   }
   .sold-out-ribbon-card{
     font-size:16px;
@@ -5396,17 +5440,25 @@ box-shadow: 0 -10px 18px rgba(255,255,255,0.95), 0 10px 24px rgba(0,0,0,0.16);
 
   /* Modal con altura controlada */
   .modal-content{
-    height: 92vh !important;
-  }
-
-  /* Zona superior (imagen + miniaturas) con altura máxima */
-  .modal-left{
-    flex: none !important;
-    height: 54vh !important;      /* ✅ ajusta 50–58 según te guste */
-    min-height: 320px !important;
-    padding: 14px 14px 8px !important;
+    height: 96vh !important;
     display: flex !important;
     flex-direction: column !important;
+  }
+
+  /* Zona superior (imagen + miniaturas) compacta */
+  .modal-left{
+    flex: none !important;
+    height: 38vh !important;
+    min-height: 220px !important;
+    max-height: 300px !important;
+    padding: 10px 10px 6px !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Ocultar hantan stack en modal móvil */
+  .modal-hantan-stack{
+    display: none !important;
   }
 
   .image-viewer{
@@ -5469,10 +5521,11 @@ box-shadow: 0 -10px 18px rgba(255,255,255,0.95), 0 10px 24px rgba(0,0,0,0.16);
 
   /* Zona inferior (tallas) siempre visible y con scroll si falta */
   .modal-right{
-    flex: 1 !important;              /* ✅ ocupa el resto */
+    flex: 1 !important;
     min-height: 0 !important;
-    overflow-y: auto !important;     /* ✅ si no cabe, scroll aquí */
-    padding: 14px 16px 18px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 12px 14px 16px !important;
     border-top: 1px solid rgba(0,0,0,0.08);
     background: rgba(255,255,255,0.97);
   }
@@ -6192,9 +6245,9 @@ body{
   }
 
   .product-grid{
-    grid-template-columns:1fr;
-    gap:18px;
-    padding:18px 12px 28px;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap:12px;
+    padding:14px 10px 24px;
   }
 
   .card{
@@ -6216,18 +6269,25 @@ body{
   }
 
   .card-image-wrap{
-    width:calc(100% - 20px);
-    height:min(68vh, 430px);
-    margin:0 10px 10px;
-    border-radius:12px;
+    width:calc(100% - 10px);
+    height:180px !important;
+    margin:0 5px 6px;
+    border-radius:10px;
+  }
+  .card .img-wrap{
+    height:180px !important;
+    overflow:hidden;
+  }
+  .card .img-wrap img,
+  .card-image-wrap img{
+    height:100% !important;
+    width:100% !important;
+    object-fit:cover !important;
+    object-position:top center !important;
   }
 
   .card-model-meta{
-    width:calc(100% - 20px);
-    margin:0 10px 10px;
-    padding:10px 11px 12px;
-    gap:6px;
-    border-radius:14px;
+    display: none !important;
   }
 
   .card-model-fabric{
@@ -6286,6 +6346,43 @@ body{
   .cart-form-column{
     margin-top:0;
     padding-top:0;
+  }
+
+  /* Banner Cole 44 compacto en móvil */
+  .cole44-banner-btn{
+    padding: 10px 14px;
+    margin: 0 auto 12px;
+    border-radius: 12px;
+  }
+  .cole44-banner-title{
+    font-size: 14px;
+    line-height: 1.2;
+  }
+  .cole44-banner-badge{
+    font-size: 10px;
+    padding: 3px 7px;
+  }
+  .cole44-banner-cta{
+    font-size: 12px;
+    padding: 8px 12px;
+    white-space: nowrap;
+    border-radius: 8px;
+  }
+
+  /* Cards más compactas en grid 2 columnas */
+  .card-title{
+    font-size: 0.85rem;
+  }
+  .card-price{
+    font-size: 11px;
+  }
+  .card-title-row{
+    padding: 6px 8px 5px;
+    gap: 4px;
+  }
+  .catalog-grid-section-grid{
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px;
   }
 }
 

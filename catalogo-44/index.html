@@ -206,10 +206,114 @@ main{max-width:1200px;margin:0 auto;padding:1rem 1.2rem 4rem}
 .velo{position:fixed;inset:0;background:rgba(12,25,36,.55);backdrop-filter:blur(3px);z-index:100;display:none;align-items:center;justify-content:center;padding:1rem}
 .velo.abierto{display:flex}
 .modal{
-  background:#fff;border-radius:22px;max-width:960px;width:100%;max-height:92vh;overflow:auto;position:relative;
+  background:#fff;border-radius:22px;max-width:960px;width:100%;max-height:92vh;overflow:hidden;position:relative;
   display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
 }
-@media(max-width:760px){.modal{grid-template-columns:1fr}}
+/* En desktop modal-body es invisible: galería y datos son hijos directos del grid */
+.modal-body{ display:contents; }
+/* Desktop: altura fija para que las columnas scrolleen independientemente */
+@media(min-width:761px){
+  #img-nav{ display:none !important; }
+  .modal{ height:88vh; }
+  /* Galería: imagen llena su espacio, minis siempre visibles abajo */
+  .modal .galeria{ min-height:0; overflow:hidden; }
+  .modal .galeria .principal{ flex:1; min-height:0; overflow:hidden; position:relative; }
+  .modal .galeria .principal img{ width:100%; height:100%; object-fit:contain; object-position:center center; }
+  /* Datos: scroll independiente en la columna derecha */
+  .modal .datos{ min-height:0; overflow-y:auto; padding-bottom:2rem; }
+}
+@media(max-width:760px){
+  /* Modal ocupa casi toda la pantalla como bottom sheet */
+  .velo{ padding:0; align-items:flex-end; }
+  .modal{
+    grid-template-columns:1fr;
+    border-radius:22px 22px 0 0;
+    height:96dvh;
+    max-height:96dvh;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  /* modal-body: el único scroll container — galería y datos fluyen dentro */
+  .modal-body{
+    display:flex;
+    flex-direction:column;
+    flex:1;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+  /* Galería mobile */
+  .modal .galeria{ flex-shrink:0; padding:.5rem .6rem .35rem; }
+  .modal .galeria .principal{ border-radius:12px; overflow:hidden; position:relative; }
+  .modal .galeria .principal img{ width:100%; height:auto; display:block; }
+  /* Minis: ocultas en mobile (el lightbox las reemplaza) */
+  .modal .galeria .minis{ display:none !important; }
+  /* Zoom: solo en PC, en mobile el pinch-to-zoom es nativo */
+  #lupa-btn{ display:none !important; }
+  /* Datos: fluye normalmente dentro del modal-body scrolleable */
+  .modal .datos{ padding:1rem 1.1rem 0; gap:.65rem; }
+  .modal .cerrar{ top:.6rem; right:.6rem; }
+  /* Curvas: una por fila en mobile */
+  .curvas-row{ grid-template-columns:1fr; }
+  /* Botón sticky al fondo del scroll de modal-body */
+  .btn-agregar-wrap{
+    display:block;
+    position:sticky;
+    bottom:0;
+    background:#fff;
+    padding:.7rem 0 1rem;
+    margin-top:.2rem;
+  }
+  .btn-agregar-wrap .btn{ width:100%; justify-content:center; }
+}
+/* Nav de imágenes integrado en el modal */
+#img-nav{
+  position:absolute;bottom:10px;left:0;right:0;
+  display:flex;align-items:center;justify-content:center;gap:10px;z-index:2;
+}
+#img-nav.hidden{ display:none; }
+#img-prev,#img-next{
+  width:2rem;height:2rem;border-radius:50%;border:none;
+  background:rgba(0,0,0,.42);color:#fff;
+  font-size:1.25rem;line-height:1;cursor:pointer;
+  backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;
+}
+#img-counter{
+  color:#fff;font-size:.78rem;font-weight:700;
+  background:rgba(0,0,0,.42);padding:3px 10px;border-radius:20px;
+  backdrop-filter:blur(4px);
+}
+/* Botón lupa sobre imagen */
+#lupa-btn{
+  position:absolute;top:.6rem;right:.6rem;z-index:3;
+  height:2rem;padding:0 .75rem;border-radius:999px;border:none;
+  background:rgba(0,0,0,.40);color:#fff;font-size:.78rem;font-weight:700;
+  cursor:pointer;backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;gap:.3rem;
+  transition:background .15s,transform .1s;letter-spacing:.04em;
+}
+#lupa-btn:hover{ background:rgba(0,0,0,.65);transform:scale(1.1); }
+/* Lightbox */
+#lightbox{
+  position:fixed;inset:0;z-index:10000;
+  background:rgba(0,0,0,.90);
+  display:none;align-items:center;justify-content:center;
+  cursor:zoom-out;
+}
+#lightbox.abierto{ display:flex; }
+#lightbox img{
+  max-width:92vw;max-height:92vh;
+  object-fit:contain;border-radius:10px;
+  cursor:default;box-shadow:0 20px 60px rgba(0,0,0,.6);
+}
+#lb-cerrar{
+  position:fixed;top:1.2rem;right:1.2rem;
+  width:2.6rem;height:2.6rem;border-radius:50%;border:none;
+  background:rgba(255,255,255,.18);color:#fff;font-size:1.3rem;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(4px);transition:background .15s;z-index:10001;
+}
+#lb-cerrar:hover{ background:rgba(255,255,255,.32); }
 .modal .galeria{background:linear-gradient(180deg,#eef8fd,#dbeef7);padding:1rem;display:flex;flex-direction:column;gap:.6rem}
 .modal .galeria .principal img{width:100%;border-radius:14px;display:block}
 .modal .galeria .minis{display:flex;gap:.5rem}
@@ -232,6 +336,12 @@ main{max-width:1200px;margin:0 auto;padding:1rem 1.2rem 4rem}
 .cant-input::-webkit-inner-spin-button,.cant-input::-webkit-outer-spin-button{-webkit-appearance:none}
 .cant-input[type=number]{-moz-appearance:textfield}
 .curvas-row{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem}
+.curva-toast{
+  background:#e8f7ef;color:#0c6b3d;border-radius:10px;
+  padding:.55rem .9rem;font-size:.82rem;font-weight:600;
+  border:1px solid #b2dfc7;
+}
+.btn-agregar-wrap{ display:contents; }
 .total-modal{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:.95rem}
 .aviso-min{font-size:.78rem;color:var(--rojo-osc);background:#fdecee;border-radius:10px;padding:.55rem .8rem;display:none}
 .aviso-min.ver{display:block}
@@ -567,6 +677,223 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
 .crm-select{border:1.5px solid #d8e4ec;border-radius:8px;padding:.45rem .7rem;font-family:inherit;font-size:.82rem;background:#fff;width:100%;cursor:pointer}
 .crm-textarea{border:1.5px solid #d8e4ec;border-radius:8px;padding:.45rem .7rem;font-family:inherit;font-size:.82rem;width:100%;resize:vertical;min-height:52px}
 .crm-select:focus,.crm-textarea:focus{outline:none;border-color:var(--rojo)}
+
+/* Elementos exclusivos de mobile: ocultos en desktop, la media query los activa */
+#dv-mobile-bar { display:none; }
+.dv-backdrop, .dv-sheet { display:none; }
+/* Ocultar pill bar y botón Tu pedido cuando el carrito está abierto */
+body.cajon-abierto #dv-mobile-bar { display:none !important; }
+body.cajon-abierto #abrir-carrito { display:none !important; }
+
+/* ===== SIDEBAR DESKTOP ===== */
+.dv-layout{
+  display:flex;gap:1.4rem;
+  max-width:1380px;margin:1.5rem auto 0;padding:0 1.2rem;
+  align-items:flex-start;
+}
+.dv-sidebar{
+  width:196px;flex-shrink:0;
+  position:sticky;top:1rem;
+  background:#fff;border-radius:16px;box-shadow:var(--sombra);
+  padding:1.2rem 1rem;
+  max-height:calc(100vh - 2rem);overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:var(--celeste2) transparent;
+}
+.dv-sidebar::-webkit-scrollbar{width:4px}
+.dv-sidebar::-webkit-scrollbar-thumb{background:var(--celeste2);border-radius:4px}
+.dv-sb-titulo{
+  font-size:1.15rem;font-weight:800;color:var(--tinta);
+  margin-bottom:1rem;letter-spacing:.01em;
+}
+.dv-sb-label{
+  font-size:.67rem;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--gris);margin-bottom:.5rem;
+}
+.dv-layout main{flex:1;min-width:0;max-width:none;margin:0;padding:0 0 4rem}
+/* Ocultar chips reales en sidebar (los muestra el JS en #dv-sb-cat) */
+.dv-sidebar .barra-filtros{
+  display:block !important;margin:0 !important;padding:0 !important;max-width:none !important;
+}
+.dv-sidebar .barra-filtros .chip{display:none !important}
+.dv-sidebar .barra-disp{display:none !important}
+.dv-sidebar .busca{
+  width:100%;border-radius:8px;font-size:.8rem;
+  padding:.42rem .75rem;min-width:0;
+}
+/* Items construidos por JS */
+.dv-sb-item{
+  display:flex;align-items:center;justify-content:space-between;
+  border:none;border-radius:8px;padding:.5rem .8rem;width:100%;
+  background:transparent;font-family:inherit;font-size:.83rem;
+  font-weight:500;color:var(--tinta);cursor:pointer;transition:all .15s;
+  text-align:left;
+}
+.dv-sb-item.dv-active{background:var(--celeste2);font-weight:700}
+.dv-sb-item:hover:not(.dv-active){background:var(--celeste)}
+.dv-sb-arr{font-size:.65rem;color:var(--gris);flex-shrink:0;pointer-events:none}
+/* Sub-lista colapsable */
+.dv-sb-sublist{
+  display:none;flex-direction:column;gap:2px;
+  padding-left:8px;border-left:2px solid var(--celeste2);
+  margin:2px 0 2px 8px;
+}
+.dv-sb-sublist.open{display:flex}
+.dv-sb-sublist .dv-sb-item{font-size:.8rem}
+/* Colores disponibilidad */
+.dv-sb-item.dv-disp-disponible.dv-active{background:#e8f7ef;color:#0c6b3d}
+.dv-sb-item.dv-disp-produccion.dv-active{background:#fff3cd;color:#7a5800}
+/* Sugerencias buscador */
+#dv-sb-sugg{margin-top:4px}
+.dv-sb-s-item{
+  padding:.38rem .8rem;border-radius:6px;font-size:.78rem;
+  color:var(--tinta);cursor:pointer;transition:background .12s;line-height:1.3;
+}
+.dv-sb-s-item:hover{background:var(--celeste)}
+.dv-sb-s-code{color:var(--gris);font-size:.7rem;display:block}
+.dv-sb-s-more,.dv-sb-nores{font-size:.72rem;color:var(--gris);padding:.3rem .8rem}
+
+/* ===== MOBILE: grid 2 columnas estilo Cole 43 ===== */
+@media(max-width:768px){
+  /* Sidebar desktop → oculto en mobile */
+  .dv-sidebar{ display:none !important; }
+  .dv-layout{ display:block; margin:0; padding:0; }
+  .dv-layout main{ padding:0 0 4rem; }
+
+  /* Grid de productos → 2 columnas */
+  .grid{
+    grid-template-columns:repeat(2,1fr) !important;
+    gap:8px !important;
+  }
+  /* Sección con portada lateral → todo en columna */
+  .cuerpo-sec,.seccion.invertida .cuerpo-sec{
+    grid-template-columns:1fr !important;
+  }
+  .seccion.invertida .cover-sec{order:0}
+  .cover-sec{position:static}
+  .cover-sec img{max-height:220px;object-fit:cover;object-position:center 18%}
+
+  /* Card compacta */
+  .card{border-radius:10px;box-shadow:0 1px 6px rgba(18,40,58,.10)}
+  .card:hover{transform:none;box-shadow:0 2px 8px rgba(18,40,58,.14)}
+  .card .marco img{aspect-ratio:3/4;object-fit:cover}
+  .card .lupa{font-size:.6rem;padding:.22rem .5rem;right:.4rem;bottom:.4rem}
+  .card .etiqueta{font-size:.58rem;padding:.2rem .5rem;left:.4rem;bottom:.4rem}
+
+  /* Info debajo de la imagen */
+  .card .cuerpo{padding:5px 7px 8px;gap:.2rem}
+  .card h3{font-size:.72rem;font-weight:700;letter-spacing:.01em;line-height:1.25}
+  .card .codigo{font-size:.62rem}
+  .card .precio{font-size:.82rem;font-weight:800}
+  .card .precio small{font-size:.6rem}
+
+  /* Ocultar botones en la tarjeta — el tap en la imagen abre el modal */
+  .card .botones{display:none}
+
+  /* Strip de fotos Italia: 2 columnas */
+  .italia-strip{grid-template-columns:repeat(2,1fr);gap:6px}
+  .italia-strip img{height:90px}
+
+  /* Ocultar barras de chips en mobile — reemplazadas por botones + bottom sheet */
+  .barra-filtros{ display:none !important; }
+  .barra-disp{ display:none !important; }
+
+  /* ===== BARRA MOBILE DOLCE VITA: pill sticky ===== */
+  #dv-mobile-bar{
+    display:flex !important;
+    position:sticky;
+    top:10px;
+    z-index:92;
+    margin:10px 14px 0;
+    background:var(--tinta);
+    border-radius:50px;
+    padding:5px;
+    gap:5px;
+    box-shadow:0 8px 28px rgba(18,40,58,.4);
+    transition:opacity .25s ease, transform .25s ease;
+  }
+  #dv-cat-btn,#dv-disp-btn,#dv-busca-btn{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+    padding:11px 8px;
+    border:none;
+    border-radius:50px;
+    background:rgba(255,255,255,.13);
+    font-size:.8rem;
+    font-weight:600;
+    color:#fff;
+    cursor:pointer;
+    font-family:inherit;
+    transition:all .15s;
+  }
+  #dv-cat-btn.is-filtered,#dv-disp-btn.is-filtered,#dv-busca-btn.is-filtered{
+    background:#fff;
+    color:var(--tinta);
+  }
+  /* Input buscador dentro del sheet */
+  #dv-busca-input{
+    width:100%;padding:.8rem 1rem;border:1.5px solid #e2e8ee;
+    border-radius:12px;font-family:'Poppins',sans-serif;font-size:1rem;
+    outline:none;background:#fafafa;color:var(--tinta);
+  }
+  #dv-busca-input:focus{ border-color:var(--rojo); background:#fff; }
+  .dv-busca-res-item{
+    display:flex;flex-direction:column;padding:.65rem .8rem;
+    border-radius:8px;cursor:pointer;border-bottom:1px solid #f5f5f5;
+  }
+  .dv-busca-res-item:hover{ background:#f5f8fa; }
+  .dv-busca-res-nom{ font-weight:600;font-size:.9rem;color:var(--tinta); }
+  .dv-busca-res-cod{ font-size:.75rem;color:var(--gris); }
+  .fab-carrito{ z-index:100; }
+  /* Sheet: asegurar que sea visible al abrir */
+  .dv-sheet.open{ transform:translateY(0); display:block !important; }
+  .dv-backdrop.open{ display:block !important; }
+  /* Bottom sheets */
+  .dv-backdrop{
+    position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:290;display:none;
+  }
+  .dv-backdrop.open{display:block}
+  .dv-sheet{
+    position:fixed;bottom:0;left:0;right:0;
+    background:#fff;border-radius:18px 18px 0 0;z-index:295;
+    transform:translateY(100%);transition:transform .28s cubic-bezier(0.32,0.72,0,1);
+    padding-bottom:28px;max-height:80vh;overflow-y:auto;
+  }
+  .dv-sheet.open{transform:translateY(0)}
+  .dv-sheet-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 20px 14px;border-bottom:1px solid #f0f0f0;
+    position:sticky;top:0;background:#fff;z-index:1;
+  }
+  .dv-sheet-title{font-size:1rem;font-weight:700;color:#111}
+  .dv-sheet-close{
+    width:30px;height:30px;border-radius:50%;border:none;
+    background:#f0f0f0;font-size:13px;font-weight:700;color:#555;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+  }
+  .dv-sheet-opt{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:15px 20px;border-bottom:1px solid #f5f5f5;
+    cursor:pointer;font-size:.95rem;color:#374151;
+  }
+  .dv-sheet-opt.active{color:#1e2d3d;font-weight:600}
+  .dv-fcheck{
+    width:22px;height:22px;border-radius:50%;border:2px solid #d1d5db;
+    display:flex;align-items:center;justify-content:center;flex:0 0 22px;transition:all .15s;
+  }
+  .dv-sheet-opt.active .dv-fcheck{border-color:#1e2d3d;background:#1e2d3d}
+  .dv-fcheck::after{
+    content:'';width:8px;height:8px;border-radius:50%;background:#fff;display:none;
+  }
+  .dv-sheet-opt.active .dv-fcheck::after{display:block}
+  /* Colores especiales para disponibilidad */
+  .dv-sheet-opt.active[data-disp="disponible"]{color:#0c6b3d}
+  .dv-sheet-opt.active[data-disp="disponible"] .dv-fcheck{border-color:#6bcf9e;background:#6bcf9e}
+  .dv-sheet-opt.active[data-disp="produccion"]{color:#7a5800}
+  .dv-sheet-opt.active[data-disp="produccion"] .dv-fcheck{border-color:#f0c050;background:#f0c050}
+}
 </style>
 </head>
 <body>
@@ -596,16 +923,66 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
   <img src="img/c5.webp" alt="Dolce Vita — Postcard desde Italia" loading="lazy">
 </div>
 
-<div class="barra-filtros" id="filtros">
-  <input class="busca" id="busca" type="search" placeholder="Buscar modelo o código…" autocomplete="new-password" spellcheck="false">
-</div>
-<div class="barra-disp" id="filtros-disp">
-  <span class="disp-label">Ver:</span>
+<!-- Barra mobile: 3 botones (oculta en desktop por CSS global display:none) -->
+<div id="dv-mobile-bar">
+  <button id="dv-cat-btn" type="button">≡ Categorías</button>
+  <button id="dv-disp-btn" type="button">✓ Disponible</button>
+  <button id="dv-busca-btn" type="button">🔍 Buscador</button>
 </div>
 
-<main>
-  <div id="catalogo"></div>
-</main>
+<!-- Backdrop + sheet: Categorías -->
+<div id="dv-cat-backdrop" class="dv-backdrop"></div>
+<div id="dv-cat-sheet" class="dv-sheet">
+  <div class="dv-sheet-header">
+    <span class="dv-sheet-title">Categorías</span>
+    <button class="dv-sheet-close" id="dv-cat-close">✕</button>
+  </div>
+  <div id="dv-cat-opts"></div>
+</div>
+
+<!-- Backdrop + sheet: Disponibilidad -->
+<div id="dv-disp-backdrop" class="dv-backdrop"></div>
+<div id="dv-disp-sheet" class="dv-sheet">
+  <div class="dv-sheet-header">
+    <span class="dv-sheet-title">Disponibilidad</span>
+    <button class="dv-sheet-close" id="dv-disp-close">✕</button>
+  </div>
+  <div class="dv-sheet-opt active" data-disp="todos"><span>Todos</span><span class="dv-fcheck"></span></div>
+  <div class="dv-sheet-opt" data-disp="disponible"><span>✓ Disponible</span><span class="dv-fcheck"></span></div>
+  <div class="dv-sheet-opt" data-disp="produccion"><span>⏳ En producción</span><span class="dv-fcheck"></span></div>
+</div>
+
+<!-- Backdrop + sheet: Buscador -->
+<div id="dv-busca-backdrop" class="dv-backdrop"></div>
+<div id="dv-busca-sheet" class="dv-sheet" style="min-height:300px">
+  <div class="dv-sheet-header">
+    <span class="dv-sheet-title">Buscar modelo</span>
+    <button class="dv-sheet-close" id="dv-busca-close">✕</button>
+  </div>
+  <div style="padding:1rem 1.2rem 1.2rem">
+    <input id="dv-busca-input" type="search" placeholder="Modelo o código…" autocomplete="off" spellcheck="false">
+    <div id="dv-busca-results" style="margin-top:.6rem"></div>
+  </div>
+</div>
+
+<div class="dv-layout">
+  <aside class="dv-sidebar">
+    <p class="dv-sb-titulo">Filtros</p>
+    <p class="dv-sb-label">Categorías</p>
+    <div id="dv-sb-cat"></div>
+    <p class="dv-sb-label" style="margin-top:1.4rem">Disponibilidad</p>
+    <div id="dv-sb-disp"></div>
+    <p class="dv-sb-label" style="margin-top:1.4rem">Buscador</p>
+    <div class="barra-filtros" id="filtros">
+      <input class="busca" id="busca" type="search" placeholder="Modelo o código…" autocomplete="new-password" spellcheck="false">
+    </div>
+    <div id="dv-sb-sugg"></div>
+    <div class="barra-disp" id="filtros-disp"><span class="disp-label">Ver:</span></div>
+  </aside>
+  <main>
+    <div id="catalogo"></div>
+  </main>
+</div>
 
 <section class="bloque-catalogo">
   <div class="bandera" style="margin:0 auto 1rem;display:flex;max-width:120px"><i></i><i></i><i></i></div>
@@ -659,14 +1036,24 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
 <div class="velo" id="velo-modal">
   <div class="modal">
     <button class="cerrar" id="cerrar-modal">✕</button>
+    <div class="modal-body">
     <div class="galeria">
-      <div class="principal"><img id="img-principal" src="" alt=""></div>
+      <div class="principal">
+        <img id="img-principal" src="" alt="">
+        <button id="lupa-btn" type="button" title="Ver imagen grande">🔍 Zoom</button>
+        <div id="img-nav" class="hidden">
+          <button id="img-prev" type="button">‹</button>
+          <span id="img-counter"></span>
+          <button id="img-next" type="button">›</button>
+        </div>
+      </div>
       <div class="minis" id="minis"></div>
     </div>
     <div class="datos">
       <h2 id="m-nombre"></h2>
       <p class="cod" id="m-codigo"></p>
       <p class="precio-g" id="m-precio"></p>
+      <div id="curva-toast" class="curva-toast" style="display:none"></div>
       <div class="tallas-caja">
         <h4>Cantidades por talla</h4>
         <div id="m-tallas"></div>
@@ -677,9 +1064,18 @@ footer.pie a{color:var(--rojo);font-weight:600;text-decoration:none}
         <button class="btn btn-borde" id="m-curva12">⚡ Agregar curva sugerida de 12</button>
         <button class="btn btn-borde" id="m-curva17">⚡ Agregar curva sugerida de 17</button>
       </div>
-      <button class="btn btn-rojo" id="m-agregar">Agregar al pedido</button>
+      <div class="btn-agregar-wrap">
+        <button class="btn btn-rojo" id="m-agregar">Agregar al pedido</button>
+      </div>
     </div>
-  </div>
+    </div><!-- /modal-body -->
+  </div><!-- /modal -->
+</div><!-- /velo -->
+
+<!-- Lightbox imagen grande -->
+<div id="lightbox">
+  <img id="lb-img" src="" alt="">
+  <button id="lb-cerrar" type="button">✕</button>
 </div>
 
 <!-- cajón carrito -->
@@ -980,5 +1376,472 @@ function copiarLink(btn) {
     <video id="video-player" controls playsinline style="width:100%;display:block;max-height:75vh;background:#000"></video>
   </div>
 </div>
+
+<script>
+/* ===== FILTROS MOBILE DOLCE VITA: 2 botones + 2 bottom sheets ===== */
+(function() {
+  /* sin guardia de innerWidth — CSS controla visibilidad en desktop vs mobile */
+  var bar = document.getElementById('dv-mobile-bar');
+
+  function openSheet(sheet, backdrop) {
+    sheet.classList.add('open');
+    backdrop.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeSheet(sheet, backdrop) {
+    sheet.classList.remove('open');
+    backdrop.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  /* ---- SHEET CATEGORÍAS ---- */
+  var catBtn      = document.getElementById('dv-cat-btn');
+  var catSheet    = document.getElementById('dv-cat-sheet');
+  var catBackdrop = document.getElementById('dv-cat-backdrop');
+  var catClose    = document.getElementById('dv-cat-close');
+  var catOpts     = document.getElementById('dv-cat-opts');
+
+  function buildCatOpts() {
+    // Los chips no tienen data-tipo — se identifican por texto y posición
+    var chips = Array.from(document.querySelectorAll('#filtros .chip:not(.chip-disp)'));
+    if (!chips.length) return;
+    catOpts.innerHTML = chips.map(function(c, i) {
+      var activo = c.classList.contains('activo') ? ' active' : '';
+      return '<div class="dv-sheet-opt' + activo + '" data-chip-idx="' + i + '">' +
+        '<span>' + c.textContent.trim() + '</span><span class="dv-fcheck"></span></div>';
+    }).join('');
+  }
+
+  // Esperar a que app.js inyecte los chips (se crean dinámicamente)
+  new MutationObserver(function(_, obs) {
+    if (document.querySelectorAll('#filtros .chip:not(.chip-disp)').length) {
+      buildCatOpts();
+      obs.disconnect();
+    }
+  }).observe(document.getElementById('filtros'), { childList: true, subtree: true });
+
+  catBtn.addEventListener('click', function() { buildCatOpts(); openSheet(catSheet, catBackdrop); });
+  catBackdrop.addEventListener('click', function() { closeSheet(catSheet, catBackdrop); });
+  catClose.addEventListener('click', function() { closeSheet(catSheet, catBackdrop); });
+
+  catOpts.addEventListener('click', function(e) {
+    var opt = e.target.closest('.dv-sheet-opt[data-chip-idx]');
+    if (!opt) return;
+    var idx = parseInt(opt.dataset.chipIdx, 10);
+    catOpts.querySelectorAll('.dv-sheet-opt').forEach(function(o) { o.classList.remove('active'); });
+    opt.classList.add('active');
+    var isTodos = idx === 0;
+    catBtn.classList.toggle('is-filtered', !isTodos);
+    catBtn.textContent = isTodos ? '≡ Categorías' : '≡ ' + opt.querySelector('span').textContent;
+    // Disparar chip real por índice
+    var chips = document.querySelectorAll('#filtros .chip:not(.chip-disp)');
+    if (chips[idx]) chips[idx].click();
+    closeSheet(catSheet, catBackdrop);
+    // Scroll al inicio del catálogo
+    setTimeout(function() {
+      var cat = document.getElementById('catalogo');
+      if (cat) cat.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+  });
+
+  /* ---- SHEET DISPONIBILIDAD ---- */
+  var dispBtn      = document.getElementById('dv-disp-btn');
+  var dispSheet    = document.getElementById('dv-disp-sheet');
+  var dispBackdrop = document.getElementById('dv-disp-backdrop');
+  var dispClose    = document.getElementById('dv-disp-close');
+
+  var dispLabels = { todos: '✓ Disponible', disponible: '✓ Disponible', produccion: '⏳ En producción' };
+  var dispColors = { todos: '', disponible: '#0c6b3d', produccion: '#7a5800' };
+
+  dispBtn.addEventListener('click', function() { openSheet(dispSheet, dispBackdrop); });
+  dispBackdrop.addEventListener('click', function() { closeSheet(dispSheet, dispBackdrop); });
+  dispClose.addEventListener('click', function() { closeSheet(dispSheet, dispBackdrop); });
+
+  dispSheet.addEventListener('click', function(e) {
+    var opt = e.target.closest('.dv-sheet-opt[data-disp]');
+    if (!opt) return;
+    var disp = opt.dataset.disp;
+    dispSheet.querySelectorAll('.dv-sheet-opt').forEach(function(o) { o.classList.remove('active'); });
+    opt.classList.add('active');
+    var isTodos = disp === 'todos';
+    dispBtn.classList.toggle('is-filtered', !isTodos);
+    dispBtn.textContent = isTodos ? '✓ Disponible' : dispLabels[disp];
+    dispBtn.style.color = isTodos ? '' : dispColors[disp];
+    dispBtn.style.borderColor = isTodos ? '' : (disp === 'disponible' ? '#6bcf9e' : '#f0c050');
+    dispBtn.style.background = isTodos ? '' : (disp === 'disponible' ? '#e8f7ef' : '#fff3cd');
+    // Disparar chip real
+    var realChip = document.querySelector('#filtros-disp .chip-disp[data-disp="' + disp + '"]');
+    if (realChip) realChip.click();
+    closeSheet(dispSheet, dispBackdrop);
+    // Scroll al inicio del catálogo
+    setTimeout(function() {
+      var cat = document.getElementById('catalogo');
+      if (cat) cat.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+  });
+
+  /* Sentinel: marca la posición natural del bar en el documento */
+  var sentinel = document.createElement('div');
+  sentinel.style.cssText = 'height:1px;pointer-events:none;visibility:hidden;';
+  bar.parentNode.insertBefore(sentinel, bar);
+
+  var lastScrollY = window.scrollY;
+
+  window.addEventListener('scroll', function() {
+    var cur = window.scrollY;
+    /* No tocar el bar si el cajón está abierto */
+    if (document.body.classList.contains('cajon-abierto')) { lastScrollY = cur; return; }
+    /* sticky mode = el sentinel ya pasó el tope del viewport */
+    var isSticky = sentinel.getBoundingClientRect().top <= 10;
+
+    if (isSticky && cur < lastScrollY) {
+      /* Subiendo en modo sticky → esconder */
+      bar.style.opacity = '0';
+      bar.style.transform = 'translateY(-16px)';
+      bar.style.pointerEvents = 'none';
+    } else if (!isSticky || cur > lastScrollY) {
+      /* En posición natural O bajando → mostrar */
+      bar.style.opacity = '1';
+      bar.style.transform = 'translateY(0)';
+      bar.style.pointerEvents = 'auto';
+    }
+    lastScrollY = cur;
+  }, { passive: true });
+
+  /* ---- SHEET BUSCADOR ---- */
+  var buscaBtn      = document.getElementById('dv-busca-btn');
+  var buscaSheet    = document.getElementById('dv-busca-sheet');
+  var buscaBackdrop = document.getElementById('dv-busca-backdrop');
+  var buscaClose    = document.getElementById('dv-busca-close');
+  var buscaInput    = document.getElementById('dv-busca-input');
+  var buscaResults  = document.getElementById('dv-busca-results');
+
+  buscaBtn.addEventListener('click', function() {
+    openSheet(buscaSheet, buscaBackdrop);
+    setTimeout(function() { if (buscaInput) buscaInput.focus(); }, 320);
+  });
+  buscaBackdrop.addEventListener('click', function() { closeSheet(buscaSheet, buscaBackdrop); });
+  buscaClose.addEventListener('click', function() { closeSheet(buscaSheet, buscaBackdrop); });
+
+  if (buscaInput && buscaResults) {
+    buscaInput.addEventListener('input', function() {
+      var q = buscaInput.value.trim();
+      buscaBtn.classList.toggle('is-filtered', !!q);
+      /* Sincronizar con el input real que usa app.js */
+      var realBusca = document.getElementById('busca');
+      if (realBusca) {
+        realBusca.value = q;
+        realBusca.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      if (!q) { buscaResults.innerHTML = ''; return; }
+      setTimeout(function() {
+        var cards = Array.from(document.querySelectorAll('#catalogo .card'));
+        if (!cards.length) {
+          buscaResults.innerHTML = '<div style="color:var(--gris);font-size:.85rem;padding:.5rem 0">Sin resultados</div>';
+          return;
+        }
+        var shown = cards.slice(0, 9);
+        buscaResults.innerHTML = shown.map(function(card, i) {
+          var h3  = card.querySelector('h3');
+          var cod = card.querySelector('[class*="codigo"]');
+          var nombre = h3  ? h3.textContent.trim() : '';
+          var codigo = cod ? cod.textContent.trim().replace('Código ','').split('·')[0].trim() : '';
+          return '<div class="dv-busca-res-item" data-ci="' + i + '">' +
+            '<span class="dv-busca-res-nom">' + nombre + '</span>' +
+            '<span class="dv-busca-res-cod">' + codigo + '</span></div>';
+        }).join('') +
+        (cards.length > 9 ? '<div style="font-size:.75rem;color:var(--gris);padding:.4rem .8rem">+' + (cards.length - 9) + ' más resultados</div>' : '');
+
+        buscaResults.querySelectorAll('[data-ci]').forEach(function(el) {
+          el.addEventListener('click', function() {
+            var idx = parseInt(el.dataset.ci, 10);
+            closeSheet(buscaSheet, buscaBackdrop);
+            setTimeout(function() {
+              cards[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 320);
+          });
+        });
+      }, 100);
+    });
+    buscaInput.addEventListener('search', function() {
+      if (!buscaInput.value) {
+        buscaResults.innerHTML = '';
+        buscaBtn.classList.remove('is-filtered');
+        var realBusca = document.getElementById('busca');
+        if (realBusca) {
+          realBusca.value = '';
+          realBusca.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+    });
+  }
+
+  /* Ocultar pill bar cuando el cajón-carrito está abierto (via clase en body) */
+  var cajon = document.getElementById('cajon');
+  if (cajon) {
+    new MutationObserver(function() {
+      document.body.classList.toggle('cajon-abierto', cajon.classList.contains('abierto'));
+    }).observe(cajon, { attributes: true, attributeFilter: ['class'] });
+  }
+})();
+
+/* ===== SIDEBAR DESKTOP: construido en JS ===== */
+(function() {
+
+  var sbOpen = false;
+  var built  = false;
+
+  function buildSidebar() {
+    if (built) return;
+    var chips = Array.from(document.querySelectorAll('#filtros .chip:not(.chip-disp)'));
+    if (chips.length < 2) return;
+    built = true;
+
+    var sbCat  = document.getElementById('dv-sb-cat');
+    var sbDisp = document.getElementById('dv-sb-disp');
+    if (!sbCat || !sbDisp) return;
+
+    /* --- Categorías --- */
+    var todosChip = chips[0];
+    var subChips  = chips.slice(1);
+
+    var todosBtn = document.createElement('button');
+    todosBtn.className = 'dv-sb-item dv-active';
+    todosBtn.innerHTML = '<span>' + todosChip.textContent.trim() + '</span><span class="dv-sb-arr">▶</span>';
+    sbCat.appendChild(todosBtn);
+
+    var subList = document.createElement('div');
+    subList.className = 'dv-sb-sublist';
+    subChips.forEach(function(chip, i) {
+      var btn = document.createElement('button');
+      btn.className = 'dv-sb-item';
+      btn.dataset.chipIdx = String(i + 1);
+      btn.textContent = chip.textContent.trim();
+      subList.appendChild(btn);
+    });
+    sbCat.appendChild(subList);
+
+    function scrollCatalogo() {
+      /* Scroll inmediato (sin animación) para evitar el salto visual por reflow del filtro */
+      var cat = document.getElementById('catalogo');
+      if (cat) window.scrollTo({ top: Math.max(0, cat.offsetTop - 16) });
+    }
+
+    todosBtn.addEventListener('click', function() {
+      todosChip.click();
+      sbOpen = !sbOpen;
+      subList.classList.toggle('open', sbOpen);
+      todosBtn.querySelector('.dv-sb-arr').textContent = sbOpen ? '▼' : '▶';
+      sbCat.querySelectorAll('.dv-sb-item').forEach(function(b) { b.classList.remove('dv-active'); });
+      todosBtn.classList.add('dv-active');
+    });
+
+    subList.addEventListener('click', function(e) {
+      var btn = e.target.closest('[data-chip-idx]');
+      if (!btn) return;
+      chips[parseInt(btn.dataset.chipIdx, 10)].click();
+      scrollCatalogo();
+      sbCat.querySelectorAll('.dv-sb-item').forEach(function(b) { b.classList.remove('dv-active'); });
+      btn.classList.add('dv-active');
+      if (!sbOpen) { sbOpen = true; subList.classList.add('open'); todosBtn.querySelector('.dv-sb-arr').textContent = '▼'; }
+    });
+
+    /* --- Disponibilidad (hardcoded, siempre presente) --- */
+    [{ disp:'todos', label:'Todos' },
+     { disp:'disponible', label:'✓ Disponible' },
+     { disp:'produccion', label:'⏳ En producción' }
+    ].forEach(function(d) {
+      var btn = document.createElement('button');
+      btn.className = 'dv-sb-item' + (d.disp === 'todos' ? ' dv-active dv-disp-todos' : '');
+      btn.dataset.disp = d.disp;
+      btn.textContent = d.label;
+      sbDisp.appendChild(btn);
+    });
+
+    sbDisp.addEventListener('click', function(e) {
+      var btn = e.target.closest('[data-disp]');
+      if (!btn) return;
+      var disp = btn.dataset.disp;
+      var realChip = document.querySelector('#filtros-disp .chip-disp[data-disp="' + disp + '"]');
+      if (realChip) realChip.click();
+      sbDisp.querySelectorAll('[data-disp]').forEach(function(b) { b.className = 'dv-sb-item'; });
+      btn.className = 'dv-sb-item dv-active dv-disp-' + disp;
+      scrollCatalogo(); /* inmediato, antes del reflow */
+    });
+  }
+
+  function alignSidebar() {
+    var sidebar  = document.querySelector('.dv-sidebar');
+    var firstCard = document.querySelector('#catalogo .card');
+    var layout   = document.querySelector('.dv-layout');
+    if (!sidebar || !firstCard || !layout) return;
+    sidebar.style.marginTop = '0';
+    var gap = firstCard.getBoundingClientRect().top - layout.getBoundingClientRect().top;
+    if (gap > 0) sidebar.style.marginTop = gap + 'px';
+  }
+
+  buildSidebar();
+  var obs = new MutationObserver(function() {
+    buildSidebar();
+    if (built) {
+      obs.disconnect();
+      /* Re-alinear después de que las categorías se agrega al sidebar */
+      setTimeout(alignSidebar, 80);
+    }
+  });
+  obs.observe(document.getElementById('filtros'), { childList: true, subtree: true });
+  setTimeout(function() { buildSidebar(); setTimeout(alignSidebar, 80); }, 800);
+  setTimeout(function() { buildSidebar(); setTimeout(alignSidebar, 80); }, 2200);
+
+  /* Alinear sidebar con la primera card de producto cuando el catálogo renderice */
+  var obsAlign = new MutationObserver(function() {
+    if (document.querySelector('#catalogo .card')) {
+      obsAlign.disconnect();
+      /* Doble RAF + timeout para dejar que el layout se estabilice */
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          setTimeout(alignSidebar, 100);
+        });
+      });
+    }
+  });
+  obsAlign.observe(document.getElementById('catalogo'), { childList: true, subtree: true });
+  window.addEventListener('resize', alignSidebar);
+
+  /* Sugerencias de búsqueda */
+  var busca = document.getElementById('busca');
+  var sugg  = document.getElementById('dv-sb-sugg');
+  if (busca && sugg) {
+    busca.addEventListener('input', function() {
+      var q = busca.value.trim();
+      if (!q) { sugg.innerHTML = ''; return; }
+      setTimeout(function() {
+        var cards = Array.from(document.querySelectorAll('#catalogo .card'));
+        if (!cards.length) {
+          sugg.innerHTML = '<div class="dv-sb-nores">Sin resultados</div>';
+          return;
+        }
+        var shown = cards.slice(0, 7);
+        sugg.innerHTML = shown.map(function(card, i) {
+          var h3  = card.querySelector('h3');
+          var cod = card.querySelector('[class*="codigo"]');
+          var nombre = h3  ? h3.textContent.trim()  : '';
+          var codigo = cod ? cod.textContent.trim().replace('Código ','').split('·')[0].trim() : '';
+          return '<div class="dv-sb-s-item" data-ci="' + i + '">' +
+            nombre + '<span class="dv-sb-s-code">' + codigo + '</span></div>';
+        }).join('') +
+        (cards.length > 7 ? '<div class="dv-sb-s-more">+' + (cards.length - 7) + ' más</div>' : '');
+
+        sugg.querySelectorAll('[data-ci]').forEach(function(el) {
+          el.addEventListener('click', function() {
+            cards[parseInt(el.dataset.ci)].scrollIntoView({ behavior:'smooth', block:'center' });
+          });
+        });
+      }, 80);
+    });
+
+    /* Limpiar sugerencias al borrar el input */
+    busca.addEventListener('search', function() {
+      if (!busca.value) sugg.innerHTML = '';
+    });
+  }
+})();
+
+/* ===== NAV IMÁGENES EN MODAL ===== */
+(function() {
+  var nav     = document.getElementById('img-nav');
+  var counter = document.getElementById('img-counter');
+  var btnPrev = document.getElementById('img-prev');
+  var btnNext = document.getElementById('img-next');
+  var principal = document.querySelector('.modal .galeria .principal');
+  var minis   = document.getElementById('minis');
+  if (!nav || !minis) return;
+
+  function getImgs(){ return Array.from(minis.querySelectorAll('img')); }
+  function getCur(){
+    var imgs = getImgs(), i;
+    for (i = 0; i < imgs.length; i++){ if (imgs[i].classList.contains('activa')) return i; }
+    return 0;
+  }
+  function update(){
+    var imgs = getImgs();
+    if (imgs.length <= 1){ nav.classList.add('hidden'); return; }
+    nav.classList.remove('hidden');
+    if (counter) counter.textContent = (getCur() + 1) + ' / ' + imgs.length;
+  }
+  function navigate(dir){
+    var imgs = getImgs();
+    if (!imgs.length) return;
+    var n = ((getCur() + dir) % imgs.length + imgs.length) % imgs.length;
+    imgs[n].click();
+  }
+
+  btnPrev.addEventListener('click', function(e){ e.stopPropagation(); navigate(-1); });
+  btnNext.addEventListener('click', function(e){ e.stopPropagation(); navigate(1); });
+
+  /* Swipe sobre la imagen */
+  var sx = 0;
+  if (principal) {
+    principal.addEventListener('touchstart', function(e){ sx = e.touches[0].clientX; }, { passive:true });
+    principal.addEventListener('touchend',   function(e){
+      var dx = e.changedTouches[0].clientX - sx;
+      if (Math.abs(dx) > 40) navigate(dx < 0 ? 1 : -1);
+    }, { passive:true });
+  }
+
+  /* Sincronizar cuando app.js cambia las minis */
+  new MutationObserver(update).observe(minis, { childList:true, subtree:true, attributes:true, attributeFilter:['class'] });
+})();
+
+/* ===== LIGHTBOX IMAGEN GRANDE ===== */
+(function() {
+  var lb      = document.getElementById('lightbox');
+  var lbImg   = document.getElementById('lb-img');
+  var lbCerrar= document.getElementById('lb-cerrar');
+  var lupaBtn = document.getElementById('lupa-btn');
+  var imgPpal = document.getElementById('img-principal');
+  if (!lb || !lbImg || !lupaBtn || !imgPpal) return;
+
+  function abrir() {
+    lbImg.src = imgPpal.src;
+    lb.classList.add('abierto');
+    document.body.style.overflow = 'hidden';
+  }
+  function cerrar() {
+    lb.classList.remove('abierto');
+    document.body.style.overflow = '';
+    lbImg.src = '';
+  }
+
+  lupaBtn.addEventListener('click', function(e) { e.stopPropagation(); abrir(); });
+  lbCerrar.addEventListener('click', function(e) { e.stopPropagation(); cerrar(); });
+  lb.addEventListener('click', function(e) { if (e.target === lb) cerrar(); });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && lb.classList.contains('abierto')) cerrar(); });
+})();
+
+/* ===== FEEDBACK CURVAS EN MODAL ===== */
+(function() {
+  var toastTimer = null;
+
+  function mostrarToast(n) {
+    setTimeout(function() {
+      var tallasEl = document.querySelector('.modal .tallas-caja');
+      var modalBody = document.querySelector('.modal-body');
+      /* En desktop modal-body es display:contents → no scrollable; usar .datos */
+      var isDesktop = modalBody && getComputedStyle(modalBody).display === 'contents';
+      var scrollEl = isDesktop ? document.querySelector('.modal .datos') : modalBody;
+      if (!scrollEl || !tallasEl) return;
+      var scrollRect = scrollEl.getBoundingClientRect();
+      var tallasRect = tallasEl.getBoundingClientRect();
+      scrollEl.scrollTo({ top: scrollEl.scrollTop + tallasRect.top - scrollRect.top - 12, behavior: 'smooth' });
+    }, 40);
+  }
+
+  var c12 = document.getElementById('m-curva12');
+  var c17 = document.getElementById('m-curva17');
+  if (c12) c12.addEventListener('click', function() { setTimeout(function() { mostrarToast(12); }, 30); });
+  if (c17) c17.addEventListener('click', function() { setTimeout(function() { mostrarToast(17); }, 30); });
+})();
+</script>
 </body>
 </html>
