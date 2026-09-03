@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dolce Vita · Primavera-Verano 2026 | Mohicano Jeans</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23d81f2a'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='16' font-weight='bold' fill='white' text-anchor='middle'%3EDV%3C/text%3E%3C/svg%3E">
-<meta name="description" content="Catálogo mayorista Dolce Vita Primavera-Verano 2026 — Mohicano Jeans. 62 modelos en 14 líneas. Arma tu pedido por curvas y envíalo por WhatsApp.">
+<meta name="description" content="Catálogo mayorista Dolce Vita Primavera-Verano 2026 — Mohicano Jeans. 62 modelos en 14 líneas. ¿Aún no hiciste tu pedido o necesitas reposición? Entra, elige tus curvas y envíalo por WhatsApp.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://mohicanojeans.netlify.app/catalogo-44/">
 <meta property="og:title" content="Dolce Vita · Primavera-Verano 2026 — Mohicano Jeans">
@@ -1541,23 +1541,29 @@ function copiarLink(btn) {
           return;
         }
         var shown = cards.slice(0, 9);
-        buscaResults.innerHTML = shown.map(function(card, i) {
+        buscaResults.innerHTML = shown.map(function(card) {
           var h3  = card.querySelector('h3');
           var cod = card.querySelector('[class*="codigo"]');
           var nombre = h3  ? h3.textContent.trim() : '';
-          var codigo = cod ? cod.textContent.trim().replace('Código ','').split('·')[0].trim() : '';
-          return '<div class="dv-busca-res-item" data-ci="' + i + '">' +
+          var codigoText = cod ? cod.textContent.trim().replace('Código ','').split('·')[0].trim() : '';
+          /* Extraer codigo real desde el onclick del marco */
+          var marco = card.querySelector('.marco[onclick]');
+          var match = marco ? (marco.getAttribute('onclick').match(/abrirModal\('([^']+)'\)/) || []) : [];
+          var codigoReal = match[1] || '';
+          return '<div class="dv-busca-res-item" data-codigo="' + codigoReal + '">' +
             '<span class="dv-busca-res-nom">' + nombre + '</span>' +
-            '<span class="dv-busca-res-cod">' + codigo + '</span></div>';
+            '<span class="dv-busca-res-cod">' + codigoText + '</span></div>';
         }).join('') +
         (cards.length > 9 ? '<div style="font-size:.75rem;color:var(--gris);padding:.4rem .8rem">+' + (cards.length - 9) + ' más resultados</div>' : '');
 
-        buscaResults.querySelectorAll('[data-ci]').forEach(function(el) {
+        buscaResults.querySelectorAll('[data-codigo]').forEach(function(el) {
           el.addEventListener('click', function() {
-            var idx = parseInt(el.dataset.ci, 10);
+            var codigo = el.dataset.codigo;
             closeSheet(buscaSheet, buscaBackdrop);
             setTimeout(function() {
-              cards[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+              if (codigo && typeof window.abrirModal === 'function') {
+                window.abrirModal(codigo);
+              }
             }, 320);
           });
         });
