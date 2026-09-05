@@ -289,7 +289,10 @@ const HANTAN_BY_SKU = {
   "4377-01": ["universal.png"],
   "4378-00": ["power strech.png"],
 };
-const LOCAL_CLIENT_OVERRIDES = [];
+/* Clientes reconocidos localmente (antes de consultar Supabase). rut_normalized: solo dígitos/K. */
+const LOCAL_CLIENT_OVERRIDES = [
+  { rut: "16.388.334-1", rut_normalized: "163883341", razon_social: "XIMENA ANDREA DUHART DUHART" },
+];
 
 function inferirCatalogoDesdeSku(value) {
   const sku = normalizarSkuCatalogo(value || "");
@@ -767,8 +770,9 @@ function formatearRutVisual(rut) {
 function buscarClienteLocalPorRut(rutInput) {
   const rutNormalizado = normalizarRut(rutInput);
   if (!rutNormalizado) return null;
-  const found = LOCAL_CLIENT_OVERRIDES.find((item) => item.rut_normalized === rutNormalizado);
-  return found ? { ...found } : null;
+  const soloDigitos = (v) => String(v || "").replace(/[^0-9kK]/g, "").toUpperCase();
+  const found = LOCAL_CLIENT_OVERRIDES.find((item) => soloDigitos(item.rut_normalized) === soloDigitos(rutNormalizado));
+  return found ? { ...found, rut_normalized: rutNormalizado } : null;
 }
 
 function esProductoAgotado(item) {
@@ -2916,19 +2920,7 @@ function aplicarStockATallas(sku) {
     const badgeEl = asegurarBadgeStock(label);
     const qty = stock ? Math.max(0, Number(stock?.sizes?.[talla]) || 0) : null;
 
-    if (CATALOG_SOURCE === "catalogo-43" && (Number(stock?.total) || 0) > 0) {
-      label.classList.remove("size-out-of-stock");
-      label.classList.add("size-in-stock");
-      label.classList.remove("size-low-stock");
-      label.removeAttribute("aria-disabled");
-      input.disabled = false;
-      input.removeAttribute("max");
-      input.removeAttribute("aria-disabled");
-      textEl.innerText = talla;
-      badgeEl.hidden = true;
-      badgeEl.innerText = "";
-      return;
-    }
+    /* Cole 40-43: se aplica el stock por talla del ERP (tope + "Quedan N" + talla sin stock deshabilitada) */
 
     if (qty === null) {
       label.classList.remove("size-out-of-stock");
@@ -2957,12 +2949,10 @@ function aplicarStockATallas(sku) {
     if (qty <= 0) {
       badgeEl.hidden = false;
       badgeEl.innerText = "Sin stock";
-    } else if (qty > 0 && qty <= 5) {
-      badgeEl.hidden = false;
-      badgeEl.innerText = qty === 1 ? "Ultima unidad" : `Ultimas ${qty} unidades`;
     } else {
-      badgeEl.hidden = true;
-      badgeEl.innerText = "";
+      /* Mostrar siempre cuántas quedan por talla */
+      badgeEl.hidden = false;
+      badgeEl.innerText = `Quedan ${qty}`;
     }
   });
 }
@@ -3961,6 +3951,18 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") cerrarPanelCotizacionModal();
 });
 
+/* Tope por talla mientras se escribe (usa el max que pone aplicarStockATallas) */
+document.addEventListener("input", (e) => {
+  const input = e.target;
+  if (!(input instanceof HTMLInputElement) || !/^t\w+$/.test(input.id || "") || !input.max) return;
+  const max = Number(input.max);
+  const val = Number(input.value);
+  if (Number.isFinite(max) && Number.isFinite(val) && val > max) {
+    input.value = String(max);
+    mostrarToastError("Stock limitado", `Talla ${input.id.slice(1)}: quedan ${max} unidades.`);
+  }
+});
+
 /***********************
  * AGREGAR AL PEDIDO
  ***********************/
@@ -3977,6 +3979,32 @@ document.getElementById("addBtn").onclick = () => {
   if (skuActivo && total > 0) {
     const sourceForSku = inferirCatalogoDesdeSku(skuActivo) || CATALOG_SOURCE;
     const existente = pedido.find((item) => item.sku === skuActivo && resolverSourceSegunSku(item, CATALOG_SOURCE) === sourceForSku);
+
+    /* Tope por talla según stock ERP, contando lo que ya hay en el pedido (no aplica a Cole 44) */
+    if (INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-44") {
+      const stockSku = obtenerStockExactoParaSkuDesdeItems(skuActivo, stockBySku);
+      if (stockSku && stockSku.sizes && typeof stockSku.sizes === "object") {
+        const recortes = [];
+        Object.keys(tallas).forEach((talla) => {
+          const disp = Math.max(0, Number(stockSku.sizes[talla]) || 0);
+          const enPedido = existente ? (Number(existente.tallas?.[talla]) || 0) : 0;
+          const permitido = Math.max(0, disp - enPedido);
+          if (tallas[talla] > permitido) {
+            recortes.push(`talla ${talla}: quedan ${disp}${enPedido ? ` (ya tienes ${enPedido})` : ""}`);
+            tallas[talla] = permitido;
+          }
+          if (tallas[talla] <= 0) delete tallas[talla];
+        });
+        if (!Object.keys(tallas).length) {
+          mostrarToastError("Sin stock", "Ya tienes en el pedido todo el stock disponible de este modelo.");
+          return;
+        }
+        if (recortes.length) {
+          mostrarToastError("Stock limitado", `Se ajustó al stock disponible: ${recortes.join(", ")}.`);
+        }
+      }
+    }
+
     if (existente) {
       Object.entries(tallas).forEach(([talla, cantidad]) => {
         const qty = Number(cantidad) || 0;
@@ -4337,7 +4365,7 @@ const ORDER_TEMPLATE_SHEET = "TOMA DE PEDIDOS";
 const ORDER_TEMPLATE_CONFIGS = {
   unified: {
     file: "PLANILLA 43 LISTA PRECIO FINAL.xlsx",
-    version: "20260903cole43-calcfix",
+    version: "20260904cole43-bd167",
     sheet: ORDER_TEMPLATE_SHEET,
     valorColumn: "S",
     firstRow: 15,
@@ -4399,7 +4427,7 @@ const ORDER_TEMPLATE_CONFIGS = {
   },
   "catalogo-43": {
     file: "PLANILLA 43 LISTA PRECIO FINAL.xlsx",
-    version: "20260903cole43-calcfix",
+    version: "20260904cole43-bd167",
     sheet: ORDER_TEMPLATE_SHEET,
     firstRow: 15,
     lastRow: 60,
@@ -4434,7 +4462,7 @@ const ORDER_TEMPLATE_CONFIGS = {
   },
   "catalogo-44": {
     file: "PLANILLA 44 LISTA PRECIO FINAL.xlsx",
-    version: "20260903cole44-calcfix",
+    version: "20260904cole44-bd167",
     sheet: ORDER_TEMPLATE_SHEET,
     firstRow: 15,
     lastRow: 59,
@@ -4696,7 +4724,8 @@ async function generarExcelPlantillaQuoteAdmin(quote, items = []) {
       const rutNorm = normalizarRut(String(quote.client_rut));
       let filaVacia = null;
       let yaExiste = false;
-      for (let row = 4; row <= 166; row++) {
+      /* Rango ampliado a 400 (los VLOOKUP de la plantilla usan $A$4:$AC$400) */
+      for (let row = 4; row <= 400; row++) {
         const val = bdSheet.cell(`A${row}`).value();
         if (!val && filaVacia === null) { filaVacia = row; }
         if (val && normalizarRut(String(val)) === rutNorm) { yaExiste = true; break; }

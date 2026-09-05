@@ -14,6 +14,20 @@ const CURVA_CHAQ_17  = {"S":4,"M":5,"L":5,"XL":3};
 const LANDING        = "https://mohicanojeans.netlify.app/catalogo-44";
 const SOURCE_PEDIDO  = "dolce-vita-44";
 
+/* ---- CLIENTES RECONOCIDOS LOCALMENTE ----------------------- */
+/* Clave: RUT solo dígitos/K. Se consulta antes de Supabase (misma forma que devuelve el RPC). */
+const CLIENTES_LOCALES = {
+  "163883341": {
+    rut: "16.388.334-1",
+    razon_social: "XIMENA ANDREA DUHART DUHART",
+    telefono: "950096525",
+    giro: "GRANDES TIENDAS DE VESTIR Y CALZADO",
+    direccion: "LAGO LYNCH #45",
+    nombre_tienda: "TIENDA ANTONELLA",
+    comuna: "PORVENIR",
+  },
+};
+
 /* ---- SUPABASE --------------------------------------------- */
 const SUPABASE_URL = "https://kdtydxihrflhziclgiof.supabase.co";
 const SUPABASE_KEY = "sb_publishable_37ce4uK_RG8o9pP-Jdf2Xw_3eWgqJQy";
@@ -607,17 +621,22 @@ async function buscarClientePorRut() {
   mostrarCampos(false);
   clienteBuscado = null;
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/lookup_client_by_rut`, {
-      method: "POST",
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ p_rut: norm }),
-    });
-    const data = await res.json().catch(() => null);
-    const row = Array.isArray(data) ? data[0] : data;
+    /* Clientes reconocidos localmente (antes de Supabase); clave = RUT solo dígitos/K */
+    const local = CLIENTES_LOCALES[String(norm).replace(/[^0-9kK]/g, "").toUpperCase()] || null;
+    let row = local;
+    if (!row) {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/lookup_client_by_rut`, {
+        method: "POST",
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ p_rut: norm }),
+      });
+      const data = await res.json().catch(() => null);
+      row = Array.isArray(data) ? data[0] : data;
+    }
     if (row && row.razon_social) {
       clienteBuscado = { rut: formatRut(norm), rut_normalized: norm, razon_social: row.razon_social, is_new: false };
       limpiarForm();
