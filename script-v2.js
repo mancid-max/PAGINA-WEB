@@ -4026,6 +4026,15 @@ window.addEventListener("load", () => {
         if (typeof validarRutClienteEnUI === "function") validarRutClienteEnUI().catch(() => {});
       }
     }
+    /* Transporte y teléfono que venían en el link */
+    const transpQ = (p.get("transporte") || "").trim();
+    const telQ = (p.get("tel") || "").trim();
+    setTimeout(() => {
+      const t = document.getElementById("clientTransporte");
+      if (t && transpQ && !t.value) t.value = transpQ;
+      const ph = document.getElementById("clientPhone");
+      if (ph && telQ && !ph.value) ph.value = telQ;
+    }, 800);
     try { history.replaceState(null, "", location.pathname); } catch (_) {}
   })();
 });

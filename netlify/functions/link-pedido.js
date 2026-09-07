@@ -47,6 +47,9 @@ exports.handler = async (event) => {
   const modelo = normCod(qs.modelo || body.modelo || "");
   const curva = String(qs.curva || body.curva || "").trim();
   const rut = rutLimpio(qs.rut || body.rut || "");
+  const transporte = String(qs.transporte || body.transporte || "").trim();
+  const tel = String(qs.telefono || body.telefono || "").replace(/[^0-9+]/g, "");
+  const soloFicha = /^(1|true|si)$/i.test(String(qs.solo_ficha || body.solo_ficha || ""));
 
   const items = itemsRaw
     ? itemsRaw.split(",").map((par) => { const [c, ...r] = par.split(":"); const cod = normCod(c); return cod ? `${cod}:${specCurva(r.join(":"), cod)}` : null; }).filter(Boolean)
@@ -60,22 +63,26 @@ exports.handler = async (event) => {
   const es44 = coles.has("44");
   const base = es44 ? `${BASE}/catalogo-44/` : `${BASE}/`;
   const params = new URLSearchParams();
-  if (items.length === 1 && !itemsRaw) {
+  if (soloFicha && items.length === 1) {
+    /* Solo ver la ficha con la curva (no agrega al carrito) */
     params.set(es44 ? "modelo" : "sku", items[0].split(":")[0]);
     params.set("curva", items[0].split(":").slice(1).join(":"));
   } else {
+    /* Por defecto: todo al carrito + abre "Tu pedido" listo para Enviar */
     params.set("items", items.join(","));
   }
   if (rut) params.set("rut", rut);
+  if (transporte) params.set("transporte", transporte);
+  if (tel) params.set("tel", tel);
 
   const url = `${base}?${params.toString()}`;
   return {
     statusCode: 200, headers,
     body: JSON.stringify({
-      ok: true, url, pagina: es44 ? "Dolce Vita · Cole 44" : "Cole 40-43", items, rut: rut || null,
-      instruccion: itemsRaw
-        ? "Al abrir el link, los modelos quedan cargados en 'Tu pedido' con la curva indicada y el RUT verificado; el cliente solo revisa y presiona Enviar pedido."
-        : "Al abrir el link se abre la ficha del modelo con la curva cargada; el cliente la agrega al pedido y luego envía.",
+      ok: true, url, pagina: es44 ? "Dolce Vita · Cole 44" : "Cole 40-43", items, rut: rut || null, transporte: transporte || null,
+      instruccion: soloFicha
+        ? "Al abrir el link se abre la ficha del modelo con la curva cargada; el cliente la agrega al pedido y luego envía."
+        : "Al abrir el link, los modelos quedan cargados en 'Tu pedido' con la curva indicada, el RUT verificado y el transporte; el cliente solo revisa y presiona Enviar pedido.",
     }),
   };
 };

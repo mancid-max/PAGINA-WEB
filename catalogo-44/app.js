@@ -532,11 +532,17 @@ function abrirCajon(resetForm = true) {
     $("#btn-finalizar").style.display = "none";
     $("#exito").classList.remove("ver");
   }
-  /* RUT que venía en el link (?rut=…): pre-llenar y verificar una sola vez */
+  /* RUT / transporte / teléfono que venían en el link: pre-llenar y verificar una sola vez */
   if (window._rutDesdeLink) {
     elRut().value = window._rutDesdeLink;
     window._rutDesdeLink = "";
-    setTimeout(() => buscarClientePorRut(), 50);
+    const transp = window._transpDesdeLink || "", tel = window._telDesdeLink || "";
+    window._transpDesdeLink = ""; window._telDesdeLink = "";
+    setTimeout(async () => {
+      await buscarClientePorRut();
+      if (transp) setTranspValue(transp);
+      if (tel && elFono() && !elFono().value) elFono().value = tel;
+    }, 50);
   }
 }
 function cerrarCajon() { $("#cajon").classList.remove("abierto"); $("#cajon-velo").classList.remove("abierto"); }
@@ -2357,6 +2363,8 @@ function toast(msg) {
   }
 
   if (rutQ) window._rutDesdeLink = rutQ;
+  window._transpDesdeLink = (p.get("transporte") || "").trim();
+  window._telDesdeLink = (p.get("tel") || "").trim();
 
   if (itemsQ) {
     let agregados = 0, saltados = [];
