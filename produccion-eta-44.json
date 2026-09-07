@@ -1,0 +1,4 @@
+{
+  "_comentario": "Plazo aproximado que da Sofía (agente Nexor) para modelos Cole 44 EN PRODUCCIÓN. default_dias aplica a todos; se puede fijar por código con días (\"7 a 10\") o fecha (\"2026-09-20\").",
+  "default_dias": "10 a 15"
+}

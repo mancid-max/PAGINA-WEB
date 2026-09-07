@@ -3951,6 +3951,85 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") cerrarPanelCotizacionModal();
 });
 
+/* ---- DEEP LINKS (para Sofía / WhatsApp) — Cole 40-43 ------
+   ?sku=4301-00&curva=12                → abre la ficha con las tallas cargadas
+   ?items=4301-00:12,4362-48:36=2.38=3&rut=16388334-1 → agrega al pedido, abre el carrito con el RUT
+   curva: "12" (2 por talla 36-46) | "17" (2/3/4/4/3/1) | "36=2.38=3" */
+window.addEventListener("load", () => {
+  const p = new URLSearchParams(location.search);
+  const skuQ   = (p.get("sku")   || "").trim().toUpperCase();
+  const itemsQ = (p.get("items") || "").trim().toUpperCase();
+  const curvaQ = (p.get("curva") || "").trim();
+  const rutQ   = (p.get("rut")   || "").trim();
+  if (!skuQ && !itemsQ) return;
+
+  const normCod = (c) => (/^\d{4}$/.test(c) ? c + "-00" : c);
+  const CV12 = { "36": 2, "38": 2, "40": 2, "42": 2, "44": 2, "46": 2 };
+  const CV17 = { "36": 2, "38": 3, "40": 4, "42": 4, "44": 3, "46": 1 };
+  const curvaPara = (spec) => {
+    if (!spec || spec === "12") return { ...CV12 };
+    if (spec === "17") return { ...CV17 };
+    if (/^\d+$/.test(spec)) {
+      /* N unidades → curva proporcional (campana 1-2-3-3-2-1) */
+      const n = Number(spec), pesos = [1, 2, 3, 3, 2, 1], sum = 12;
+      const exact = pesos.map((p) => (n * p) / sum), base = exact.map(Math.floor);
+      let resto = n - base.reduce((a, b) => a + b, 0);
+      exact.map((v, i) => [v - Math.floor(v), i]).sort((a, b) => b[0] - a[0] || a[1] - b[1]).forEach(([, i]) => { if (resto > 0) { base[i]++; resto--; } });
+      const out = {}; TALLAS_DISPONIBLES.forEach((t, i) => { if (base[i] > 0) out[t] = base[i]; }); return out;
+    }
+    const cv = {};
+    spec.split(".").forEach((par) => { const [t, n] = par.split("="); if (t && Number(n) > 0) cv[t.trim()] = Number(n); });
+    return cv;
+  };
+  /* Espera a que el modelo exista en `productos` (Cole 43 carga primero; 40/41/42 se agregan después) */
+  const tiene = (sku) => Array.isArray(productos) && productos.some((p) => normalizarSkuCatalogo(p.family) === sku);
+  const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
+  const esperarSku = async (sku) => { for (let i = 0; i < 50 && !tiene(sku); i++) await esperar(300); return tiene(sku); };
+  const setTallas = (cv) => {
+    TALLAS_DISPONIBLES.forEach((t) => {
+      const input = document.getElementById("t" + t);
+      if (!input) return;
+      let n = Number(cv[t]) || 0;
+      const max = Number(input.max);
+      if (input.max && Number.isFinite(max) && n > max) n = max;
+      input.value = n > 0 && !input.disabled ? String(n) : "";
+    });
+  };
+
+  (async () => {
+    if (itemsQ) {
+      for (const par of itemsQ.split(",")) {
+        const [cod, ...rest] = par.split(":");
+        const sku = normCod(cod.trim());
+        if (!(await esperarSku(sku))) continue;
+        verProducto(sku.slice(0, 4), sku);
+        await esperar(400);
+        if (skuActivo !== sku) continue;
+        setTallas(curvaPara(rest.join(":") || "12"));
+        document.getElementById("addBtn")?.click();
+        await esperar(300);
+      }
+      document.getElementById("modal")?.classList.remove("active");
+      document.getElementById("cartSidebar")?.classList.add("open");
+    } else if (skuQ) {
+      const sku = normCod(skuQ);
+      if (!(await esperarSku(sku))) return;
+      verProducto(sku.slice(0, 4), sku);
+      await esperar(400);
+      if (curvaQ && skuActivo === sku) setTallas(curvaPara(curvaQ));
+    }
+
+    if (rutQ) {
+      const input = document.getElementById("clientRut");
+      if (input) {
+        input.value = rutQ;
+        if (typeof validarRutClienteEnUI === "function") validarRutClienteEnUI().catch(() => {});
+      }
+    }
+    try { history.replaceState(null, "", location.pathname); } catch (_) {}
+  })();
+});
+
 /* Tope por talla mientras se escribe (usa el max que pone aplicarStockATallas) */
 document.addEventListener("input", (e) => {
   const input = e.target;

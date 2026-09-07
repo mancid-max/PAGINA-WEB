@@ -532,6 +532,12 @@ function abrirCajon(resetForm = true) {
     $("#btn-finalizar").style.display = "none";
     $("#exito").classList.remove("ver");
   }
+  /* RUT que venía en el link (?rut=…): pre-llenar y verificar una sola vez */
+  if (window._rutDesdeLink) {
+    elRut().value = window._rutDesdeLink;
+    window._rutDesdeLink = "";
+    setTimeout(() => buscarClientePorRut(), 50);
+  }
 }
 function cerrarCajon() { $("#cajon").classList.remove("abierto"); $("#cajon-velo").classList.remove("abierto"); }
 $("#abrir-carrito").onclick = () => { abrirCajon(true); pintarCarrito(); };
@@ -2314,3 +2320,71 @@ function toast(msg) {
   clearTimeout(toastT);
   toastT = setTimeout(() => el.classList.remove("ver"), 2800);
 }
+
+/* ---- DEEP LINKS (para Sofía / WhatsApp) -------------------
+   ?modelo=4448-00&curva=12            → abre la ficha con la curva cargada (12, 17 o 36=2.38=3.40=4)
+   ?items=4448-00:12,4458-00:17&rut=16388334-1 → agrega todo al pedido, abre "Tu pedido" con el RUT verificado
+   Formato de curva: "12" | "17" | "36=2.38=3.40=4" (talla=cantidad separados por punto) */
+(function() {
+  const p = new URLSearchParams(location.search);
+  const modeloQ = (p.get("modelo") || "").trim().toUpperCase();
+  const itemsQ  = (p.get("items")  || "").trim().toUpperCase();
+  const curvaQ  = (p.get("curva")  || "").trim();
+  const rutQ    = (p.get("rut")    || "").trim();
+  if (!modeloQ && !itemsQ && !rutQ) return;
+
+  const normCod = c => /^\d{4}$/.test(c) ? c + "-00" : c;
+  function curvaPara(m, spec) {
+    if (!spec || spec === "12") return { ...curvaDe(m) };
+    if (spec === "17") return { ...curva17De(m) };
+    if (/^\d+$/.test(spec)) {
+      /* N unidades → curva proporcional (campana) */
+      const tallas = tallasDe(m), n = Number(spec);
+      const pesos = m.tipo === "chaqueta" ? [3, 4, 4, 3] : [1, 2, 3, 3, 2, 1];
+      const sum = pesos.reduce((a, b) => a + b, 0);
+      const exact = tallas.map((_, i) => (n * (pesos[i] || 1)) / sum);
+      const base = exact.map(Math.floor);
+      let resto = n - base.reduce((a, b) => a + b, 0);
+      exact.map((v, i) => [v - Math.floor(v), i]).sort((a, b) => b[0] - a[0] || a[1] - b[1]).forEach(([, i]) => { if (resto > 0) { base[i]++; resto--; } });
+      const out = {}; tallas.forEach((t, i) => { if (base[i] > 0) out[t] = base[i]; }); return out;
+    }
+    const cv = {};
+    spec.split(".").forEach(par => {
+      const [t, n] = par.split("=");
+      if (t && Number(n) > 0 && tallasDe(m).includes(t.trim())) cv[t.trim()] = Number(n);
+    });
+    return cv;
+  }
+
+  if (rutQ) window._rutDesdeLink = rutQ;
+
+  if (itemsQ) {
+    let agregados = 0, saltados = [];
+    itemsQ.split(",").forEach(par => {
+      const [cod, ...rest] = par.split(":");
+      const m = buscar(normCod(cod.trim()));
+      if (!m) { saltados.push(cod); return; }
+      const cv = curvaPara(m, rest.join(":") || "12");
+      const tot = Object.values(cv).reduce((a, b) => a + b, 0);
+      if (tot < MIN_POR_MODELO) { saltados.push(m.codigo + " (min " + MIN_POR_MODELO + ")"); return; }
+      carrito[m.codigo] = { t: cv, nombre: m.nombre };
+      agregados++;
+    });
+    guardar(); pintarCarrito();
+    if (agregados) { abrirCajon(true); pintarCarrito(); toast(agregados + " modelo(s) cargados ✔ Revisa y envía tu pedido"); }
+    if (saltados.length) setTimeout(() => toast("No se cargó: " + saltados.join(", ")), 3000);
+  } else if (modeloQ) {
+    const m = buscar(normCod(modeloQ));
+    if (m) {
+      abrirModal(m.codigo);
+      if (curvaQ) {
+        const cv = curvaPara(m, curvaQ);
+        if (Object.keys(cv).length) { aplicarCurva(cv); toast("Curva cargada ✔ Revisa y agrega al pedido"); }
+      }
+    } else {
+      toast("No encontré el modelo " + modeloQ);
+    }
+  }
+  /* Limpiar la URL para que al recargar no se vuelva a aplicar */
+  try { history.replaceState(null, "", location.pathname + (p.get("cli") ? "?cli=" + encodeURIComponent(p.get("cli")) : "")); } catch (_) {}
+})();
