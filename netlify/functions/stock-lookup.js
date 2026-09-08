@@ -113,6 +113,8 @@ async function consultarCodigo(family) {
     tallas_con_stock: es44 ? undefined : conStock,
     minimo_por_modelo: es44 ? 12 : undefined,
     url: es44 ? `${BASE}/catalogo-44/` : `${BASE}/cole-43`,
+    /* link por modelo con vista previa (foto, nombre, precio) en WhatsApp; abre la ficha real */
+    link_modelo: `${BASE}/m/${family}`,
     nota: notaProduccion || (es44 && disponible ? "Disponible en bodega para despacho inmediato." : undefined),
   };
 }
