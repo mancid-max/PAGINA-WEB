@@ -13,7 +13,8 @@ const SUPABASE_URL = (process.env.SUPABASE_URL || "https://kdtydxihrflhziclgiof.
 const SERVICE_KEY = (process.env.SUPABASE_SERVICE_KEY || "").trim();
 const ANON_KEY = (process.env.SUPABASE_ANON_KEY || "sb_publishable_37ce4uK_RG8o9pP-Jdf2Xw_3eWgqJQy").trim();
 const ORDER_KEY = (process.env.NEXOR_ORDER_KEY || "").trim();
-const MIN_44 = 12;
+const MIN_44 = 12;          /* Cole 44: mínimo por modelo */
+const MIN_TOTAL_4043 = 24;  /* Cole 40-43: sin mínimo por modelo, pero el pedido completo suma al menos 24 u. (igual que la web) */
 const CV12 = { "36": 2, "38": 2, "40": 2, "42": 2, "44": 2, "46": 2 };
 const CV17 = { "36": 2, "38": 3, "40": 4, "42": 4, "44": 3, "46": 1 };
 const CV12_CHAQ = { S: 3, M: 3, L: 3, XL: 3 };
@@ -168,6 +169,11 @@ exports.handler = async (event) => {
   if (!lineas44.length && !lineas43.length) return json({ ok: false, mensaje: "No se pudo armar ningún modelo.", errores });
 
   const totalU = resumen.reduce((a, r) => a + r.unidades, 0);
+  const total4043 = lineas43.reduce((a, l) => a + l.cantidad, 0);
+  if (lineas43.length && total4043 < MIN_TOTAL_4043) {
+    return json({ ok: false, resumen, total_unidades: totalU, errores: errores.length ? errores : undefined,
+      mensaje: `Cole 40-43: el pedido suma ${total4043} unidades y el mínimo del pedido completo es ${MIN_TOTAL_4043} (sin mínimo por modelo). Agrega más modelos o unidades con stock para completar.` });
+  }
   if (dryRun) return json({ ok: true, dry_run: true, cliente: { rut: rutFmt, razon_social: razon, nuevo: !existente }, resumen, total_unidades: totalU, errores: errores.length ? errores : undefined, mensaje: "Simulación: nada se guardó. Confirma con el cliente y vuelve a llamar sin dry_run." });
 
   /* --- registrar cliente si es nuevo --- */
