@@ -5,6 +5,7 @@
 /* ---- CONFIGURACIÓN ---------------------------------------- */
 const WHATSAPP       = "56233990578";
 const MIN_POR_MODELO = 12;
+const MIN_PEDIDO = 24;   /* mínimo del pedido completo (todas las prendas), igual que en Cole 40-43 */
 const TALLAS_JEANS   = ["36","38","40","42","44","46"];
 const TALLAS_CHAQ    = ["S","M","L","XL"];
 const CURVA_JEANS    = {"36":2,"38":2,"40":2,"42":2,"44":2,"46":2};
@@ -494,6 +495,14 @@ function pintarCarrito() {
   const d = datosCarrito();
   $("#c-prendas").textContent = d.prendas;
   $("#c-curvas").textContent = d.curvas;
+  const avisoMin = $("#c-min-aviso");
+  if (avisoMin) {
+    avisoMin.hidden = d.prendas === 0;
+    avisoMin.classList.toggle("ok", d.prendas >= MIN_PEDIDO);
+    avisoMin.textContent = d.prendas >= MIN_PEDIDO
+      ? "✓ Mínimo del pedido cumplido (" + MIN_PEDIDO + " u.)"
+      : "⚠ Faltan " + (MIN_PEDIDO - d.prendas) + " unidades para el mínimo del pedido (" + MIN_PEDIDO + ")";
+  }
   if (d.consultar) {
     $("#c-neto").textContent = "—";
     $("#c-iva").textContent = "—";
@@ -848,11 +857,12 @@ $("#btn-finalizar").onclick = async () => {
   if (!codigos.length) { toast("Tu pedido está vacío"); return; }
   const bajos = codigos.filter(c => Object.values(carrito[c].t).reduce((a,b)=>a+b,0) < MIN_POR_MODELO);
   if (bajos.length) { toast("Hay modelos bajo el mínimo de "+MIN_POR_MODELO+" u.: "+bajos.join(", ")); return; }
+  const totalUnidades = codigos.reduce((s,c) => s + Object.values(carrito[c].t).reduce((a,b)=>a+b,0), 0);
+  if (totalUnidades < MIN_PEDIDO) { toast(`Faltan ${MIN_PEDIDO - totalUnidades} unidades para el mínimo del pedido (${MIN_PEDIDO})`); return; }
 
   if (!clienteBuscado) { toast("Ingresa y verifica el RUT del cliente"); elRut().focus(); return; }
   if (!validarCamposForm()) return;
 
-  const totalUnidades = codigos.reduce((s,c) => s + Object.values(carrito[c].t).reduce((a,b)=>a+b,0), 0);
   const confirmar = await customConfirm(
     "¿Enviar pedido?",
     `${codigos.length} modelo${codigos.length!==1?"s":""} · ${totalUnidades} unidades. Una vez enviado se descarga el Excel automáticamente.`,

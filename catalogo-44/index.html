@@ -382,6 +382,8 @@ main{max-width:1200px;margin:0 auto;padding:1rem 1.2rem 4rem}
 .item-c .quitar{border:none;background:none;color:var(--rojo);cursor:pointer;font-size:.74rem;font-weight:600;text-decoration:underline}
 .item-c .editar{border:none;background:none;color:var(--tinta);cursor:pointer;font-size:.74rem;font-weight:600;text-decoration:underline;margin-right:.5rem}
 .item-c .falta{font-size:.7rem;color:var(--rojo-osc);font-weight:600;margin-top:.2rem}
+.aviso-min{font-size:.72rem;font-weight:600;color:#b45309;background:#fffbeb;border-radius:6px;padding:.3rem .55rem;margin:.25rem 0}
+.aviso-min.ok{color:#15803d;background:#f0fdf4}
 .cajon footer{padding:.9rem 1.2rem 1.2rem;display:flex;flex-direction:column;gap:.5rem}
 .resumen-grid{display:grid;grid-template-columns:1fr 1fr;gap:.15rem .6rem;margin-bottom:.35rem}
 .cajon footer .linea{display:flex;justify-content:space-between;font-size:.82rem}
@@ -1101,6 +1103,7 @@ body.cajon-abierto #abrir-carrito { display:none !important; }
   <footer>
     <div class="resumen-grid">
       <div class="linea"><span>Prendas</span><b id="c-prendas">0</b></div>
+      <div class="aviso-min" id="c-min-aviso" hidden></div>
       <div class="linea"><span>Curvas</span><b id="c-curvas">0</b></div>
       <div class="linea"><span>Neto</span><b id="c-neto">$0</b></div>
       <div class="linea"><span>IVA 19%</span><b id="c-iva">$0</b></div>
@@ -1336,7 +1339,7 @@ body.cajon-abierto #abrir-carrito { display:none !important; }
   </div>
 </div>
 
-<script src="app.js?v=20260907b"></script>
+<script src="app.js?v=20260909a"></script>
 <script>
 var SHARE_URL = 'https://mohicanojeans.netlify.app/catalogo-44/';
 var SHARE_TEXT = '🔥 ¿Aún no haces tu pedido o necesitas reposición? 😍 Dolce Vita 44 — 62 modelos, ¡quedan pocas unidades! 👖';
