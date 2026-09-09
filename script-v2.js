@@ -3996,21 +3996,60 @@ window.addEventListener("load", () => {
     });
   };
 
+  /* Agrega un modelo al pedido SIN abrir la ficha (misma lógica que el botón "Agregar al pedido":
+     tope por talla según stock y suma si ya estaba). Evita el parpadeo de fichas al cargar varios modelos. */
+  const agregarSilencioso = (sku, cv) => {
+    if (typeof skuEstaAgotado === "function" && skuEstaAgotado(sku)) return { ok: false, motivo: "agotado" };
+    const tallas = {};
+    Object.entries(cv).forEach(([t, n]) => { if (Number(n) > 0 && TALLAS_DISPONIBLES.includes(t)) tallas[t] = Number(n); });
+    const sourceForSku = inferirCatalogoDesdeSku(sku) || CATALOG_SOURCE;
+    const existente = pedido.find((item) => item.sku === sku && resolverSourceSegunSku(item, CATALOG_SOURCE) === sourceForSku);
+    const ajustes = [];
+    if (INVENTORY_ENABLED && CATALOG_SOURCE !== "catalogo-44") {
+      const stockSku = obtenerStockExactoParaSkuDesdeItems(sku, stockBySku);
+      if (stockSku && stockSku.sizes && typeof stockSku.sizes === "object") {
+        Object.keys(tallas).forEach((talla) => {
+          const disp = Math.max(0, Number(stockSku.sizes[talla]) || 0);
+          const enPedido = existente ? (Number(existente.tallas?.[talla]) || 0) : 0;
+          const permitido = Math.max(0, disp - enPedido);
+          if (tallas[talla] > permitido) { ajustes.push(`${talla}: quedan ${disp}`); tallas[talla] = permitido; }
+          if (tallas[talla] <= 0) delete tallas[talla];
+        });
+      }
+    }
+    if (!Object.keys(tallas).length) return { ok: false, motivo: "sin stock" };
+    if (existente) {
+      Object.entries(tallas).forEach(([t, n]) => { existente.tallas[t] = (Number(existente.tallas[t]) || 0) + n; });
+    } else {
+      pedido.push({ sku, tallas: { ...tallas }, source: sourceForSku });
+    }
+    return { ok: true, ajustes };
+  };
+  const esperarStock = async () => {
+    if (!INVENTORY_ENABLED) return;
+    for (let i = 0; i < 40 && !(stockBySku && Object.keys(stockBySku).length); i++) await esperar(250);
+  };
+
   (async () => {
     if (itemsQ) {
+      await esperarStock();
+      let agregados = 0; const saltados = [], recortes = [];
       for (const par of itemsQ.split(",")) {
         const [cod, ...rest] = par.split(":");
         const sku = normCod(cod.trim());
-        if (!(await esperarSku(sku))) continue;
-        verProducto(sku.slice(0, 4), sku);
-        await esperar(400);
-        if (skuActivo !== sku) continue;
-        setTallas(curvaPara(rest.join(":") || "12"));
-        document.getElementById("addBtn")?.click();
-        await esperar(300);
+        if (!(await esperarSku(sku))) { saltados.push(sku); continue; }
+        const r = agregarSilencioso(sku, curvaPara(rest.join(":") || "12"));
+        if (r.ok) { agregados++; if (r.ajustes.length) recortes.push(`${sku} (${r.ajustes.join(", ")})`); }
+        else saltados.push(`${sku} (${r.motivo})`);
       }
       document.getElementById("modal")?.classList.remove("active");
-      document.getElementById("cartSidebar")?.classList.add("open");
+      if (agregados) {
+        actualizarCarrito();
+        document.getElementById("cartSidebar")?.classList.add("open");
+        if (typeof mostrarToastExito === "function") mostrarToastExito("Pedido cargado", `${agregados} modelo(s) en tu pedido. Revisa las tallas y envíalo.`);
+      }
+      if (recortes.length && typeof mostrarToastError === "function") setTimeout(() => mostrarToastError("Ajustado al stock", recortes.join(" · ")), 1200);
+      if (saltados.length && typeof mostrarToastError === "function") setTimeout(() => mostrarToastError("No se cargó", saltados.join(", ")), 2600);
     } else if (skuQ) {
       const sku = normCod(skuQ);
       if (!(await esperarSku(sku))) return;
