@@ -1282,8 +1282,8 @@ html { scroll-behavior: smooth; }
 
 /* Al saltar desde los botones del hero, el header fijo tapaba el titulo de la coleccion.
    --hdr-h la calcula el script midiendo el header real. */
-#catalog-desktop-wrap { scroll-margin-top: calc(var(--hdr-h, 80px) + 34px); }
-.dv-close, #dv-lookbook { scroll-margin-top: calc(var(--hdr-h, 80px) + 20px); }
+#modelos { scroll-margin-top: calc(var(--hdr-h, 80px) + 18px); }
+.dv-close, #campana { scroll-margin-top: calc(var(--hdr-h, 80px) + 20px); }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .top-marquee-track, .dv-hero-title, .dv-hero-photo img { animation: none !important; }
@@ -1901,8 +1901,8 @@ src="https://www.facebook.com/tr?id=2136280953641446&ev=PageView&noscript=1"
     <h1 class="dv-hero-title">Cole<br>43<small>Dolce Vita</small></h1>
     <p class="dv-hero-sub">Denim de oficio chileno en las calles de Italia. Wide leg, flare y skinny en azul profundo y blanco óptico, listos para despacho a todo Chile.</p>
     <div class="dv-hero-actions">
-      <a class="dv-btn" href="#catalog-desktop-wrap">Ver modelos y pedir</a>
-      <a class="dv-btn is-ghost" href="#dv-lookbook">Ver campaña</a>
+      <a class="dv-btn" href="#modelos">Ver modelos y pedir</a>
+      <a class="dv-btn is-ghost" href="#campana">Ver campaña</a>
     </div>
   </div>
   <div class="dv-hero-photo">
@@ -1913,7 +1913,7 @@ src="https://www.facebook.com/tr?id=2136280953641446&ev=PageView&noscript=1"
 <div class="dv-tricolore" aria-hidden="true"><span></span><span></span><span></span></div>
 
 <!-- ===== DOLCE VITA · CABECERA CATÁLOGO ===== -->
-<div class="dv-catalog-head">
+<div class="dv-catalog-head" id="modelos">
   <h2>Modelos en stock</h2>
   <p>Toca un modelo para ver sus fotos, elige cantidad por talla y agrégalo a tu pedido. El envío se coordina desde el carrito.</p>
 </div>
@@ -2020,12 +2020,12 @@ src="https://www.facebook.com/tr?id=2136280953641446&ev=PageView&noscript=1"
   <div class="dv-close-copy">
     <h2>Arma tu <em>pedido</em> hoy</h2>
     <p>Stock real, pedido por talla y despacho a todo Chile. Si tienes dudas de calce o disponibilidad, escríbenos por WhatsApp al +56 2 3399 0578.</p>
-    <a class="dv-btn" href="#catalog-desktop-wrap">Ver modelos y pedir</a>
+    <a class="dv-btn" href="#modelos">Ver modelos y pedir</a>
   </div>
 </section>
 <div class="dv-tricolore" aria-hidden="true"><span></span><span></span><span></span></div>
 <!-- ===== DOLCE VITA · LOOKBOOK ===== -->
-<section class="dv-look" id="dv-lookbook">
+<section class="dv-look" id="campana">
   <div class="dv-look-head">
     <h2>La campaña</h2>
     <p>Del Duomo a la Galleria Vittorio Emanuele: cada foto muestra el calce real de los modelos que están en stock en esta página.</p>
@@ -2073,7 +2073,7 @@ src="https://www.facebook.com/tr?id=2136280953641446&ev=PageView&noscript=1"
     <div class="dv-look-text">
       <h3>Azul profundo</h3>
       <p>Lavado oscuro con costura contraste. Bolsillo plaqué adelante, etiqueta de cuero atrás. El modelo estrella de esta colección.</p>
-      <a class="dv-btn" href="#catalog-desktop-wrap">Ir al catálogo</a>
+      <a class="dv-btn" href="#modelos">Ir al catálogo</a>
     </div>
   </div>
 </section>
