@@ -27,7 +27,7 @@
 <meta name="twitter:image" content="https://mohicanojeans.netlify.app/Imagenes/Logo/app-icon.png?v=3">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20260831o">
+<link rel="stylesheet" href="style.css?v=20260910a">
 <style>
   /* Reserva espacio del scrollbar siempre — evita el salto de layout al abrir/cerrar modal */
   html { scrollbar-gutter: stable; }
@@ -62,7 +62,7 @@
     order: 1 !important;
     padding: 8px 10px 10px !important;
     flex-direction: column !important;
-    align-items: flex-start !important;
+    align-items: center !important;
     gap: 2px !important;
   }
   .product-grid .card-title { font-size: 0.72rem !important; }
@@ -1153,7 +1153,7 @@
       order: 1 !important;
       padding: 8px 10px 10px !important;
       flex-direction: column !important;
-      align-items: flex-start !important;
+      align-items: center !important;
       gap: 2px !important;
     }
     #cole-40-carousel .card-title,
@@ -1686,7 +1686,7 @@ src="https://www.facebook.com/tr?id=2136280953641446&ev=PageView&noscript=1"
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="script-v2.js?v=20260909a"></script>
+<script src="script-v2.js?v=20260910a"></script>
 
 <script>
 /* Medir altura real del header y setear --hdr-h para posicionar elementos mobile */
@@ -1951,7 +1951,7 @@ src="https://www.facebook.com/tr?id=2136280953641446&ev=PageView&noscript=1"
           '<div class="card-title-row"><div class="card-title-block">' +
           '<div class="card-title">' + titulo + '</div>' +
           '<div class="card-subtitle" style="font-size:0.65rem;color:#9ca3af;margin-top:1px">Cole ' + cole + ' · ' + p.family + '</div>' +
-          (p._precio ? '<div class="card-price"><span class="card-price-current">' + fmtPrecio(p._precio) + '</span></div>' : '') +
+          (p._precio ? '<div class="card-price"><span class="card-price-current">' + fmtPrecio(p._precio) + '</span><span class="card-price-badge">+ IVA</span></div>' : '') +
           '</div></div>' +
           '</div>';
       }).join('');
