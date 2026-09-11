@@ -27,6 +27,9 @@
 <meta name="twitter:image" content="https://mohicanojeans.netlify.app/Imagenes/Logo/app-icon.png?v=3">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=20260910a">
 <style>
   /* Reserva espacio del scrollbar siempre — evita el salto de layout al abrir/cerrar modal */
@@ -1233,6 +1236,520 @@
     }
 
   }
+
+/* ======================================================================
+   DOLCE VITA — sistema editorial (tricolore + Archivo Black)
+   Requiere en <head>: <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&display=swap" rel="stylesheet">
+   ====================================================================== */
+/* =====================================================================
+   COLE 43 · DOLCE VITA — capa editorial sobre el catálogo mayorista
+   Se carga DESPUÉS de style.css y cole-43.css. Solo restyla; no toca
+   ningún id ni la lógica de script-v2.js.
+   ===================================================================== */
+
+:root {
+  --dv-ink: #101214;
+  --dv-paper: #faf8f3;
+  --dv-verde: #009246;
+  --dv-bianco: #ffffff;
+  --dv-rosso: #ce2b37;
+  --dv-denim: #2e4a6b;
+  --dv-stone: #e9e4d8;
+  --dv-display: 'Archivo Black', 'Inter', system-ui, sans-serif;
+  --dv-body: 'Inter', system-ui, sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+
+/* Al saltar desde los botones del hero, el header fijo tapaba el titulo de la coleccion.
+   --hdr-h la calcula el script midiendo el header real. */
+#catalog-desktop-wrap { scroll-margin-top: calc(var(--hdr-h, 80px) + 34px); }
+.dv-close, #dv-lookbook { scroll-margin-top: calc(var(--hdr-h, 80px) + 20px); }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .top-marquee-track, .dv-hero-title, .dv-hero-photo img { animation: none !important; }
+}
+
+body {
+  background: var(--dv-paper) !important;
+  font-family: var(--dv-body);
+  color: var(--dv-ink);
+}
+
+/* ---------- Franja tricolore (utilidad) ---------- */
+.dv-tricolore {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  height: 6px;
+}
+.dv-tricolore span:nth-child(1) { background: var(--dv-verde); }
+.dv-tricolore span:nth-child(2) { background: var(--dv-bianco); border-top: 1px solid var(--dv-stone); border-bottom: 1px solid var(--dv-stone); }
+.dv-tricolore span:nth-child(3) { background: var(--dv-rosso); }
+
+/* ---------- Marquee superior ---------- */
+.top-marquee {
+  background: var(--dv-ink) !important;
+  color: var(--dv-paper) !important;
+  border-bottom: 3px solid var(--dv-verde);
+  font-family: var(--dv-display);
+  font-size: 11px;
+  letter-spacing: .12em;
+}
+.top-marquee span { color: var(--dv-paper) !important; }
+.top-marquee span:nth-child(even) { color: var(--dv-rosso) !important; }
+
+/* ---------- Header ---------- */
+.header {
+  background: var(--dv-paper) !important;
+  border-bottom: 1px solid var(--dv-ink) !important;
+  box-shadow: none !important;
+}
+.header .admin-btn {
+  border: 1px solid var(--dv-ink) !important;
+  color: var(--dv-ink) !important;
+  border-radius: 0 !important;
+  font-family: var(--dv-display);
+  font-size: 10px;
+  letter-spacing: .1em;
+}
+.cart-btn {
+  background: var(--dv-ink) !important;
+  color: var(--dv-paper) !important;
+  border-radius: 0 !important;
+  border: 0 !important;
+  font-family: var(--dv-display);
+}
+.cart-btn-caption { color: var(--dv-paper) !important; opacity: .7; }
+#cartCount { color: var(--dv-rosso) !important; }
+
+/* ---------- Ocultar hero antiguo (banner 44 y switch) ---------- */
+.hero .collection-switch-row,
+.hero .hero-title,
+.hero .hero-cta-43-wrap { display: none !important; }
+/* El banner de la Cole 44 se mantiene visible (pedido de Manu): el prototipo lo escondia. */
+.hero .cole44-banner-btn { display: flex !important; margin: 0 !important; }
+.hero { padding: 0 !important; margin: 0 !important; background: transparent !important; }
+
+/* ---------- Banner Cole 44 con el lenguaje editorial (filos rectos, tricolore) ---------- */
+.hero .cole44-banner-btn {
+  width: 100% !important;
+  max-width: none !important;
+  border-radius: 0 !important;
+  background: var(--dv-ink) !important;
+  border: 0 !important;
+  border-bottom: 3px solid var(--dv-rosso) !important;
+  box-shadow: none !important;
+  overflow: hidden;
+}
+.hero .cole44-banner-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 10px;
+  background: linear-gradient(180deg, var(--dv-verde) 0 33.33%, var(--dv-bianco) 33.33% 66.66%, var(--dv-rosso) 66.66% 100%);
+}
+.hero .cole44-banner-overlay { display: none !important; }
+.hero .cole44-banner-content {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 14px 24px 14px 34px !important;
+  gap: 18px;
+}
+.hero .cole44-banner-badge {
+  border-radius: 0 !important;
+  background: var(--dv-rosso) !important;
+  color: #fff !important;
+  font-family: var(--dv-display);
+  font-size: 10px !important;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 5px 9px !important;
+}
+.hero .cole44-banner-title {
+  font-family: var(--dv-display) !important;
+  font-weight: 400 !important;
+  letter-spacing: .01em;
+  color: var(--dv-paper) !important;
+  text-transform: uppercase;
+  font-size: clamp(13px, 2vw, 17px) !important;
+}
+.hero .cole44-banner-title em {
+  font-style: normal;
+  color: var(--dv-verde) !important;
+}
+.hero .cole44-banner-cta {
+  border-radius: 0 !important;
+  background: transparent !important;
+  border: 2px solid var(--dv-paper) !important;
+  color: var(--dv-paper) !important;
+  font-family: var(--dv-display) !important;
+  font-size: 11px !important;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 11px 18px !important;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.hero .cole44-banner-btn:hover .cole44-banner-cta,
+.hero .cole44-banner-btn:focus-visible .cole44-banner-cta {
+  background: var(--dv-rosso) !important;
+  border-color: var(--dv-rosso) !important;
+  color: #fff !important;
+}
+@media (max-width: 640px) {
+  .hero .cole44-banner-content { flex-direction: column; align-items: flex-start; padding: 12px 16px 12px 24px !important; gap: 10px; }
+  .hero .cole44-banner-cta { width: 100%; justify-content: center; }
+}
+
+/* =====================================================================
+   HERO EDITORIAL
+   ===================================================================== */
+.dv-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  min-height: min(88vh, 860px);
+  background: var(--dv-paper);
+  overflow: hidden;
+  border-bottom: 1px solid var(--dv-ink);
+}
+.dv-hero-copy {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: clamp(28px, 5vw, 72px);
+}
+.dv-hero-kicker {
+  font-family: var(--dv-body);
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--dv-denim);
+  margin: 0 0 18px;
+  max-width: 34ch;
+  line-height: 1.5;
+}
+.dv-hero-title {
+  font-family: var(--dv-display);
+  font-size: clamp(64px, 13vw, 190px);
+  line-height: .86;
+  letter-spacing: -.035em;
+  margin: 0;
+  color: var(--dv-ink);
+  text-transform: uppercase;
+}
+.dv-hero-title small {
+  display: block;
+  font-size: .28em;
+  letter-spacing: .02em;
+  color: var(--dv-rosso);
+  margin-top: .35em;
+  line-height: 1;
+}
+.dv-hero-sub {
+  margin: 26px 0 0;
+  font-size: 16px;
+  line-height: 1.55;
+  max-width: 44ch;
+  color: #3a3d42;
+}
+.dv-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 30px;
+}
+.dv-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 22px;
+  font-family: var(--dv-display);
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: 2px solid var(--dv-ink);
+  background: var(--dv-ink);
+  color: var(--dv-paper);
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.dv-btn:hover, .dv-btn:focus-visible { background: var(--dv-rosso); border-color: var(--dv-rosso); outline: none; }
+.dv-btn.is-ghost { background: transparent; color: var(--dv-ink); }
+.dv-btn.is-ghost:hover, .dv-btn.is-ghost:focus-visible { background: var(--dv-ink); color: var(--dv-paper); border-color: var(--dv-ink); }
+
+.dv-hero-photo {
+  position: relative;
+  min-height: 420px;
+}
+.dv-hero-photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 55% 35%;
+  display: block;
+}
+.dv-hero-photo::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 6px;
+  background: linear-gradient(to bottom, var(--dv-verde) 0 33.3%, var(--dv-bianco) 33.3% 66.6%, var(--dv-rosso) 66.6%);
+}
+.dv-hero-tag {
+  position: absolute;
+  right: 22px;
+  bottom: 22px;
+  background: var(--dv-paper);
+  color: var(--dv-ink);
+  font-family: var(--dv-display);
+  font-size: 11px;
+  letter-spacing: .1em;
+  padding: 9px 12px;
+  border: 1px solid var(--dv-ink);
+}
+
+/* =====================================================================
+   LOOKBOOK — bloques imagen / texto alternados
+   ===================================================================== */
+.dv-look {
+  background: var(--dv-paper);
+  border-top: 1px solid var(--dv-ink);
+  border-bottom: 1px solid var(--dv-ink);
+}
+.dv-look-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: clamp(28px, 4vw, 56px) clamp(20px, 4vw, 56px) 20px;
+  flex-wrap: wrap;
+}
+.dv-look-head h2 {
+  font-family: var(--dv-display);
+  font-size: clamp(36px, 6vw, 84px);
+  line-height: .92;
+  letter-spacing: -.03em;
+  margin: 0;
+  text-transform: uppercase;
+}
+.dv-look-head p {
+  margin: 0;
+  max-width: 40ch;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #3a3d42;
+}
+
+.dv-look-row {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 12px;
+  padding: 0 clamp(12px, 2vw, 32px) 12px;
+  align-items: stretch;
+}
+.dv-look-row figure {
+  margin: 0;
+  position: relative;
+  overflow: hidden;
+  background: var(--dv-stone);
+}
+.dv-look-row figure img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.dv-look-row figcaption {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  font-family: var(--dv-display);
+  font-size: 11px;
+  letter-spacing: .1em;
+  background: var(--dv-paper);
+  padding: 7px 10px;
+  border: 1px solid var(--dv-ink);
+}
+.dv-look-row .dv-tall  { grid-column: span 4; aspect-ratio: 2 / 3; }
+.dv-look-row .dv-wide  { grid-column: span 8; aspect-ratio: 3 / 2; }
+.dv-look-row .dv-half  { grid-column: span 6; aspect-ratio: 2 / 3; }
+.dv-look-row .dv-third { grid-column: span 4; aspect-ratio: 2 / 3; }
+
+.dv-look-text {
+  grid-column: span 4;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 28px;
+  background: var(--dv-ink);
+  color: var(--dv-paper);
+}
+.dv-look-text.is-verde { background: var(--dv-verde); }
+.dv-look-text.is-rosso { background: var(--dv-rosso); }
+.dv-look-text h3 {
+  font-family: var(--dv-display);
+  font-size: clamp(28px, 3.4vw, 46px);
+  line-height: .95;
+  letter-spacing: -.02em;
+  margin: 0 0 14px;
+  text-transform: uppercase;
+}
+.dv-look-text p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  max-width: 34ch;
+  opacity: .92;
+}
+.dv-look-text .dv-btn { margin-top: 22px; align-self: flex-start; background: var(--dv-paper); color: var(--dv-ink); border-color: var(--dv-paper); }
+.dv-look-text .dv-btn:hover { background: transparent; color: var(--dv-paper); }
+
+/* =====================================================================
+   CATÁLOGO — restyle de chips, sidebar, tarjetas
+   ===================================================================== */
+.dv-catalog-head {
+  padding: clamp(28px, 4vw, 56px) clamp(20px, 4vw, 56px) 10px;
+}
+.dv-catalog-head h2 {
+  font-family: var(--dv-display);
+  font-size: clamp(36px, 6vw, 84px);
+  line-height: .92;
+  letter-spacing: -.03em;
+  margin: 0;
+  text-transform: uppercase;
+}
+.dv-catalog-head p { margin: 12px 0 0; max-width: 52ch; font-size: 15px; line-height: 1.55; color: #3a3d42; }
+
+#catalog-desktop-wrap { background: var(--dv-paper) !important; }
+
+#cole-filter-chips { background: var(--dv-paper) !important; border-bottom: 1px solid var(--dv-ink) !important; }
+.cole-chip { border-radius: 0 !important; border: 1px solid var(--dv-ink) !important; box-shadow: none !important; background: var(--dv-paper) !important; }
+.cole-chip-icon { background: var(--dv-paper) !important; color: var(--dv-ink) !important; font-family: var(--dv-display); font-weight: 400 !important; }
+.cole-chip-label { color: var(--dv-ink) !important; }
+.cole-chip.active { border-color: var(--dv-ink) !important; box-shadow: none !important; }
+.cole-chip.active .cole-chip-icon { background: var(--dv-rosso) !important; color: var(--dv-paper) !important; }
+
+#desktop-sidebar { background: var(--dv-paper) !important; border-right: 1px solid var(--dv-ink) !important; border-radius: 0 !important; box-shadow: none !important; }
+#desktop-sidebar .sidebar-title { font-family: var(--dv-display); text-transform: uppercase; letter-spacing: .08em; font-size: 12px; color: var(--dv-ink) !important; }
+.sidebar-cole-btn { border-radius: 0 !important; border: 1px solid transparent !important; color: var(--dv-ink) !important; background: transparent !important; font-weight: 500 !important; }
+.sidebar-cole-btn:hover { border-color: var(--dv-ink) !important; }
+.sidebar-cole-btn.active { background: var(--dv-ink) !important; color: var(--dv-paper) !important; border-color: var(--dv-ink) !important; }
+.sidebar-cole-btn.active .sidebar-cole-num { color: var(--dv-rosso) !important; }
+.sidebar-search-card { border-radius: 0 !important; border: 1px solid var(--dv-ink) !important; box-shadow: none !important; background: var(--dv-bianco) !important; }
+.model-search input { border-radius: 0 !important; border: 1px solid var(--dv-ink) !important; }
+.model-search #modelSearchBtn { border-radius: 0 !important; background: var(--dv-ink) !important; color: var(--dv-paper) !important; }
+
+.cole-seccion-header { border-left: 6px solid var(--dv-verde) !important; }
+.cole-seccion-label { font-family: var(--dv-display); font-weight: 400 !important; text-transform: uppercase; letter-spacing: .04em; color: var(--dv-ink) !important; }
+#cole-42-wrapper .cole-seccion-header { border-left-color: var(--dv-rosso) !important; }
+#cole-41-wrapper .cole-seccion-header { border-left-color: var(--dv-denim) !important; }
+#cole-40-wrapper .cole-seccion-header { border-left-color: var(--dv-ink) !important; }
+
+.card {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  border: 1px solid var(--dv-ink) !important;
+  background: var(--dv-bianco) !important;
+}
+.card:hover { box-shadow: 6px 6px 0 var(--dv-ink) !important; transform: translate(-2px, -2px) !important; transition: transform .15s, box-shadow .15s; }
+.card .card-title { font-family: var(--dv-display); font-weight: 400 !important; letter-spacing: .02em; color: var(--dv-ink) !important; }
+.card .card-price { color: var(--dv-rosso) !important; font-weight: 700 !important; }
+.catalog-visibility-badge { border-radius: 0 !important; font-family: var(--dv-display); font-size: 9px !important; letter-spacing: .08em; }
+.catalog-visibility-badge.is-available { background: var(--dv-verde) !important; color: var(--dv-paper) !important; }
+
+/* ---------- Carrito / modal: acentos ---------- */
+.cart-sidebar { border-left: 1px solid var(--dv-ink) !important; border-radius: 0 !important; }
+.cart-header h2, .modal-right #modalTitle { font-family: var(--dv-display); text-transform: uppercase; letter-spacing: -.01em; }
+.cart-jump-send-btn, #sendQuoteBtn, .add-to-cart, #addToCartBtn { border-radius: 0 !important; background: var(--dv-ink) !important; color: var(--dv-paper) !important; font-family: var(--dv-display); letter-spacing: .06em; }
+.cart-jump-send-btn:hover, #sendQuoteBtn:hover, .add-to-cart:hover, #addToCartBtn:hover { background: var(--dv-rosso) !important; }
+.modal-content { border-radius: 0 !important; border-top: 6px solid var(--dv-rosso) !important; }
+#c43-prev, #c43-next { border-radius: 0 !important; background: var(--dv-ink) !important; color: var(--dv-paper) !important; }
+
+/* =====================================================================
+   CIERRE — bloque final + footer
+   ===================================================================== */
+.dv-close {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid var(--dv-ink);
+  background: var(--dv-ink);
+  color: var(--dv-paper);
+}
+.dv-close figure { margin: 0; min-height: 520px; position: relative; }
+.dv-close figure img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 20%; display: block; }
+.dv-close-copy { padding: clamp(32px, 5vw, 72px); display: flex; flex-direction: column; justify-content: center; }
+.dv-close-copy h2 {
+  font-family: var(--dv-display);
+  font-size: clamp(40px, 6.5vw, 96px);
+  line-height: .9;
+  letter-spacing: -.03em;
+  margin: 0 0 20px;
+  text-transform: uppercase;
+}
+.dv-close-copy h2 em { font-style: normal; color: var(--dv-verde); }
+.dv-close-copy p { margin: 0; font-size: 16px; line-height: 1.6; max-width: 46ch; opacity: .9; }
+.dv-close-copy .dv-btn { margin-top: 28px; align-self: flex-start; background: var(--dv-paper); color: var(--dv-ink); border-color: var(--dv-paper); }
+.dv-close-copy .dv-btn:hover { background: var(--dv-rosso); color: var(--dv-paper); border-color: var(--dv-rosso); }
+
+.dv-footer {
+  background: var(--dv-paper);
+  border-top: 1px solid var(--dv-ink);
+  padding: 22px clamp(20px, 4vw, 56px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: #3a3d42;
+}
+.dv-footer strong { font-family: var(--dv-display); font-weight: 400; color: var(--dv-ink); letter-spacing: .04em; }
+.dv-footer a { color: var(--dv-ink); text-decoration: underline; text-underline-offset: 3px; }
+
+/* =====================================================================
+   RESPONSIVE
+   ===================================================================== */
+@media (max-width: 900px) {
+  .dv-hero { grid-template-columns: 1fr; min-height: 0; }
+  .dv-hero-photo { order: -1; min-height: 62vh; }
+  .dv-hero-photo::after { width: 100%; height: 6px; top: auto; bottom: 0; right: 0;
+    background: linear-gradient(to right, var(--dv-verde) 0 33.3%, var(--dv-bianco) 33.3% 66.6%, var(--dv-rosso) 66.6%); }
+  .dv-hero-title { font-size: clamp(56px, 20vw, 120px); }
+  .dv-look-row { gap: 8px; padding: 0 8px 8px; }
+  .dv-look-row .dv-tall, .dv-look-row .dv-wide, .dv-look-row .dv-half, .dv-look-row .dv-third { grid-column: span 6; aspect-ratio: 2 / 3; }
+  .dv-look-row .dv-wide { grid-column: span 12; aspect-ratio: 4 / 5; }
+  .dv-look-text { grid-column: span 12; padding: 22px; }
+  .dv-close { grid-template-columns: 1fr; }
+  .dv-close figure { min-height: 60vh; }
+}
+@media (max-width: 520px) {
+  .dv-look-row .dv-half, .dv-look-row .dv-third { grid-column: span 6; }
+  .dv-hero-copy { padding: 22px 16px 32px; }
+}
+
+
+/* ---------- Sidebar: solo color, el layout lo define estilos-catalogo ---------- */
+@media (min-width: 901px) {
+  #desktop-sidebar { top: 56px !important; }
+  .sidebar-title { color: var(--dv-ink) !important; border-bottom: 4px solid var(--dv-verde) !important; padding-left: 16px !important; }
+  .sidebar-cole-btn { border-left: 3px solid transparent !important; }
+  .sidebar-cole-btn:hover { background: var(--dv-stone) !important; border-color: transparent !important; }
+  .sidebar-cole-btn.active { border-left-color: var(--dv-rosso) !important; }
+  .sidebar-cole-num { background: transparent !important; color: var(--dv-rosso) !important; font-family: var(--dv-display); font-size: .8rem !important; }
+  .sidebar-cole-btn.active .sidebar-cole-num { background: transparent !important; color: var(--dv-paper) !important; }
+}
+/* Tarjetas: neutralizar degradados y sombras del diseño anterior */
+.card { background: var(--dv-bianco) !important; }
+.card:hover { transform: translate(-2px,-2px) !important; }
+.card-subtitle { color: #6b6f76 !important; }
+.card-cta-hint { border-radius: 0 !important; font-family: var(--dv-display); font-size: 9px !important; letter-spacing: .06em; }
+/* Carrito local: botón quitar */
+.cart-item-remove { margin-top: 8px; font-size: 11px !important; padding: 5px 10px !important; border-radius: 0 !important; border: 1px solid var(--dv-ink) !important; background: transparent !important; color: var(--dv-ink) !important; cursor: pointer; }
+.cart-item-remove:hover { background: var(--dv-rosso) !important; color: #fff !important; border-color: var(--dv-rosso) !important; }
 </style>
 <!-- Meta Pixel Code -->
 <script>
@@ -1358,6 +1875,30 @@ src="https://www.facebook.com/tr?id=2136280953641446&ev=PageView&noscript=1"
 </section>
 
 
+<!-- ===== DOLCE VITA · HERO EDITORIAL ===== -->
+<section class="dv-hero" id="dv-hero">
+  <div class="dv-hero-copy">
+    <p class="dv-hero-kicker">Fotografiada en Milán y la Costa Amalfitana. Disponible ahora para pedido mayorista por talla.</p>
+    <h1 class="dv-hero-title">Cole<br>43<small>Dolce Vita</small></h1>
+    <p class="dv-hero-sub">Denim de oficio chileno en las calles de Italia. Wide leg, flare y skinny en azul profundo y blanco óptico, listos para despacho a todo Chile.</p>
+    <div class="dv-hero-actions">
+      <a class="dv-btn" href="#catalog-desktop-wrap">Ver modelos y pedir</a>
+      <a class="dv-btn is-ghost" href="#dv-lookbook">Ver campaña</a>
+    </div>
+  </div>
+  <div class="dv-hero-photo">
+    <img src="Imagenes/cole43-italia/amalfi.jpg" alt="Modelo con top de mezclilla y jean blanco frente a la Costa Amalfitana" fetchpriority="high">
+    <span class="dv-hero-tag">Amalfi · Italia</span>
+  </div>
+</section>
+<div class="dv-tricolore" aria-hidden="true"><span></span><span></span><span></span></div>
+
+<!-- ===== DOLCE VITA · CABECERA CATÁLOGO ===== -->
+<div class="dv-catalog-head">
+  <h2>Modelos en stock</h2>
+  <p>Toca un modelo para ver sus fotos, elige cantidad por talla y agrégalo a tu pedido. El envío se coordina desde el carrito.</p>
+</div>
+
 <div id="catalog-desktop-wrap">
   <!-- Chips: sticky en mobile (se queda fijo mientras scrolleas productos), oculto en desktop -->
   <div id="cole-filter-chips">
@@ -1451,6 +1992,77 @@ src="https://www.facebook.com/tr?id=2136280953641446&ev=PageView&noscript=1"
     </div>
   </div>
 </div>
+
+<!-- ===== DOLCE VITA · CIERRE ===== -->
+<section class="dv-close">
+  <figure>
+    <img src="Imagenes/cole43-italia/duomo-3.jpg" alt="Modelo apoyada en un poste frente al Duomo de Milán con jean blanco" loading="lazy">
+  </figure>
+  <div class="dv-close-copy">
+    <h2>Arma tu <em>pedido</em> hoy</h2>
+    <p>Stock real, pedido por talla y despacho a todo Chile. Si tienes dudas de calce o disponibilidad, escríbenos por WhatsApp al +56 2 3399 0578.</p>
+    <a class="dv-btn" href="#catalog-desktop-wrap">Ver modelos y pedir</a>
+  </div>
+</section>
+<div class="dv-tricolore" aria-hidden="true"><span></span><span></span><span></span></div>
+<!-- ===== DOLCE VITA · LOOKBOOK ===== -->
+<section class="dv-look" id="dv-lookbook">
+  <div class="dv-look-head">
+    <h2>La campaña</h2>
+    <p>Del Duomo a la Galleria Vittorio Emanuele: cada foto muestra el calce real de los modelos que están en stock en esta página.</p>
+  </div>
+
+  <div class="dv-look-row">
+    <figure class="dv-third">
+      <img src="Imagenes/cole43-italia/duomo-2.jpg" alt="Modelo con top corsé de mezclilla y jean blanco capri frente al Duomo de Milán" loading="lazy">
+      <figcaption>Piazza del Duomo</figcaption>
+    </figure>
+    <figure class="dv-third">
+      <img src="Imagenes/cole43-italia/duomo-1.jpg" alt="Modelo sentada en pilar de piedra con jean flare azul oscuro y el Duomo detrás" loading="lazy">
+      <figcaption>Flare azul profundo</figcaption>
+    </figure>
+    <div class="dv-look-text is-rosso">
+      <h3>Blanco óptico</h3>
+      <p>El jean blanco capri de la 43 bajo el sol de Milán. Calce alto, tobillo al aire, el modelo que más rota en vitrina de verano.</p>
+    </div>
+  </div>
+
+  <div class="dv-look-row">
+    <div class="dv-look-text is-verde">
+      <h3>Total denim</h3>
+      <p>Chaleco y jean recto en el mismo lavado medio. Fotografiado bajo la cúpula de la Galleria Vittorio Emanuele II.</p>
+    </div>
+    <figure class="dv-third">
+      <img src="Imagenes/cole43-italia/galleria-1.jpg" alt="Modelo en cuclillas con conjunto de mezclilla dentro de la Galleria Vittorio Emanuele" loading="lazy">
+      <figcaption>Galleria · frente</figcaption>
+    </figure>
+    <figure class="dv-third">
+      <img src="Imagenes/cole43-italia/galleria-2.jpg" alt="Modelo de espaldas con conjunto de mezclilla mostrando el calce trasero del jean" loading="lazy">
+      <figcaption>Galleria · espalda</figcaption>
+    </figure>
+  </div>
+
+  <div class="dv-look-row">
+    <figure class="dv-third">
+      <img src="Imagenes/cole43-italia/galeria-1.jpg" alt="Modelo con top blanco y jean wide leg azul con bolsillos delanteros en una galería de arte" loading="lazy">
+      <figcaption>Wide leg · bolsillo frontal</figcaption>
+    </figure>
+    <figure class="dv-third">
+      <img src="Imagenes/cole43-italia/galeria-2.jpg" alt="Vista trasera del jean wide leg azul con etiqueta Mohicano" loading="lazy">
+      <figcaption>Wide leg · espalda</figcaption>
+    </figure>
+    <div class="dv-look-text">
+      <h3>Azul profundo</h3>
+      <p>Lavado oscuro con costura contraste. Bolsillo plaqué adelante, etiqueta de cuero atrás. El modelo estrella de esta colección.</p>
+      <a class="dv-btn" href="#catalog-desktop-wrap">Ir al catálogo</a>
+    </div>
+  </div>
+</section>
+
+<footer class="dv-footer">
+  <strong>MOHICANO JEANS · COLE 43 · DOLCE VITA</strong>
+  <span>Vitacura · Patronato · <a href="https://mohicano.cl">mohicano.cl</a></span>
+</footer>
 
 <div id="cartSidebar" class="cart-sidebar">
     <button id="closeCart" class="cart-close">X</button>
