@@ -18,6 +18,10 @@ exports.handler = async function(event) {
     ? (order.quoteId ? "https://mohicanojeans.netlify.app/catalogo-44/?pedido=" + order.quoteId : "https://mohicanojeans.netlify.app/catalogo-44/")
     : "https://mohicanojeans.netlify.app/?admin=1#admin";
 
+  const lineas = (order.items || []).map(it =>
+    `  - ${it.codigo}${it.nombre ? " (" + it.nombre + ")" : ""}: ${it.totalUnidades} u`
+  ).join("\n");
+
   const texto = [
     titulo + "  [" + ref + "]",
     "",
