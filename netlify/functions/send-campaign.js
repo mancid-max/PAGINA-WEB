@@ -1,6 +1,32 @@
 exports.handler = async function(event) {
   if (event.httpMethod !== "POST") return { statusCode: 405, body: "Method Not Allowed" };
 
+  /* Candado: solo un administrador con sesion valida del CRM puede mandar correos.
+     Sin esto, cualquiera que sepa la URL manda correos desde ventas@mohicanojeans.cl
+     y nos quema el dominio en Gmail. Ojo: el codigo de las funciones se lee desde la
+     web (el repo es publico), asi que la URL no es ningun secreto. */
+  let SUPABASE_URL = process.env.SUPABASE_URL || "https://kdtydxihrflhziclgiof.supabase.co";
+  if (SUPABASE_URL.endsWith("/")) SUPABASE_URL = SUPABASE_URL.slice(0, -1);
+  const SERVICE_KEY = (process.env.SUPABASE_SERVICE_KEY || "").trim();
+  const h = event.headers || {};
+  const cabAuth = String(h.authorization || h.Authorization || "").trim();
+  const token = cabAuth.toLowerCase().startsWith("bearer ") ? cabAuth.slice(7).trim() : cabAuth;
+
+  if (!token) return { statusCode: 401, body: JSON.stringify({ error: "Falta la sesion de administrador. Entra al CRM de nuevo." }) };
+  if (!SERVICE_KEY) return { statusCode: 500, body: JSON.stringify({ error: "Falta SUPABASE_SERVICE_KEY en Netlify." }) };
+  try {
+    const ver = await fetch(`${SUPABASE_URL}/auth/v1/user`, { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${token}` } });
+    if (!ver.ok) {
+      console.warn("send-campaign: sesion rechazada, HTTP", ver.status);
+      return { statusCode: 401, body: JSON.stringify({ error: "Sesion invalida o vencida. Vuelve a entrar al CRM." }) };
+    }
+    const usuario = await ver.json();
+    console.log("send-campaign: autorizado por", usuario.email || usuario.id);
+  } catch (e) {
+    console.error("send-campaign: no pude validar la sesion:", e.message);
+    return { statusCode: 502, body: JSON.stringify({ error: "No pude validar la sesion. Intenta de nuevo." }) };
+  }
+
   let body;
   try { body = JSON.parse(event.body); } catch { return { statusCode: 400, body: "Bad JSON" }; }
 

@@ -705,7 +705,7 @@ function actualizarBotonRut() {
   const t = document.getElementById("rut-btn-titulo");
   const s = document.getElementById("rut-btn-sub");
   if (t) t.textContent = clienteBuscado.is_new
-    ? "Cliente nuevo — completá los datos"
+    ? "Cliente nuevo — completa los datos"
     : "✔ " + (clienteBuscado.razon_social || clienteBuscado.rut);
   if (s) s.textContent = clienteBuscado.rut + " · Toca para cambiar";
 }
@@ -1697,7 +1697,7 @@ $("#btn-enviar-resend").onclick = async () => {
   if (!conEmail.length) { toast("Sin destinatarios con email"); return; }
   const asunto = $("#crm-email-subject").value.trim();
   const textoPlano = $("#crm-email-body").value.trim();
-  if (!asunto || !textoPlano) { toast("Completá asunto y cuerpo"); return; }
+  if (!asunto || !textoPlano) { toast("Completa el asunto y el cuerpo"); return; }
   const dest = conEmail.length === 1 ? conEmail[0].nombre : `${conEmail.length} clientes`;
   // Confirmación inline en vez del confirm() del navegador
   const status = $("#crm-email-status");
@@ -1717,9 +1717,10 @@ $("#btn-enviar-resend").onclick = async () => {
   status.textContent = "";
 
   try {
+    if (!adminToken) { sesionExpirada(); return; }
     const res = await fetch("/.netlify/functions/send-campaign", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${adminToken}` },
       body: JSON.stringify({ clientes: conEmail, asunto, html: textoPlano }),
     });
     const data = await res.json();

@@ -6,7 +6,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL || "https://kdtydxihrflhziclgiof.s
 const SUPABASE_KEY = process.env.SUPABASE_CRM_KEY || process.env.SUPABASE_SERVICE_KEY;
 const PS_URL       = (process.env.PRESTASHOP_URL || "https://mohicano.cl").replace(/\/$/, "");
 const PS_KEY       = process.env.PRESTASHOP_API_KEY;
-const CRM_SECRET   = process.env.CRM_SECRET || "mohicano-crm-2026";
+const CRM_SECRET   = (process.env.CRM_SECRET || "").trim();
 
 const SB_HEADERS = {
   "apikey":        SUPABASE_KEY,
@@ -54,7 +54,7 @@ exports.handler = async (event) => {
   if (!secret && event.httpMethod === "POST") {
     try { secret = JSON.parse(event.body || "{}").secret; } catch {}
   }
-  if (secret !== CRM_SECRET) {
+  if (!CRM_SECRET || secret !== CRM_SECRET) {
     return { statusCode: 401, headers, body: JSON.stringify({ ok: false, error: "Unauthorized" }) };
   }
 

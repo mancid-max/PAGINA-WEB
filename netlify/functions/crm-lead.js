@@ -3,7 +3,7 @@
 
 const SUPABASE_URL      = process.env.SUPABASE_URL        || "https://kdtydxihrflhziclgiof.supabase.co";
 const SUPABASE_KEY      = process.env.SUPABASE_CRM_KEY    || process.env.SUPABASE_SERVICE_KEY;
-const CRM_SECRET        = process.env.CRM_SECRET          || "mohicano-crm-2026";
+const CRM_SECRET        = (process.env.CRM_SECRET || "").trim();
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const MANYCHAT_API_KEY  = process.env.MANYCHAT_API_KEY;
 
@@ -176,7 +176,7 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: "Invalid JSON" };
   }
 
-  if (body.secret !== CRM_SECRET) {
+  if (!CRM_SECRET || body.secret !== CRM_SECRET) {
     console.warn("[crm-lead] secret inválido:", body.secret);
     return { statusCode: 401, body: "Unauthorized" };
   }
