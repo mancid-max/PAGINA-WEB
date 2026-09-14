@@ -7,17 +7,19 @@ exports.handler = async function(event) {
   const TOKEN = process.env.TELEGRAM_TOKEN;
   const CHAT  = process.env.TELEGRAM_CHAT_ID || "-5261495560";
 
-  const ref  = order.quoteId ? "DV44-" + order.quoteId.slice(-6).toUpperCase() : "DV44-???";
-  const link = order.quoteId
-    ? "https://mohicanojeans.netlify.app/catalogo-44/?pedido=" + order.quoteId
-    : "https://mohicanojeans.netlify.app/catalogo-44/";
-
-  const lineas = (order.items || []).map(it =>
-    `  - ${it.codigo}${it.nombre ? " (" + it.nombre + ")" : ""}: ${it.totalUnidades} u`
-  ).join("\n");
+  /* Cole 44 (catalogo-44 / dolce-vita-44) o Cole 40-43 (catalogo-43, catalogo-2, catalogo-mixto).
+     Sin source se asume Cole 44, que era el unico que avisaba antes. */
+  const src   = String(order.source || "").toLowerCase();
+  const es44  = !src || src.includes("44");
+  const id6   = order.quoteId ? String(order.quoteId).slice(-6).toUpperCase() : "???";
+  const titulo = es44 ? "Nuevo pedido Cole 44" : "Nuevo pedido Cole 40-43";
+  const ref  = (es44 ? "DV44-" : "C43-") + id6;
+  const link = es44
+    ? (order.quoteId ? "https://mohicanojeans.netlify.app/catalogo-44/?pedido=" + order.quoteId : "https://mohicanojeans.netlify.app/catalogo-44/")
+    : "https://mohicanojeans.netlify.app/?admin=1#admin";
 
   const texto = [
-    "Nuevo pedido Cole 44  [" + ref + "]",
+    titulo + "  [" + ref + "]",
     "",
     "Cliente: "    + (order.storeName  || "—"),
     "RUT: "        + (order.rut        || "—"),

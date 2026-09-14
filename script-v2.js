@@ -5633,6 +5633,32 @@ async function enviarPayloadDirectoSinStock(payload) {
   return payload.quote.id;
 }
 
+/* Aviso a Telegram del pedido de Cole 40-43 (mismo bot y misma funcion que usa catalogo-44).
+   Fuego y olvido: si falla, el pedido igual queda guardado y el cliente no se entera. */
+function notificarPedidoTelegram(quoteId, cliente) {
+  try {
+    const items = (Array.isArray(pedido) ? pedido : []).map((it) => ({
+      codigo: normalizarSkuCatalogo(it.sku),
+      totalUnidades: Object.values(it.tallas || {}).reduce((a, b) => a + (Number(b) || 0), 0),
+    })).filter((i) => i.totalUnidades > 0);
+    const body = {
+      quoteId: quoteId || "",
+      source: CATALOG_SOURCE,
+      storeName: cliente?.razon_social || cliente?.nombre_tienda || "",
+      rut: cliente?.rut || cliente?.rut_normalized || "",
+      phone: cliente?.client_phone || "",
+      transporte: cliente?.transporte || "",
+      ciudad: cliente?.comuna || "",
+      items,
+      totalUnidades: items.reduce((s, i) => s + i.totalUnidades, 0),
+    };
+    fetch("/.netlify/functions/notify-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }).catch(() => {});
+  } catch (_) {}
+}
 async function guardarCotizacionSupabase(cliente) {
   const payload = construirPayloadCotizacion(cliente, pedido, CATALOG_SOURCE);
   if (CATALOG_SOURCE === "catalogo-44") return enviarPayloadDirectoSinStock(payload);
@@ -7899,7 +7925,8 @@ document.getElementById("sendRequest").onclick = async () => {
     clearCartFieldInvalidState();
     const cliente = await obtenerClienteParaCotizacion();
     btn.innerText = "Enviando pedido...";
-    await guardarCotizacionSupabase(cliente);
+    const quoteId = await guardarCotizacionSupabase(cliente);
+    notificarPedidoTelegram(quoteId, cliente);
 
     // ── CRM: registrar pedido si el cliente vino desde WhatsApp ──────────
     const _waPhone = sessionStorage.getItem("crm_wa_phone") || cliente.client_phone || "";
