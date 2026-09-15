@@ -84,6 +84,53 @@ while ($true) {
 }
 $reader.Close()
 
+# --- Restar lo que ya esta en cajas (CAJAS.TXT): unidades embaladas para pedidos, no disponibles ---
+# El stock real vendible es el SALDO = stock fisico - cajas (asi lo muestra el dashboard ADECOM).
+# CAJAS.TXT: Caja;Fecha;Articulo;Pedido;Cant;RUT;Cliente, con Articulo = 01 + modelo(4) + variante(2) + talla(2).
+$cajasPath = Join-Path (Split-Path $csvPath -Parent) 'CAJAS.TXT'
+$enCajas = @{}   # family -> @{ talla -> unidades }
+if (Test-Path $cajasPath) {
+    $rc = New-Object System.IO.StreamReader($cajasPath, $enc)
+    [void]$rc.ReadLine()
+    while ($true) {
+        $l = $rc.ReadLine()
+        if ($null -eq $l) { break }
+        $c = $l -split ';'
+        if ($c.Count -lt 5) { continue }
+        $a = $c[2].Trim()
+        if ($a.Length -lt 10 -or -not $a.StartsWith('01')) { continue }
+        $fam = $a.Substring(2, 4) + '-' + $a.Substring(6, 2)
+        $tal = $a.Substring(8, 2)
+        $n = 0; [void][int]::TryParse(($c[4].Trim() -replace '[^0-9\-]', ''), [ref]$n)
+        if ($n -le 0) { continue }
+        if (-not $enCajas.ContainsKey($fam)) { $enCajas[$fam] = @{} }
+        if (-not $enCajas[$fam].ContainsKey($tal)) { $enCajas[$fam][$tal] = 0 }
+        $enCajas[$fam][$tal] += $n
+    }
+    $rc.Close()
+    $restadas = 0
+    foreach ($t in $targets) {
+        $items = $byTarget[$t.file]
+        foreach ($fam in @($items.Keys)) {
+            if (-not $enCajas.ContainsKey($fam)) { continue }
+            $tot = 0
+            foreach ($sz in $sizeNames) {
+                $q = if ($enCajas[$fam].ContainsKey($sz)) { [int]$enCajas[$fam][$sz] } else { 0 }
+                $v = [int]$items[$fam].sizes[$sz] - $q
+                if ($v -lt 0) { $v = 0 }
+                $items[$fam].sizes[$sz] = $v
+                $tot += $v
+            }
+            $items[$fam].en_cajas = ($enCajas[$fam].Values | Measure-Object -Sum).Sum
+            $items[$fam].total = $tot
+            $restadas++
+        }
+    }
+    Write-Output "$(Get-Date -Format 'HH:mm:ss') CAJAS.TXT: $($enCajas.Count) articulos con unidades en cajas; descontados en $restadas registros"
+} else {
+    Write-Warning "No se encuentra $cajasPath - se publica el stock sin descontar cajas"
+}
+
 # --- Aplicar excepciones y escribir JSON ---
 $changedFiles = @()
 foreach ($t in $targets) {
