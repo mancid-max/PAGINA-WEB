@@ -8,7 +8,9 @@ const sharp = require("sharp");
 
 const ROOT = __dirname;
 const OUT = path.join(ROOT, "og");
-const W = 1200, H = 630;
+/* Cuadrada: WhatsApp recorta la vista previa a un cuadrado, y con 1200x630 el jean quedaba
+   diminuto y borroso. Con 1200x1200 y recorte "cover" el modelo llena la miniatura. */
+const W = 1200, H = 1200;
 fs.mkdirSync(OUT, { recursive: true });
 
 const fuentes = [];
@@ -39,9 +41,9 @@ for (const cole of ["40", "41", "42", "43"]) {
     if (!fs.existsSync(src)) { faltan.push(`${codigo} (${path.relative(ROOT, src)})`); continue; }
     const out = path.join(OUT, `${codigo}.jpg`);
     try {
-      const fondo = await sharp(src).resize(W, H, { fit: "cover" }).blur(40).modulate({ brightness: 1.08, saturation: 0.7 }).toBuffer();
-      const foto = await sharp(src).resize(W, H, { fit: "inside" }).toBuffer();
-      await sharp(fondo).composite([{ input: foto, gravity: "centre" }]).jpeg({ quality: 82, mozjpeg: true }).toFile(out);
+      /* La foto llena el cuadrado con recorte centrado: en las fotos de cuerpo entero sacrifica un poco
+         de cabeza y pies pero deja el jean completo ("attention" se iba a la cara y cortaba el jean). */
+      await sharp(src).resize(W, H, { fit: "cover", position: "centre" }).jpeg({ quality: 82, mozjpeg: true }).toFile(out);
       ok++;
     } catch (e) { faltan.push(`${codigo}: ${e.message}`); }
   }
