@@ -101,8 +101,14 @@ async function consultarCodigo(family) {
   const rasgos = [tiro ? `tiro ${tiro}` : null, corte ? `corte ${corte}` : null].filter(Boolean).join(" · ");
   const descripcion_corta = rasgos ? `${tipoTxt} ${rasgos}` : tipoTxt; // ej. "Jean tiro alto · corte flare"
   const precioCorto = precio == null ? "precio a consultar" : es44 ? `${clp(precio)} c/u IVA incl.` : `${clp(precio)} sin IVA`;
-  const stockCorto = es44 ? estado : (total > 0 ? `${total} u. (${conStock.join(" · ")})` : "Agotado");
-  const ficha_texto = `${family}${es44 && nombre ? ` ${nombre}` : ""} · ${es44 ? "Dolce Vita 44" : `Cole ${cole}`} · ${descripcion_corta} · ${precioCorto} · ${stockCorto}`;
+  /* Ficha en varias lineas (se lee mejor en el celular); en Cole 40-43 cada talla va en su linea */
+  const lineasStock = es44 ? [estado] : (total > 0 ? [`Stock: ${total} unidades`, ...conStock.map((s) => `  ${s}`)] : ["Agotado"]);
+  const ficha_texto = [
+    `${family}${es44 && nombre ? ` ${nombre}` : ""} · ${es44 ? "Dolce Vita 44" : `Cole ${cole}`}`,
+    descripcion_corta,
+    precioCorto,
+    ...lineasStock,
+  ].join("\n");
 
   /* Cole 44 en producción: plazo aproximado de despacho (editable en /produccion-eta-44.json) */
   let notaProduccion;
