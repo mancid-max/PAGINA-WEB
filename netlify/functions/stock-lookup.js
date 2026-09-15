@@ -62,17 +62,21 @@ async function consultarCodigo(family) {
   ]);
 
   let nombre = "", detalle = "", precio = null, seccion = "";
+  /* atributos que ya trae la web, como respaldo de los de BI */
+  let webTipo = null, webTiro = null, webCorte = null;
   if (es44) {
     const m = (await modelos44())[family];
     if (!m) return { ok: false, codigo: family, coleccion: "Cole 44", mensaje: "Ese código no está en el catálogo Dolce Vita 44." };
     nombre = m.nombre; precio = m.precio; seccion = SECCIONES_44[m.sec] || m.sec;
     detalle = m.tipo === "chaqueta" ? "Chaqueta" : "Jean";
+    webTipo = m.tipo === "chaqueta" ? "chaqueta" : "jean"; webCorte = m.sec || null;
   } else {
     const item = (Array.isArray(cat) ? cat : []).find((p) => String(p.family).toUpperCase() === family);
     if (!item) return { ok: false, codigo: family, coleccion: `Cole ${cole}`, mensaje: `Ese código no está en el catálogo Cole ${cole}.` };
     const partes = [item.tipo, item.tiro ? `tiro ${item.tiro}` : "", item.bota ? `bota ${item.bota}` : ""].filter(Boolean);
     detalle = partes.join(" · ") || String(item.description || "").replace(/\?/g, "·");
     nombre = item.bota ? item.bota.charAt(0).toUpperCase() + item.bota.slice(1).toLowerCase() : `Modelo ${base4}`;
+    webTipo = item.tipo ? String(item.tipo).toLowerCase() : null; webTiro = item.tiro ? String(item.tiro).toLowerCase() : null; webCorte = item.bota ? String(item.bota).toLowerCase() : null;
     const precios = cole === "43" ? await getJson("/price-data-catalogo-43.json") : await getJson("/price-data.json");
     const pit = precios.items || precios;
     precio = pit[family] ?? pit[base4] ?? null;
@@ -84,6 +88,21 @@ async function consultarCodigo(family) {
   const conStock = Object.entries(tallas).filter(([, n]) => Number(n) > 0).map(([t, n]) => `${t}: ${n}`);
   const disponible = es44 ? total > 30 : total > 0;
   const estado = es44 ? (disponible ? "Disponible" : "En producción") : (disponible ? "Disponible" : "Agotado");
+
+  /* Tipo, tiro y corte: primero BI (atributos-modelos.json, subcategoría de Adecom), después lo que trae la web.
+     Se entrega también una frase lista (descripcion_corta) y la ficha completa de una línea (ficha_texto)
+     para que Sofía la mande tal cual debajo de la foto. */
+  const atrs = await getJson("/atributos-modelos.json").then((a) => a.modelos || {}).catch(() => ({}));
+  const bi = atrs[family] || atrs[base4] || {};
+  const tipo = bi.tipo || webTipo || (es44 ? "jean" : null);
+  const tiro = bi.tiro || webTiro || null;
+  const corte = bi.corte || webCorte || null;
+  const tipoTxt = tipo ? tipo.charAt(0).toUpperCase() + tipo.slice(1) : "Modelo";
+  const rasgos = [tiro ? `tiro ${tiro}` : null, corte ? `corte ${corte}` : null].filter(Boolean).join(" · ");
+  const descripcion_corta = rasgos ? `${tipoTxt} ${rasgos}` : tipoTxt; // ej. "Jean tiro alto · corte flare"
+  const precioCorto = precio == null ? "precio a consultar" : es44 ? `${clp(precio)} c/u IVA incl.` : `${clp(precio)} sin IVA`;
+  const stockCorto = es44 ? estado : (total > 0 ? `${total} u. (${conStock.join(" · ")})` : "Agotado");
+  const ficha_texto = `${family}${es44 && nombre ? ` ${nombre}` : ""} · ${es44 ? "Dolce Vita 44" : `Cole ${cole}`} · ${descripcion_corta} · ${precioCorto} · ${stockCorto}`;
 
   /* Cole 44 en producción: plazo aproximado de despacho (editable en /produccion-eta-44.json) */
   let notaProduccion;
@@ -103,6 +122,11 @@ async function consultarCodigo(family) {
     nombre,
     detalle,
     seccion: seccion || undefined,
+    tipo: tipo || undefined,
+    tiro: tiro || undefined,
+    corte: corte || undefined,
+    descripcion_corta,
+    ficha_texto,
     precio,
     precio_texto: precio == null ? "Precio a consultar" : es44 ? `${clp(precio)} por unidad, IVA incluido` : `${clp(precio)} precio mayorista sin IVA`,
     estado,
