@@ -160,6 +160,68 @@ async function buscarNombre(q) {
   return { ok: true, coleccion: "Dolce Vita · Cole 44", resultados: res };
 }
 
+/* Búsqueda por atributos: "quiero pitillos", "tiro alto", "flare de la 44".
+   Cruza atributos-modelos.json (BI) con los catálogos de la web y el stock; devuelve solo modelos con stock
+   (Cole 40-43) o con estado (Cole 44), cada uno con su ficha_texto lista. */
+const SINONIMOS_CORTE = { skinny: "pitillo", pitillos: "pitillo", acampanado: "flare", acampanados: "flare", campana: "flare", rectos: "recto", ancho: "wide leg", anchos: "wide leg", palazzos: "palazzo", oxfords: "oxford", tobilleros: "tobillero", tobillo: "tobillero", cropped: "cropped", crop: "cropped", mom: "mom", balloon: "balloon", bootcut: "bootcut", "boot cut": "bootcut" };
+const SINONIMOS_TIRO = { cintura: "alto", alta: "alto", altos: "alto", "high waist": "alto", medios: "medio", media: "medio", bajos: "bajo", baja: "bajo", cadera: "bajo" };
+const normAttr = (v, dic) => { let s = String(v || "").trim().toLowerCase().replace(/^tiro\s+/, "").replace(/^corte\s+/, ""); if (!s) return null; return dic[s] || s; };
+
+async function buscarPorAtributos({ corte, tiro, tipo, cole }) {
+  const qCorte = normAttr(corte, SINONIMOS_CORTE), qTiro = normAttr(tiro, SINONIMOS_TIRO), qTipo = normAttr(tipo, {});
+  if (!qCorte && !qTiro && !qTipo) return { ok: false, mensaje: "Indica corte (pitillo, flare, recto, palazzo, oxford, wide leg…) o tiro (alto, medio, bajo)." };
+  const atrs = await getJson("/atributos-modelos.json").then((a) => a.modelos || {}).catch(() => ({}));
+  const coleQ = cole ? String(cole).replace(/\D/g, "") : "";
+  const coles = coleQ ? [coleQ] : ["44", "43", "42", "41", "40"];
+  const calza = (bi, fallbackCorte, fallbackTipo) => {
+    const co = String(bi.corte || fallbackCorte || "").toLowerCase(), ti = String(bi.tiro || "").toLowerCase(), tp = String(bi.tipo || fallbackTipo || "").toLowerCase();
+    if (qCorte && !co.includes(qCorte)) return false;
+    if (qTiro && ti !== qTiro) return false;
+    if (qTipo && !tp.includes(qTipo)) return false;
+    return { co: co || null, ti: ti || null, tp: tp || null };
+  };
+  const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : "Modelo");
+  const res = [];
+  for (const c of coles) {
+    if (c === "44") {
+      const map = await modelos44();
+      const stock = await getJson("/stock-data-catalogo-44.json");
+      for (const [codigo, m] of Object.entries(map)) {
+        const bi = atrs[codigo] || atrs[codigo.slice(0, 4)] || {};
+        const ok = calza(bi, m.sec, m.tipo === "chaqueta" ? "chaqueta" : "jean");
+        if (!ok) continue;
+        const total = Number(((stock.items || {})[codigo] || {}).total) || 0;
+        const estado = total > 30 ? "Disponible" : "En producción";
+        const desc = [cap(ok.tp || "jean"), ok.ti ? `tiro ${ok.ti}` : null, ok.co ? `corte ${ok.co}` : null].filter(Boolean).join(" · ").replace(" · tiro", " tiro");
+        /* orden: primero la Dolce Vita disponible (es la novedad), después colecciones anteriores por stock, al final la 44 en producción */
+        res.push({ codigo, nombre: m.nombre, coleccion: "Dolce Vita · Cole 44", tiro: ok.ti, corte: ok.co, precio: m.precio, estado, ficha_texto: `${codigo} ${m.nombre} · Dolce Vita 44 · ${desc} · ${clp(m.precio)} c/u IVA incl. · ${estado}`, _orden: total > 30 ? 3 : 1, _total: total });
+      }
+    } else {
+      const cat = await getJson(`/data-catalogo-${c}.json`).catch(() => []);
+      const stock = await getJson("/stock-data-catalogo-43.json");
+      const precios = c === "43" ? await getJson("/price-data-catalogo-43.json").catch(() => ({})) : await getJson("/price-data.json").catch(() => ({}));
+      const pit = precios.items || precios;
+      for (const item of (Array.isArray(cat) ? cat : [])) {
+        const codigo = String(item.family || "").toUpperCase();
+        const st = (stock.items || {})[codigo]; const total = st ? Number(st.total) || 0 : 0;
+        if (total <= 0) continue;
+        const bi = atrs[codigo] || atrs[codigo.slice(0, 4)] || {};
+        const ok = calza(bi, item.bota, item.tipo);
+        if (!ok) continue;
+        const tallas = Object.entries(st.sizes || {}).filter(([, n]) => Number(n) > 0).map(([t, n]) => `${t}: ${n}`);
+        const precio = pit[codigo] ?? pit[codigo.slice(0, 4)] ?? null;
+        const desc = [cap(ok.tp || "jean"), ok.ti ? `tiro ${ok.ti}` : null, ok.co ? `corte ${ok.co}` : null].filter(Boolean).join(" · ").replace(" · tiro", " tiro");
+        res.push({ codigo, nombre: `Modelo ${codigo.slice(0, 4)}`, coleccion: `Cole ${c}`, tiro: ok.ti, corte: ok.co, precio, estado: "Disponible", stock_total: total, tallas_con_stock: tallas, ficha_texto: `${codigo} · Cole ${c} · ${desc} · ${precio == null ? "precio a consultar" : clp(precio) + " sin IVA"} · ${total} u. (${tallas.join(" · ")})`, _orden: 2, _total: total });
+      }
+    }
+  }
+  res.sort((a, b) => b._orden - a._orden || b._total - a._total);
+  const resultados = res.slice(0, 8).map(({ _orden, _total, ...r }) => r);
+  const que = [qTipo, qTiro ? `tiro ${qTiro}` : null, qCorte ? `corte ${qCorte}` : null].filter(Boolean).join(" ");
+  if (!resultados.length) return { ok: false, mensaje: `No tengo modelos con stock que calcen con "${que}"${coleQ ? ` en la Cole ${coleQ}` : ""}. Ofrece un corte o tiro parecido.` };
+  return { ok: true, busqueda: que, total_encontrados: res.length, resultados, nota: res.length > 8 ? `Hay ${res.length} en total; muestro los 8 con más stock. Pregunta al cliente si quiere ver más.` : undefined };
+}
+
 exports.handler = async function (event) {
   const headers = { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" };
   try {
@@ -168,9 +230,12 @@ exports.handler = async function (event) {
     if (event.httpMethod === "POST" && event.body) { try { body = JSON.parse(event.body); } catch (_) {} }
     const codigoRaw = qs.codigo || body.codigo || "";
     const q = qs.q || body.q || "";
+    const corte = qs.corte || body.corte || "", tiro = qs.tiro || body.tiro || "", tipo = qs.tipo || body.tipo || "", cole = qs.cole || body.cole || "";
 
     let out;
-    if (codigoRaw) {
+    if (!codigoRaw && (corte || tiro || tipo)) {
+      out = await buscarPorAtributos({ corte, tiro, tipo, cole });
+    } else if (codigoRaw) {
       const family = normalizarCodigo(codigoRaw);
       out = family ? await consultarCodigo(family) : { ok: false, mensaje: `Código inválido: ${codigoRaw}. Usa 4 dígitos (ej. 4401) o 4401-00.` };
     } else if (q) {
