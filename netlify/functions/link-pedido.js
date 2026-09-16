@@ -38,6 +38,36 @@ function specCurva(spec, cod) {
   return s;
 }
 
+/* Cole 40-43: cada talla del link tiene que existir con stock (evita que el agente invente tallas).
+   Si el modelo no está en el archivo de stock, no bloquea. Devuelve lista de errores (vacía = ok). */
+async function validarStock4043(items) {
+  let inv = null;
+  try {
+    const t = await fetch(`${BASE}/stock-data-catalogo-43.json`, { headers: { "Cache-Control": "no-cache" } }).then((r) => r.text());
+    const st = JSON.parse(t.replace(/^﻿/, ""));
+    inv = Array.isArray(st.items) ? Object.fromEntries(st.items.map((i) => [String(i.sku || i.article).toUpperCase(), i])) : st.items;
+  } catch (_) { return []; }
+  if (!inv) return [];
+  const errores = [];
+  for (const it of items) {
+    const cod = it.split(":")[0];
+    const spec = it.split(":").slice(1).join(":");
+    const reg = inv[cod];
+    if (!reg || !reg.sizes) continue;
+    const malas = [];
+    for (const par of spec.split(".")) {
+      const [t, q] = par.split("=");
+      const n = Number(q) || 0;
+      const disp = Number(reg.sizes[t]) || 0;
+      if (n > disp) malas.push(disp > 0 ? `talla ${t}: pediste ${n} y hay ${disp}` : `talla ${t}: sin stock`);
+    }
+    if (!malas.length) continue;
+    const con = Object.entries(reg.sizes).filter(([, v]) => Number(v) > 0).sort((a, b) => Number(a[0]) - Number(b[0])).map(([t, v]) => `${t}: ${v}`);
+    errores.push(`${cod}: ${malas.join(" · ")}. Tallas con stock del ${cod}:\n${con.length ? con.join("\n") : "ninguna (agotado)"}`);
+  }
+  return errores;
+}
+
 exports.handler = async (event) => {
   const headers = { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" };
   const qs = event.queryStringParameters || {};
@@ -61,6 +91,12 @@ exports.handler = async (event) => {
     return { statusCode: 200, headers, body: JSON.stringify({ ok: false, mensaje: "No se puede mezclar Cole 44 con Cole 40-43 en un mismo link: arma dos links." }) };
   }
   const es44 = coles.has("44");
+  if (!es44) {
+    const errores = await validarStock4043(items);
+    if (errores.length) {
+      return { statusCode: 200, headers, body: JSON.stringify({ ok: false, mensaje: `No se armó el link porque hay tallas sin stock. Corrige usando solo estas tallas y vuelve a llamar:\n${errores.join("\n")}`, errores }) };
+    }
+  }
   const base = es44 ? `${BASE}/catalogo-44/` : `${BASE}/`;
   const params = new URLSearchParams();
   if (soloFicha && items.length === 1) {
