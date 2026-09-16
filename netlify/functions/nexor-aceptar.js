@@ -5,6 +5,7 @@
    - La firma la genera notify-nexor.js con HMAC-SHA256(lead|accion, NEXOR_ORDER_KEY): nadie puede armar el link a mano.
    - aceptar : quita tag "desconocido", pone "mayorista", mueve a "Lead creado" (core_new) en el agente B2B y reanuda la automatización → Sofía lo atiende.
    - rechazar: archiva el lead en Nexor.
+   - devolver: (aviso "necesita ayuda") saca el lead de "Necesita ayuda (humano)", que deja a Sofía muda, y lo vuelve a "Información entregada".
    Env Netlify: NEXOR_API_KEY (clave REST nxr_live_…), NEXOR_ORDER_KEY (secreto para firmar). */
 const crypto = require("crypto");
 const NEXOR_API = "https://api.getnexor.ai/api/public";
@@ -59,7 +60,7 @@ exports.handler = async (event) => {
   const lead = String(q.lead || "").trim();
   const accion = String(q.a || "aceptar").toLowerCase();
   const t = String(q.t || "").trim();
-  if (!/^[0-9a-f-]{36}$/i.test(lead) || !["aceptar", "rechazar"].includes(accion)) return pagina("Link inválido", "<p>Faltan datos del lead.</p>", { ok: false, status: 400 });
+  if (!/^[0-9a-f-]{36}$/i.test(lead) || !["aceptar", "rechazar", "devolver"].includes(accion)) return pagina("Link inválido", "<p>Faltan datos del lead.</p>", { ok: false, status: 400 });
   if (!SECRET || !API_KEY) return pagina("Falta configuración", "<p>Revisa NEXOR_API_KEY y NEXOR_ORDER_KEY en Netlify.</p>", { ok: false, status: 500 });
   if (t !== firma(lead, accion)) return pagina("Link no válido", "<p>La firma no coincide. Usa el botón del aviso de Telegram.</p>", { ok: false, status: 400 });
 
@@ -69,18 +70,27 @@ exports.handler = async (event) => {
   /* 1) Confirmación (GET): no se ejecuta nada todavía */
   if (event.httpMethod !== "POST" || q.confirmar !== "1") {
     const esAceptar = accion === "aceptar";
-    const titulo = esAceptar ? "¿Seguro que quieres aceptarlo como mayorista?" : "¿Seguro que quieres rechazar este lead?";
-    const detalle = esAceptar
-      ? "Al confirmar, Sofía lo atenderá por WhatsApp desde ahora y quedará con la etiqueta <b>mayorista</b>. Contará como lead."
-      : "Al confirmar, el lead se archiva en Nexor y Sofía no le responderá.";
+    const esDevolver = accion === "devolver";
+    const titulo = esDevolver ? "¿Devolver este cliente a Sofía?" : esAceptar ? "¿Seguro que quieres aceptarlo como mayorista?" : "¿Seguro que quieres rechazar este lead?";
+    const detalle = esDevolver
+      ? "Úsalo cuando ya lo atendiste. Al confirmar, el lead sale de <b>Necesita ayuda (humano)</b>, vuelve a <b>Información entregada</b> y Sofía le responde de nuevo."
+      : esAceptar
+        ? "Al confirmar, Sofía lo atenderá por WhatsApp desde ahora y quedará con la etiqueta <b>mayorista</b>. Contará como lead."
+        : "Al confirmar, el lead se archiva en Nexor y Sofía no le responderá.";
     const form = `<form method="POST" action=""><input type="hidden" name="lead" value="${esc(lead)}"><input type="hidden" name="a" value="${esc(accion)}"><input type="hidden" name="t" value="${esc(t)}"><input type="hidden" name="confirmar" value="1">
-      <button class="btn ${esAceptar ? "ok" : "no"}" type="submit">${esAceptar ? "Sí, aceptar como mayorista" : "Sí, rechazar"}</button></form>
+      <button class="btn ${esAceptar || esDevolver ? "ok" : "no"}" type="submit">${esDevolver ? "Sí, devolver a Sofía" : esAceptar ? "Sí, aceptar como mayorista" : "Sí, rechazar"}</button></form>
       <p style="margin-top:.8rem"><a class="btn gris" href="https://app.getnexor.ai" target="_blank" rel="noopener">Cancelar / ver en Nexor</a></p>`;
     return pagina(titulo, `${ficha}<p>${detalle}</p>${form}`);
   }
 
   /* 2) Ejecutar (POST confirmado) */
   try {
+    if (accion === "devolver") {
+      /* "Necesita ayuda (humano)" apaga a Sofía para ese lead; al volver a una etapa normal se reactiva */
+      await nx("POST", `/leads/${lead}/status`, { status_key: "informed", workflow_id: WORKFLOW_B2B, reason: "Atendido por una persona; devuelto a Sofía desde Telegram" });
+      await nx("POST", `/leads/${lead}/automation/resume`, { workflow_id: WORKFLOW_B2B }).catch(() => {});
+      return pagina("Cliente devuelto a Sofía", `${ficha}<p>Volvió a <b>Información entregada</b>. Sofía le responde de nuevo.</p>`);
+    }
     if (accion === "rechazar") {
       await nx("PATCH", `/leads/${lead}`, { metadata: { filtro: "rechazado", rechazado_en: new Date().toISOString() } }).catch(() => {});
       await nx("DELETE", `/leads/${lead}`);

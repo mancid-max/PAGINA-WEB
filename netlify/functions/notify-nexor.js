@@ -31,7 +31,7 @@ async function textoAyuda(body) {
     `Teléfono: ${telFmt}`,
     `Motivo: ${motivo || problema || "Sofía no pudo resolverlo; ver la conversación"}`,
     "",
-    "Sofía lo dejó en \"Necesita ayuda (humano)\". Alguien tiene que responderle por WhatsApp.",
+    "Sofía lo dejó en \"Necesita ayuda (humano)\" y NO le responde mientras esté ahí. Alguien tiene que escribirle por WhatsApp y, cuando termine, tocar \"Devolver a Sofía\".",
   ].join("\n");
 }
 
@@ -68,7 +68,10 @@ exports.handler = async (event) => {
       { text: "✖ Rechazar", url: linkAccion(lead, "rechazar") },
     ]] };
   } else if (tipo === "nexor_ayuda") {
-    payload.reply_markup = { inline_keyboard: [[{ text: "Abrir Sofía en Nexor", url: "https://app.getnexor.ai/agents/a914d7c0-fccc-4eb1-947a-ac5f875111d1" }]] };
+    const fila = [{ text: "Abrir Sofía en Nexor", url: "https://app.getnexor.ai/agents/a914d7c0-fccc-4eb1-947a-ac5f875111d1" }];
+    /* Mientras el lead esté en "Necesita ayuda (humano)" Sofía no le responde: este botón se lo devuelve cuando ya lo atendieron */
+    if (/^[0-9a-f-]{36}$/i.test(lead) && SECRET) fila.unshift({ text: "↩ Devolver a Sofía", url: linkAccion(lead, "devolver") });
+    payload.reply_markup = { inline_keyboard: [fila] };
   }
   const r = await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
     method: "POST",
