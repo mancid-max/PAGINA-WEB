@@ -38,6 +38,62 @@ function specCurva(spec, cod) {
   return s;
 }
 
+/* Mínimos del pedido (los mismos que aplica la página al enviar) */
+const MIN_TOTAL = 24;       /* unidades del pedido completo */
+const MIN_POR_MODELO_44 = 12; /* Cole 44: por modelo */
+const TALLAS_CHAQUETA = ["S", "M", "L", "XL"];
+const TALLAS_JEAN = ["36", "38", "40", "42", "44", "46", "48", "50", "52"];
+
+const leerJson = async (ruta) => {
+  const t = await fetch(`${BASE}${ruta}`, { headers: { "Cache-Control": "no-cache" } }).then((r) => (r.ok ? r.text() : ""));
+  if (!t) return null;
+  try { return JSON.parse(t.replace(/^﻿/, "")); } catch (_) { return null; }
+};
+
+/* Códigos válidos: Cole 44 desde catalogo-44/app.js (con su tipo), Cole 40-43 desde data-catalogo-4X.json */
+async function catalogo44() {
+  const src = await fetch(`${BASE}/catalogo-44/app.js`, { headers: { "Cache-Control": "no-cache" } }).then((r) => (r.ok ? r.text() : ""));
+  const map = {};
+  const re = /\{nombre:"([^"]+)",\s*codigo:"([^"]+)",\s*precio:(null|\d+),[^}]*?tipo:"([^"]+)"/g;
+  let m;
+  while ((m = re.exec(src))) map[m[2].toUpperCase()] = { nombre: m[1], tipo: m[4] };
+  return map;
+}
+async function codigos4043() {
+  const set = new Set();
+  for (const c of ["40", "41", "42", "43"]) {
+    const d = await leerJson(`/data-catalogo-${c}.json`);
+    const items = Array.isArray(d) ? d : (d && d.items) || [];
+    for (const p of items) { const f = String(p.family || "").toUpperCase(); if (f) set.add(f); }
+  }
+  return set;
+}
+
+/* RUT chileno: dígito verificador */
+function rutValido(norm) {
+  const m = /^(\d{7,8})-([0-9K])$/.exec(String(norm || "").toUpperCase());
+  if (!m) return false;
+  let suma = 0, mul = 2;
+  for (const d of m[1].split("").reverse()) { suma += Number(d) * mul; mul = mul === 7 ? 2 : mul + 1; }
+  const res = 11 - (suma % 11);
+  const dv = res === 11 ? "0" : res === 10 ? "K" : String(res);
+  return dv === m[2];
+}
+
+/* "36=2.38=3" → { "36": 2, "38": 3 } y de vuelta */
+const specAObjeto = (spec) => {
+  const o = {};
+  for (const par of String(spec || "").split(".")) {
+    const [t, q] = par.split("=");
+    const talla = String(t || "").trim().toUpperCase();
+    const n = Number(q) || 0;
+    if (talla && n > 0) o[talla] = (o[talla] || 0) + n;
+  }
+  return o;
+};
+const objetoASpec = (o) => Object.entries(o).map(([t, n]) => `${t}=${n}`).join(".");
+const unidades = (o) => Object.values(o).reduce((a, b) => a + b, 0);
+
 /* Cole 40-43: cada talla del link tiene que existir con stock (evita que el agente invente tallas).
    Si el modelo no está en el archivo de stock, no bloquea. Devuelve lista de errores (vacía = ok). */
 async function validarStock4043(items) {
@@ -81,20 +137,73 @@ exports.handler = async (event) => {
   const tel = String(qs.telefono || body.telefono || "").replace(/[^0-9+]/g, "");
   const soloFicha = /^(1|true|si)$/i.test(String(qs.solo_ficha || body.solo_ficha || ""));
 
-  const items = itemsRaw
-    ? itemsRaw.split(",").map((par) => { const [c, ...r] = par.split(":"); const cod = normCod(c); return cod ? `${cod}:${specCurva(r.join(":"), cod)}` : null; }).filter(Boolean)
-    : (modelo ? [`${modelo}:${specCurva(curva, modelo)}`] : []);
-  if (!items.length) return { statusCode: 200, headers, body: JSON.stringify({ ok: false, mensaje: "Indica items (ej. 4448-00:12) o modelo." }) };
+  const error = (mensaje, extra) => ({ statusCode: 200, headers, body: JSON.stringify({ ok: false, mensaje, ...(extra || {}) }) });
 
+  /* Un modelo repetido en el mismo link se suma en vez de pisarse */
+  const porCodigo = new Map();
+  const crudos = itemsRaw
+    ? itemsRaw.split(",").map((par) => { const [c, ...r] = par.split(":"); return { cod: normCod(c), spec: r.join(":") }; })
+    : (modelo ? [{ cod: modelo, spec: curva }] : []);
+  for (const { cod, spec } of crudos) {
+    if (!cod) continue;
+    const cv = specAObjeto(specCurva(spec, cod));
+    const acum = porCodigo.get(cod) || {};
+    for (const [t, n] of Object.entries(cv)) acum[t] = (acum[t] || 0) + n;
+    porCodigo.set(cod, acum);
+  }
+  if (!porCodigo.size) return error("Indica items (ej. 4448-00:12) o modelo.");
+
+  const items = [...porCodigo].map(([cod, cv]) => `${cod}:${objetoASpec(cv)}`);
+  const fuera = [...porCodigo.keys()].filter((c) => !/^4[0-4]$/.test(c.slice(0, 2)));
+  if (fuera.length) return error(`${fuera.join(", ")} no pertenece a las colecciones vigentes (Cole 40 a 44). Confirma el código con consultar_stock.`, { codigos_desconocidos: fuera });
   const coles = new Set(items.map((i) => i.slice(0, 2)));
   if (coles.size > 1 && coles.has("44")) {
-    return { statusCode: 200, headers, body: JSON.stringify({ ok: false, mensaje: "No se puede mezclar Cole 44 con Cole 40-43 en un mismo link: arma dos links." }) };
+    return error("No se puede mezclar Cole 44 con Cole 40-43 en un mismo link: arma dos links.");
   }
   const es44 = coles.has("44");
+
+  /* 1) que los códigos existan en el catálogo */
+  const desconocidos = [];
+  let cat44 = null;
+  if (es44) {
+    cat44 = await catalogo44().catch(() => null);
+    if (cat44 && Object.keys(cat44).length) for (const cod of porCodigo.keys()) if (!cat44[cod]) desconocidos.push(cod);
+  } else {
+    const validos = await codigos4043().catch(() => null);
+    if (validos && validos.size) for (const cod of porCodigo.keys()) if (!validos.has(cod)) desconocidos.push(cod);
+  }
+  if (desconocidos.length) {
+    return error(`${desconocidos.join(", ")} no ${desconocidos.length === 1 ? "es un código" : "son códigos"} de ${es44 ? "la Dolce Vita 44" : "las colecciones 40 a 43"}. Confirma el código con consultar_stock antes de armar el link.`, { codigos_desconocidos: desconocidos });
+  }
+
+  /* 2) RUT: si viene, tiene que ser válido (la página lo rechaza y el pedido no se puede enviar) */
+  if (rut && !rutValido(rut)) {
+    return error(`El RUT "${qs.rut || body.rut}" no es válido (dígito verificador). Pídeselo de nuevo al cliente, con el formato 12.345.678-9.`);
+  }
+
+  /* 3) tallas y mínimos (los mismos que exige la página al apretar Enviar) */
+  if (!soloFicha) {
+    const problemas = [];
+    for (const [cod, cv] of porCodigo) {
+      const esChaqueta = es44 && cat44 && cat44[cod] ? cat44[cod].tipo === "chaqueta" : CHAQUETAS.test(cod);
+      const permitidas = esChaqueta ? TALLAS_CHAQUETA : TALLAS_JEAN;
+      const malas = Object.keys(cv).filter((t) => !permitidas.includes(t));
+      if (malas.length) problemas.push(`${cod}: ${malas.join(", ")} no ${malas.length === 1 ? "es una talla" : "son tallas"} de este modelo (usa ${permitidas.join(", ")}).`);
+      if (es44 && unidades(cv) < MIN_POR_MODELO_44) problemas.push(`${cod}: ${unidades(cv)} unidades; en la Dolce Vita 44 el mínimo es ${MIN_POR_MODELO_44} por modelo.`);
+    }
+    if (problemas.length) return error(`No armé el link porque la página lo va a rechazar:\n${problemas.join("\n")}`, { problemas });
+
+    const total = [...porCodigo.values()].reduce((a, cv) => a + unidades(cv), 0);
+    if (total < MIN_TOTAL) {
+      return error(`El pedido suma ${total} unidades y el mínimo es ${MIN_TOTAL}. Faltan ${MIN_TOTAL - total}: agrega más unidades o otro modelo y vuelve a armar el link.`, { total_unidades: total, minimo: MIN_TOTAL });
+    }
+  }
+
+  /* 4) Cole 40-43: las tallas tienen que tener stock real */
   if (!es44) {
     const errores = await validarStock4043(items);
     if (errores.length) {
-      return { statusCode: 200, headers, body: JSON.stringify({ ok: false, mensaje: `No se armó el link porque hay tallas sin stock. Corrige usando solo estas tallas y vuelve a llamar:\n${errores.join("\n")}`, errores }) };
+      return error(`No se armó el link porque hay tallas sin stock. Corrige usando solo estas tallas y vuelve a llamar:\n${errores.join("\n")}`, { errores });
     }
   }
   const base = es44 ? `${BASE}/catalogo-44/` : `${BASE}/`;
