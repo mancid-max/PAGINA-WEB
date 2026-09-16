@@ -14,12 +14,21 @@ const json = (obj, status = 200) => ({ statusCode: status, headers: { "Content-T
 const ORDEN_TALLAS = ["34", "36", "38", "40", "42", "44", "46", "48", "50", "52", "XS", "S", "M", "L", "XL", "XXL"];
 const ordenTalla = (t) => { const i = ORDEN_TALLAS.indexOf(String(t).toUpperCase()); return i < 0 ? 99 : i; };
 
-async function sb(path) {
+async function sb(path, opts = {}) {
   if (!SUPABASE_URL || !SERVICE_KEY) throw new Error("Faltan SUPABASE_URL / SUPABASE_SERVICE_KEY");
-  const r = await fetch(`${SUPABASE_URL}${path}`, { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } });
+  const r = await fetch(`${SUPABASE_URL}${path}`, { ...opts, headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, "Content-Type": "application/json", ...(opts.headers || {}) } });
   const text = await r.text();
   if (!r.ok) throw new Error(`${path} → ${r.status}: ${text.slice(0, 200)}`);
   return text ? JSON.parse(text) : null;
+}
+/* Ficha del cliente (tabla clients) por RUT: teléfono, transporte, giro, dirección, tienda, comuna */
+async function fichaCliente(rut) {
+  const d = rutDigitos(rut);
+  if (d.length < 2) return null;
+  try {
+    const rows = await sb(`/rest/v1/rpc/lookup_client_by_rut`, { method: "POST", body: JSON.stringify({ p_rut: `${d.slice(0, -1)}-${d.slice(-1)}` }) });
+    return (Array.isArray(rows) ? rows[0] : rows) || null;
+  } catch (_) { return null; }
 }
 async function getRemote(path) {
   const r = await fetch(`${BASE}${path}`, { headers: { "Cache-Control": "no-cache" } });
@@ -109,12 +118,24 @@ async function construirNota({ id, rut } = {}) {
   if (es44) { total = suma; neto = Math.round(total / 1.19); iva = total - neto; }
   else { neto = suma; iva = Math.round(neto * 0.19); total = neto + iva; }
 
-  const cliente = quote.store_name || quote.nombre_tienda || "";
+  const ficha = (await fichaCliente(quote.client_rut || quote.client_rut_normalized)) || {};
+  const dato = (...vals) => { for (const v of vals) { const s = String(v == null ? "" : v).trim(); if (s) return s; } return ""; };
+  const cliente = dato(quote.store_name, ficha.razon_social, quote.nombre_tienda);
+  const telefono = dato(quote.client_phone, ficha.telefono);
+  const transporte = dato(quote.transporte, ficha.transporte);
+  const direccion = dato(quote.direccion, ficha.direccion);
+  const comuna = dato(quote.comuna, ficha.comuna);
+  const giro = dato(quote.giro, ficha.giro);
+  const tienda = dato(quote.nombre_tienda, ficha.nombre_tienda);
   const lineas = [
     `NOTA DE PEDIDO ${ref}`,
     `${cliente}${quote.client_rut ? ` · RUT ${quote.client_rut}` : ""}`,
+    ...(tienda && tienda !== cliente ? [`Tienda: ${tienda}`] : []),
+    ...(giro ? [`Giro: ${giro}`] : []),
+    ...(direccion || comuna ? [`Dirección: ${[direccion, comuna].filter(Boolean).join(", ")}`] : []),
+    ...(telefono ? [`Teléfono: ${telefono}`] : []),
     `Fecha: ${fechaCL(quote.created_at)}`,
-    `Transporte: ${quote.transporte || "por confirmar"}`,
+    `Transporte: ${transporte || "por confirmar"}`,
     "",
   ];
   for (const m of modelos) {
@@ -131,7 +152,8 @@ async function construirNota({ id, rut } = {}) {
 
   return {
     ok: true, referencia: ref, quote_id: quote.id, fecha: fechaCL(quote.created_at), coleccion: es44 ? "Dolce Vita · Cole 44" : "Cole 40-43",
-    cliente, rut: quote.client_rut || null, telefono: quote.client_phone || null, transporte: quote.transporte || null,
+    cliente, rut: quote.client_rut || null, telefono: telefono || null, transporte: transporte || null,
+    direccion: direccion || null, comuna: comuna || null, giro: giro || null, nombre_tienda: tienda || null,
     modelos, total_unidades: totalUnidades, neto, iva, total, nota_texto: lineas.join("\n"),
   };
 }
