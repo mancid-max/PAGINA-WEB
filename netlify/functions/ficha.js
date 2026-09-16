@@ -92,16 +92,11 @@ exports.handler = async (event) => {
 <meta property="og:title" content="${esc(titulo)}">
 <meta property="og:description" content="${esc(descripcion)}">
 <meta property="og:url" content="${esc(url)}">
-<meta property="og:image" content="${esc(imagen)}">
-<meta property="og:image:secure_url" content="${esc(imagen)}">
-<meta property="og:image:type" content="image/jpeg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="1200">
-<meta property="og:image:alt" content="${esc(info ? info.nombre + " " + cod : "Mohicano Jeans")}">
-<meta name="twitter:card" content="summary_large_image">
+<!-- Sin og:image a propósito (2026-09-16, pedido de Manu): la miniatura chica que WhatsApp arma con el link se ve mal.
+     Así el link muestra solo título y descripción; las fotos grandes las manda Sofía aparte o se ven en la página. -->
+<meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="${esc(titulo)}">
 <meta name="twitter:description" content="${esc(descripcion)}">
-<meta name="twitter:image" content="${esc(imagen)}">
 <meta http-equiv="refresh" content="0;url=${esc(destino)}">
 <link rel="canonical" href="${esc(destino)}">
 </head><body style="font-family:system-ui;padding:24px;text-align:center">
