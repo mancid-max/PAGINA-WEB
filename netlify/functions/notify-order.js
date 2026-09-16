@@ -150,10 +150,14 @@ exports.handler = async function(event) {
     "Ver pedido: " + link,
   ].join("\n");
 
+  /* Botón "Lo tomo yo" (lo atiende telegram-callback): así el grupo sabe quién está con el pedido */
+  const idPedido = nota.ok ? nota.quote_id : (/^[0-9a-f-]{36}$/i.test(quoteId) ? quoteId : "");
+  const tgBody = { chat_id: CHAT, text: texto, disable_web_page_preview: true };
+  if (idPedido) tgBody.reply_markup = { inline_keyboard: [[{ text: "🙋 Lo tomo yo", callback_data: `tomar:${idPedido}` }]] };
   await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: CHAT, text: texto, disable_web_page_preview: true }),
+    body: JSON.stringify(tgBody),
   });
 
   let nexor = null;
