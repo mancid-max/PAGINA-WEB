@@ -2478,6 +2478,7 @@ function renderImages(imageList, sku = "") {
   imagenesModalActual = Array.isArray(uniqueImages) ? [...uniqueImages] : [];
   imagenModalIndex = 0;
   if (galleryBtn) galleryBtn.hidden = !imagenesModalActual.length;
+  actualizarContadorFotos();
 
   if (!uniqueImages.length) {
     return;
@@ -3083,10 +3084,48 @@ function renderZoomGallery() {
       });
       zoomThumbs.querySelectorAll("img").forEach((t) => t.classList.remove("active-thumb"));
       thumb.classList.add("active-thumb");
+      actualizarContadorFotos();
     };
     zoomThumbs.appendChild(thumb);
   });
+  actualizarContadorFotos();
 }
+
+/* Contador "1 / 4" en el modal y en el visor grande; pasar de foto deslizando o con flechas */
+function actualizarContadorFotos() {
+  const n = imagenesModalActual.length;
+  const texto = n > 1 ? `${imagenModalIndex + 1} / ${n}` : "";
+  const c1 = document.getElementById("viewerCounter");
+  const c2 = document.getElementById("imageZoomCounter");
+  if (c1) { c1.textContent = n > 1 ? `1 / ${n}` : ""; c1.hidden = n < 2; }
+  if (c2) { c2.textContent = texto; c2.hidden = n < 2; }
+}
+function fotoZoomSiguiente(d) {
+  const n = imagenesModalActual.length;
+  if (n < 2) return;
+  imagenModalIndex = (imagenModalIndex + d + n) % n;
+  renderZoomGallery();
+}
+(function () {
+  const viewer = document.getElementById("viewerImg");
+  if (viewer) viewer.addEventListener("click", () => { if (imagenesModalActual.length) abrirVisorImagenes(); });
+  const stage = document.querySelector("#imageZoomModal .image-zoom-stage");
+  if (stage) {
+    let x0 = null;
+    stage.addEventListener("touchstart", (e) => { x0 = e.touches[0].clientX; }, { passive: true });
+    stage.addEventListener("touchend", (e) => {
+      if (x0 == null) return;
+      const dx = e.changedTouches[0].clientX - x0; x0 = null;
+      if (Math.abs(dx) > 40) fotoZoomSiguiente(dx < 0 ? 1 : -1);
+    }, { passive: true });
+  }
+  document.addEventListener("keydown", (e) => {
+    const zoom = document.getElementById("imageZoomModal");
+    if (!zoom || zoom.hidden) return;
+    if (e.key === "ArrowRight") fotoZoomSiguiente(1);
+    if (e.key === "ArrowLeft") fotoZoomSiguiente(-1);
+  });
+})();
 
 function abrirVisorImagenes() {
   const zoomModal = document.getElementById("imageZoomModal");

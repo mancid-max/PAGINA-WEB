@@ -359,9 +359,9 @@ window.abrirModal = function(codigo) {
     vbtn.style.display = tieneVideo ? "inline-flex" : "none";
     vbtn.onclick = () => abrirVideo(m.codigo);
   }
-  const fotos = [0, 1, 2].map(i => `img/${m.img}_${i}.webp`);
-  $("#img-principal").src = fotos[0];
-  $("#minis").innerHTML = fotos.map((f, i) => `<img src="${f}" class="${i===0?"activa":""}" onclick="cambiarFoto(this)" alt="vista ${i+1}">`).join("");
+  fotosModal = [0, 1, 2].map(i => `img/${m.img}_${i}.webp`);
+  $("#minis").innerHTML = fotosModal.map((f, i) => `<img src="${f}" class="${i===0?"activa":""}" onclick="cambiarFoto(this)" alt="vista ${i+1}">`).join("");
+  mostrarFoto(0);
   pintarTallasModal();
   const cajonEstabaAbierto = $("#cajon").classList.contains("abierto");
   cerrarCajon();
@@ -369,11 +369,43 @@ window.abrirModal = function(codigo) {
   $("#velo-modal").classList.add("abierto");
   document.body.style.overflow = "hidden";
 };
+/* Galería del modal: contador "1 / 3", flechas y deslizar con el dedo (en celular las minis van ocultas,
+   así que sin esto nadie sabe que hay más fotos). */
+let fotosModal = [], fotoIdx = 0;
+function mostrarFoto(i) {
+  if (!fotosModal.length) return;
+  fotoIdx = (i + fotosModal.length) % fotosModal.length;
+  $("#img-principal").src = fotosModal[fotoIdx];
+  document.querySelectorAll("#minis img").forEach((im, k) => im.classList.toggle("activa", k === fotoIdx));
+  const nav = document.getElementById("img-nav"), cnt = document.getElementById("img-counter");
+  if (cnt) cnt.textContent = `${fotoIdx + 1} / ${fotosModal.length}`;
+  if (nav) nav.classList.toggle("hidden", fotosModal.length < 2);
+}
 window.cambiarFoto = function(el) {
-  $("#img-principal").src = el.getAttribute("src");
-  document.querySelectorAll("#minis img").forEach(i => i.classList.remove("activa"));
-  el.classList.add("activa");
+  const i = [...document.querySelectorAll("#minis img")].indexOf(el);
+  mostrarFoto(i < 0 ? 0 : i);
 };
+window.fotoSiguiente = function(d) { mostrarFoto(fotoIdx + d); };
+(function() {
+  const prev = document.getElementById("img-prev"), next = document.getElementById("img-next");
+  const ppal = document.querySelector(".modal .galeria .principal");
+  if (prev) prev.onclick = (e) => { e.stopPropagation(); fotoSiguiente(-1); };
+  if (next) next.onclick = (e) => { e.stopPropagation(); fotoSiguiente(1); };
+  if (ppal) {
+    let x0 = null;
+    ppal.addEventListener("touchstart", (e) => { x0 = e.touches[0].clientX; }, { passive: true });
+    ppal.addEventListener("touchend", (e) => {
+      if (x0 == null) return;
+      const dx = e.changedTouches[0].clientX - x0; x0 = null;
+      if (Math.abs(dx) > 40) fotoSiguiente(dx < 0 ? 1 : -1);
+    }, { passive: true });
+  }
+  document.addEventListener("keydown", (e) => {
+    if (!document.getElementById("velo-modal")?.classList.contains("abierto")) return;
+    if (e.key === "ArrowRight") fotoSiguiente(1);
+    if (e.key === "ArrowLeft") fotoSiguiente(-1);
+  });
+})();
 function pintarTallasModal() {
   const m = modeloAbierto;
   $("#m-tallas").innerHTML = tallasDe(m).map(t => `

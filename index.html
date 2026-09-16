@@ -498,6 +498,14 @@
       object-fit: contain !important;
       object-position: center !important;
     }
+    /* Contador de fotos "1 / 4" sobre la imagen (modal y visor grande), para que se note que hay más */
+    .viewer-counter {
+      position: absolute; bottom: 10px; left: 10px; z-index: 3;
+      background: rgba(0,0,0,.45); color: #fff; font: 700 .78rem/1 system-ui, sans-serif;
+      padding: 5px 10px; border-radius: 20px; pointer-events: none; letter-spacing: .03em;
+    }
+    .image-zoom-stage { position: relative; }
+    .image-viewer img { cursor: zoom-in; }
     /* Botón "Ver fotos": esquina inferior derecha sobre la imagen */
     #openImageGalleryBtn:not([hidden]) {
       display: flex !important;
@@ -2152,6 +2160,7 @@ src="https://www.facebook.com/tr?id=2136280953641446&ev=PageView&noscript=1"
             <div id="imageSoldOutOverlay" class="image-sold-out-overlay" hidden>AGOTADO</div>
             <div id="modalHantanStack" class="modal-hantan-stack" hidden></div>
             <img id="viewerImg">
+            <div id="viewerCounter" class="viewer-counter" hidden></div>
         </div>
         <div id="thumbContainer" class="thumbnails"></div>
     </div>
@@ -2184,6 +2193,7 @@ src="https://www.facebook.com/tr?id=2136280953641446&ev=PageView&noscript=1"
     <button id="closeImageZoomBtn" class="image-zoom-close" type="button" aria-label="Cerrar visor">X</button>
     <div class="image-zoom-stage">
       <img id="imageZoomMain" alt="Vista ampliada de producto">
+      <div id="imageZoomCounter" class="viewer-counter"></div>
     </div>
     <div id="imageZoomThumbs" class="image-zoom-thumbs"></div>
   </div>
@@ -2298,7 +2308,7 @@ src="https://www.facebook.com/tr?id=2136280953641446&ev=PageView&noscript=1"
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="script-v2.js?v=20260910a"></script>
+<script src="script-v2.js?v=20260916a"></script>
 
 <script>
 /* Medir altura real del header y setear --hdr-h para posicionar elementos mobile */
