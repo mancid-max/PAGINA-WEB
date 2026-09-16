@@ -93,6 +93,12 @@ exports.handler = async function(event) {
 
   let order;
   try { order = JSON.parse(event.body); } catch { return { statusCode: 400, body: "Bad JSON" }; }
+  /* La página llama sin clave y solo con el uuid del pedido (imposible de adivinar). Con la clave interna
+     (X-Api-Key = NEXOR_ORDER_KEY) se permite además buscar por RUT y se devuelve el detalle de Nexor. */
+  const ORDER_KEY = (process.env.NEXOR_ORDER_KEY || "").trim();
+  const apiKey = (event.headers || {})["x-api-key"] || (event.headers || {})["X-Api-Key"] || "";
+  const conClave = !!ORDER_KEY && apiKey === ORDER_KEY;
+  if (!conClave && !/^[0-9a-f-]{36}$/i.test(String(order.quoteId || ""))) return { statusCode: 400, body: JSON.stringify({ ok: false, mensaje: "Falta el id del pedido." }) };
 
   const TOKEN = process.env.TELEGRAM_TOKEN;
   const CHAT  = process.env.TELEGRAM_CHAT_PEDIDOS || process.env.TELEGRAM_CHAT_ID || "-5261495560"; /* grupo "Mohicano Pedidos" */
@@ -113,23 +119,23 @@ exports.handler = async function(event) {
   /* Con id del pedido; si no viene (o no es uuid), el último pedido de ese RUT en las últimas 72 h */
   const nota = /^[0-9a-f-]{36}$/i.test(quoteId)
     ? await construirNota({ id: quoteId }).catch((e) => ({ ok: false, mensaje: e.message }))
-    : (order.rut ? await construirNota({ rut: order.rut }).catch((e) => ({ ok: false, mensaje: e.message })) : { ok: false, mensaje: "sin id ni rut" });
-  const rut = order.rut || (nota.ok && nota.rut) || "";
+    : (conClave && order.rut ? await construirNota({ rut: order.rut }).catch((e) => ({ ok: false, mensaje: e.message })) : { ok: false, mensaje: "sin id de pedido" });
+  const rut = (nota.ok && nota.rut) || order.rut || "";
   const ficha = await fichaCliente(rut);
   const dato = (...vals) => { for (const v of vals) { const s = String(v == null ? "" : v).trim(); if (s) return s; } return "—"; };
-  const nombre     = dato(order.storeName, nota.ok && nota.cliente, ficha && ficha.razon_social);
-  const telefono   = dato(order.phone, nota.ok && nota.telefono, ficha && ficha.telefono);
-  const transporte = dato(order.transporte, nota.ok && nota.transporte, ficha && ficha.transporte);
-  const comuna     = dato(order.ciudad, ficha && ficha.comuna);
+  /* Lo guardado (pedido + ficha) manda; lo que trae la página solo rellena huecos */
+  const nombre     = dato(nota.ok && nota.cliente, ficha && ficha.razon_social, order.storeName);
+  const telefono   = dato(nota.ok && nota.telefono, ficha && ficha.telefono, order.phone);
+  const transporte = dato(nota.ok && nota.transporte, ficha && ficha.transporte, order.transporte);
+  const comuna     = dato(nota.ok && nota.comuna, ficha && ficha.comuna, order.ciudad);
   const direccion  = dato(ficha && ficha.direccion);
   const giro       = dato(ficha && ficha.giro);
   const tienda     = dato(ficha && ficha.nombre_tienda);
 
-  const lineas = nota.ok
-    ? nota.modelos.map((m) => `  - ${m.codigo}${m.nombre ? " (" + m.nombre + ")" : ""}: ${m.unidades} u  [${m.tallas.map((t) => t.replace(": ", ":")).join(" ")}]${m.subtotal != null ? "  " + clp(m.subtotal) : ""}`).join("\n")
-    : (order.items || []).map((it) => `  - ${it.codigo}${it.nombre ? " (" + it.nombre + ")" : ""}: ${it.totalUnidades} u`).join("\n");
-
-  const texto = [
+  const lineasModelos = nota.ok
+    ? nota.modelos.map((m) => `  - ${m.codigo}${m.nombre ? " (" + m.nombre + ")" : ""}: ${m.unidades} u  [${m.tallas.map((t) => t.replace(": ", ":")).join(" ")}]${m.subtotal != null ? "  " + clp(m.subtotal) : ""}`)
+    : (order.items || []).map((it) => `  - ${it.codigo}${it.nombre ? " (" + it.nombre + ")" : ""}: ${it.totalUnidades} u`);
+  const armar = (ls) => [
     titulo + "  [" + (nota.ok ? nota.referencia : ref) + "]",
     "",
     "Cliente: "    + nombre,
@@ -142,26 +148,40 @@ exports.handler = async function(event) {
     "Tienda: "     + tienda,
     "",
     "Modelos:",
-    lineas || "  (sin detalle)",
+    ls.length ? ls.join("\n") : "  (sin detalle)",
     "",
     "Total unidades: " + (nota.ok ? nota.total_unidades : (order.totalUnidades || "—")),
     ...(nota.ok ? [`Neto: ${clp(nota.neto)}  ·  IVA: ${clp(nota.iva)}  ·  Total: ${clp(nota.total)}`] : []),
     "",
     "Ver pedido: " + link,
   ].join("\n");
+  /* Telegram acepta 4096 caracteres: si el pedido es enorme se recortan modelos (el detalle completo está en el link) */
+  let texto = armar(lineasModelos);
+  let ls = lineasModelos;
+  while (texto.length > 3900 && ls.length > 1) {
+    ls = ls.slice(0, Math.max(1, Math.floor(ls.length * 0.8)));
+    texto = armar([...ls, `  … y ${lineasModelos.length - ls.length} modelos más (ver link)`]);
+  }
 
   /* Botón "Lo tomo yo" (lo atiende telegram-callback): así el grupo sabe quién está con el pedido */
   const idPedido = nota.ok ? nota.quote_id : (/^[0-9a-f-]{36}$/i.test(quoteId) ? quoteId : "");
   const tgBody = { chat_id: CHAT, text: texto, disable_web_page_preview: true };
   if (idPedido) tgBody.reply_markup = { inline_keyboard: [[{ text: "🙋 Lo tomo yo", callback_data: `tomar:${idPedido}` }]] };
-  await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(tgBody),
-  });
+  let telegram = "sin token";
+  if (TOKEN) {
+    try {
+      const r = await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(tgBody) });
+      const j = await r.json().catch(() => ({}));
+      telegram = j.ok ? "ok" : `error ${r.status}: ${j.description || ""}`.trim();
+      if (!j.ok) console.error("Telegram sendMessage falló:", telegram);
+    } catch (e) { telegram = `error: ${e.message}`; console.error("Telegram sendMessage falló:", e.message); }
+  }
 
   let nexor = null;
   try { nexor = await avisarNexor(nota, telefono === "—" ? "" : telefono); } catch (e) { nexor = { error: e.message }; }
+  if (nexor && (nexor.error || nexor.msg1 >= 400 || nexor.estado >= 400)) console.error("Nexor:", JSON.stringify(nexor));
 
-  return { statusCode: 200, body: JSON.stringify({ ok: true, ref: nota.ok ? nota.referencia : ref, nexor }) };
+  const refFinal = nota.ok ? nota.referencia : ref;
+  /* Al navegador solo se le confirma; el detalle (lead_id, estados) solo con la clave interna */
+  return { statusCode: 200, body: JSON.stringify(conClave ? { ok: true, ref: refFinal, telegram, nexor } : { ok: true, ref: refFinal }) };
 };
