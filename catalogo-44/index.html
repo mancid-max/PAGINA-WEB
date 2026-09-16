@@ -355,6 +355,9 @@ main{max-width:1200px;margin:0 auto;padding:1rem 1.2rem 4rem}
 /* ===== cajón carrito ===== */
 .cajon-velo{position:fixed;inset:0;background:rgba(12,25,36,.45);z-index:80;display:none}
 .cajon-velo.abierto{display:block}
+/* Con el carrito abierto la página de atrás no se mueve (en celular el scroll se "colaba" y dejaba un hueco abajo) */
+body.cajon-abierto{overflow:hidden;overscroll-behavior:none}
+.cajon-items,.cajon-form{overscroll-behavior:contain}
 .cajon{
   position:fixed;top:0;right:0;height:100dvh;width:min(460px,100vw);background:#fff;z-index:90;
   transform:translateX(105%);transition:transform .25s ease;display:flex;flex-direction:column;box-shadow:-16px 0 48px rgba(12,25,36,.25);
@@ -1340,7 +1343,7 @@ body.cajon-abierto #abrir-carrito { display:none !important; }
   </div>
 </div>
 
-<script src="app.js?v=20260916b"></script>
+<script src="app.js?v=20260916c"></script>
 <script>
 var SHARE_URL = 'https://mohicanojeans.netlify.app/catalogo-44/';
 var SHARE_TEXT = '🔥 ¿Aún no haces tu pedido o necesitas reposición? 😍 Dolce Vita 44 — 62 modelos, ¡quedan pocas unidades! 👖';

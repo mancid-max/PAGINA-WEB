@@ -564,6 +564,7 @@ function abrirCajon(resetForm = true) {
   $("#cajon").classList.add("abierto");
   $("#cajon-velo").classList.add("abierto");
   document.body.classList.add("cajon-abierto"); /* oculta la barra flotante y el botón "Tu pedido" (también cuando se abre desde un link) */
+  bloquearScrollFondo(true);
   if (resetForm) {
     elRut().value = "";
     setRutEstado("", "");
@@ -587,7 +588,23 @@ function abrirCajon(resetForm = true) {
     }, 50);
   }
 }
-function cerrarCajon() { $("#cajon").classList.remove("abierto"); $("#cajon-velo").classList.remove("abierto"); document.body.classList.remove("cajon-abierto"); }
+function cerrarCajon() { $("#cajon").classList.remove("abierto"); $("#cajon-velo").classList.remove("abierto"); document.body.classList.remove("cajon-abierto"); bloquearScrollFondo(false); }
+/* En celular, con el cajón abierto el dedo hacía scroll en la página de atrás (se veía un hueco abajo y luego
+   "volvía"). Se fija el body en su posición mientras el cajón está abierto y se restaura al cerrarlo. */
+let _scrollFondo = null;
+function bloquearScrollFondo(on) {
+  const b = document.body;
+  if (on) {
+    if (_scrollFondo !== null) return;
+    _scrollFondo = window.scrollY || 0;
+    b.style.position = "fixed"; b.style.top = `-${_scrollFondo}px`; b.style.left = "0"; b.style.right = "0"; b.style.width = "100%";
+  } else {
+    if (_scrollFondo === null) return;
+    const y = _scrollFondo; _scrollFondo = null;
+    b.style.position = ""; b.style.top = ""; b.style.left = ""; b.style.right = ""; b.style.width = "";
+    window.scrollTo(0, y);
+  }
+}
 $("#abrir-carrito").onclick = () => { abrirCajon(true); pintarCarrito(); };
 $("#cerrar-cajon").onclick = cerrarCajon;
 $("#cajon-velo").onclick = cerrarCajon;
