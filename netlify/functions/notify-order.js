@@ -67,7 +67,7 @@ exports.handler = async function(event) {
   try { order = JSON.parse(event.body); } catch { return { statusCode: 400, body: "Bad JSON" }; }
 
   const TOKEN = process.env.TELEGRAM_TOKEN;
-  const CHAT  = process.env.TELEGRAM_CHAT_ID || "-5261495560";
+  const CHAT  = process.env.TELEGRAM_CHAT_PEDIDOS || process.env.TELEGRAM_CHAT_ID || "-5261495560"; /* grupo "Mohicano Pedidos" */
 
   /* Cole 44 (catalogo-44 / dolce-vita-44) o Cole 40-43 (catalogo-43, catalogo-2, catalogo-mixto).
      Sin source se asume Cole 44, que era el unico que avisaba antes. */

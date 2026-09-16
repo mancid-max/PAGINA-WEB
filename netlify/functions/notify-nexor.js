@@ -22,16 +22,23 @@ exports.handler = async (event) => {
   if (!texto) return { statusCode: 400, body: "Falta texto" };
 
   const TOKEN = process.env.TELEGRAM_TOKEN;
-  const CHAT = process.env.TELEGRAM_CHAT_ID || "-5261495560";
   if (!TOKEN) return { statusCode: 500, body: "TELEGRAM_TOKEN no configurado" };
+  /* Un grupo de Telegram por tipo de aviso (2026-09-16): desconocidos, ayuda humana; el resto al grupo general */
+  const tipo = String(body.tipo || "aviso");
+  const CHAT = tipo === "nexor_ayuda" ? (process.env.TELEGRAM_CHAT_AYUDA || process.env.TELEGRAM_CHAT_ID || "-5261495560")
+    : tipo === "nexor_desconocido" ? (process.env.TELEGRAM_CHAT_DESCONOCIDOS || process.env.TELEGRAM_CHAT_ID || "-5261495560")
+    : (process.env.TELEGRAM_CHAT_ID || "-5261495560");
+  const titulo = tipo === "nexor_ayuda" ? "Cliente necesita ayuda (Sofía)" : tipo === "nexor_desconocido" ? "Número desconocido" : `Nexor · ${tipo}`;
 
   const lead = String(body.lead_id || "").trim();
-  const payload = { chat_id: CHAT, text: `[Nexor · ${body.tipo || "aviso"}]\n${texto}`.slice(0, 4000), disable_web_page_preview: true };
-  if (/^[0-9a-f-]{36}$/i.test(lead) && SECRET) {
+  const payload = { chat_id: CHAT, text: `[${titulo}]\n${texto}`.slice(0, 4000), disable_web_page_preview: true };
+  if (/^[0-9a-f-]{36}$/i.test(lead) && SECRET && tipo === "nexor_desconocido") {
     payload.reply_markup = { inline_keyboard: [[
       { text: "✅ Aceptar como mayorista", url: linkAccion(lead, "aceptar") },
       { text: "✖ Rechazar", url: linkAccion(lead, "rechazar") },
     ]] };
+  } else if (tipo === "nexor_ayuda") {
+    payload.reply_markup = { inline_keyboard: [[{ text: "Abrir Sofía en Nexor", url: "https://app.getnexor.ai/agents/a914d7c0-fccc-4eb1-947a-ac5f875111d1" }]] };
   }
   const r = await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
     method: "POST",
