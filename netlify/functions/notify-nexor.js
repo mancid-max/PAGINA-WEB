@@ -9,6 +9,32 @@ const SECRET = (process.env.NEXOR_ORDER_KEY || "").trim();
 const firma = (lead, accion) => crypto.createHmac("sha256", SECRET).update(`${lead}|${accion}`).digest("hex").slice(0, 32);
 const linkAccion = (lead, accion) => `${BASE}/.netlify/functions/nexor-aceptar?lead=${encodeURIComponent(lead)}&a=${accion}&t=${firma(lead, accion)}`;
 
+/* Aviso "necesita ayuda": nombre, RUT, teléfono y motivo leídos del lead en Nexor (NEXOR_API_KEY) */
+async function textoAyuda(body) {
+  const API = (process.env.NEXOR_API_KEY || "").trim();
+  let L = {};
+  if (API) {
+    const r = await fetch(`https://api.getnexor.ai/api/public/leads/${body.lead_id}?verbose=true`, { headers: { "X-API-Key": API } });
+    if (r.ok) { const j = await r.json(); L = j.lead || j; }
+  }
+  const nombre = [L.first_name, L.last_name].filter(Boolean).join(" ") || L.company || body.nombre || "Cliente";
+  const empresa = L.company && L.company !== nombre ? L.company : "";
+  const campos = L.fields || L.field_values || {};
+  const meta = L.metadata || {};
+  const rut = campos.rut || meta.rut || "";
+  const tel = String(L.phone || body.phone || "").replace(/\D/g, "");
+  const telFmt = tel.length >= 11 ? `+${tel.slice(0, 2)} ${tel.slice(2, 3)} ${tel.slice(3, 7)} ${tel.slice(7)}` : tel || "—";
+  const motivo = String(body.motivo || "").trim();
+  const problema = campos.problema || meta.problema || "";
+  return [
+    `${nombre}${empresa ? ` · ${empresa}` : ""}${rut ? ` · RUT ${rut}` : ""}`,
+    `Teléfono: ${telFmt}`,
+    `Motivo: ${motivo || problema || "Sofía no pudo resolverlo; ver la conversación"}`,
+    "",
+    "Sofía lo dejó en \"Necesita ayuda (humano)\". Alguien tiene que responderle por WhatsApp.",
+  ].join("\n");
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") return { statusCode: 405, body: "Method Not Allowed" };
   const KEY = (process.env.NEXOR_NOTIFY_KEY || "").trim();
@@ -18,7 +44,11 @@ exports.handler = async (event) => {
   }
   let body;
   try { body = JSON.parse(event.body || "{}"); } catch { return { statusCode: 400, body: "Bad JSON" }; }
-  const texto = String(body.texto || "").trim();
+  let texto = String(body.texto || "").trim();
+  if (body.tipo === "nexor_ayuda" && /^[0-9a-f-]{36}$/i.test(String(body.lead_id || ""))) {
+    /* El evento de cambio de estado de Nexor no trae los datos del lead: se completan desde su API */
+    texto = await textoAyuda(body).catch(() => texto || "Un cliente necesita ayuda (no pude leer sus datos).");
+  }
   if (!texto) return { statusCode: 400, body: "Falta texto" };
 
   const TOKEN = process.env.TELEGRAM_TOKEN;
