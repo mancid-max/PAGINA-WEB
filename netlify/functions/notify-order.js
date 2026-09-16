@@ -82,7 +82,10 @@ exports.handler = async function(event) {
 
   /* Completar con lo que ya sabemos: pedido guardado + ficha del cliente */
   const quoteId = String(order.quoteId || "");
-  const nota = /^[0-9a-f-]{36}$/i.test(quoteId) ? await construirNota({ id: quoteId }).catch((e) => ({ ok: false, mensaje: e.message })) : { ok: false, mensaje: "sin id" };
+  /* Con id del pedido; si no viene (o no es uuid), el último pedido de ese RUT en las últimas 72 h */
+  const nota = /^[0-9a-f-]{36}$/i.test(quoteId)
+    ? await construirNota({ id: quoteId }).catch((e) => ({ ok: false, mensaje: e.message }))
+    : (order.rut ? await construirNota({ rut: order.rut }).catch((e) => ({ ok: false, mensaje: e.message })) : { ok: false, mensaje: "sin id ni rut" });
   const rut = order.rut || (nota.ok && nota.rut) || "";
   const ficha = await fichaCliente(rut);
   const dato = (...vals) => { for (const v of vals) { const s = String(v == null ? "" : v).trim(); if (s) return s; } return "—"; };
