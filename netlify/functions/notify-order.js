@@ -57,7 +57,8 @@ async function avisarNexor(nota, telefono) {
     for (let i = 0; i < ids.length && !lead; i += 50) {
       const lote = ids.slice(i, i + 50);
       const j = await fetch(`${NX}/leads/bulk/get`, { method: "POST", headers: H, body: JSON.stringify({ lead_ids: lote }) }).then((x) => x.json()).catch(() => ({}));
-      lead = (j.leads || j.data || []).find((l) => String((l.metadata || {}).rut || "").replace(/[^0-9kK]/g, "").toUpperCase() === rutDig) || null;
+      /* bulk/get devuelve [{ lead: {...} }] */
+      lead = (j.leads || j.data || []).map((x) => x.lead || x).find((l) => String((l.metadata || {}).rut || "").replace(/[^0-9kK]/g, "").toUpperCase() === rutDig) || null;
     }
     if (lead) via = "RUT";
   }
