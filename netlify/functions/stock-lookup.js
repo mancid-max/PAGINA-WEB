@@ -200,7 +200,9 @@ async function buscarPorAtributos({ corte, tiro, tipo, cole }) {
         const estado = total > 30 ? "Disponible" : "En producción";
         const desc = [cap(ok.tp || "jean"), ok.ti ? `tiro ${ok.ti}` : null, ok.co ? `corte ${ok.co}` : null].filter(Boolean).join(" · ").replace(" · tiro", " tiro");
         /* orden: primero la Dolce Vita disponible (es la novedad), después colecciones anteriores por stock, al final la 44 en producción */
-        res.push({ codigo, nombre: m.nombre, coleccion: "Dolce Vita · Cole 44", tiro: ok.ti, corte: ok.co, precio: m.precio, estado, ficha_texto: `${codigo} ${m.nombre} · Dolce Vita 44 · ${desc} · ${clp(m.precio)} c/u IVA incl. · ${estado}`, _orden: total > 30 ? 3 : 1, _total: total });
+        /* ficha vertical, igual que la consulta por código (una cosa por línea) */
+        const ficha = [`${codigo} ${m.nombre} · Dolce Vita 44`, desc, m.precio == null ? "precio a consultar" : `${clp(m.precio)} c/u IVA incl.`, estado === "Disponible" ? "Disponible (despacho inmediato)" : "En producción (10 a 15 días, se puede reservar)"].join("\n");
+        res.push({ codigo, nombre: m.nombre, coleccion: "Dolce Vita · Cole 44", tiro: ok.ti, corte: ok.co, precio: m.precio, estado, ficha_texto: ficha, _orden: total > 30 ? 3 : 1, _total: total });
       }
     } else {
       const cat = await getJson(`/data-catalogo-${c}.json`).catch(() => []);
@@ -217,7 +219,8 @@ async function buscarPorAtributos({ corte, tiro, tipo, cole }) {
         const tallas = Object.entries(st.sizes || {}).filter(([, n]) => Number(n) > 0).map(([t, n]) => `${t}: ${n}`);
         const precio = pit[codigo] ?? pit[codigo.slice(0, 4)] ?? null;
         const desc = [cap(ok.tp || "jean"), ok.ti ? `tiro ${ok.ti}` : null, ok.co ? `corte ${ok.co}` : null].filter(Boolean).join(" · ").replace(" · tiro", " tiro");
-        res.push({ codigo, nombre: `Modelo ${codigo.slice(0, 4)}`, coleccion: `Cole ${c}`, tiro: ok.ti, corte: ok.co, precio, estado: "Disponible", stock_total: total, tallas_con_stock: tallas, ficha_texto: `${codigo} · Cole ${c} · ${desc} · ${precio == null ? "precio a consultar" : clp(precio) + " sin IVA"} · ${total} u. (${tallas.join(" · ")})`, _orden: 2, _total: total });
+        const ficha = [`${codigo} · Cole ${c}`, desc, precio == null ? "precio a consultar" : `${clp(precio)} sin IVA`, `Stock: ${total} unidades`, ...tallas.map((t) => `  ${t}`)].join("\n");
+        res.push({ codigo, nombre: `Modelo ${codigo.slice(0, 4)}`, coleccion: `Cole ${c}`, tiro: ok.ti, corte: ok.co, precio, estado: "Disponible", stock_total: total, tallas_con_stock: tallas, ficha_texto: ficha, _orden: 2, _total: total });
       }
     }
   }
@@ -225,7 +228,9 @@ async function buscarPorAtributos({ corte, tiro, tipo, cole }) {
   const resultados = res.slice(0, 8).map(({ _orden, _total, ...r }) => r);
   const que = [qTipo, qTiro ? `tiro ${qTiro}` : null, qCorte ? `corte ${qCorte}` : null].filter(Boolean).join(" ");
   if (!resultados.length) return { ok: false, mensaje: `No tengo modelos con stock que calcen con "${que}"${coleQ ? ` en la Cole ${coleQ}` : ""}. Ofrece un corte o tiro parecido.` };
-  return { ok: true, busqueda: que, total_encontrados: res.length, resultados, nota: res.length > 8 ? `Hay ${res.length} en total; muestro los 8 con más stock. Pregunta al cliente si quiere ver más.` : undefined };
+  /* lista_texto: los primeros 5 con su ficha completa, listos para mandar tal cual en un mensaje */
+  const lista = resultados.slice(0, 5).map((r) => r.ficha_texto).join("\n\n") + (res.length > 5 ? `\n\n… y ${res.length - 5} más. ¿Quieres verlos?` : "");
+  return { ok: true, busqueda: que, total_encontrados: res.length, resultados, lista_texto: lista, nota: res.length > 8 ? `Hay ${res.length} en total; devuelvo los 8 con más stock y lista_texto trae los 5 primeros.` : undefined };
 }
 
 exports.handler = async function (event) {
