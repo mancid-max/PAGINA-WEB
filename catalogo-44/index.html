@@ -1340,7 +1340,7 @@ body.cajon-abierto #abrir-carrito { display:none !important; }
   </div>
 </div>
 
-<script src="app.js?v=20260916a"></script>
+<script src="app.js?v=20260916b"></script>
 <script>
 var SHARE_URL = 'https://mohicanojeans.netlify.app/catalogo-44/';
 var SHARE_TEXT = '🔥 ¿Aún no haces tu pedido o necesitas reposición? 😍 Dolce Vita 44 — 62 modelos, ¡quedan pocas unidades! 👖';
@@ -1611,9 +1611,10 @@ function copiarLink(btn) {
   /* Ocultar pill bar cuando el cajón-carrito está abierto (via clase en body) */
   var cajon = document.getElementById('cajon');
   if (cajon) {
-    new MutationObserver(function() {
-      document.body.classList.toggle('cajon-abierto', cajon.classList.contains('abierto'));
-    }).observe(cajon, { attributes: true, attributeFilter: ['class'] });
+    var syncCajon = function() { document.body.classList.toggle('cajon-abierto', cajon.classList.contains('abierto')); };
+    new MutationObserver(syncCajon).observe(cajon, { attributes: true, attributeFilter: ['class'] });
+    /* Si el cajón ya venía abierto (link con pedido cargado), el observer no alcanza a verlo: sincronizar ahora */
+    syncCajon();
   }
 })();
 

@@ -563,6 +563,7 @@ pintarCarrito();
 function abrirCajon(resetForm = true) {
   $("#cajon").classList.add("abierto");
   $("#cajon-velo").classList.add("abierto");
+  document.body.classList.add("cajon-abierto"); /* oculta la barra flotante y el botón "Tu pedido" (también cuando se abre desde un link) */
   if (resetForm) {
     elRut().value = "";
     setRutEstado("", "");
@@ -586,7 +587,7 @@ function abrirCajon(resetForm = true) {
     }, 50);
   }
 }
-function cerrarCajon() { $("#cajon").classList.remove("abierto"); $("#cajon-velo").classList.remove("abierto"); }
+function cerrarCajon() { $("#cajon").classList.remove("abierto"); $("#cajon-velo").classList.remove("abierto"); document.body.classList.remove("cajon-abierto"); }
 $("#abrir-carrito").onclick = () => { abrirCajon(true); pintarCarrito(); };
 $("#cerrar-cajon").onclick = cerrarCajon;
 $("#cajon-velo").onclick = cerrarCajon;
