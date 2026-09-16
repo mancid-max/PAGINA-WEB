@@ -51,8 +51,16 @@ async function info4043(cod, cole) {
   const items = Array.isArray(data) ? data : data.items || [];
   const it = items.find((x) => String(x.family || "").toUpperCase() === cod);
   if (!it) return null;
-  const p = (precios.items || {})[cod] ?? (precios.items || {})[cod.slice(0, 4)] ?? null;
-  const desc = [it.tipo, it.tiro ? `tiro ${it.tiro}` : "", it.bota ? `bota ${it.bota}` : ""].filter(Boolean).join(" · ")
+  const pit = precios.items || precios || {};
+  const base4 = cod.slice(0, 4);
+  const p = pit[cod] ?? pit[base4] ?? pit[`${base4}-00`] ?? null;
+  /* tiro y corte desde BI (lo mismo que dice Sofía), con la web como respaldo */
+  const atrs = await getRemote("/atributos-modelos.json").then((a) => a.modelos || {}).catch(() => ({}));
+  const bi = atrs[cod] || atrs[base4] || {};
+  const tipo = bi.tipo || it.tipo || "jean";
+  const tiro = bi.tiro || it.tiro || "";
+  const corte = bi.corte || it.bota || "";
+  const desc = [tipo, tiro ? `tiro ${tiro}` : "", corte ? `corte ${corte}` : ""].filter(Boolean).join(" · ")
     || String(it.description || "").replace(/\?/g, "·").trim();
   return {
     nombre: `Modelo ${cod}`,
@@ -76,7 +84,10 @@ exports.handler = async (event) => {
 
   let info = null;
   try { info = es44 ? await info44(cod) : /^4[0-3]$/.test(cole) ? await info4043(cod, cole) : null; } catch (e) { console.warn("ficha:", e.message); }
-  const titulo = info ? `${info.nombre} · ${cod} · Mohicano Jeans` : `Mohicano Jeans · ${cod}`;
+  /* "Modelo 4157-00 · 4157-00" se veía repetido en la vista previa de WhatsApp */
+  const titulo = info
+    ? (String(info.nombre).includes(cod) ? `${info.nombre} · Mohicano Jeans` : `${info.nombre} · ${cod} · Mohicano Jeans`)
+    : `Mohicano Jeans · ${cod}`;
   const descripcion = info
     ? `${info.coleccion} · ${info.precio_texto} · ${info.detalle}`
     : "Jeans de mujer, venta mayorista a todo Chile.";

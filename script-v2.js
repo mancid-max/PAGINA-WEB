@@ -4102,7 +4102,11 @@ window.addEventListener("load", () => {
       if (saltados.length && typeof mostrarToastError === "function") setTimeout(() => mostrarToastError("No se cargó", saltados.join(", ")), 2600);
     } else if (skuQ) {
       const sku = normCod(skuQ);
-      if (!(await esperarSku(sku))) return;
+      if (!(await esperarSku(sku))) {
+        /* link con un modelo que no está en esta página: avisar en vez de dejar la portada muda */
+        if (typeof mostrarToastError === "function") mostrarToastError("No encontré ese modelo", `${sku} no está en el catálogo. Escríbenos y te ayudamos.`);
+        return;
+      }
       verProducto(sku.slice(0, 4), sku);
       await esperar(400);
       if (curvaQ && skuActivo === sku) setTallas(curvaPara(curvaQ));
@@ -4331,7 +4335,7 @@ function actualizarCarrito() {
     ` : `
       <div class="cart-totals-head">
         <span class="cart-totals-title">Total a pagar</span>
-        <span class="cart-totals-note">Precios con IVA incluido</span>
+        <span class="cart-totals-note">Precios sin IVA (se agrega el 19%)</span>
       </div>
       <div class="cart-totals-row"><span>Total prendas</span><strong>${totalItems}</strong></div>
       ${totalItems > 0 && totalItems < 24 ? `<div class="cart-totals-row" style="color:#b45309;font-size:12px;background:#fffbeb;padding:4px 8px;border-radius:4px;margin-top:2px;">⚠️ Faltan ${24 - totalItems} unidades para el mínimo (24)</div>` : ""}
