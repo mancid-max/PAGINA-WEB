@@ -35,17 +35,44 @@ async function avisarNexor(nota, telefono) {
   const API = (process.env.NEXOR_API_KEY || "").trim();
   if (!API) return { skip: "sin NEXOR_API_KEY" };
   if (!nota || !nota.ok) return { skip: `sin nota: ${nota && nota.mensaje}` };
-  const tel = String(nota.telefono || telefono || "").replace(/\D/g, "");
-  if (tel.length < 8) return { skip: "pedido sin teléfono" };
-  const cola = tel.slice(-8);
-
   const H = { "X-API-Key": API, "Content-Type": "application/json" };
-  const r = await fetch(`${NX}/leads?search=${cola}&workflow_id=${WF}&limit=5`, { headers: H });
-  const j = await r.json().catch(() => ({}));
-  const lead = (j.leads || j.data || []).find((l) => String(l.phone || "").replace(/\D/g, "").endsWith(cola));
-  if (!lead) return { skip: "el cliente no es lead de Nexor (no se crea)" };
+  const tel = String(nota.telefono || telefono || "").replace(/\D/g, "");
+  const rutDig = String(nota.rut || "").replace(/[^0-9kK]/g, "").toUpperCase();
+  let lead = null, via = "";
+  /* 1) por teléfono (últimos 8 dígitos) */
+  if (tel.length >= 8) {
+    const cola = tel.slice(-8);
+    const j = await fetch(`${NX}/leads?search=${cola}&workflow_id=${WF}&limit=5`, { headers: H }).then((x) => x.json()).catch(() => ({}));
+    lead = (j.leads || j.data || []).find((l) => String(l.phone || "").replace(/\D/g, "").endsWith(cola)) || null;
+    if (lead) via = "teléfono";
+  }
+  /* 2) por RUT (metadata.rut de los leads cargados desde BI): lista los leads del flujo y los trae completos */
+  if (!lead && rutDig.length >= 8) {
+    const ids = [];
+    for (let page = 0; page < 6; page++) {
+      const j = await fetch(`${NX}/leads?workflow_id=${WF}&limit=50&page=${page}`, { headers: H }).then((x) => x.json()).catch(() => ({}));
+      (j.leads || j.data || []).forEach((l) => ids.push(l.id));
+      if (!(j.pagination && j.pagination.has_more)) break;
+    }
+    for (let i = 0; i < ids.length && !lead; i += 50) {
+      const lote = ids.slice(i, i + 50);
+      const j = await fetch(`${NX}/leads/bulk/get`, { method: "POST", headers: H, body: JSON.stringify({ lead_ids: lote }) }).then((x) => x.json()).catch(() => ({}));
+      lead = (j.leads || j.data || []).find((l) => String((l.metadata || {}).rut || "").replace(/[^0-9kK]/g, "").toUpperCase() === rutDig) || null;
+    }
+    if (lead) via = "RUT";
+  }
+  if (!lead) return { skip: tel.length >= 8 ? "el cliente no es lead de Nexor (no se crea)" : "pedido sin teléfono y sin lead con ese RUT" };
 
-  const out = { lead_id: lead.id, referencia: nota.referencia };
+  const out = { lead_id: lead.id, via, referencia: nota.referencia };
+  /* Si la ficha del cliente no tenía teléfono y el lead sí, se guarda para la próxima (tabla clients) */
+  if (!tel && lead.phone && SUPABASE_URL && SERVICE_KEY && rutDig.length >= 8) {
+    try {
+      const norm = `${rutDig.slice(0, -1)}-${rutDig.slice(-1)}`;
+      const filtro = encodeURIComponent(`(rut_normalized.eq.${rutDig},rut_normalized.eq.${norm})`);
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/clients?or=${filtro}&telefono=is.null`, { method: "PATCH", headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify({ telefono: String(lead.phone).replace(/\D/g, "") }) });
+      out.telefono_guardado = r.status;
+    } catch (_) {}
+  }
   /* 1) nota en el CRM (Sofía la ve en contexto) */
   out.nota_crm = await fetch(`${NX}/leads/${lead.id}/notes`, { method: "POST", headers: H, body: JSON.stringify({ content: nota.nota_texto, ai_visible: true }) }).then((x) => x.status).catch((e) => e.message);
   /* 2) WhatsApp solo si hay conversación activa (últimas 24 h): fuera de esa ventana Meta exige plantilla */
