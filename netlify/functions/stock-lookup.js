@@ -192,11 +192,12 @@ async function consultarCodigoConVariantes(family) {
     const fichas = await fichasDeVariantes(base4, cole).catch(() => []);
     if (fichas.length === 1) return fichas[0];
     if (fichas.length > 1) {
+      /* lista_texto va primero: es lo que Sofía debe mandar tal cual (un modelo por bloque) */
       return {
         ok: true, busqueda: `modelo ${base4}`, total_encontrados: fichas.length,
-        resultados: fichas.map(resumenVariante),
         lista_texto: fichas.map((f) => f.ficha_texto).join("\n\n"),
-        nota: `El modelo ${base4} viene en ${fichas.length} variantes. Muéstraselas y pregunta cuál quiere.`,
+        nota: `El modelo ${base4} viene en ${fichas.length} variantes. Manda lista_texto tal cual y pregunta cuál quiere.`,
+        resultados: fichas.map(resumenVariante),
       };
     }
     return out;
@@ -232,8 +233,8 @@ async function buscarNombre(q) {
   if (fichas.length === 1) return fichas[0];
   return {
     ok: true, coleccion: "Dolce Vita · Cole 44", busqueda: q, total_encontrados: fichas.length,
-    resultados: fichas.map(resumenVariante),
     lista_texto: fichas.map((f) => f.ficha_texto).join("\n\n"),
+    resultados: fichas.map(resumenVariante),
   };
 }
 
@@ -314,7 +315,8 @@ async function buscarPorAtributos({ corte, tiro, tipo, cole }) {
   if (!resultados.length) return { ok: false, mensaje: `No tengo modelos con stock que calcen con "${que}"${coleQ ? ` en la Cole ${coleQ}` : ""}. Ofrece un corte o tiro parecido.` };
   /* lista_texto: los primeros 5 con su ficha completa, listos para mandar tal cual en un mensaje */
   const lista = resultados.slice(0, 5).map((r) => r.ficha_texto).join("\n\n") + (res.length > 5 ? `\n\n… y ${res.length - 5} más. ¿Quieres verlos?` : "");
-  return { ok: true, busqueda: que, total_encontrados: res.length, resultados, lista_texto: lista, nota: res.length > 8 ? `Hay ${res.length} que calzan; devuelvo 8 (primero la Dolce Vita 44 disponible, después las colecciones anteriores con más stock) y lista_texto trae los 5 primeros.` : undefined };
+  /* lista_texto va antes que resultados: es lo que Sofía manda tal cual (un modelo por bloque, una línea por dato) */
+  return { ok: true, busqueda: que, total_encontrados: res.length, lista_texto: lista, nota: res.length > 5 ? `Hay ${res.length} que calzan. Manda lista_texto TAL CUAL (trae los 5 primeros con su ficha) y ofrece ver los demás.` : "Manda lista_texto TAL CUAL, sin resumir.", resultados };
 }
 
 exports.handler = async function (event) {
