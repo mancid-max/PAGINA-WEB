@@ -572,9 +572,11 @@ function abrirCajon(resetForm = true) {
     limpiarForm();
     clienteBuscado = null;
     pedidoListo = null; snapshotCarrito = null; payloadListo = null;
-    $("#btn-finalizar").style.display = "none";
     $("#exito").classList.remove("ver");
   }
+  /* El botón de enviar se ve siempre (2026-09-17): si aprietan sin RUT, se remarca el campo del RUT */
+  $("#btn-finalizar").style.display = "flex";
+  $("#btn-finalizar").disabled = false;
   /* RUT / transporte / teléfono que venían en el link: pre-llenar y verificar una sola vez */
   if (window._rutDesdeLink) {
     elRut().value = window._rutDesdeLink;
@@ -910,7 +912,14 @@ $("#btn-finalizar").onclick = async () => {
   const totalUnidades = codigos.reduce((s,c) => s + Object.values(carrito[c].t).reduce((a,b)=>a+b,0), 0);
   if (totalUnidades < MIN_PEDIDO) { toast(`Faltan ${MIN_PEDIDO - totalUnidades} unidades para el mínimo del pedido (${MIN_PEDIDO})`); return; }
 
-  if (!clienteBuscado) { toast("Ingresa y verifica el RUT del cliente"); elRut().focus(); return; }
+  if (!clienteBuscado) {
+    /* sin RUT verificado: remarcar el campo (borde rojo, sacudida, foco) y explicar */
+    const rutEscrito = normalizarRut(elRut().value.trim());
+    setRutEstado("error", rutEscrito ? "Verifica el RUT: presiona Enter o espera un segundo" : "Ingresa tu RUT para enviar el pedido");
+    resaltarRut();
+    if (rutEscrito && esRutValido(rutEscrito)) buscarClientePorRut();
+    return;
+  }
   if (!validarCamposForm()) return;
 
   const confirmar = await customConfirm(
