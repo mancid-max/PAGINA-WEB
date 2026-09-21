@@ -10,11 +10,15 @@
       "40/40/4001/editar/CRI_7440.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: MEDIO",
+      "Bota: PALAZZO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "MEDIO",
+    "bota": "PALAZZO",
     "fabric": null
   },
   {
@@ -28,11 +32,15 @@
       "40/40/4002/editar/CRI_8549.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: MEDIO",
+      "Bota: OXFORD"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "MEDIO",
+    "bota": "OXFORD",
     "fabric": null
   },
   {
@@ -54,22 +62,6 @@
     "fabric": null
   },
   {
-    "family": "4004-01",
-    "main_image": "40/40/4004 01/CRI_8729 copia.jpg",
-    "gallery": [
-      "40/40/4004 01/CRI_8729 copia.jpg",
-      "40/40/4004 01/CRI_8735 copia.jpg",
-      "40/40/4004 01/CRI_8742 copia.jpg"
-    ],
-    "description": "",
-    "characteristics": [],
-    "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
-    "fabric": null
-  },
-  {
     "family": "4004-00",
     "main_image": "40/40/4004-00/editar/CRI_8729.jpg",
     "gallery": [
@@ -79,11 +71,35 @@
       "40/40/4004-00/editar/CRI_8743.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: OXFORD"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "OXFORD",
+    "fabric": null
+  },
+  {
+    "family": "4004-01",
+    "main_image": "40/40/4004 01/CRI_8729 copia.jpg",
+    "gallery": [
+      "40/40/4004 01/CRI_8729 copia.jpg",
+      "40/40/4004 01/CRI_8735 copia.jpg",
+      "40/40/4004 01/CRI_8742 copia.jpg"
+    ],
+    "description": "",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: OXFORD"
+    ],
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "OXFORD",
     "fabric": null
   },
   {
@@ -98,11 +114,15 @@
       "40/40/4007/editar/CRI_7977.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PITILLO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PITILLO",
     "fabric": null
   },
   {
@@ -116,11 +136,15 @@
       "40/40/4008/editar/CRI_8672.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE",
     "fabric": null
   },
   {
@@ -135,11 +159,15 @@
       "40/40/4009/editar/CRI_8094.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: OXFORD"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "OXFORD",
     "fabric": null
   },
   {
@@ -153,11 +181,15 @@
       "40/40/4010/editar/CRI_7898.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: TOBILLERO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "TOBILLERO",
     "fabric": null
   },
   {
@@ -172,11 +204,15 @@
       "40/40/4011/editar/CRI_8239.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE",
     "fabric": null
   },
   {
@@ -190,11 +226,15 @@
       "40/40/4012/editar/CRI_7757.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE",
     "fabric": null
   },
   {
@@ -228,11 +268,15 @@
       "40/40/4013/editar/CRI_7598.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PALAZZO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PALAZZO",
     "fabric": null
   },
   {
@@ -265,11 +309,15 @@
       "40/40/4015/editar/CRI_7662.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: TOBILLERO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "TOBILLERO",
     "fabric": null
   },
   {
@@ -281,11 +329,15 @@
       "40/40/4015 01/CRI_7656 copia.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: TOBILLERO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "TOBILLERO",
     "fabric": null
   },
   {
@@ -300,11 +352,15 @@
       "40/40/4016/editar/CRI_8488.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PITILLO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PITILLO",
     "fabric": null
   },
   {
@@ -317,11 +373,15 @@
       "40/40/4017/editar/CRI_8591.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: TOBILLERO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "TOBILLERO",
     "fabric": null
   },
   {
@@ -335,11 +395,15 @@
       "40/40/4017-01/editar/CRI_7630.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: TOBILLERO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "TOBILLERO",
     "fabric": null
   },
   {
@@ -353,11 +417,15 @@
       "40/40/4018/editar/CRI_8579.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PITILLO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PITILLO",
     "fabric": null
   },
   {
@@ -370,12 +438,35 @@
       "40/40/4021/editar/CRI_8691.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: TOBILLERO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "TOBILLERO",
     "fabric": null
+  },
+  {
+    "family": "4021-90",
+    "main_image": "40/40/4021 90 trucada/CRI_8678-copia-web.jpg",
+    "gallery": [
+      "40/40/4021 90 trucada/CRI_8678-copia-web.jpg",
+      "40/40/4021 90 trucada/CRI_8680-copia-web.jpg",
+      "40/40/4021 90 trucada/CRI_8690-copia-web.jpg"
+    ],
+    "variants": [],
+    "description": "JEAN · ALTO · TOBILLERO",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: TOBILLERO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "TOBILLERO"
   },
   {
     "family": "4023-00",
@@ -407,11 +498,15 @@
       "40/40/4027/editar/CRI_7914 copie.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE",
     "fabric": null
   },
   {
@@ -425,11 +520,15 @@
       "40/40/4027 01/CRI_7914 copia.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE",
     "fabric": null
   },
   {
@@ -444,11 +543,15 @@
       "40/40/4029/editar/CRI_8761.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE",
     "fabric": null
   },
   {
@@ -498,11 +601,15 @@
       "40/40/4036 00/CRI_7530 copia.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PALAZZO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PALAZZO",
     "fabric": null
   },
   {
@@ -533,11 +640,15 @@
       "40/40/4042/editar/CRI_8360.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: MEDIO",
+      "Bota: TOBILLERO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "MEDIO",
+    "bota": "TOBILLERO",
     "fabric": null
   },
   {
@@ -552,11 +663,15 @@
       "40/40/4044/editar/CRI_7383.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE",
     "fabric": null
   },
   {
@@ -571,11 +686,15 @@
       "40/40/4051/editar/CRI_7786.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PITILLO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PITILLO",
     "fabric": null
   },
   {
@@ -589,11 +708,15 @@
       "40/40/4052/editar/CRI_7512.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: MEDIO",
+      "Bota: CROPPED"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "MEDIO",
+    "bota": "CROPPED",
     "fabric": null
   },
   {
@@ -606,11 +729,15 @@
       "40/40/4056/editar/CRI_8618.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PITILLO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PITILLO",
     "fabric": null
   },
   {
@@ -622,11 +749,15 @@
       "40/40/4056 01/CRI_8611.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PITILLO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PITILLO",
     "fabric": null
   },
   {
@@ -641,11 +772,15 @@
       "40/40/4057/editar/CRI_7859.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE",
     "fabric": null
   },
   {
@@ -697,12 +832,54 @@
       "40/40/4066/editar/CRI_8852.png"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE",
     "fabric": null
+  },
+  {
+    "family": "4070-06",
+    "main_image": "40/40/4070 06 beige/CRI_8944-copia-web.jpg",
+    "gallery": [
+      "40/40/4070 06 beige/CRI_8944-copia-web.jpg",
+      "40/40/4070 06 beige/CRI_8949-copia-web.jpg",
+      "40/40/4070 06 beige/CRI_8971-copia-web.jpg"
+    ],
+    "variants": [],
+    "description": "JEAN · ALTO · PALAZZO",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PALAZZO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PALAZZO"
+  },
+  {
+    "family": "4070-38",
+    "main_image": "40/40/4070 38 ostra/CRI_8944-copia-web.jpg",
+    "gallery": [
+      "40/40/4070 38 ostra/CRI_8944-copia-web.jpg",
+      "40/40/4070 38 ostra/CRI_8949-copia-web.jpg",
+      "40/40/4070 38 ostra/CRI_8971-copia-web.jpg"
+    ],
+    "variants": [],
+    "description": "JEAN · ALTO · PALAZZO",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PALAZZO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PALAZZO"
   },
   {
     "family": "4963-00",

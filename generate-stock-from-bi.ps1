@@ -3,6 +3,8 @@
 #   - stock-data-catalogo-2.json   (Cole 40, 41 -> pagina cole-40-41)
 #   - stock-data-catalogo-43.json  (Cole 40, 41, 42, 43 -> index y cole-43)
 #   (Cole 44 queda manual, no se toca)
+# Despues corre conectar-fotos.js: los modelos 40-43 con stock y carpeta de fotos en el repo que no estan
+# en la pagina quedan conectados solos (foto web liviana + og + ficha en data-catalogo-4X.json).
 # Se ejecuta desde "ADECOM WEB\auto_build.bat" (tareas 8:20 / 14:20 / 17:20).
 # Excepciones opcionales: stock-overrides.json en la raiz del repo, formato
 #   { "4416-00": { "total": 60 } }  -> fuerza el total (y opcionalmente "sizes").
@@ -160,9 +162,45 @@ foreach ($t in $targets) {
     $changedFiles += $t.file
 }
 
+# --- Conectar fotos nuevas a la pagina (conectar-fotos.js) ---
+# Modelos con stock y carpeta de fotos que no se muestran: genera la foto web, la portada og y la ficha.
+# Imprime "CAMBIO <ruta>" solo por los archivos que el script escribio (nunca cambios hechos a mano).
+# Si falla, el stock se publica igual. Con -NoPush no se corre: no deja fotos ni fichas a medio publicar.
+Set-Location $repoPath
+$fotoFiles = @()
+$fotosNuevas = 0
+$pendientesFotos = Join-Path $repoPath '.conectar-fotos.pendiente.json'
+if ($NoPush) {
+    Write-Output "$(Get-Date -Format 'HH:mm:ss') -NoPush: no se conectan fotos nuevas"
+} elseif (Get-Command node -ErrorAction SilentlyContinue) {
+    try {
+        [Console]::OutputEncoding = [System.Text.Encoding]::UTF8   # node escribe UTF-8 (rutas y acentos)
+        $salida = @(& node (Join-Path $repoPath 'conectar-fotos.js') --apply --desde-sync)
+        # Al log van solo las secciones con novedades; la lista "con stock y sin carpeta" se repite en cada corrida y no aporta.
+        $seccion = ''
+        foreach ($l in $salida) {
+            $t = "$l"
+            if ($t.StartsWith('CAMBIO ')) { $fotoFiles += $t.Substring(7); continue }
+            if ($t -match '^(Fichas nuevas|C.digos corregidos|Fotos republicadas|Tipo/tiro/corte|Ignorados|Con stock y sin carpeta|Errores|Sin fotos nuevas)') {
+                $seccion = $Matches[1]
+                if ($seccion -notlike 'Con stock*') { Write-Output "$(Get-Date -Format 'HH:mm:ss') fotos: $t" }
+                continue
+            }
+            if ($seccion -ne '' -and $seccion -notlike 'Con stock*' -and $t.StartsWith('  ')) {
+                Write-Output "$(Get-Date -Format 'HH:mm:ss') fotos: $t"
+                if ($seccion -eq 'Fichas nuevas') { $fotosNuevas++ }
+            }
+        }
+    } catch { Write-Warning "conectar-fotos.js fallo, se publica solo el stock: $_" }
+} else {
+    Write-Warning "node no esta disponible: no se conectan fotos nuevas (solo stock)"
+}
+if ($fotoFiles.Count) { $changedFiles += $fotoFiles }
+
 # --- Git commit + push ---
 Set-Location $repoPath
-git add -- $changedFiles 2>&1 | Out-Null
+git add -- $changedFiles
+if ($LASTEXITCODE -ne 0) { Write-Output "$(Get-Date -Format 'HH:mm:ss') ERROR en git add (codigo $LASTEXITCODE)"; exit 1 }
 $status = git status --porcelain -- $changedFiles
 if (-not $status) {
     Write-Output "$(Get-Date -Format 'HH:mm:ss') Sin cambios, no se hizo push"
@@ -174,7 +212,13 @@ if ($NoPush) {
     exit 0
 }
 $msg = "auto: stock desde Z:\BI $(Get-Date -Format 'yyyy-MM-dd HH:mm')"
-git commit -m $msg -- $changedFiles 2>&1 | Out-Null
-git push origin main 2>&1 | Out-Null
-if ($LASTEXITCODE -eq 0) { Write-Output "$(Get-Date -Format 'HH:mm:ss') Push a Netlify OK" }
+if ($fotosNuevas -gt 0) { $msg += " + $fotosNuevas modelos con foto nueva en la pagina" }
+git commit -q -m $msg -- $changedFiles
+if ($LASTEXITCODE -ne 0) { Write-Output "$(Get-Date -Format 'HH:mm:ss') ERROR en git commit (codigo $LASTEXITCODE)"; exit 1 }
+git push -q origin main
+if ($LASTEXITCODE -eq 0) {
+    Write-Output "$(Get-Date -Format 'HH:mm:ss') Push a Netlify OK"
+    # Las fotos ya estan publicadas: la lista de pendientes se borra (si el push falla, la corrida siguiente las vuelve a subir)
+    if (Test-Path $pendientesFotos) { Remove-Item $pendientesFotos -Force -ErrorAction SilentlyContinue }
+}
 else { Write-Output "$(Get-Date -Format 'HH:mm:ss') ERROR en push (codigo $LASTEXITCODE)"; exit 1 }

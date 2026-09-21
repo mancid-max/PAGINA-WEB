@@ -4,3 +4,6 @@
 # SQL con datos de clientes (no subir a GitHub)
 crm-setup.sql
 clients-import.sql
+
+# Lista temporal de fotos/fichas pendientes de push (la borra generate-stock-from-bi.ps1)
+.conectar-fotos.pendiente.json

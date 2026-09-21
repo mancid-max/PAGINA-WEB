@@ -239,6 +239,47 @@
     "fabric": "New Glue"
   },
   {
+    "family": "4322-00",
+    "main_image": "43/4322/editar/Mohicano-50-web.jpg",
+    "gallery": [
+      "43/4322/editar/Mohicano-50-web.jpg",
+      "43/4322/editar/Mohicano-51-web.jpg",
+      "43/4322/editar/Mohicano-54-web.jpg",
+      "43/4322/editar/Mohicano-56-web.jpg",
+      "43/4322/editar/Mohicano-58-web.jpg"
+    ],
+    "variants": [],
+    "description": "JEAN · ALTO · FLARE",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE"
+  },
+  {
+    "family": "4322-01",
+    "main_image": "43/4322-01/editar/Mohicano-62-web.jpg",
+    "gallery": [
+      "43/4322-01/editar/Mohicano-62-web.jpg",
+      "43/4322-01/editar/Mohicano-68-web.jpg",
+      "43/4322-01/editar/Mohicano-69-web.jpg",
+      "43/4322-01/editar/Mohicano-74-web.jpg"
+    ],
+    "variants": [],
+    "description": "JEAN · ALTO · FLARE",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE"
+  },
+  {
     "family": "4322-02",
     "main_image": "43/4322-02/Mohicano-50.jpg",
     "gallery": [
@@ -251,9 +292,15 @@
     "description": "JEAN Â· CINTURA Â· FLARE",
     "characteristics": [
       "Tela: B2868V-3",
-      "TecnologÃ­a: Power Stretch"
+      "TecnologÃ­a: Power Stretch",
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
     ],
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE"
   },
   {
     "family": "4322-60",
@@ -319,6 +366,26 @@
     "tiro": "CINTURA",
     "bota": "FLARE",
     "fabric": "Ayla"
+  },
+  {
+    "family": "4325-00",
+    "main_image": "43/4325/editar/Mohicano-172-web.jpg",
+    "gallery": [
+      "43/4325/editar/Mohicano-172-web.jpg",
+      "43/4325/editar/Mohicano-174-web.jpg",
+      "43/4325/editar/Mohicano-176-web.jpg",
+      "43/4325/editar/Mohicano-177-copie-web.jpg"
+    ],
+    "variants": [],
+    "description": "JEAN · ALTO · WIDE LEG",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: WIDE LEG"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "WIDE LEG"
   },
   {
     "family": "4325-01",
@@ -421,6 +488,26 @@
     "fabric": "B2868V-3"
   },
   {
+    "family": "4336-00",
+    "main_image": "43/4336/CRI_7845-web.jpg",
+    "gallery": [
+      "43/4336/CRI_7845-web.jpg",
+      "43/4336/Copia-de-CRI_7864-web.jpg",
+      "43/4336/Copia-de-CRI_7888-web.jpg",
+      "43/4336/CRI_7853-web.jpg"
+    ],
+    "variants": [],
+    "description": "JEAN · ALTO · PITILLO",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PITILLO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PITILLO"
+  },
+  {
     "family": "4337-00",
     "main_image": "43/43/4337/editar/Mohicano-131.jpg",
     "gallery": [
@@ -495,6 +582,26 @@
     "fabric": "New Glue"
   },
   {
+    "family": "4348-00",
+    "main_image": "43/4348/editar/Mohicano-75-web.jpg",
+    "gallery": [
+      "43/4348/editar/Mohicano-75-web.jpg",
+      "43/4348/editar/Mohicano-79-web.jpg",
+      "43/4348/editar/Mohicano-81-web.jpg",
+      "43/4348/editar/Mohicano-86-web.jpg"
+    ],
+    "variants": [],
+    "description": "JEAN · ALTO · PITILLO",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PITILLO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PITILLO"
+  },
+  {
     "family": "4348-01",
     "main_image": "43/4348-01/Mohicano-89-.jpg",
     "gallery": [
@@ -509,7 +616,69 @@
     ],
     "tiro": "CINTURA",
     "bota": "PITILLO",
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN"
+  },
+  {
+    "family": "4348-60",
+    "main_image": "43/4348-60/Mohicano-88-web.jpg",
+    "gallery": [
+      "43/4348-60/Mohicano-88-web.jpg",
+      "43/4348-60/Mohicano-89-web.jpg",
+      "43/4348-60/Mohicano-90-web.jpg",
+      "43/4348-60/Mohicano-91-web.jpg",
+      "43/4348-60/Mohicano-92-web.jpg",
+      "43/4348-60/Mohicano-93-web.jpg"
+    ],
+    "variants": [],
+    "description": "JEAN · ALTO · PITILLO",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PITILLO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PITILLO"
+  },
+  {
+    "family": "4353-00",
+    "main_image": "43/4353/Mohicano0625-copia-web.jpg",
+    "gallery": [
+      "43/4353/Mohicano0625-copia-web.jpg",
+      "43/4353/Mohicano0633-copia-web.jpg"
+    ],
+    "variants": [],
+    "description": "JEAN · ALTO · FLARE",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE"
+  },
+  {
+    "family": "4355-00",
+    "main_image": "43/4355/editar/Mohicano-35-web.jpg",
+    "gallery": [
+      "43/4355/editar/Mohicano-35-web.jpg",
+      "43/4355/editar/Mohicano-40-web.jpg",
+      "43/4355/editar/Mohicano-43-web.jpg",
+      "43/4355/editar/Mohicano-44-web.jpg",
+      "43/4355/editar/Mohicano-48-web.jpg"
+    ],
+    "variants": [],
+    "description": "JEAN · ALTO · FLARE",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE"
   },
   {
     "family": "4356-01",
@@ -597,6 +766,28 @@
     "fabric": "YASMIN"
   },
   {
+    "family": "4361-48",
+    "main_image": "43/4361-48/editar/4361-web.jpg",
+    "gallery": [
+      "43/4361-48/editar/4361-web.jpg",
+      "43/4361-48/editar/Mohicano-1-web.jpg",
+      "43/4361-48/editar/Mohicano-9-web.jpg",
+      "43/4361-48/editar/Mohicano-10-copie-web.jpg",
+      "43/4361-48/editar/Mohicano-11-copie-web.jpg",
+      "43/4361-48/editar/Mohicano-14-web.jpg"
+    ],
+    "variants": [],
+    "description": "JEAN · ALTO · FLARE",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE"
+  },
+  {
     "family": "4361-67",
     "main_image": "43/4361-67/Copia de CRI_8303 copia.jpg",
     "gallery": [
@@ -616,6 +807,24 @@
     "tiro": "CINTURA",
     "bota": "FLARE",
     "fabric": "YASMIN"
+  },
+  {
+    "family": "4362-04",
+    "main_image": "43/4362-04/IMG_1419-web.jpg",
+    "gallery": [
+      "43/4362-04/IMG_1419-web.jpg",
+      "43/4362-04/12-web.jpg"
+    ],
+    "variants": [],
+    "description": "JEAN · ALTO · PITILLO",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PITILLO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PITILLO"
   },
   {
     "family": "4362-08",
@@ -752,7 +961,49 @@
     ],
     "tiro": "CINTURA",
     "bota": "RECTO",
-    "variants": []
+    "variants": [],
+    "tipo": "JEAN"
+  },
+  {
+    "family": "4366-06",
+    "main_image": "43/4366-06/editar/4366-web.jpg",
+    "gallery": [
+      "43/4366-06/editar/4366-web.jpg",
+      "43/4366-06/editar/Mohicano-98-web.jpg",
+      "43/4366-06/editar/Mohicano-102-web.jpg",
+      "43/4366-06/editar/Mohicano-103-web.jpg",
+      "43/4366-06/editar/Mohicano-106-web.jpg"
+    ],
+    "variants": [],
+    "description": "JEAN · ALTO · RECTO",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: RECTO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "RECTO"
+  },
+  {
+    "family": "4366-48",
+    "main_image": "43/4366-48/IMG_1397-web.jpg",
+    "gallery": [
+      "43/4366-48/IMG_1397-web.jpg",
+      "43/4366-48/IMG_1398-web.jpg",
+      "43/4366-48/Mohicano-89-web.jpg",
+      "43/4366-48/SAXC-web.jpg"
+    ],
+    "variants": [],
+    "description": "JEAN · ALTO · RECTO",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: RECTO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "RECTO"
   },
   {
     "family": "4371-00",
@@ -798,24 +1049,25 @@
     "fabric": ""
   },
   {
-    "family": "4380-02",
-    "main_image": "43/4380/IMG_2080.jpg",
+    "family": "4378-00",
+    "main_image": "43/4378/Copia-de-CRI_8232-web.jpg",
     "gallery": [
-      "43/4380/IMG_2080.jpg",
-      "43/4380/IMG_2081.jpg",
-      "43/4380/IMG_2082.jpg"
-    ],
-    "description": "JEAN / CINTURA / FLARE",
-    "characteristics": [
-      "Tipo: JEAN",
-      "Tiro: CINTURA",
-      "Bota: FLARE"
+      "43/4378/Copia-de-CRI_8232-web.jpg",
+      "43/4378/Copia-de-CRI_8236-web.jpg",
+      "43/4378/Copia-de-CRI_8243-web.jpg",
+      "43/4378/Copia-de-CRI_8244-web.jpg",
+      "43/4378/Copia-de-CRI_8249-web.jpg"
     ],
     "variants": [],
+    "description": "JEAN · ALTO · TOBILLERO",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: TOBILLERO"
+    ],
     "tipo": "JEAN",
-    "tiro": "CINTURA",
-    "bota": "FLARE",
-    "fabric": ""
+    "tiro": "ALTO",
+    "bota": "TOBILLERO"
   },
   {
     "family": "4380-00",
@@ -837,5 +1089,25 @@
     "tiro": "CINTURA",
     "bota": "WIDE LEG",
     "fabric": "OUTLANDER"
+  },
+  {
+    "family": "4380-02",
+    "main_image": "43/4380/IMG_2080.jpg",
+    "gallery": [
+      "43/4380/IMG_2080.jpg",
+      "43/4380/IMG_2081.jpg",
+      "43/4380/IMG_2082.jpg"
+    ],
+    "description": "JEAN / CINTURA / FLARE",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: CINTURA",
+      "Bota: FLARE"
+    ],
+    "variants": [],
+    "tipo": "JEAN",
+    "tiro": "CINTURA",
+    "bota": "FLARE",
+    "fabric": ""
   }
 ]

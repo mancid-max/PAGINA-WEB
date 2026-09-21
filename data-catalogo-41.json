@@ -29,11 +29,15 @@
       "41/41 toda/4106/Mohicano2802.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PALAZZO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PALAZZO",
     "fabric": null
   },
   {
@@ -47,11 +51,15 @@
       "41/41 toda/4109/editar/Moicano-385.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PALAZZO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PALAZZO",
     "fabric": null
   },
   {
@@ -66,11 +74,15 @@
       "41/41 toda/4110/Mohicano1883.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE",
     "fabric": null
   },
   {
@@ -85,11 +97,15 @@
       "41/41 toda/4113/Mohicano1989.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE",
     "fabric": null
   },
   {
@@ -104,11 +120,15 @@
       "41/41 toda/4113-01/editar/Moicano-498.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE",
     "fabric": null
   },
   {
@@ -123,11 +143,15 @@
       "41/41 toda/4116/editar/Moicano-598 copie.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: BAJO",
+      "Bota: OXFORD"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "BAJO",
+    "bota": "OXFORD",
     "fabric": null
   },
   {
@@ -142,11 +166,15 @@
       "41/41 toda/4124/editar/Moicano-359.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: OXFORD"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "OXFORD",
     "fabric": null
   },
   {
@@ -160,11 +188,15 @@
       "41/41 toda/4125/editar/IMG_8556.JPG"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PALAZZO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PALAZZO",
     "fabric": null
   },
   {
@@ -179,11 +211,15 @@
       "41/41 toda/4130/Mohicano2068.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PITILLO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PITILLO",
     "fabric": null
   },
   {
@@ -198,11 +234,15 @@
       "41/41 toda/4135/Mohicano2180.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: MEDIO",
+      "Bota: TOBILLERO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "MEDIO",
+    "bota": "TOBILLERO",
     "fabric": null
   },
   {
@@ -215,11 +255,15 @@
       "41/41 toda/4136/editar/Moicano-164 copie.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: MEDIO",
+      "Bota: TOBILLERO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "MEDIO",
+    "bota": "TOBILLERO",
     "fabric": null
   },
   {
@@ -234,11 +278,15 @@
       "41/41 toda/4137/editar/Moicano-285 copie.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PITILLO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PITILLO",
     "fabric": null
   },
   {
@@ -253,11 +301,15 @@
       "41/41 toda/4147/Mohicano2260.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PITILLO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PITILLO",
     "fabric": null
   },
   {
@@ -327,11 +379,15 @@
       "41/41 toda/4147-60/editar/IMG_8515.JPG"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PITILLO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PITILLO",
     "fabric": null
   },
   {
@@ -365,11 +421,15 @@
       "41/41 toda/4149-60/Mohicano2022.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: MEDIO",
+      "Bota: TOBILLERO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "MEDIO",
+    "bota": "TOBILLERO",
     "fabric": null
   },
   {
@@ -402,11 +462,15 @@
       "41/41 toda/4155/editar/Moicano-111.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: MEDIO",
+      "Bota: RECTO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "MEDIO",
+    "bota": "RECTO",
     "fabric": null
   },
   {
@@ -421,11 +485,15 @@
       "41/41 toda/4157/Mohicano2289.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PITILLO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PITILLO",
     "fabric": null
   },
   {
@@ -438,11 +506,15 @@
       "41/41 toda/4165/editar/Moicano-646.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: BAJO",
+      "Bota: PITILLO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "BAJO",
+    "bota": "PITILLO",
     "fabric": null
   },
   {
@@ -457,11 +529,15 @@
       "41/41 toda/4166/Mohicano2211.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PITILLO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PITILLO",
     "fabric": null
   },
   {
@@ -473,11 +549,15 @@
       "41/41 toda/4168/editar/Moicano-246 copie.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: TOBILLERO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "TOBILLERO",
     "fabric": null
   },
   {
@@ -509,11 +589,15 @@
       "41/41 toda/4169/Mohicano2092.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE",
     "fabric": null
   },
   {
@@ -528,11 +612,15 @@
       "41/41 toda/4169-01/editar/IMG_8545.JPG"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE",
     "fabric": null
   },
   {
@@ -638,11 +726,15 @@
       "41/41 toda/4177-08/Mohicano2748.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE",
     "fabric": null
   },
   {
@@ -731,11 +823,15 @@
       "41/41 toda/4189/editar/Moicano-334 copie.jpg"
     ],
     "description": "",
-    "characteristics": [],
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: RECTO"
+    ],
     "variants": [],
-    "tipo": null,
-    "tiro": null,
-    "bota": null,
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "RECTO",
     "fabric": null
   },
   {

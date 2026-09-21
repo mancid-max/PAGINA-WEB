@@ -12,7 +12,14 @@
       "42/4201/Mohicano0055.jpg"
     ],
     "description": "Modelo 4201-00",
-    "characteristics": []
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PITILLO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PITILLO"
   },
   {
     "family": "4202-00",
@@ -25,7 +32,14 @@
       "42/4202/Copia de CRI_7828.jpg"
     ],
     "description": "Modelo 4202-00",
-    "characteristics": []
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: RECTO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "RECTO"
   },
   {
     "family": "4204-00",
@@ -51,8 +65,37 @@
       "42/4204-02/Mohicano0701-web.jpg"
     ],
     "description": "Modelo 4204-00",
-    "characteristics": [],
-    "main_image": "42/4204-02/Mohicano0691-web.jpg"
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: MEDIO",
+      "Bota: FLARE"
+    ],
+    "main_image": "42/4204-02/Mohicano0691-web.jpg",
+    "tipo": "JEAN",
+    "tiro": "MEDIO",
+    "bota": "FLARE"
+  },
+  {
+    "family": "4204-02",
+    "main_image": "42/4204-02/Mohicano0691-web.jpg",
+    "gallery": [
+      "42/4204-02/Mohicano0691-web.jpg",
+      "42/4204-02/Mohicano0693-web.jpg",
+      "42/4204-02/Mohicano0698-web.jpg",
+      "42/4204-02/Mohicano0701-web.jpg",
+      "42/4204-02/Mohicano0707-copie-web.jpg",
+      "42/4204-02/Mohicano0713-web.jpg"
+    ],
+    "variants": [],
+    "description": "JEAN · MEDIO · FLARE",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: MEDIO",
+      "Bota: FLARE"
+    ],
+    "tipo": "JEAN",
+    "tiro": "MEDIO",
+    "bota": "FLARE"
   },
   {
     "family": "4205-00",
@@ -77,8 +120,37 @@
       "42/4205/Copia-de-CRI_7905-web.jpg"
     ],
     "description": "Modelo 4205-00",
-    "characteristics": [],
-    "main_image": "42/4205/Copia-de-CRI_7893-web.jpg"
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: OXFORD"
+    ],
+    "main_image": "42/4205/Copia-de-CRI_7893-web.jpg",
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "OXFORD"
+  },
+  {
+    "family": "4205-01",
+    "main_image": "42/4205-01/Mohicano0559-web.jpg",
+    "gallery": [
+      "42/4205-01/Mohicano0559-web.jpg",
+      "42/4205-01/Mohicano0566-web.jpg",
+      "42/4205-01/Mohicano0569-web.jpg",
+      "42/4205-01/Mohicano0572-copie-web.jpg",
+      "42/4205-01/Mohicano0573-copie-web.jpg",
+      "42/4205-01/Mohicano0581-copie-web.jpg"
+    ],
+    "variants": [],
+    "description": "JEAN · MEDIO · OXFORD",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: MEDIO",
+      "Bota: OXFORD"
+    ],
+    "tipo": "JEAN",
+    "tiro": "MEDIO",
+    "bota": "OXFORD"
   },
   {
     "family": "4206-00",
@@ -91,7 +163,35 @@
       "42/4206/Mohicano0196 copie.jpg"
     ],
     "description": "Modelo 4206-00",
-    "characteristics": []
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PITILLO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PITILLO"
+  },
+  {
+    "family": "4208-00",
+    "main_image": "42/4208/editar/Mohicano0060-web.jpg",
+    "gallery": [
+      "42/4208/editar/Mohicano0060-web.jpg",
+      "42/4208/editar/Mohicano0088-web.jpg",
+      "42/4208/editar/Mohicano0090-web.jpg",
+      "42/4208/editar/Mohicano0096-copie-web.jpg",
+      "42/4208/editar/Mohicano0100-web.jpg"
+    ],
+    "variants": [],
+    "description": "JEAN · ALTO · FLARE",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE"
   },
   {
     "family": "4209-00",
@@ -105,7 +205,14 @@
       "42/4209/Copia de CRI_8103.jpg"
     ],
     "description": "Modelo 4209-00",
-    "characteristics": []
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: MEDIO",
+      "Bota: PITILLO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "MEDIO",
+    "bota": "PITILLO"
   },
   {
     "family": "4211-00",
@@ -119,7 +226,14 @@
       "42/4211/Mohicano0121 copie.jpg"
     ],
     "description": "Modelo 4211-00",
-    "characteristics": []
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE"
   },
   {
     "family": "4214-00",
@@ -142,8 +256,35 @@
       "42/4214-01/Mohicano0366-copie-web.jpg"
     ],
     "description": "Modelo 4214-00",
-    "characteristics": [],
-    "main_image": "42/4214-01/Mohicano0342-web.jpg"
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: OXFORD"
+    ],
+    "main_image": "42/4214-01/Mohicano0342-web.jpg",
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "OXFORD"
+  },
+  {
+    "family": "4214-01",
+    "main_image": "42/4214-01/Mohicano0342-web.jpg",
+    "gallery": [
+      "42/4214-01/Mohicano0342-web.jpg",
+      "42/4214-01/Mohicano0349-web.jpg",
+      "42/4214-01/Mohicano0360-web.jpg",
+      "42/4214-01/Mohicano0366-copie-web.jpg"
+    ],
+    "variants": [],
+    "description": "JEAN · ALTO · OXFORD",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: OXFORD"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "OXFORD"
   },
   {
     "family": "4218-01",
@@ -157,7 +298,14 @@
       "42/4218-01/Mohicano0654.jpg"
     ],
     "description": "Modelo 4218-01",
-    "characteristics": []
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE"
   },
   {
     "family": "4219-00",
@@ -172,7 +320,14 @@
       "42/4219/Mohicano0423.jpg"
     ],
     "description": "Modelo 4219-00",
-    "characteristics": []
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PITILLO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PITILLO"
   },
   {
     "family": "4220-00",
@@ -187,7 +342,34 @@
       "42/4220/Copia de CRI_7490.jpg"
     ],
     "description": "Modelo 4220-00",
-    "characteristics": []
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PITILLO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PITILLO"
+  },
+  {
+    "family": "4221-90",
+    "main_image": "42/4221-90/Mohicano0010-copie-web.jpg",
+    "gallery": [
+      "42/4221-90/Mohicano0010-copie-web.jpg",
+      "42/4221-90/Mohicano0015-web.jpg",
+      "42/4221-90/Mohicano0017-copie-web.jpg",
+      "42/4221-90/Mohicano0019-copie-web.jpg"
+    ],
+    "variants": [],
+    "description": "JEAN · ALTO · TOBILLERO",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: TOBILLERO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "TOBILLERO"
   },
   {
     "family": "4222-00",
@@ -201,10 +383,17 @@
       "42/4222/Mohicano0165 copie.jpg"
     ],
     "description": "Modelo 4222-00",
-    "characteristics": []
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: BAJO",
+      "Bota: PITILLO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "BAJO",
+    "bota": "PITILLO"
   },
   {
-    "family": "4223",
+    "family": "4223-00",
     "variants": [],
     "main_image": "42/4223/Mohicano0437.jpg",
     "gallery": [
@@ -215,7 +404,57 @@
       "42/4223/Mohicano0459 copie.jpg"
     ],
     "description": "Modelo 4223",
-    "characteristics": []
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: MEDIO",
+      "Bota: FLARE"
+    ],
+    "tipo": "JEAN",
+    "tiro": "MEDIO",
+    "bota": "FLARE"
+  },
+  {
+    "family": "4224-00",
+    "main_image": "42/4224/Mohicano0479-copie-web.jpg",
+    "gallery": [
+      "42/4224/Mohicano0479-copie-web.jpg",
+      "42/4224/Mohicano0485-web.jpg",
+      "42/4224/Mohicano0489-web.jpg",
+      "42/4224/Mohicano0495-copie-web.jpg",
+      "42/4224/Mohicano0500-copie-web.jpg"
+    ],
+    "variants": [],
+    "description": "JEAN · MEDIO · OXFORD",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: MEDIO",
+      "Bota: OXFORD"
+    ],
+    "tipo": "JEAN",
+    "tiro": "MEDIO",
+    "bota": "OXFORD"
+  },
+  {
+    "family": "4224-01",
+    "main_image": "42/4224-01 gravillado/Mohicano0530-web.jpg",
+    "gallery": [
+      "42/4224-01 gravillado/Mohicano0530-web.jpg",
+      "42/4224-01 gravillado/Mohicano0537-web.jpg",
+      "42/4224-01 gravillado/Mohicano0540-web.jpg",
+      "42/4224-01 gravillado/Mohicano0542-web.jpg",
+      "42/4224-01 gravillado/Mohicano0545-copie-web.jpg",
+      "42/4224-01 gravillado/Mohicano0548-web.jpg"
+    ],
+    "variants": [],
+    "description": "JEAN · MEDIO · OXFORD",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: MEDIO",
+      "Bota: OXFORD"
+    ],
+    "tipo": "JEAN",
+    "tiro": "MEDIO",
+    "bota": "OXFORD"
   },
   {
     "family": "4225-00",
@@ -244,7 +483,14 @@
       "42/4226-01/Copia de CRI_7762.jpg"
     ],
     "description": "Modelo 4226-01",
-    "characteristics": []
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: MEDIO",
+      "Bota: PITILLO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "MEDIO",
+    "bota": "PITILLO"
   },
   {
     "family": "4227-00",
@@ -271,10 +517,38 @@
       "42/4227/Copia de CRI_7443.jpg"
     ],
     "description": "Modelo 4227-00",
-    "characteristics": []
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: TOBILLERO RECTO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "TOBILLERO RECTO"
   },
   {
-    "family": "4228",
+    "family": "4227-01",
+    "main_image": "42/4227-01/Copia-de-CRI_7538-web.jpg",
+    "gallery": [
+      "42/4227-01/Copia-de-CRI_7538-web.jpg",
+      "42/4227-01/Copia-de-CRI_7544-web.jpg",
+      "42/4227-01/Copia-de-CRI_7548-web.jpg",
+      "42/4227-01/Copia-de-CRI_7554-web.jpg",
+      "42/4227-01/Copia-de-CRI_7558-web.jpg"
+    ],
+    "variants": [],
+    "description": "JEAN · ALTO · TOBILLERO RECTO",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: TOBILLERO RECTO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "TOBILLERO RECTO"
+  },
+  {
+    "family": "4228-00",
     "variants": [],
     "main_image": "42/4228/Mohicano0372.jpg",
     "gallery": [
@@ -285,35 +559,56 @@
       "42/4228/Mohicano0394 copie.jpg"
     ],
     "description": "Modelo 4228",
-    "characteristics": []
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: MEDIO",
+      "Bota: FLARE"
+    ],
+    "tipo": "JEAN",
+    "tiro": "MEDIO",
+    "bota": "FLARE"
   },
   {
-    "family": "4229",
+    "family": "4229-00",
     "variants": [],
-    "main_image": "42/4229/Copia de CRI_7654.jpg",
+    "main_image": "42/4229/CRI_7649.jpg",
     "gallery": [
+      "42/4229/CRI_7649.jpg",
       "42/4229/Copia de CRI_7654.jpg",
       "42/4229/Copia de CRI_7657.jpg",
       "42/4229/Copia de CRI_7674.jpg",
-      "42/4229/Copia de CRI_7676.jpg",
-      "42/4229/CRI_7649.jpg"
+      "42/4229/Copia de CRI_7676.jpg"
     ],
     "description": "Modelo 4229",
-    "characteristics": []
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PITILLO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PITILLO"
   },
   {
-    "family": "4232",
+    "family": "4232-00",
     "variants": [],
-    "main_image": "42/4232 hacer flare/Copia de CRI_7351.jpg",
+    "main_image": "42/4232 hacer flare/CRI_7336.jpg",
     "gallery": [
-      "42/4232 hacer flare/Copia de CRI_7351.jpg",
       "42/4232 hacer flare/CRI_7336.jpg",
+      "42/4232 hacer flare/Copia de CRI_7351.jpg",
       "42/4232 hacer flare/CRI_7339.jpg",
       "42/4232 hacer flare/CRI_7346.jpg",
       "42/4232 hacer flare/CRI_7349.jpg"
     ],
     "description": "Modelo 4232",
-    "characteristics": []
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: OXFORD"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "OXFORD"
   },
   {
     "family": "4233-08",
@@ -327,7 +622,14 @@
       "42/4233-08/Copia de CRI_8474.jpg"
     ],
     "description": "Modelo 4233-08",
-    "characteristics": []
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: TOBILLERO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "TOBILLERO"
   },
   {
     "family": "4233-16",
@@ -340,7 +642,34 @@
       "42/4233-16/Copia de CRI_8411.jpg"
     ],
     "description": "Modelo 4233-16",
-    "characteristics": []
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: TOBILLERO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "TOBILLERO"
+  },
+  {
+    "family": "4233-48",
+    "main_image": "42/4233-48/Copia-de-CRI_8426-web.jpg",
+    "gallery": [
+      "42/4233-48/Copia-de-CRI_8426-web.jpg",
+      "42/4233-48/Copia-de-CRI_8430-web.jpg",
+      "42/4233-48/Copia-de-CRI_8438-web.jpg",
+      "42/4233-48/Copia-de-CRI_8440-web.jpg"
+    ],
+    "variants": [],
+    "description": "JEAN · ALTO · TOBILLERO",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: TOBILLERO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "TOBILLERO"
   },
   {
     "family": "4234-04",
@@ -351,7 +680,14 @@
       "42/4234- 04/Copia de CRI_8309.jpg"
     ],
     "description": "Modelo 4234-04",
-    "characteristics": []
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE"
   },
   {
     "family": "4234-08",
@@ -364,7 +700,14 @@
       "42/4234-08/Copia de CRI_8290.jpg"
     ],
     "description": "Modelo 4234-08",
-    "characteristics": []
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE"
   },
   {
     "family": "4234-09",
@@ -377,7 +720,14 @@
       "42/4234-09/CRI_8365.jpg"
     ],
     "description": "Modelo 4234-09",
-    "characteristics": []
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE"
   },
   {
     "family": "4234-16",
@@ -390,7 +740,14 @@
       "42/4234-16/Copia de CRI_8350.jpg"
     ],
     "description": "Modelo 4234-16",
-    "characteristics": []
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: FLARE"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "FLARE"
   },
   {
     "family": "4235-00",
@@ -404,7 +761,14 @@
       "42/4235/Copia de CRI_8502.jpg"
     ],
     "description": "Modelo 4235-00",
-    "characteristics": []
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PITILLO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PITILLO"
   },
   {
     "family": "4236-00",
@@ -418,7 +782,57 @@
       "42/4236/Copia de CRI_8593.jpg"
     ],
     "description": "Modelo 4236-00",
-    "characteristics": []
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PALAZZO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PALAZZO"
+  },
+  {
+    "family": "4238-00",
+    "main_image": "42/4238/Copia-de-CRI_7209-web.jpg",
+    "gallery": [
+      "42/4238/Copia-de-CRI_7209-web.jpg",
+      "42/4238/Copia-de-CRI_7210-web.jpg",
+      "42/4238/Copia-de-CRI_7214-web.jpg",
+      "42/4238/Copia-de-CRI_7215-web.jpg",
+      "42/4238/CRI_7203-web.jpg"
+    ],
+    "variants": [],
+    "description": "JEAN · ALTO · PALAZZO",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PALAZZO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PALAZZO"
+  },
+  {
+    "family": "4242-00",
+    "main_image": "42/4242/Mohicano0308-web.jpg",
+    "gallery": [
+      "42/4242/Mohicano0308-web.jpg",
+      "42/4242/Mohicano0310-copie-web.jpg",
+      "42/4242/Mohicano0317-web.jpg",
+      "42/4242/Mohicano0321-web.jpg",
+      "42/4242/Mohicano0329-web.jpg",
+      "42/4242/Mohicano0338-web.jpg"
+    ],
+    "variants": [],
+    "description": "JEAN · ALTO · PALAZZO",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PALAZZO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PALAZZO"
   },
   {
     "family": "4243-00",
@@ -431,7 +845,14 @@
       "42/4243/Copia de CRI_8628.jpg"
     ],
     "description": "Modelo 4243-00",
-    "characteristics": []
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PITILLO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PITILLO"
   },
   {
     "family": "4245-00",
@@ -444,7 +865,14 @@
       "42/4245/CRI_7853.jpg"
     ],
     "description": "Modelo 4245-00",
-    "characteristics": []
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PITILLO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PITILLO"
   },
   {
     "family": "4248-01",
@@ -458,6 +886,34 @@
       "42/4248-01/Copia de CRI_8249.jpg"
     ],
     "description": "Modelo 4248-01",
-    "characteristics": []
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: RECTO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "RECTO"
+  },
+  {
+    "family": "4249-00",
+    "main_image": "42/4249/editar/Mohicano-21-web.jpg",
+    "gallery": [
+      "42/4249/editar/Mohicano-21-web.jpg",
+      "42/4249/editar/Mohicano-26-copie-web.jpg",
+      "42/4249/editar/Mohicano-27-web.jpg",
+      "42/4249/editar/Mohicano-30-web.jpg",
+      "42/4249/editar/Mohicano-33-copie-web.jpg"
+    ],
+    "variants": [],
+    "description": "JEAN · ALTO · PALAZZO",
+    "characteristics": [
+      "Tipo: JEAN",
+      "Tiro: ALTO",
+      "Bota: PALAZZO"
+    ],
+    "tipo": "JEAN",
+    "tiro": "ALTO",
+    "bota": "PALAZZO"
   }
 ]
