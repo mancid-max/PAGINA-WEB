@@ -3091,14 +3091,12 @@ function renderZoomGallery() {
   actualizarContadorFotos();
 }
 
-/* Contador "1 / 4" en el modal y en el visor grande; pasar de foto deslizando o con flechas */
+/* Contador "1 / 4" solo en el visor grande (ahí se pasa de foto con flechas, teclado o deslizando).
+   En el modal no se muestra: la imagen principal no navega y el número no hacía nada. */
 function actualizarContadorFotos() {
   const n = imagenesModalActual.length;
-  const texto = n > 1 ? `${imagenModalIndex + 1} / ${n}` : "";
-  const c1 = document.getElementById("viewerCounter");
   const c2 = document.getElementById("imageZoomCounter");
-  if (c1) { c1.textContent = n > 1 ? `1 / ${n}` : ""; c1.hidden = n < 2; }
-  if (c2) { c2.textContent = texto; c2.hidden = n < 2; }
+  if (c2) { c2.textContent = n > 1 ? `${imagenModalIndex + 1} / ${n}` : ""; c2.hidden = n < 2; }
 }
 function fotoZoomSiguiente(d) {
   const n = imagenesModalActual.length;
