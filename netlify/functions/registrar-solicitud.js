@@ -8,7 +8,7 @@
         { tipo, texto, contexto?, rut?, nombre? }
         Autorización: el lead existe en Nexor y está en el workflow de Sofía (igual que guardar-cliente),
         o header X-Api-Key = NEXOR_ORDER_KEY.
-   GET  /.netlify/functions/registrar-solicitud?clave=<NEXOR_ORDER_KEY>[&estado=pendiente|resuelta|todas]
+   GET  /.netlify/functions/registrar-solicitud[?estado=pendiente|resuelta|todas]  (header X-Api-Key = NEXOR_ORDER_KEY)
         → lista para el informe privado de pendientes (pendientes-catalogo.js).
    → { ok, id, mensaje } */
 const SUPABASE_URL = (process.env.SUPABASE_URL || "").replace(/\/$/, "");
@@ -51,7 +51,7 @@ async function leadDeNexor(leadId) {
 exports.handler = async (event) => {
   const q = event.queryStringParameters || {};
   const apiKey = event.headers["x-api-key"] || event.headers["X-Api-Key"] || "";
-  const conClave = !!ORDER_KEY && (apiKey === ORDER_KEY || String(q.clave || "") === ORDER_KEY);
+  const conClave = !!ORDER_KEY && apiKey === ORDER_KEY; /* siempre por header, nunca en la URL */
   if (!SUPABASE_URL || !SERVICE_KEY) return json({ ok: false, mensaje: "Falta configuración de Supabase." }, 500);
 
   /* Listado para el informe privado (solo con la clave). */

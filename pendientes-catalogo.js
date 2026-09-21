@@ -66,7 +66,7 @@ async function leerSolicitudes() {
   try { clave = String(JSON.parse(fs.readFileSync(path.join(process.env.USERPROFILE || process.env.HOME, ".mohicano", "api.json"), "utf8")).order_key || "").trim(); } catch (_) {}
   if (!clave) return { error: "sin clave local (%USERPROFILE%\\.mohicano\\api.json)", lista: [] };
   try {
-    const r = await fetch("https://mohicanojeans.netlify.app/.netlify/functions/registrar-solicitud?estado=pendiente&clave=" + encodeURIComponent(clave));
+    const r = await fetch("https://mohicanojeans.netlify.app/.netlify/functions/registrar-solicitud?estado=pendiente", { headers: { "X-Api-Key": clave } });
     const j = await r.json();
     if (!j.ok) return { error: j.mensaje || ("HTTP " + r.status), lista: [] };
     return { error: null, lista: j.solicitudes || [] };

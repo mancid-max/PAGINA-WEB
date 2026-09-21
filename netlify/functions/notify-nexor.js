@@ -37,13 +37,27 @@ async function textoAyuda(body) {
 
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") return { statusCode: 405, body: "Method Not Allowed" };
-  const KEY = (process.env.NEXOR_NOTIFY_KEY || "").trim();
-  if (KEY) {
-    const h = event.headers || {};
-    if ((h["x-api-key"] || h["X-Api-Key"] || "").trim() !== KEY) return { statusCode: 401, body: "No autorizado" };
-  }
   let body;
   try { body = JSON.parse(event.body || "{}"); } catch { return { statusCode: 400, body: "Bad JSON" }; }
+  /* Autorización: header X-Api-Key = NEXOR_NOTIFY_KEY si está configurada; si no, el lead_id debe ser un lead
+     real de Nexor (las Cloud Functions siempre lo mandan; un uuid no se adivina). Nunca queda abierto. */
+  const KEY = (process.env.NEXOR_NOTIFY_KEY || "").trim();
+  const h = event.headers || {};
+  const conClave = !!KEY && (h["x-api-key"] || h["X-Api-Key"] || "").trim() === KEY;
+  if (!conClave) {
+    const API = (process.env.NEXOR_API_KEY || "").trim();
+    const lid = String(body.lead_id || "");
+    let leadReal = false;
+    if (API && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(lid)) {
+      try {
+        const r = await fetch(`https://api.getnexor.ai/api/public/leads/${lid}`, { headers: { "X-API-Key": API } });
+        const j = r.ok ? await r.json().catch(() => null) : null;
+        const l = j && (j.lead || j);
+        leadReal = !!(l && String(l.id || "").toLowerCase() === lid.toLowerCase());
+      } catch (_) {}
+    }
+    if (!leadReal) return { statusCode: 401, body: "No autorizado" };
+  }
   let texto = String(body.texto || "").trim();
   if (body.tipo === "nexor_ayuda" && /^[0-9a-f-]{36}$/i.test(String(body.lead_id || ""))) {
     /* El evento de cambio de estado de Nexor no trae los datos del lead: se completan desde su API */
