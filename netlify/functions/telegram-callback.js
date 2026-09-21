@@ -142,9 +142,10 @@ exports.handler = async (event) => {
     } catch (_) { filas = null; }
     if (filas === null) { await responder("No pude marcarla en la base; intenta de nuevo"); return ok({ error: "supabase" }); }
     if (!filas.length) { await responder("Esa solicitud ya estaba resuelta"); return ok({ sin_cambio: "ya resuelta" }); }
-    const nuevo = `${texto}\n\n✅ Resuelta · ${persona} · ${hora}`;
-    const r = await tg("editMessageText", { chat_id: chatId, message_id: messageId, text: nuevo.slice(0, LIMITE_TG), disable_web_page_preview: true, reply_markup: { inline_keyboard: [] } });
-    await responder(r.ok ? "Solicitud marcada como resuelta" : "Marcada en la base, pero no pude actualizar el mensaje");
+    /* El aviso original tiene formato HTML (negrita, link de WhatsApp); editar el texto lo perdería. Se quita el botón y se responde debajo. */
+    const r = await tg("editMessageReplyMarkup", { chat_id: chatId, message_id: messageId, reply_markup: { inline_keyboard: [] } });
+    await tg("sendMessage", { chat_id: chatId, reply_to_message_id: messageId, text: `✅ Resuelta · ${persona} · ${hora}` });
+    await responder("Solicitud marcada como resuelta");
     return ok({ resuelta: true, por: persona, editado: !!r.ok });
   }
 

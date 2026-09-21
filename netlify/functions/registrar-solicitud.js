@@ -88,7 +88,7 @@ exports.handler = async (event) => {
   try {
     if (fila.lead_id) {
       const desde = new Date(Date.now() - 24 * 3600e3).toISOString();
-      const rep = await sb(`/rest/v1/solicitudes?select=id&lead_id=eq.${encodeURIComponent(fila.lead_id)}&texto=eq.${encodeURIComponent(texto)}&created_at=gte.${desde}&limit=1`);
+      const rep = await sb(`/rest/v1/solicitudes?select=id&lead_id=eq.${encodeURIComponent(fila.lead_id)}&estado=eq.pendiente&texto=eq.${encodeURIComponent(JSON.stringify(texto))}&created_at=gte.${desde}&limit=1`);
       if (rep && rep.length) return json({ ok: true, id: rep[0].id, repetida: true, mensaje: "Esa solicitud ya estaba registrada; no la repitas, dile al cliente que ya quedó anotada." });
     }
   } catch (_) {}
@@ -98,9 +98,18 @@ exports.handler = async (event) => {
     guardada = ((await sb(`/rest/v1/solicitudes`, { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify(fila) })) || [])[0] || null;
   } catch (e) { return json({ ok: false, mensaje: `No pude registrar la solicitud: ${e.message}` }, 500); }
 
-  /* Aviso al grupo Ayuda con botón "Resuelta". Si Telegram falla, la solicitud igual queda guardada. */
+  /* Aviso al grupo Ayuda con botón "Resuelta". Si Telegram falla, la solicitud igual queda guardada.
+     Tope: hasta 5 avisos por lead al día; el resto se guarda sin avisar (un cliente no puede inundar el grupo). */
   let telegram = false;
-  if (TOKEN && CHAT_AYUDA && guardada) {
+  let avisosHoy = 0;
+  try {
+    if (fila.lead_id) {
+      const desde = new Date(Date.now() - 24 * 3600e3).toISOString();
+      const n = await sb(`/rest/v1/solicitudes?select=id&lead_id=eq.${encodeURIComponent(fila.lead_id)}&created_at=gte.${desde}&limit=20`);
+      avisosHoy = (n || []).length;
+    }
+  } catch (_) {}
+  if (TOKEN && CHAT_AYUDA && guardada && avisosHoy <= 5) {
     const lineas = [
       `🙋 <b>Solicitud de cliente</b> · ${esc(ETIQUETA[tipo] || tipo)}`,
       `Pidió: ${esc(texto)}`,

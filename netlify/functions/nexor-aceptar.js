@@ -97,7 +97,7 @@ exports.handler = async (event) => {
       /* No se archiva: queda en "No mayorista" con Sofía apagada. Si vuelve a escribir, la Cloud Function
          "Rechazado vuelve a escribir" (message.received) manda el aviso a Telegram de nuevo, con los mismos botones. */
       await nx("PATCH", `/leads/${lead}`, { metadata: { filtro: "rechazado", rechazado_en: new Date().toISOString() } });
-      await nx("POST", `/leads/tags`, { lead_id: lead, tags: Array.from(new Set(d.tags.filter((x) => x !== "desconocido").concat("rechazado"))) }).catch(() => {});
+      await nx("POST", `/leads/tags`, { lead_id: lead, tags: Array.from(new Set(d.tags.filter((x) => x !== "desconocido" && x !== "mayorista").concat("rechazado"))) }).catch(() => {});
       await nx("POST", `/leads/${lead}/status`, { status_key: "no_mayorista", workflow_id: WORKFLOW_B2B, reason: "Rechazado desde Telegram" }).catch(() => {});
       return pagina("Lead rechazado", `${ficha}<p>Sofía no le responderá. Si vuelve a escribir, te llega el aviso de nuevo.</p>`);
     }
@@ -105,15 +105,17 @@ exports.handler = async (event) => {
        no la suelta. Primero el metadata (filtro=aceptado) y DESPUÉS la etiqueta "mayorista": la Cloud Function
        "Reactivar Sofía al aceptar mayorista" (lead.tag_added) cierra esa corrida y abre una nueva con la IA activa. */
     await nx("PATCH", `/leads/${lead}`, { metadata: { filtro: "aceptado", aceptado_en: new Date().toISOString(), lista_blanca: true, segmento: "b2b" } });
-    const tags = Array.from(new Set(d.tags.filter((x) => x !== "desconocido" && x !== "rechazado").concat("mayorista")));
-    await nx("POST", `/leads/tags`, { lead_id: lead, tags });
+    const base = d.tags.filter((x) => x !== "desconocido" && x !== "rechazado" && x !== "mayorista" && x !== "reactivar-ia");
+    /* Si ya tenía "mayorista" (segundo intento), se quita y se vuelve a poner: la Cloud Function se dispara con lead.tag_added. */
+    if (d.tags.includes("mayorista")) await nx("POST", `/leads/tags`, { lead_id: lead, tags: base }).catch(() => {});
+    await nx("POST", `/leads/tags`, { lead_id: lead, tags: base.concat("mayorista") });
     /* Por si la corrida nueva no alcanzó a crearse: la vieja queda en Lead creado y reanudada (no hace daño si ya se cerró). */
     await nx("POST", `/leads/${lead}/status`, { status_key: "core_new", workflow_id: WORKFLOW_B2B, reason: "Aceptado como mayorista desde Telegram" }).catch(() => {});
     await nx("POST", `/leads/${lead}/automation/resume`, { workflow_id: WORKFLOW_B2B, resume_cadence: true }).catch(() => {});
     /* Confirmar que la IA quedó activa (la función tarda 1-3 s); si no, avisar en la página. */
     let ia = "";
-    for (let i = 0; i < 6 && ia !== "active"; i++) {
-      await new Promise((r) => setTimeout(r, 1500));
+    for (let i = 0; i < 3 && ia !== "active"; i++) { /* 3 × 1,2 s: cabe en los 10 s de la función */
+      await new Promise((r) => setTimeout(r, 1200));
       ia = String(((await nx("GET", `/leads/${lead}/is_paused?workflow_id=${WORKFLOW_B2B}`).catch(() => ({}))) || {}).ai_state || "");
     }
     const aviso = ia === "active" ? "Sofía lo atiende desde ahora." : `<b>OJO:</b> la IA sigue en "${esc(ia || "?")}"; revísalo en Nexor o vuelve a apretar Aceptar.`;
