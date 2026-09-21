@@ -87,6 +87,8 @@ async function consultarCodigo(family) {
   } else {
     const item = (Array.isArray(cat) ? cat : []).find((p) => String(p.family).toUpperCase() === family);
     if (!item) return { ok: false, codigo: family, coleccion: `Cole ${cole}`, mensaje: `Ese código no está en el catálogo Cole ${cole}.` };
+    /* Sin foto la página no muestra el modelo: no ofrecerlo (el link abriría el catálogo sin él) */
+    if (!item.main_image) return { ok: false, codigo: family, coleccion: `Cole ${cole}`, mensaje: `El ${family} tiene stock pero aún no está publicado en la página (sin foto). No lo ofrezcas; si el cliente lo pide, dile que un ejecutivo se lo cotiza.` };
     const partes = [item.tipo, item.tiro ? `tiro ${item.tiro}` : "", item.bota ? `bota ${item.bota}` : ""].filter(Boolean);
     detalle = partes.join(" · ") || String(item.description || "").replace(/\?/g, "·");
     nombre = item.bota ? item.bota.charAt(0).toUpperCase() + item.bota.slice(1).toLowerCase() : `Modelo ${base4}`;
@@ -296,6 +298,7 @@ async function buscarPorAtributos({ corte, tiro, tipo, cole }) {
       const pit = precios.items || precios;
       for (const item of (Array.isArray(cat) ? cat : [])) {
         const codigo = String(item.family || "").toUpperCase();
+        if (!item.main_image) continue; /* sin foto no se muestra en la página: no se ofrece */
         const st = (stock.items || {})[codigo]; const total = st ? Number(st.total) || 0 : 0;
         if (total <= 0) continue;
         const bi = atrs[codigo] || atrs[codigo.slice(0, 4)] || {};
