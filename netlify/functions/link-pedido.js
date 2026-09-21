@@ -64,7 +64,7 @@ async function codigos4043() {
   for (const c of ["40", "41", "42", "43"]) {
     const d = await leerJson(`/data-catalogo-${c}.json`);
     const items = Array.isArray(d) ? d : (d && d.items) || [];
-    for (const p of items) { const f = String(p.family || "").toUpperCase(); if (f) set.add(f); }
+    for (const p of items) { const f = String(p.family || "").toUpperCase(); if (f && p.main_image) set.add(f); } /* solo lo que la página muestra (con foto) */
   }
   return set;
 }
