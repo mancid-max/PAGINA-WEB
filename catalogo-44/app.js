@@ -162,10 +162,65 @@ const videoSrc = c => VIDEOS[c] ? `../44/videos/video/${VIDEOS[c]}` : null;
 /* ============================================================ */
 const $     = s => document.querySelector(s) || {};
 const CLP   = n => "$" + Number(n).toLocaleString("es-CL");
-const tallasDe  = m => m.tipo === "chaqueta" ? TALLAS_CHAQ : TALLAS_JEANS;
-const curvaDe   = m => m.tipo === "chaqueta" ? CURVA_CHAQ    : CURVA_JEANS;
-const curva17De = m => m.tipo === "chaqueta" ? CURVA_CHAQ_17 : CURVA_JEANS_17;
-const buscar    = c => MODELOS.find(m => m.codigo === c);
+
+/* ---- COLE 40-43 EN EL MISMO CARRITO (2026-09-21) ----------------
+   El cliente (o el link de Sofía) puede mezclar modelos de la Dolce Vita 44 con los de las colecciones
+   40-43 en un solo pedido. Los de la 40-43 se cargan como "modelos sintéticos" con la misma forma que
+   MODELOS, así el carrito, el modal, la nota Excel y el envío los tratan igual. Diferencias:
+   precio NETO (precioNeto, sin IVA), tallas y cantidades limitadas al stock real de BI, sin mínimo por modelo.
+   Por dentro se registran como un pedido aparte (source catalogo-43) para que la planilla siga como hoy. */
+const es4043 = c => /^4[0-3]\d{2}-\d{2}$/.test(String(c || "").toUpperCase());
+const TALLAS_4043 = ["36","38","40","42","44","46","48","50","52"];
+let datos4043 = null, datos4043Promise = null;
+const modelos4043 = {};
+function cargarDatos4043() {
+  if (datos4043Promise) return datos4043Promise;
+  const j = (u, texto) => fetch(u, { cache: "no-cache" }).then(r => r.text()).then(t => JSON.parse(t.replace(/^﻿/, ""))).catch(() => ({}));
+  datos4043Promise = Promise.all([j("../price-data.json"), j("../price-data-catalogo-43.json"), j("../stock-data-catalogo-43.json"), j("../atributos-modelos.json")])
+    .then(([p, p43, st, at]) => { datos4043 = { precios: p.items || p || {}, precios43: p43.items || p43 || {}, stock: st.items || {}, atrs: at.modelos || {} }; return datos4043; });
+  return datos4043Promise;
+}
+function modelo4043(codigo) {
+  codigo = String(codigo || "").toUpperCase();
+  if (!es4043(codigo)) return null;
+  if (modelos4043[codigo]) return modelos4043[codigo];
+  if (!datos4043) return null; /* aún no cargan los datos: quien llama debe esperar cargarDatos4043() */
+  const base4 = codigo.slice(0, 4), cole = codigo.slice(0, 2);
+  const pit = cole === "43" ? datos4043.precios43 : datos4043.precios;
+  const precioNeto = pit[codigo] ?? pit[base4] ?? pit[`${base4}-00`] ?? null;
+  const st = datos4043.stock[codigo];
+  const stock = {}; Object.entries((st && st.sizes) || {}).forEach(([t, n]) => { if (Number(n) > 0) stock[t] = Number(n); });
+  const bi = datos4043.atrs[codigo] || datos4043.atrs[base4] || {};
+  const desc = [bi.tiro ? `tiro ${bi.tiro}` : null, bi.corte ? `corte ${bi.corte}` : null].filter(Boolean).join(" · ");
+  const m = { nombre: `Modelo ${base4}`, codigo, precio: null, precioNeto: precioNeto == null ? null : Number(precioNeto), img: null, imgSrc: `../og/${codigo}.jpg`,
+              tipo: "jeans", sec: "", cole, es4043: true, desc, stock, total: st ? Number(st.total) || 0 : 0 };
+  modelos4043[codigo] = m;
+  return m;
+}
+const etiquetaCole = m => m && m.es4043 ? `Cole ${m.cole}` : "Dolce Vita 44";
+/* precio unitario y subtotal netos (sin IVA), para sumar parejo las dos colecciones */
+const netoUnit = m => m.es4043 ? m.precioNeto : (m.precio ? Math.round(m.precio / 1.19) : null);
+
+const tallasDe  = m => m.es4043 ? (Object.keys(m.stock).length ? TALLAS_4043.filter(t => m.stock[t] > 0) : TALLAS_4043) : (m.tipo === "chaqueta" ? TALLAS_CHAQ : TALLAS_JEANS);
+const curvaDe   = m => m.es4043 ? curvaStock4043(m, 12) : (m.tipo === "chaqueta" ? CURVA_CHAQ    : CURVA_JEANS);
+const curva17De = m => m.es4043 ? curvaStock4043(m, 17) : (m.tipo === "chaqueta" ? CURVA_CHAQ_17 : CURVA_JEANS_17);
+/* Cole 40-43: reparte N unidades entre las tallas con stock (campana), sin pasarse del stock de cada una */
+function curvaStock4043(m, n) {
+  const tallas = tallasDe(m);
+  if (!tallas.length) return {};
+  const pesos = tallas.map(t => ({ "36": 1, "38": 2, "40": 3, "42": 3, "44": 2, "46": 1 })[t] || 1);
+  const sum = pesos.reduce((a, b) => a + b, 0);
+  const out = {}; let resto = n;
+  tallas.forEach((t, i) => { const q = Math.min(Math.floor((n * pesos[i]) / sum), m.stock[t] || 99); if (q > 0) { out[t] = q; resto -= q; } });
+  /* lo que sobra, de a una, donde quede stock */
+  for (let vuelta = 0; resto > 0 && vuelta < 50; vuelta++) {
+    let puso = false;
+    for (const t of tallas) { if (resto <= 0) break; const cap = m.stock[t] || 99; if ((out[t] || 0) < cap) { out[t] = (out[t] || 0) + 1; resto--; puso = true; } }
+    if (!puso) break;
+  }
+  return out;
+}
+const buscar    = c => MODELOS.find(m => m.codigo === c) || modelo4043(c);
 const nombreSec = id => (SECCIONES.find(s => s.id === id) || {}).nombre || "";
 const linkWsp   = txt => `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(txt)}`;
 
@@ -350,8 +405,13 @@ window.abrirModal = function(codigo) {
   modeloAbierto = m;
   selModal = { ...(carrito[codigo]?.t || {}) };
   $("#m-nombre").textContent = m.nombre;
-  $("#m-codigo").textContent = "Código " + m.codigo + " · " + nombreSec(m.sec) + " · Dolce Vita 44";
-  $("#m-precio").innerHTML = m.precio ? CLP(m.precio) + "<small>por unidad · IVA incluido</small>" : "Precio a consultar<small>se cotiza por WhatsApp</small>";
+  if (m.es4043) {
+    $("#m-codigo").textContent = "Código " + m.codigo + " · Cole " + m.cole + (m.desc ? " · " + m.desc : "");
+    $("#m-precio").innerHTML = m.precioNeto ? CLP(m.precioNeto) + "<small>por unidad · sin IVA</small>" : "Precio a consultar<small>se cotiza por WhatsApp</small>";
+  } else {
+    $("#m-codigo").textContent = "Código " + m.codigo + " · " + nombreSec(m.sec) + " · Dolce Vita 44";
+    $("#m-precio").innerHTML = m.precio ? CLP(m.precio) + "<small>por unidad · IVA incluido</small>" : "Precio a consultar<small>se cotiza por WhatsApp</small>";
+  }
   /* Botón de video dentro del modal (en mobile las cards no muestran botones) */
   const vbtn = $("#m-video-btn");
   if (vbtn) {
@@ -359,7 +419,7 @@ window.abrirModal = function(codigo) {
     vbtn.style.display = tieneVideo ? "inline-flex" : "none";
     vbtn.onclick = () => abrirVideo(m.codigo);
   }
-  fotosModal = [0, 1, 2].map(i => `img/${m.img}_${i}.webp`);
+  fotosModal = m.es4043 ? [m.imgSrc] : [0, 1, 2].map(i => `img/${m.img}_${i}.webp`);
   $("#minis").innerHTML = fotosModal.map((f, i) => `<img src="${f}" class="${i===0?"activa":""}" onclick="cambiarFoto(this)" alt="vista ${i+1}">`).join("");
   mostrarFoto(0);
   pintarTallasModal();
@@ -406,27 +466,36 @@ window.fotoSiguiente = function(d) { mostrarFoto(fotoIdx + d); };
     if (e.key === "ArrowLeft") fotoSiguiente(-1);
   });
 })();
+/* Cole 40-43: la cantidad por talla no puede pasar el stock real; Cole 44 no tiene tope */
+const topeTalla = (m, t) => (m && m.es4043) ? (m.stock[t] || 0) : 99;
 function pintarTallasModal() {
   const m = modeloAbierto;
-  $("#m-tallas").innerHTML = tallasDe(m).map(t => `
+  const tallas = tallasDe(m);
+  if (m.es4043 && !Object.keys(m.stock).length) {
+    $("#m-tallas").innerHTML = `<p class="falta" style="padding:.6rem 0">Este modelo está agotado por ahora.</p>`;
+    actualizarTotalModal(); return;
+  }
+  $("#m-tallas").innerHTML = tallas.map(t => `
     <div class="talla-fila">
-      <span class="t">${t}</span>
+      <span class="t">${t}${m.es4043 ? `<small style="display:block;font-size:.65rem;color:var(--gris);font-weight:600">quedan ${m.stock[t]}</small>` : ""}</span>
       <input type="number" class="cant-input" id="cant-${t}"
-             min="0" max="99" value="${selModal[t]||0}"
+             min="0" max="${topeTalla(m, t)}" value="${selModal[t]||0}"
              onfocus="this.select()"
              oninput="setCant('${t}',this.value)">
     </div>`).join("");
   actualizarTotalModal();
 }
 window.setCant = function(t, v) {
-  const n = Math.max(0, parseInt(v) || 0);
+  let n = Math.max(0, parseInt(v) || 0);
+  const tope = topeTalla(modeloAbierto, t);
+  if (n > tope) { n = tope; const inp = document.getElementById("cant-" + t); if (inp) inp.value = n; toast(`Talla ${t}: quedan ${tope} en stock`); }
   if (n > 0) selModal[t] = n;
   else delete selModal[t];
   actualizarTotalModal();
 };
 function aplicarCurva(cv) {
   tallasDe(modeloAbierto).forEach(t => {
-    const n = cv[t] || 0;
+    const n = Math.min(cv[t] || 0, topeTalla(modeloAbierto, t));
     if (n > 0) selModal[t] = n; else delete selModal[t];
     const inp = document.getElementById("cant-" + t);
     if (inp) inp.value = n;
@@ -437,7 +506,8 @@ function totalSel() { return Object.values(selModal).reduce((a,b) => a+b, 0); }
 function actualizarTotalModal() {
   const tot = totalSel();
   $("#m-total").textContent = tot;
-  $("#m-aviso").classList.toggle("ver", tot > 0 && tot < MIN_POR_MODELO);
+  /* el mínimo de 12 por modelo es solo de la Dolce Vita 44 */
+  $("#m-aviso").classList.toggle("ver", tot > 0 && tot < MIN_POR_MODELO && !(modeloAbierto && modeloAbierto.es4043));
 }
 $("#m-curva12").onclick = () => {
   aplicarCurva(curvaDe(modeloAbierto));
@@ -450,8 +520,8 @@ $("#m-curva17").onclick = () => {
 $("#m-agregar").onclick = () => {
   const tot = totalSel();
   if (tot === 0) { toast("Elige cantidades por talla primero"); return; }
-  if (tot < MIN_POR_MODELO) { $("#m-aviso").classList.add("ver"); toast("Mínimo "+MIN_POR_MODELO+" unidades por modelo"); return; }
-  carrito[modeloAbierto.codigo] = { t: {...selModal} };
+  if (tot < MIN_POR_MODELO && !modeloAbierto.es4043) { $("#m-aviso").classList.add("ver"); toast("Mínimo "+MIN_POR_MODELO+" unidades por modelo"); return; }
+  carrito[modeloAbierto.codigo] = { t: {...selModal}, nombre: modeloAbierto.nombre };
   guardar(); pintarCarrito();
   cerrarModal();
   toast(modeloAbierto.nombre + " agregado al pedido 🛒");
@@ -486,16 +556,23 @@ window.cerrarVideo = function() {
 };
 
 /* ---- CARRITO --------------------------------------------- */
-function datosCarrito() {
-  let prendas = 0, total = 0, consultar = false;
-  Object.entries(carrito).forEach(([c, v]) => {
-    const m = buscar(c); if (!m) return;
-    const n = Object.values(v.t).reduce((a,b) => a+b, 0);
+/* Totales de un carrito (el actual o un snapshot). Dolce Vita 44 viene con IVA incluido; Cole 40-43 en neto.
+   Se suma todo en neto, se agrega el IVA y se entrega el total con IVA, sin perder los pesos exactos de la 44. */
+function calcularTotales(c) {
+  let prendas = 0, total44 = 0, neto43 = 0, consultar = false, hay44 = false, hay43 = false;
+  Object.entries(c || carrito).forEach(([cod, v]) => {
+    const m = buscar(cod); if (!m) return;
+    const n = Object.values(v.t).reduce((a, b) => a + b, 0);
     prendas += n;
-    if (m.precio) total += n * m.precio; else consultar = true;
+    if (m.es4043) { hay43 = true; if (m.precioNeto) neto43 += n * m.precioNeto; else consultar = true; }
+    else { hay44 = true; if (m.precio) total44 += n * m.precio; else consultar = true; }
   });
-  return { prendas, total, consultar, curvas: Math.round((prendas / MIN_POR_MODELO) * 10) / 10 };
+  const neto44 = Math.round(total44 / 1.19);
+  const iva43 = Math.round(neto43 * 0.19);
+  const neto = neto44 + neto43, iva = (total44 - neto44) + iva43, total = total44 + neto43 + iva43;
+  return { prendas, total, neto, iva, consultar, hay44, hay43, mixto: hay44 && hay43, curvas: Math.round((prendas / MIN_POR_MODELO) * 10) / 10 };
 }
+function datosCarrito() { return calcularTotales(carrito); }
 function pintarCarrito() {
   const cont = $("#items-carrito");
   const codigos = Object.keys(carrito);
@@ -506,13 +583,16 @@ function pintarCarrito() {
     cont.innerHTML = codigos.map(c => {
       const m = buscar(c); const v = carrito[c]; if (!m) return "";
       const n = Object.values(v.t).reduce((a,b) => a+b, 0);
-      const sub = m.precio ? CLP(n * m.precio) : "A consultar";
-      const bajo = n < MIN_POR_MODELO ? `<p class="falta">⚠ Faltan ${MIN_POR_MODELO-n} u. para el mínimo</p>` : "";
+      /* 44: precio y subtotal con IVA incluido (como en el catálogo); 40-43: neto + IVA. Abajo se suma todo parejo. */
+      const sub = m.es4043 ? (m.precioNeto ? CLP(n * m.precioNeto) + " + IVA" : "A consultar") : (m.precio ? CLP(n * m.precio) : "A consultar");
+      const precioTxt = m.es4043 ? (m.precioNeto ? CLP(m.precioNeto) + " c/u + IVA" : "precio a consultar") : (m.precio ? CLP(m.precio) + " c/u IVA incl." : "precio a consultar");
+      const bajo = (!m.es4043 && n < MIN_POR_MODELO) ? `<p class="falta">⚠ Faltan ${MIN_POR_MODELO-n} u. para el mínimo</p>` : "";
+      const foto = m.es4043 ? m.imgSrc : `img/${m.img}_0.webp`;
       return `<div class="item-c" data-sku="${c}">
-        <img src="img/${m.img}_0.webp" alt="${m.nombre}">
+        <img src="${foto}" alt="${m.nombre}">
         <div class="info">
-          <h4>${m.nombre}</h4>
-          <p class="cod">${m.codigo} · ${m.precio?CLP(m.precio)+" c/u":"precio a consultar"}</p>
+          <h4>${m.nombre} <small style="font-weight:600;color:var(--gris);font-size:.7rem">· ${etiquetaCole(m)}</small></h4>
+          <p class="cod">${m.codigo} · ${precioTxt}</p>
           <div class="tallas-mini">${Object.entries(v.t).map(([t,q])=>`<span>${t} × ${q}</span>`).join("")}</div>
           ${bajo}
           <div class="abajo"><span>${n} prendas</span><b>${sub}</b></div>
@@ -540,13 +620,13 @@ function pintarCarrito() {
     $("#c-iva").textContent = "—";
     $("#c-total").textContent = CLP(d.total) + " + a consultar";
   } else {
-    const neto = Math.round(d.total / 1.19);
-    const iva  = d.total - neto;
-    $("#c-neto").textContent = CLP(neto);
-    $("#c-iva").textContent  = CLP(iva);
+    $("#c-neto").textContent = CLP(d.neto);
+    $("#c-iva").textContent  = CLP(d.iva);
     $("#c-total").textContent = CLP(d.total);
   }
 }
+/* Si el carrito guardado trae modelos de la 40-43, sus datos (precio, stock, foto) se cargan aparte */
+if (Object.keys(carrito).some(es4043)) cargarDatos4043().then(() => pintarCarrito());
 window.quitar = async function(c) {
   const ok = await customConfirm("¿Quitar artículo?", "Se eliminará este modelo del pedido.", { okTexto: "Sí, quitar", ico: "🗑" });
   if (!ok) return;
@@ -822,36 +902,54 @@ function obtenerDatosCliente() {
   };
 }
 
-function construirPayload(cliente) {
-  const quoteId = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
-  let totalItems = 0;
-  const lineas = [];
+const nuevoUuid = () => crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
+/* Un pedido por colección, con los mismos datos del cliente y la misma hora (created_at_client) para que
+   el admin y el Telegram los reconozcan como el mismo envío. p44 → Dolce Vita 44; p43 → Cole 40-43. */
+function construirPayloads(cliente) {
+  const creado = new Date().toISOString();
+  const base = () => ({
+    store_name: cliente.razon_social,
+    client_rut: cliente.rut,
+    client_rut_normalized: cliente.rut_normalized,
+    client_phone: cliente.client_phone,
+    created_at_client: creado,
+    giro: cliente.giro || null,
+    direccion: cliente.direccion || null,
+    nombre_tienda: cliente.nombre_tienda || null,
+    comuna: cliente.comuna || null,
+    transporte: cliente.transporte || null,
+  });
+  const l44 = [], l43 = [];
   Object.entries(carrito).forEach(([codigo, v]) => {
     Object.entries(v.t).forEach(([talla, cantidad]) => {
       const qty = Number(cantidad) || 0;
       if (qty <= 0) return;
-      totalItems += qty;
-      lineas.push({ sku: codigo, talla, cantidad: qty });
+      if (es4043(codigo)) l43.push({ sku: codigo, talla, cantidad: qty, source: "catalogo-43" });
+      else l44.push({ sku: codigo, talla, cantidad: qty });
     });
   });
+  const suma = (l) => l.reduce((s, x) => s + x.cantidad, 0);
   return {
-    quote: {
-      id: quoteId,
-      store_name: cliente.razon_social,
-      client_rut: cliente.rut,
-      client_rut_normalized: cliente.rut_normalized,
-      client_phone: cliente.client_phone,
-      total_items: totalItems,
-      created_at_client: new Date().toISOString(),
-      source: SOURCE_PEDIDO,
-      giro: cliente.giro || null,
-      direccion: cliente.direccion || null,
-      nombre_tienda: cliente.nombre_tienda || null,
-      comuna: cliente.comuna || null,
-      transporte: cliente.transporte || null,
-    },
-    items: lineas,
+    p44: l44.length ? { quote: { id: nuevoUuid(), ...base(), total_items: suma(l44), source: SOURCE_PEDIDO }, items: l44 } : null,
+    p43: l43.length ? { quote: { id: nuevoUuid(), ...base(), total_items: suma(l43), source: "catalogo-43" }, items: l43 } : null,
   };
+}
+/* compatibilidad: el "payload" principal que usan la nota Excel y el WhatsApp */
+function construirPayload(cliente) { const { p44, p43 } = construirPayloads(cliente); return p44 || p43; }
+
+/* Cole 40-43 se guarda por el mismo RPC que usa la página 40-43 (registra pedido + ítems y avisa por correo) */
+async function guardarPedido43(payload) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/create_quote_with_stock_reservation`, {
+    method: "POST",
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ p_quote: payload.quote, p_items: payload.items }),
+  });
+  if (!res.ok) {
+    const t = await res.text().catch(() => "");
+    let msg = t; try { msg = JSON.parse(t).message || t; } catch (_) {}
+    throw new Error("Error guardando el pedido Cole 40-43: " + (msg || res.status));
+  }
+  return payload.quote.id;
 }
 
 async function guardarEnSupabase(payload) {
@@ -881,14 +979,17 @@ async function guardarEnSupabase(payload) {
   return payload.quote.id;
 }
 
-function notificarPedido(cliente, payload) {
+function notificarPedido(cliente, payload, payloadExtra) {
   const items = Object.entries(carrito).map(([codigo, v]) => {
     const total = Object.values(v.t).reduce((s, n) => s + (Number(n) || 0), 0);
     return { codigo, nombre: v.nombre || "", totalUnidades: total };
   }).filter(i => i.totalUnidades > 0);
   const totalUnidades = items.reduce((s, i) => s + i.totalUnidades, 0);
+  const src = payload?.quote?.source || SOURCE_PEDIDO;
   const body = {
     quoteId:     payload?.quote?.id || "",
+    quoteIdExtra: payloadExtra?.quote?.id || "",   /* pedido hermano de la otra colección (mismo envío) */
+    source:      payloadExtra ? "catalogo-mixto" : src,
     storeName:   cliente.razon_social || cliente.nombre_tienda || "",
     rut:         cliente.rut || "",
     phone:       cliente.client_phone || "",
@@ -907,7 +1008,8 @@ function notificarPedido(cliente, payload) {
 $("#btn-finalizar").onclick = async () => {
   const codigos = Object.keys(carrito);
   if (!codigos.length) { toast("Tu pedido está vacío"); return; }
-  const bajos = codigos.filter(c => Object.values(carrito[c].t).reduce((a,b)=>a+b,0) < MIN_POR_MODELO);
+  if (codigos.some(es4043) && !datos4043) { toast("Cargando datos del pedido, intenta de nuevo en un segundo"); cargarDatos4043().then(() => pintarCarrito()); return; }
+  const bajos = codigos.filter(c => !es4043(c) && Object.values(carrito[c].t).reduce((a,b)=>a+b,0) < MIN_POR_MODELO);
   if (bajos.length) { toast("Hay modelos bajo el mínimo de "+MIN_POR_MODELO+" u.: "+bajos.join(", ")); return; }
   const totalUnidades = codigos.reduce((s,c) => s + Object.values(carrito[c].t).reduce((a,b)=>a+b,0), 0);
   if (totalUnidades < MIN_PEDIDO) { toast(`Faltan ${MIN_PEDIDO - totalUnidades} unidades para el mínimo del pedido (${MIN_PEDIDO})`); return; }
@@ -931,7 +1033,8 @@ $("#btn-finalizar").onclick = async () => {
 
   const cliente = obtenerDatosCliente();
   pedidoListo = { ...cliente, fecha: new Date() };
-  const payload = construirPayload(cliente);
+  const { p44, p43 } = construirPayloads(cliente);
+  const payload = p44 || p43;
 
   const gEl = $("#guardando-estado");
   gEl.style.display = "block";
@@ -939,15 +1042,17 @@ $("#btn-finalizar").onclick = async () => {
   $("#btn-finalizar").disabled = true;
 
   try {
-    await guardarEnSupabase(payload);
+    /* un pedido por colección: primero la 44 (si hay), después la 40-43 (si hay) */
+    if (p44) await guardarEnSupabase(p44);
+    if (p43) await guardarPedido43(p43);
     if (cliente.transporte && clienteBuscado?.rut_normalized) {
       localStorage.setItem("dv44_transp_" + clienteBuscado.rut_normalized, cliente.transporte);
     }
     // Snapshot del carrito antes de vaciarlo (para re-descarga)
     snapshotCarrito = JSON.parse(JSON.stringify(carrito));
     payloadListo = payload;
-    // Notificar pedido por Telegram
-    notificarPedido(cliente, payload);
+    // Notificar pedido por Telegram (un solo aviso aunque sean dos pedidos)
+    notificarPedido(cliente, payload, p44 && p43 ? p43 : null);
     // Generar Excel (lee carrito sincrónicamente antes del primer await interno)
     generarExcel(pedidoListo, payload);
     // Link WhatsApp antes de vaciar (usa carrito)
@@ -975,16 +1080,18 @@ $("#btn-cerrar-exito").onclick = () => cerrarCajon();
 function textoPedido(cliente, payload) {
   const d = datosCarrito();
   const lineas = Object.keys(carrito).map(c => {
-    const m = buscar(c); const v = carrito[c];
+    const m = buscar(c); const v = carrito[c]; if (!m) return "";
     const n = Object.values(v.t).reduce((a,b)=>a+b,0);
     const det = Object.entries(v.t).map(([t,q])=>`${t}×${q}`).join(" ");
-    return `• *${m.nombre} ${m.codigo}*: ${n} u. (${det})${m.precio?` — ${CLP(n*m.precio)}`:" — a consultar"}`;
-  });
-  return `¡Hola Mohicano! 🇮🇹 Pedido mayorista *DOLCE VITA 44*\n\n`+
+    const sub = m.es4043 ? (m.precioNeto ? ` — ${CLP(n*m.precioNeto)} + IVA` : " — a consultar") : (m.precio ? ` — ${CLP(n*m.precio)}` : " — a consultar");
+    return `• *${m.nombre} ${m.codigo}* (${etiquetaCole(m)}): ${n} u. (${det})${sub}`;
+  }).filter(Boolean);
+  const titulo = d.mixto ? "DOLCE VITA 44 + COLE 40-43" : (d.hay43 ? "COLE 40-43" : "DOLCE VITA 44");
+  return `¡Hola Mohicano! 🇮🇹 Pedido mayorista *${titulo}*\n\n`+
     `👤 ${cliente.razon_social}\n🪪 RUT: ${cliente.rut}\n📞 ${cliente.client_phone}\n`+
     (cliente.nota?`📝 ${cliente.nota}\n`:"")+
     `\n${lineas.join("\n")}\n\n`+
-    `Total: *${d.prendas} prendas* (${d.curvas} curvas) — *${CLP(d.total)}*${d.consultar?" + ítems a consultar":""}\n\n`+
+    `Total: *${d.prendas} prendas* — neto ${CLP(d.neto)} + IVA ${CLP(d.iva)} = *${CLP(d.total)}*${d.consultar?" + ítems a consultar":""}\n\n`+
     `📎 Adjunto el Excel con el detalle del pedido.`;
 }
 
@@ -1002,19 +1109,21 @@ async function generarExcel(cliente, payload, carritoRef) {
 
   // Capturar datos del carrito ANTES de cualquier await
   const tallasUsadas = [];
-  for (const t of [...TALLAS_JEANS, ...TALLAS_CHAQ]) {
+  for (const t of [...TALLAS_4043, ...TALLAS_CHAQ]) {
     if (Object.values(c).some(v => v.t[t] && v.t[t] > 0)) tallasUsadas.push(t);
   }
-  const modelos = Object.keys(c).map((cod, i) => {
+  const modelos = Object.keys(c).map((cod) => {
     const m = buscar(cod); const v = c[cod]; if (!m) return null;
     const n = Object.values(v.t).reduce((a, b) => a + b, 0);
-    return { m, v, n, i };
-  }).filter(Boolean);
+    /* precio unitario y subtotal tal como los ve el cliente en cada catálogo: 44 con IVA, 40-43 neto */
+    const unit = m.es4043 ? m.precioNeto : m.precio;
+    return { m, v, n, unit, sub: unit ? n * unit : null, etiquetaPrecio: m.es4043 ? " + IVA" : "" };
+  }).filter(Boolean).map((x, i) => ({ ...x, i }));
 
   const tot = modelos.reduce((a, x) => a + x.n, 0);
-  const totalPesos = modelos.reduce((a, x) => a + (x.m.precio ? x.n * x.m.precio : 0), 0);
-  const neto = Math.round(totalPesos / 1.19);
-  const iva  = totalPesos - neto;
+  const totales = calcularTotales(c);
+  const neto = totales.neto, iva = totales.iva, totalPesos = totales.total;
+  const tituloCole = totales.mixto ? "DOLCE VITA 44 + COLE 40-43" : (totales.hay43 ? "COLE 40-43" : "DOLCE VITA · COLECCIÓN 44");
 
   // Columnas de la tabla
   const C_NUM = 1, C_COD = 2, C_NOM = 3;
@@ -1049,7 +1158,7 @@ async function generarExcel(cliente, payload, carritoRef) {
 
   // Fila 2: colección
   sh.range(`A2:${L}2`).merged(true);
-  sh.cell("A2").value("DOLCE VITA · COLECCIÓN 44").style({
+  sh.cell("A2").value(tituloCole).style({
     bold:true, fontSize:10, fontColor:"FFFFFF", fill:ROJO,
     horizontalAlignment:"center", verticalAlignment:"center"
   });
@@ -1102,19 +1211,19 @@ async function generarExcel(cliente, payload, carritoRef) {
   sh.row(10).height(20);
 
   // Filas 11+: ítems
-  modelos.forEach(({ m, v, n, i }) => {
+  modelos.forEach(({ m, v, n, i, unit, sub, etiquetaPrecio }) => {
     const row = 11 + i;
     const rf = i % 2 === 0 ? "FFFFFF" : GF;
     const rs = { fontSize:9, fill:rf, border:bA };
     sh.cell(row, C_NUM).value(i + 1).style({ ...rs, horizontalAlignment:"center" });
     sh.cell(row, C_COD).value(m.codigo).style({ ...rs, horizontalAlignment:"center" });
-    sh.cell(row, C_NOM).value(m.nombre).style({ ...rs, bold:true });
+    sh.cell(row, C_NOM).value(`${m.nombre} · ${etiquetaCole(m)}`).style({ ...rs, bold:true });
     tallasUsadas.forEach((t, ti) => {
       sh.cell(row, C_TAL + ti).value(v.t[t] || "").style({ ...rs, horizontalAlignment:"center" });
     });
     sh.cell(row, C_TOT).value(n).style({ ...rs, horizontalAlignment:"center", bold:true });
-    sh.cell(row, C_PRC).value(m.precio ? clp(m.precio) : "Consultar").style({ ...rs, horizontalAlignment:"right" });
-    sh.cell(row, C_SUB).value(m.precio ? clp(n * m.precio) : "Consultar").style({ ...rs, horizontalAlignment:"right", bold:true });
+    sh.cell(row, C_PRC).value(unit ? clp(unit) + etiquetaPrecio : "Consultar").style({ ...rs, horizontalAlignment:"right" });
+    sh.cell(row, C_SUB).value(sub != null ? clp(sub) + etiquetaPrecio : "Consultar").style({ ...rs, horizontalAlignment:"right", bold:true });
     sh.row(row).height(16);
   });
 
@@ -1137,7 +1246,7 @@ async function generarExcel(cliente, payload, carritoRef) {
 
   const noteRow = sp + 6;
   sh.range(`A${noteRow}:${L}${noteRow}`).merged(true)
-    .value("Los precios incluyen IVA. Los modelos 'Consultar' se cotizan por separado.")
+    .value(totales.hay43 ? "Dolce Vita 44: precios con IVA incluido. Cole 40-43: precios netos (+ IVA). El total ya incluye el IVA de todo. Los modelos 'Consultar' se cotizan por separado." : "Los precios incluyen IVA. Los modelos 'Consultar' se cotizan por separado.")
     .style({ fontSize:7, italic:true, fontColor:"AAAAAA" });
 
   // Anchos de columna
@@ -1155,7 +1264,7 @@ async function generarExcel(cliente, payload, carritoRef) {
   const a = document.createElement("a");
   const nombreCliente = String(cliente.razon_social || cliente.rut || "").replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]/g," ").trim().replace(/\s+/g,"_").slice(0,30);
   const yyyymmdd = f.getFullYear() + String(f.getMonth()+1).padStart(2,"0") + String(f.getDate()).padStart(2,"0");
-  a.href = url; a.download = `NotaPedido_DolceVita44_${nombreCliente}_${yyyymmdd}.xlsx`;
+  a.href = url; a.download = `NotaPedido_${totales.mixto ? "Mohicano" : (totales.hay43 ? "Cole4043" : "DolceVita44")}_${nombreCliente}_${yyyymmdd}.xlsx`;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 8000);
 }
@@ -2401,7 +2510,7 @@ function toast(msg) {
    ?modelo=4448-00&curva=12            → abre la ficha con la curva cargada (12, 17 o 36=2.38=3.40=4)
    ?items=4448-00:12,4458-00:17&rut=16388334-1 → agrega todo al pedido, abre "Tu pedido" con el RUT verificado
    Formato de curva: "12" | "17" | "36=2.38=3.40=4" (talla=cantidad separados por punto) */
-(function() {
+(async function() {
   const p = new URLSearchParams(location.search);
   const modeloQ = (p.get("modelo") || "").trim().toUpperCase();
   const itemsQ  = (p.get("items")  || "").trim().toUpperCase();
@@ -2410,10 +2519,15 @@ function toast(msg) {
   if (!modeloQ && !itemsQ && !rutQ) return;
 
   const normCod = c => /^\d{4}$/.test(c) ? c + "-00" : c;
+  /* Si el link trae modelos de la 40-43 (mezclados con la 44), primero cargar sus precios y stock */
+  const codigosLink = [...itemsQ.split(",").map(par => normCod(par.split(":")[0].trim())), modeloQ ? normCod(modeloQ) : ""].filter(Boolean);
+  if (codigosLink.some(es4043)) await cargarDatos4043();
+
   function curvaPara(m, spec) {
     if (!spec || spec === "12") return { ...curvaDe(m) };
     if (spec === "17") return { ...curva17De(m) };
     if (/^\d+$/.test(spec)) {
+      if (m.es4043) return curvaStock4043(m, Number(spec));
       /* N unidades → curva proporcional (campana) */
       const tallas = tallasDe(m), n = Number(spec);
       const pesos = m.tipo === "chaqueta" ? [3, 4, 4, 3] : [1, 2, 3, 3, 2, 1];
@@ -2427,7 +2541,11 @@ function toast(msg) {
     const cv = {};
     spec.split(".").forEach(par => {
       const [t, n] = par.split("=");
-      if (t && Number(n) > 0 && tallasDe(m).includes(t.trim())) cv[t.trim()] = Number(n);
+      const talla = String(t || "").trim();
+      if (!talla || !(Number(n) > 0) || !tallasDe(m).includes(talla)) return;
+      /* Cole 40-43: nunca más que el stock real de esa talla */
+      cv[talla] = m.es4043 ? Math.min(Number(n), m.stock[talla] || 0) : Number(n);
+      if (cv[talla] <= 0) delete cv[talla];
     });
     return cv;
   }
@@ -2444,7 +2562,8 @@ function toast(msg) {
       if (!m) { saltados.push(cod); return; }
       const cv = curvaPara(m, rest.join(":") || "12");
       const tot = Object.values(cv).reduce((a, b) => a + b, 0);
-      if (tot < MIN_POR_MODELO) { saltados.push(m.codigo + " (min " + MIN_POR_MODELO + ")"); return; }
+      if (tot <= 0) { saltados.push(m.codigo + (m.es4043 ? " (sin stock)" : "")); return; }
+      if (tot < MIN_POR_MODELO && !m.es4043) { saltados.push(m.codigo + " (min " + MIN_POR_MODELO + ")"); return; }
       carrito[m.codigo] = { t: cv, nombre: m.nombre };
       agregados++;
     });

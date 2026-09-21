@@ -157,20 +157,22 @@ exports.handler = async (event) => {
   const fuera = [...porCodigo.keys()].filter((c) => !/^4[0-4]$/.test(c.slice(0, 2)));
   if (fuera.length) return error(`${fuera.join(", ")} no pertenece a las colecciones vigentes (Cole 40 a 44). Confirma el código con consultar_stock.`, { codigos_desconocidos: fuera });
   const coles = new Set(items.map((i) => i.slice(0, 2)));
-  if (coles.size > 1 && coles.has("44")) {
-    return error("No se puede mezclar Cole 44 con Cole 40-43 en un mismo link: arma dos links.");
-  }
+  /* Desde el 2026-09-21 se puede mezclar: si hay algún modelo de la 44 el link abre catalogo-44, cuyo
+     carrito acepta también los de la 40-43 (por dentro se registran como dos pedidos, uno por colección). */
   const es44 = coles.has("44");
+  const hay4043 = [...coles].some((c) => /^4[0-3]$/.test(c));
+  const mixto = es44 && hay4043;
 
   /* 1) que los códigos existan en el catálogo */
   const desconocidos = [];
   let cat44 = null;
   if (es44) {
     cat44 = await catalogo44().catch(() => null);
-    if (cat44 && Object.keys(cat44).length) for (const cod of porCodigo.keys()) if (!cat44[cod]) desconocidos.push(cod);
-  } else {
+    if (cat44 && Object.keys(cat44).length) for (const cod of porCodigo.keys()) if (cod.startsWith("44") && !cat44[cod]) desconocidos.push(cod);
+  }
+  if (hay4043) {
     const validos = await codigos4043().catch(() => null);
-    if (validos && validos.size) for (const cod of porCodigo.keys()) if (!validos.has(cod)) desconocidos.push(cod);
+    if (validos && validos.size) for (const cod of porCodigo.keys()) if (!cod.startsWith("44") && !validos.has(cod)) desconocidos.push(cod);
   }
   if (desconocidos.length) {
     return error(`${desconocidos.join(", ")} no ${desconocidos.length === 1 ? "es un código" : "son códigos"} de ${es44 ? "la Dolce Vita 44" : "las colecciones 40 a 43"}. Confirma el código con consultar_stock antes de armar el link.`, { codigos_desconocidos: desconocidos });
@@ -185,11 +187,11 @@ exports.handler = async (event) => {
   if (!soloFicha) {
     const problemas = [];
     for (const [cod, cv] of porCodigo) {
-      const esChaqueta = es44 && cat44 && cat44[cod] ? cat44[cod].tipo === "chaqueta" : CHAQUETAS.test(cod);
+      const esChaqueta = cod.startsWith("44") && cat44 && cat44[cod] ? cat44[cod].tipo === "chaqueta" : CHAQUETAS.test(cod);
       const permitidas = esChaqueta ? TALLAS_CHAQUETA : TALLAS_JEAN;
       const malas = Object.keys(cv).filter((t) => !permitidas.includes(t));
       if (malas.length) problemas.push(`${cod}: ${malas.join(", ")} no ${malas.length === 1 ? "es una talla" : "son tallas"} de este modelo (usa ${permitidas.join(", ")}).`);
-      if (es44 && unidades(cv) < MIN_POR_MODELO_44) problemas.push(`${cod}: ${unidades(cv)} unidades; en la Dolce Vita 44 el mínimo es ${MIN_POR_MODELO_44} por modelo.`);
+      if (cod.startsWith("44") && unidades(cv) < MIN_POR_MODELO_44) problemas.push(`${cod}: ${unidades(cv)} unidades; en la Dolce Vita 44 el mínimo es ${MIN_POR_MODELO_44} por modelo.`);
     }
     if (problemas.length) return error(`No armé el link porque la página lo va a rechazar:\n${problemas.join("\n")}`, { problemas });
 
@@ -199,9 +201,9 @@ exports.handler = async (event) => {
     }
   }
 
-  /* 4) Cole 40-43: las tallas tienen que tener stock real */
-  if (!es44) {
-    const errores = await validarStock4043(items);
+  /* 4) Cole 40-43: las tallas tienen que tener stock real (también dentro de un link mixto) */
+  if (hay4043) {
+    const errores = await validarStock4043(items.filter((i) => !i.startsWith("44")));
     if (errores.length) {
       return error(`No se armó el link porque hay tallas sin stock. Corrige usando solo estas tallas y vuelve a llamar:\n${errores.join("\n")}`, { errores });
     }
@@ -224,7 +226,7 @@ exports.handler = async (event) => {
   return {
     statusCode: 200, headers,
     body: JSON.stringify({
-      ok: true, url, pagina: es44 ? "Dolce Vita · Cole 44" : "Cole 40-43", items, rut: rut || null, transporte: transporte || null,
+      ok: true, url, pagina: mixto ? "Dolce Vita 44 + Cole 40-43 (un solo carrito)" : es44 ? "Dolce Vita · Cole 44" : "Cole 40-43", items, rut: rut || null, transporte: transporte || null,
       instruccion: soloFicha
         ? "Al abrir el link se abre la ficha del modelo con la curva cargada; el cliente la agrega al pedido y luego envía."
         : "Al abrir el link, los modelos quedan cargados en 'Tu pedido' con la curva indicada, el RUT verificado y el transporte; el cliente solo revisa y presiona Enviar pedido.",

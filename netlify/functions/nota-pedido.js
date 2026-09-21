@@ -69,11 +69,28 @@ const fechaCL = (iso) => {
 };
 const rutDigitos = (r) => String(r || "").replace(/[^0-9kK]/g, "").toUpperCase();
 
-/* { id } o { rut } → nota. Devuelve { ok:false, mensaje } si no hay pedido. */
-async function construirNota({ id, rut } = {}) {
+/* { id } | { ids:[...] } | { rut } → nota. Devuelve { ok:false, mensaje } si no hay pedido.
+   Un envío mixto (Dolce Vita 44 + Cole 40-43) son DOS pedidos con la misma hora (created_at_client):
+   con `ids` se juntan en una sola nota; con `id` se buscan solos sus hermanos por RUT + hora. */
+const esUuid = (v) => /^[0-9a-f-]{36}$/i.test(String(v || ""));
+async function hermanosDe(quote) {
+  if (!quote || !quote.created_at_client) return [];
+  const rutN = String(quote.client_rut_normalized || "").trim();
+  if (!rutN) return [];
+  const rows = await sb(`/rest/v1/quotes?client_rut_normalized=eq.${encodeURIComponent(rutN)}&created_at_client=eq.${encodeURIComponent(quote.created_at_client)}&select=*&order=source.asc`).catch(() => []);
+  return (rows || []).filter((q) => q.id !== quote.id);
+}
+async function construirNota({ id, ids, rut } = {}) {
   let quote = null;
-  if (id && /^[0-9a-f-]{36}$/i.test(id)) {
+  let extras = [];
+  if (Array.isArray(ids) && ids.filter(esUuid).length) {
+    const lista = ids.filter(esUuid);
+    const rows = await sb(`/rest/v1/quotes?id=in.(${lista.join(",")})&select=*`);
+    quote = (rows || []).find((q) => q.id === lista[0]) || (rows || [])[0] || null;
+    extras = (rows || []).filter((q) => quote && q.id !== quote.id);
+  } else if (id && esUuid(id)) {
     quote = (await sb(`/rest/v1/quotes?id=eq.${id}&select=*&limit=1`))[0] || null;
+    if (quote) extras = await hermanosDe(quote);
   } else if (rut) {
     const d = rutDigitos(rut);
     const desde = new Date(Date.now() - 72 * 3600e3).toISOString();
@@ -87,8 +104,11 @@ async function construirNota({ id, rut } = {}) {
     }
   }
   if (!quote) return { ok: false, mensaje: id ? "No encontré ese pedido." : "No encontré un pedido de ese RUT en las últimas 72 horas. Si lo acaba de enviar, pídele que espere un minuto; si no, dile que un ejecutivo lo revisa." };
+  if (!extras.length && rut) extras = await hermanosDe(quote);
+  const quotes = [quote, ...extras];
 
-  const items = (await sb(`/rest/v1/quote_items?quote_id=eq.${quote.id}&select=sku,size,quantity`)) || [];
+  const idsTodos = quotes.map((q) => q.id);
+  const items = (await sb(`/rest/v1/quote_items?quote_id=in.(${idsTodos.join(",")})&select=quote_id,sku,size,quantity`)) || [];
   if (!items.length) return { ok: false, mensaje: "El pedido no tiene detalle de modelos." };
   const precioDe = await buscadorPrecios();
 
@@ -101,34 +121,45 @@ async function construirNota({ id, rut } = {}) {
     g.tallas[String(it.size)] = (g.tallas[String(it.size)] || 0) + q;
     g.unidades += q;
   }
-  const src = String(quote.source || "").toLowerCase();
-  const es44 = src.includes("44") || Object.keys(porSku).every((s) => s.startsWith("44"));
-  const ref = (es44 ? "DV44-" : "C43-") + String(quote.id).slice(-6).toUpperCase();
+  const refDe = (q) => {
+    const s = String(q.source || "").toLowerCase();
+    const es44q = s.includes("44");
+    return (es44q ? "DV44-" : "C43-") + String(q.id).slice(-6).toUpperCase();
+  };
+  const ref = quotes.map(refDe).join(" + ");
+  const hay44 = Object.keys(porSku).some((s) => s.startsWith("44"));
+  const hay43 = Object.keys(porSku).some((s) => !s.startsWith("44"));
+  const es44 = hay44 && !hay43;
+  const coleccion = hay44 && hay43 ? "Dolce Vita 44 + Cole 40-43" : (hay44 ? "Dolce Vita · Cole 44" : "Cole 40-43");
 
+  /* Dolce Vita 44: precio con IVA incluido; Cole 40-43: neto. Cada modelo aporta su neto y su IVA. */
   const modelos = Object.values(porSku).sort((a, b) => a.codigo.localeCompare(b.codigo)).map((g) => {
     const p = precioDe(g.codigo);
     const lineasTallas = Object.entries(g.tallas).sort((a, b) => ordenTalla(a[0]) - ordenTalla(b[0])).map(([t, n]) => `${t}: ${n}`);
     const subtotal = p.precio == null ? null : p.precio * g.unidades;
-    return { codigo: g.codigo, nombre: p.nombre || "", unidades: g.unidades, precio_unitario: p.precio, subtotal, tallas: lineasTallas };
+    const netoM = subtotal == null ? 0 : (p.ivaIncluido ? Math.round(subtotal / 1.19) : subtotal);
+    const ivaM = subtotal == null ? 0 : (p.ivaIncluido ? subtotal - netoM : Math.round(subtotal * 0.19));
+    return { codigo: g.codigo, nombre: p.nombre || "", coleccion: g.codigo.startsWith("44") ? "Dolce Vita 44" : `Cole ${g.codigo.slice(0, 2)}`, unidades: g.unidades, precio_unitario: p.precio, iva_incluido: !!p.ivaIncluido, subtotal, neto: netoM, iva: ivaM, tallas: lineasTallas };
   });
   const totalUnidades = modelos.reduce((s, m) => s + m.unidades, 0);
   const sinPrecio = modelos.filter((m) => m.subtotal == null).map((m) => m.codigo);
-  const suma = modelos.reduce((s, m) => s + (m.subtotal || 0), 0);
-  let neto, iva, total;
-  if (es44) { total = suma; neto = Math.round(total / 1.19); iva = total - neto; }
-  else { neto = suma; iva = Math.round(neto * 0.19); total = neto + iva; }
+  const neto = modelos.reduce((s, m) => s + m.neto, 0);
+  const iva = modelos.reduce((s, m) => s + m.iva, 0);
+  const total = neto + iva;
 
   const ficha = (await fichaCliente(quote.client_rut || quote.client_rut_normalized)) || {};
   const dato = (...vals) => { for (const v of vals) { const s = String(v == null ? "" : v).trim(); if (s) return s; } return ""; };
-  const cliente = dato(quote.store_name, ficha.razon_social, quote.nombre_tienda);
-  const telefono = dato(quote.client_phone, ficha.telefono);
-  const transporte = dato(quote.transporte, ficha.transporte);
-  const direccion = dato(quote.direccion, ficha.direccion);
-  const comuna = dato(quote.comuna, ficha.comuna);
-  const giro = dato(quote.giro, ficha.giro);
-  const tienda = dato(quote.nombre_tienda, ficha.nombre_tienda);
+  const deQuotes = (campo) => quotes.map((q) => q[campo]); /* el pedido 40-43 (RPC) no guarda giro/dirección: se toman del hermano */
+  const cliente = dato(...deQuotes("store_name"), ficha.razon_social, ...deQuotes("nombre_tienda"));
+  const telefono = dato(...deQuotes("client_phone"), ficha.telefono);
+  const transporte = dato(...deQuotes("transporte"), ficha.transporte);
+  const direccion = dato(...deQuotes("direccion"), ficha.direccion);
+  const comuna = dato(...deQuotes("comuna"), ficha.comuna);
+  const giro = dato(...deQuotes("giro"), ficha.giro);
+  const tienda = dato(...deQuotes("nombre_tienda"), ficha.nombre_tienda);
   const lineas = [
     `NOTA DE PEDIDO ${ref}`,
+    ...(hay44 && hay43 ? [`(${coleccion})`] : []),
     `${cliente}${quote.client_rut ? ` · RUT ${quote.client_rut}` : ""}`,
     ...(tienda && tienda !== cliente ? [`Tienda: ${tienda}`] : []),
     ...(giro ? [`Giro: ${giro}`] : []),
@@ -139,9 +170,11 @@ async function construirNota({ id, rut } = {}) {
     "",
   ];
   for (const m of modelos) {
-    lineas.push(`${m.codigo}${m.nombre ? ` ${m.nombre}` : ""} (${m.unidades} u${m.precio_unitario != null ? ` · ${clp(m.precio_unitario)} c/u` : ""})`);
+    const etiqueta = hay44 && hay43 ? ` · ${m.coleccion}` : "";
+    const cu = m.precio_unitario == null ? "" : ` · ${clp(m.precio_unitario)} c/u${hay44 && hay43 ? (m.iva_incluido ? " IVA incl." : " + IVA") : ""}`;
+    lineas.push(`${m.codigo}${m.nombre ? ` ${m.nombre}` : ""}${etiqueta} (${m.unidades} u${cu})`);
     lineas.push(...m.tallas);
-    lineas.push(m.subtotal != null ? `Subtotal: ${clp(m.subtotal)}` : "Subtotal: precio a confirmar");
+    lineas.push(m.subtotal != null ? `Subtotal: ${clp(m.subtotal)}${hay44 && hay43 && !m.iva_incluido ? " + IVA" : ""}` : "Subtotal: precio a confirmar");
     lineas.push("");
   }
   lineas.push(`Total prendas: ${totalUnidades}`);
@@ -151,7 +184,7 @@ async function construirNota({ id, rut } = {}) {
   if (sinPrecio.length) lineas.push(`(${sinPrecio.join(", ")} sin precio en la web: se confirma con un ejecutivo)`);
 
   return {
-    ok: true, referencia: ref, quote_id: quote.id, fecha: fechaCL(quote.created_at), coleccion: es44 ? "Dolce Vita · Cole 44" : "Cole 40-43",
+    ok: true, referencia: ref, quote_id: quote.id, quote_ids: idsTodos, fecha: fechaCL(quote.created_at), coleccion, es44, mixto: hay44 && hay43,
     cliente, rut: quote.client_rut || null, telefono: telefono || null, transporte: transporte || null,
     direccion: direccion || null, comuna: comuna || null, giro: giro || null, nombre_tienda: tienda || null,
     modelos, total_unidades: totalUnidades, neto, iva, total, nota_texto: lineas.join("\n"),
@@ -165,7 +198,8 @@ exports.handler = async (event) => {
   if (!ORDER_KEY || apiKey !== ORDER_KEY) return json({ ok: false, mensaje: "No autorizado." }, 401);
   const qs = event.queryStringParameters || {};
   try {
-    const out = await construirNota({ id: String(qs.id || "").trim(), rut: String(qs.rut || "").trim() });
+    const ids = String(qs.ids || "").split(",").map((s) => s.trim()).filter(Boolean);
+    const out = await construirNota({ id: String(qs.id || "").trim(), ids: ids.length ? ids : undefined, rut: String(qs.rut || "").trim() });
     return json(out);
   } catch (e) {
     return json({ ok: false, mensaje: `No pude armar la nota de pedido: ${e.message}` }, 500);

@@ -112,11 +112,20 @@ exports.handler = async (event) => {
       await responder(up.ok ? "No encontré ese pedido en el admin" : "No pude marcarlo en el admin, intenta de nuevo");
       return ok({ listo: false, supabase: up.status, error: up.error || "sin filas" });
     }
+    /* Envío mixto (44 + 40-43): son dos pedidos con el mismo RUT y la misma hora; se marcan listos juntos */
+    let hermanos = 0;
+    try {
+      const q = up.filas[0] || {};
+      if (q.client_rut_normalized && q.created_at_client) {
+        const h = await patchQuote(`id=neq.${id}&client_rut_normalized=eq.${encodeURIComponent(q.client_rut_normalized)}&created_at_client=eq.${encodeURIComponent(q.created_at_client)}`, { is_ready: true, ready_at: new Date().toISOString() });
+        hermanos = h.ok ? h.filas.length : 0;
+      }
+    } catch (_) {}
     const base = texto.replace(RE_TOMADO, "");
     const nuevo = `${base}\n\n✅ Listo · ${persona} · ${hora}`;
     const r = await tg("editMessageText", { chat_id: chatId, message_id: messageId, text: nuevo.slice(0, LIMITE_TG), disable_web_page_preview: true, reply_markup: { inline_keyboard: [] } });
     await responder(r.ok ? "Pedido marcado como listo" : "Marcado en el admin, pero no pude actualizar el mensaje");
-    return ok({ listo: true, por: persona, editado: !!r.ok });
+    return ok({ listo: true, por: persona, editado: !!r.ok, hermanos });
   }
 
   await responder("Acción desconocida");

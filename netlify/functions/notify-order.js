@@ -107,18 +107,21 @@ exports.handler = async function(event) {
      Sin source se asume Cole 44, que era el unico que avisaba antes. */
   const src   = String(order.source || "").toLowerCase();
   const es44  = !src || src.includes("44");
+  const mixto = src.includes("mixto") || /^[0-9a-f-]{36}$/i.test(String(order.quoteIdExtra || ""));
   const id6   = order.quoteId ? String(order.quoteId).slice(-6).toUpperCase() : "???";
-  const titulo = es44 ? "Nuevo pedido Cole 44" : "Nuevo pedido Cole 40-43";
+  const titulo = mixto ? "Nuevo pedido Cole 44 + Cole 40-43" : es44 ? "Nuevo pedido Cole 44" : "Nuevo pedido Cole 40-43";
   const ref  = (es44 ? "DV44-" : "C43-") + id6;
-  const link = es44
+  const link = (es44 || mixto)
     ? (order.quoteId ? "https://mohicanojeans.netlify.app/catalogo-44/?pedido=" + order.quoteId : "https://mohicanojeans.netlify.app/catalogo-44/")
     : "https://mohicanojeans.netlify.app/?admin=1#admin";
 
   /* Completar con lo que ya sabemos: pedido guardado + ficha del cliente */
   const quoteId = String(order.quoteId || "");
   /* Con id del pedido; si no viene (o no es uuid), el último pedido de ese RUT en las últimas 72 h */
+  /* Envío mixto desde catalogo-44: dos pedidos (44 y 40-43) con la misma hora; quoteIdExtra es el hermano */
+  const quoteIdExtra = String(order.quoteIdExtra || "");
   const nota = /^[0-9a-f-]{36}$/i.test(quoteId)
-    ? await construirNota({ id: quoteId }).catch((e) => ({ ok: false, mensaje: e.message }))
+    ? await construirNota(/^[0-9a-f-]{36}$/i.test(quoteIdExtra) ? { ids: [quoteId, quoteIdExtra] } : { id: quoteId }).catch((e) => ({ ok: false, mensaje: e.message }))
     : (conClave && order.rut ? await construirNota({ rut: order.rut }).catch((e) => ({ ok: false, mensaje: e.message })) : { ok: false, mensaje: "sin id de pedido" });
   const rut = (nota.ok && nota.rut) || order.rut || "";
   const ficha = await fichaCliente(rut);
@@ -128,12 +131,12 @@ exports.handler = async function(event) {
   const telefono   = dato(nota.ok && nota.telefono, ficha && ficha.telefono, order.phone);
   const transporte = dato(nota.ok && nota.transporte, ficha && ficha.transporte, order.transporte);
   const comuna     = dato(nota.ok && nota.comuna, ficha && ficha.comuna, order.ciudad);
-  const direccion  = dato(ficha && ficha.direccion);
-  const giro       = dato(ficha && ficha.giro);
-  const tienda     = dato(ficha && ficha.nombre_tienda);
+  const direccion  = dato(nota.ok && nota.direccion, ficha && ficha.direccion);
+  const giro       = dato(nota.ok && nota.giro, ficha && ficha.giro);
+  const tienda     = dato(nota.ok && nota.nombre_tienda, ficha && ficha.nombre_tienda);
 
   const lineasModelos = nota.ok
-    ? nota.modelos.map((m) => `  - ${m.codigo}${m.nombre ? " (" + m.nombre + ")" : ""}: ${m.unidades} u  [${m.tallas.map((t) => t.replace(": ", ":")).join(" ")}]${m.subtotal != null ? "  " + clp(m.subtotal) : ""}`)
+    ? nota.modelos.map((m) => `  - ${m.codigo}${m.nombre ? " (" + m.nombre + ")" : ""}${nota.mixto ? " · " + m.coleccion : ""}: ${m.unidades} u  [${m.tallas.map((t) => t.replace(": ", ":")).join(" ")}]${m.subtotal != null ? "  " + clp(m.subtotal) + (nota.mixto && !m.iva_incluido ? " + IVA" : "") : ""}`)
     : (order.items || []).map((it) => `  - ${it.codigo}${it.nombre ? " (" + it.nombre + ")" : ""}: ${it.totalUnidades} u`);
   const armar = (ls) => [
     titulo + "  [" + (nota.ok ? nota.referencia : ref) + "]",
