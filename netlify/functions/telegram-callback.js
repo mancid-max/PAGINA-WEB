@@ -1,4 +1,5 @@
-/* telegram-callback — botones del grupo "Mohicano Pedidos": "Lo tomo yo" y "Marcar listo".
+/* telegram-callback — botones del grupo "Mohicano Pedidos": "Lo tomo yo" y "Marcar listo";
+   y del grupo Ayuda: "Resuelta" en las solicitudes de clientes (sol:<uuid> → solicitudes.estado = resuelta).
    Telegram manda aquí (webhook) cada toque de botón. Se valida el secreto del webhook
    (header X-Telegram-Bot-Api-Secret-Token = TELEGRAM_WEBHOOK_SECRET) y:
      tomar:<uuid>  → toma el pedido en Supabase (quotes.tomado_por / tomado_at, atómico: solo si nadie lo tomó)
@@ -126,6 +127,25 @@ exports.handler = async (event) => {
     const r = await tg("editMessageText", { chat_id: chatId, message_id: messageId, text: nuevo.slice(0, LIMITE_TG), disable_web_page_preview: true, reply_markup: { inline_keyboard: [] } });
     await responder(r.ok ? "Pedido marcado como listo" : "Marcado en el admin, pero no pude actualizar el mensaje");
     return ok({ listo: true, por: persona, editado: !!r.ok, hermanos });
+  }
+
+  if (accion === "sol") {
+    /* Solicitud de cliente (registrar-solicitud): marcar resuelta en Supabase y dejar constancia en el aviso. */
+    let filas = [];
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/solicitudes?id=eq.${id}&estado=eq.pendiente`, {
+        method: "PATCH",
+        headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, "Content-Type": "application/json", Prefer: "return=representation" },
+        body: JSON.stringify({ estado: "resuelta", resuelta_at: new Date().toISOString(), resuelta_por: persona }),
+      });
+      filas = r.ok ? await r.json() : null;
+    } catch (_) { filas = null; }
+    if (filas === null) { await responder("No pude marcarla en la base; intenta de nuevo"); return ok({ error: "supabase" }); }
+    if (!filas.length) { await responder("Esa solicitud ya estaba resuelta"); return ok({ sin_cambio: "ya resuelta" }); }
+    const nuevo = `${texto}\n\n✅ Resuelta · ${persona} · ${hora}`;
+    const r = await tg("editMessageText", { chat_id: chatId, message_id: messageId, text: nuevo.slice(0, LIMITE_TG), disable_web_page_preview: true, reply_markup: { inline_keyboard: [] } });
+    await responder(r.ok ? "Solicitud marcada como resuelta" : "Marcada en la base, pero no pude actualizar el mensaje");
+    return ok({ resuelta: true, por: persona, editado: !!r.ok });
   }
 
   await responder("Acción desconocida");

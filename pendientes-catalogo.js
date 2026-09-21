@@ -60,9 +60,24 @@ for (const m of app44.matchAll(/\{nombre:"([^"]+)",\s*codigo:"([^"]+)",\s*precio
   sinPrecio44.push({ codigo: m[2], nombre: m[1], unidades: Number((stock44[m[2]] || {}).total || 0) });
 }
 
+/* --- Solicitudes de clientes pendientes (registrar_solicitud → Supabase), vía la función con la clave local --- */
+async function leerSolicitudes() {
+  let clave = "";
+  try { clave = String(JSON.parse(fs.readFileSync(path.join(process.env.USERPROFILE || process.env.HOME, ".mohicano", "api.json"), "utf8")).order_key || "").trim(); } catch (_) {}
+  if (!clave) return { error: "sin clave local (%USERPROFILE%\\.mohicano\\api.json)", lista: [] };
+  try {
+    const r = await fetch("https://mohicanojeans.netlify.app/.netlify/functions/registrar-solicitud?estado=pendiente&clave=" + encodeURIComponent(clave));
+    const j = await r.json();
+    if (!j.ok) return { error: j.mensaje || ("HTTP " + r.status), lista: [] };
+    return { error: null, lista: j.solicitudes || [] };
+  } catch (e) { return { error: e.message, lista: [] }; }
+}
+
 /* --- Notas manuales --- */
 const notas = (() => { try { return fs.readFileSync(path.join(RAIZ, "pendientes-catalogo.notas.md"), "utf8").replace(BOM, "").trim(); } catch (_) { return ""; } })();
 
+(async () => {
+const solicitudes = await leerSolicitudes();
 const unidades = (arr) => arr.reduce((s, x) => s + (x.unidades || 0), 0);
 const informe = {
   generado: new Date().toISOString(),
@@ -75,7 +90,10 @@ const informe = {
     sin_precio_4043: sinPrecio.length,
     sin_precio_44: sinPrecio44.length,
     notas: notas ? notas.split("\n").filter((l) => /^\s*[-*]/.test(l)).length : 0,
+    solicitudes: solicitudes.lista.length,
   },
+  solicitudes: solicitudes.lista.map((x) => ({ id: x.id, fecha: x.created_at, tipo: x.tipo, texto: x.texto, contexto: x.contexto, nombre: x.nombre, rut: x.rut, phone: x.phone })),
+  solicitudes_error: solicitudes.error,
   sin_foto: sinFoto,
   sin_precio_4043: sinPrecio,
   sin_precio_44: sinPrecio44,
@@ -121,7 +139,13 @@ const html = `<!doctype html>
   <div><b>${informe.resumen.sin_precio_4043}</b><span>en la página sin precio (40-43)</span></div>
   <div><b>${informe.resumen.sin_precio_44}</b><span>Dolce Vita 44 sin precio</span></div>
   <div><b>${informe.resumen.notas}</b><span>notas por resolver</span></div>
+  <div><b>${informe.resumen.solicitudes}</b><span>solicitudes de clientes</span></div>
 </div>
+
+<h2>0. Solicitudes de clientes que Sofía no pudo resolver (${informe.resumen.solicitudes})</h2>
+<p class="ayuda">Las registra Sofía con <code>registrar_solicitud</code>; llegan también al grupo Ayuda de Telegram, donde se marcan "Resuelta". Aquí salen las pendientes.</p>
+${solicitudes.error ? `<p class="ayuda">No se pudieron leer: ${esc(solicitudes.error)}</p>` : ""}
+${tabla(["Cuándo", "Tipo", "Pidió", "Cliente"], informe.solicitudes.map((x) => fila([esc(new Date(x.fecha).toLocaleString("es-CL", { timeZone: "America/Santiago", dateStyle: "short", timeStyle: "short" })), esc(x.tipo), esc(x.texto) + (x.contexto ? `<br><span class="ayuda">${esc(x.contexto)}</span>` : ""), esc([x.nombre, x.rut, x.phone].filter(Boolean).join(" · ") || "—")])), "Sin solicitudes pendientes.")}
 
 <h2>1. Con stock y sin foto de ese color: hay fotos de otro color (${sinFoto.otroColor.length})</h2>
 <p class="ayuda">Decisión: ¿se usa la foto del color hermano o se fotografía? Si se aprueba, se agrega el código a la carpeta correcta (o se copia la carpeta con el nombre del color) y el sync lo conecta solo.</p>
@@ -157,7 +181,7 @@ if (process.argv.includes("--avisar")) {
     try { tg = JSON.parse(fs.readFileSync(path.join(process.env.USERPROFILE || process.env.HOME, ".mohicano", "telegram.json"), "utf8")); } catch (_) {}
     if (!tg || !tg.token || !tg.chat) { console.log("aviso: falta %USERPROFILE%\\.mohicano\\telegram.json (token, chat); no se manda"); return; }
     const r = informe.resumen;
-    const total = r.sin_foto_total + r.sin_precio_4043 + r.sin_precio_44 + r.notas;
+    const total = r.sin_foto_total + r.sin_precio_4043 + r.sin_precio_44 + r.notas + r.solicitudes;
     if (!total) { console.log("aviso: sin pendientes, no se manda"); return; }
     const top = (arr, n) => arr.slice(0, n).map((m) => `${m.codigo} (${m.unidades} u)`).join(", ");
     const tx = (t) => String(t).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
@@ -169,6 +193,7 @@ if (process.argv.includes("--avisar")) {
       r.sin_foto_sin_carpeta ? `   · ${r.sin_foto_sin_carpeta} sin ninguna foto: ${tx(top(sinFoto.sinCarpeta, 3))}…` : null,
       `💲 Sin precio: <b>${r.sin_precio_4043}</b> de la 40-43${r.sin_precio_4043 ? ` (${tx(top(sinPrecio, 3))}…)` : ""} y <b>${r.sin_precio_44}</b> de la Dolce Vita 44`,
       r.notas ? `📝 Notas por resolver: <b>${r.notas}</b>` : null,
+      r.solicitudes ? `🙋 Solicitudes de clientes sin resolver: <b>${r.solicitudes}</b>` : null,
       `El detalle va en el archivo adjunto (ábrelo en el navegador).`,
     ].filter((l) => l !== null).join("\n");
     const fd = new FormData();
@@ -182,3 +207,4 @@ if (process.argv.includes("--avisar")) {
     } catch (e) { console.log("aviso Telegram: error", e.message); }
   })();
 }
+})();
