@@ -197,6 +197,19 @@ if ($NoPush) {
 }
 if ($fotoFiles.Count) { $changedFiles += $fotoFiles }
 
+# --- Informe privado de pendientes del catalogo (pendientes-catalogo.js) ---
+# Modelos con stock sin foto, sin precio y notas por resolver -> pendientes-catalogo.html en el PC
+# (no va a la web: esta en .gitignore). En las corridas de las 8 y de las 17 se manda por Telegram
+# como archivo (--avisar) al chat guardado en %USERPROFILE%\.mohicano	elegram.json.
+if (-not $NoPush -and (Get-Command node -ErrorAction SilentlyContinue)) {
+    try {
+        $argsP = @((Join-Path $repoPath 'pendientes-catalogo.js'))
+        if ((Get-Date).Hour -eq 8 -or (Get-Date).Hour -eq 17) { $argsP += '--avisar' }
+        $salidaP = @(& node $argsP)
+        foreach ($l in $salidaP) { Write-Output "$(Get-Date -Format 'HH:mm:ss') $l" }
+    } catch { Write-Warning "pendientes-catalogo.js fallo: $_" }
+}
+
 # --- Git commit + push ---
 Set-Location $repoPath
 git add -- $changedFiles

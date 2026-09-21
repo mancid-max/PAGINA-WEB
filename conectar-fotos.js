@@ -174,6 +174,10 @@ function insertarFicha(fichas, ficha) {
   fichas.splice(pos + 1, 0, ficha);
 }
 
+/* Usado como módulo por pendientes-catalogo.js (informe de lo que falta en la página). */
+module.exports = { carpetaPara, carpetasDelModelo, fotosElegidas, codigoDeCarpeta, MAX_CRUDAS };
+if (require.main !== module) return;
+
 (async () => {
   const stock = leerJson("stock-data-catalogo-43.json").items || {};
   const atrs = (() => { try { return leerJson("atributos-modelos.json").modelos || {}; } catch (_) { return {}; } })();
