@@ -4324,23 +4324,23 @@ function actualizarCarrito() {
     totalsBox.innerHTML = IS_COTIZACION_MODE ? `
       <div class="cart-totals-head">
         <span class="cart-totals-title">Total a pagar</span>
-        <span class="cart-totals-note">Precios sin IVA</span>
+        <span class="cart-totals-note"></span>
       </div>
       <div class="cart-totals-row"><span>Total prendas</span><strong>${totalItems}</strong></div>
-      ${totalEstimado > 0 ? `<div class="cart-totals-row"><span>Neto sin IVA</span><strong>${formatearPrecioCLP(totalEstimado)}</strong></div>` : ""}
+      ${totalEstimado > 0 ? `<div class="cart-totals-row"><span>Neto</span><strong>${formatearPrecioCLP(totalEstimado)}</strong></div>` : ""}
       ${totalIva > 0 ? `<div class="cart-totals-row"><span>IVA ${IVA_PERCENT}%</span><strong>${formatearPrecioCLP(totalIva)}</strong></div>` : ""}
-      ${totalConIva > 0 ? `<div class="cart-totals-row cart-totals-row-final"><span>Total con IVA</span><strong>${formatearPrecioCLP(totalConIva)}</strong></div>` : ""}
+      ${totalConIva > 0 ? `<div class="cart-totals-row cart-totals-row-final"><span>Total</span><strong>${formatearPrecioCLP(totalConIva)}</strong></div>` : ""}
     ` : `
       <div class="cart-totals-head">
         <span class="cart-totals-title">Total a pagar</span>
-        <span class="cart-totals-note">Precios sin IVA (se agrega el 19%)</span>
+        <span class="cart-totals-note"></span>
       </div>
       <div class="cart-totals-row"><span>Total prendas</span><strong>${totalItems}</strong></div>
       ${totalItems > 0 && totalItems < 24 ? `<div class="cart-totals-row" style="color:#b45309;font-size:12px;background:#fffbeb;padding:4px 8px;border-radius:4px;margin-top:2px;">⚠️ Faltan ${24 - totalItems} unidades para el mínimo (24)</div>` : ""}
       ${totalItems >= 24 ? `<div class="cart-totals-row" style="color:#15803d;font-size:12px;">✓ Mínimo mayorista cumplido</div>` : ""}
-      ${totalEstimado > 0 ? `<div class="cart-totals-row"><span>Neto sin IVA</span><strong>${formatearPrecioCLP(totalEstimado)}</strong></div>` : ""}
+      ${totalEstimado > 0 ? `<div class="cart-totals-row"><span>Neto</span><strong>${formatearPrecioCLP(totalEstimado)}</strong></div>` : ""}
       ${totalIva > 0 ? `<div class="cart-totals-row"><span>IVA ${IVA_PERCENT}%</span><strong>${formatearPrecioCLP(totalIva)}</strong></div>` : ""}
-      ${totalConIva > 0 ? `<div class="cart-totals-row cart-totals-row-final"><span>Total final con IVA</span><strong>${formatearPrecioCLP(totalConIva)}</strong></div>` : ""}
+      ${totalConIva > 0 ? `<div class="cart-totals-row cart-totals-row-final"><span>Total</span><strong>${formatearPrecioCLP(totalConIva)}</strong></div>` : ""}
     `;
     guardarCotizacionPersistida();
   }
