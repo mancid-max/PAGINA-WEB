@@ -1,5 +1,5 @@
 ﻿{
-    "generated_at":  "2026-09-21T08:20:44",
+    "generated_at":  "2026-09-21T14:20:44",
     "source_file":  "Z:\\BI\\ARCHIVO_TALLAS.CSV",
     "item_count":  359,
     "items":  {
@@ -5872,12 +5872,12 @@
                                   "sku":  "4213-01"
                               },
                   "4206-00":  {
-                                  "total":  24,
+                                  "total":  25,
                                   "description":  "J MHC CINTURA P",
                                   "article":  "4206-00",
                                   "sizes":  {
                                                 "50":  0,
-                                                "38":  5,
+                                                "38":  6,
                                                 "36":  1,
                                                 "40":  0,
                                                 "46":  4,
