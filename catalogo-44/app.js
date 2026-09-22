@@ -658,17 +658,24 @@ function abrirCajon(resetForm = true) {
   /* El botón de enviar se ve siempre (2026-09-17): si aprietan sin RUT, se remarca el campo del RUT */
   $("#btn-finalizar").style.display = "flex";
   $("#btn-finalizar").disabled = false;
-  /* RUT / transporte / teléfono que venían en el link: pre-llenar y verificar una sola vez */
+  /* RUT / transporte / teléfono que venían en el link: pre-llenar y verificar una sola vez.
+     El transporte y el teléfono se aplican aunque el link venga SIN rut (Sofía manda links sin rut
+     cuando el cliente no lo dio; antes se perdían y el pedido salía sin despacho). */
+  const transpLink = window._transpDesdeLink || "", telLink = window._telDesdeLink || "";
   if (window._rutDesdeLink) {
     elRut().value = window._rutDesdeLink;
     window._rutDesdeLink = "";
-    const transp = window._transpDesdeLink || "", tel = window._telDesdeLink || "";
     window._transpDesdeLink = ""; window._telDesdeLink = "";
     setTimeout(async () => {
       await buscarClientePorRut();
-      if (transp) setTranspValue(transp);
-      if (tel && elFono() && !elFono().value) elFono().value = tel;
+      if (transpLink) setTranspValue(transpLink);
+      if (telLink && elFono() && !elFono().value) elFono().value = telLink;
     }, 50);
+  } else if (transpLink || telLink) {
+    window._transpDesdeLink = ""; window._telDesdeLink = "";
+    mostrarCampos("nuevo"); /* sin RUT todavía: al menos que vea y pueda cambiar el transporte */
+    if (transpLink) setTranspValue(transpLink);
+    if (telLink && elFono() && !elFono().value) elFono().value = telLink;
   }
 }
 function cerrarCajon() { $("#cajon").classList.remove("abierto"); $("#cajon-velo").classList.remove("abierto"); document.body.classList.remove("cajon-abierto"); bloquearScrollFondo(false); }
@@ -861,17 +868,19 @@ elRut().addEventListener("input", () => {
 /* ---- CHECKOUT --------------------------------------------- */
 function validarCamposForm() {
   const esNuevo = clienteBuscado?.is_new ?? true;
-  const reqs = esNuevo
-    ? [
-        { el: elNombre(),  label: "Razón Social" },
-        { el: elFono(),    label: "Teléfono" },
-        { el: elGiro(),    label: "Giro" },
-        { el: elDir(),     label: "Dirección" },
-        { el: elTienda(),  label: "Nombre Tienda" },
-        { el: elComuna(),  label: "Comuna" },
-        { el: elTransp(),  label: "Transporte" },
-      ]
-    : []; // cliente existente: sin campos obligatorios adicionales
+  /* Al cliente conocido no se le vuelve a pedir lo que ya está en su ficha, pero sí lo que falta:
+     el transporte se pide SIEMPRE (se elige por pedido) y antes se podía enviar sin él. */
+  const visible = (el) => !!el && el.offsetParent !== null;
+  const todos = [
+    { el: elNombre(),  label: "Razón Social" },
+    { el: elFono(),    label: "Teléfono" },
+    { el: elGiro(),    label: "Giro" },
+    { el: elDir(),     label: "Dirección" },
+    { el: elTienda(),  label: "Nombre Tienda" },
+    { el: elComuna(),  label: "Comuna" },
+    { el: elTransp(),  label: "Transporte" },
+  ];
+  const reqs = esNuevo ? todos : todos.filter((r) => r.label === "Transporte" || visible(r.el));
   for (const r of reqs) {
     if (!r.el || !r.el.value.trim()) {
       toast("Completa el campo: " + r.label);

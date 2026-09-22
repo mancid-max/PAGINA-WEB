@@ -249,7 +249,7 @@ const SINONIMOS_CORTE = { skinny: "pitillo", skinnys: "pitillo", pitillos: "piti
 const SINONIMOS_TIRO = { cintura: "alto", alta: "alto", altos: "alto", "high waist": "alto", "highwaist": "alto", "cintura alta": "alto", "tiro alto": "alto", "talle alto": "alto", medios: "medio", media: "medio", "tiro medio": "medio", bajos: "bajo", baja: "bajo", cadera: "bajo", "cintura baja": "bajo", "tiro bajo": "bajo" };
 const normAttr = (v, dic) => { let s = normClave(v).replace(/^tiro\s+/, "").replace(/^corte\s+/, ""); if (!s) return null; return dic[s] || s; };
 
-async function buscarPorAtributos({ corte, tiro, tipo, cole, desde }) {
+async function buscarPorAtributos({ corte, tiro, tipo, cole, desde, soloDisponible }) {
   let qCorte = normAttr(corte, SINONIMOS_CORTE), qTiro = normAttr(tiro, SINONIMOS_TIRO);
   const qTipo = normAttr(tipo, {});
   /* "cintura alta" suele venir en corte: si es un tiro, se mueve al campo que corresponde */
@@ -257,7 +257,8 @@ async function buscarPorAtributos({ corte, tiro, tipo, cole, desde }) {
     const comoTiro = SINONIMOS_TIRO[normClave(corte).replace(/^corte\s+/, "")] || (["alto", "medio", "bajo"].includes(qCorte) ? qCorte : null);
     if (comoTiro) { qTiro = comoTiro; qCorte = null; }
   }
-  if (!qCorte && !qTiro && !qTipo) return { ok: false, mensaje: "Indica corte (pitillo, flare, recto, palazzo, oxford, wide leg…) o tiro (alto, medio, bajo)." };
+  /* Con solo la colección (ej. "qué tienes de la Cole 42") se listan sus modelos con stock */
+  if (!qCorte && !qTiro && !qTipo && !coleQ) return { ok: false, mensaje: "Indica corte (pitillo, flare, recto, palazzo, oxford, wide leg…), tiro (alto, medio, bajo) o colección (40 a 44)." };
   const atrs = await getJson("/atributos-modelos.json").then((a) => a.modelos || {}).catch(() => ({}));
   const coleQ = cole ? String(cole).replace(/\D/g, "") : "";
   const coles = coleQ ? [coleQ] : ["44", "43", "42", "41", "40"];
@@ -275,7 +276,7 @@ async function buscarPorAtributos({ corte, tiro, tipo, cole, desde }) {
     if (tp.includes("chaqueta")) return `${cap(tp)} · tallas S a XL`;
     return [cap(tp), ok.ti ? `tiro ${ok.ti}` : null, ok.co ? `corte ${ok.co}` : null].filter(Boolean).join(" · ").replace(" · tiro", " tiro");
   };
-  const res = [];
+  let res = [];
   for (const c of coles) {
     if (c === "44") {
       const map = await modelos44();
@@ -315,6 +316,12 @@ async function buscarPorAtributos({ corte, tiro, tipo, cole, desde }) {
       }
     }
   }
+  /* "con despacho inmediato": deja fuera lo que está En producción (la 44) y lo agotado */
+  if (soloDisponible) {
+    const antes = res.length;
+    res = res.filter((r) => r.estado === "Disponible");
+    if (!res.length) return { ok: false, mensaje: `Con despacho inmediato no tengo nada que calce con esa búsqueda (sí hay ${antes} que llegan en 10 a 15 días). Ofrécele esos o algo parecido disponible.` };
+  }
   res.sort((a, b) => b._orden - a._orden || b._total - a._total);
   /* de a 5 modelos por tanda: 'desde' es el índice donde sigue la lista si el cliente pide ver más */
   const inicio = Math.max(0, Math.min(Number(desde) || 0, Math.max(0, res.length - 1)));
@@ -340,8 +347,9 @@ exports.handler = async function (event) {
     const corte = qs.corte || body.corte || "", tiro = qs.tiro || body.tiro || "", tipo = qs.tipo || body.tipo || "", cole = qs.cole || body.cole || "";
 
     let out;
-    if (!codigoRaw && (corte || tiro || tipo)) {
-      out = await buscarPorAtributos({ corte, tiro, tipo, cole, desde: qs.desde || body.desde || 0 });
+    if (!codigoRaw && (corte || tiro || tipo || cole)) {
+      const dispRaw = String(qs.disponible ?? body.disponible ?? "").toLowerCase();
+      out = await buscarPorAtributos({ corte, tiro, tipo, cole, desde: qs.desde || body.desde || 0, soloDisponible: dispRaw === "true" || dispRaw === "1" || dispRaw === "si" || dispRaw === "sí" });
     } else if (codigoRaw) {
       const family = normalizarCodigo(codigoRaw);
       out = family ? await consultarCodigoConVariantes(family) : { ok: false, mensaje: `Código inválido: ${codigoRaw}. Usa 4 dígitos (ej. 4401) o 4401-00.` };

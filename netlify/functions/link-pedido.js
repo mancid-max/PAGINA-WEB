@@ -42,20 +42,27 @@ function specCurva(spec, cod) {
    de la más surtida a la menos, sin pasarse de lo disponible. Antes repartía parejo y el propio
    validador de stock rechazaba el link. Devuelve "" si no alcanza el stock para nada. */
 function curvaSegunStock(sizes, n) {
-  const disp = Object.entries(sizes || {}).map(([t, v]) => [t, Number(v) || 0]).filter(([, v]) => v > 0);
+  /* Una curva se vende pareja (parecida cantidad por talla), no proporcional al stock: si se reparte
+     según lo que hay, sale deforme (12 de una talla y 2 de otra). Se reparte parejo, se recorta lo que
+     no alcanza, y el resto sobrante se acomoda en las tallas que todavía tienen. */
+  const disp = Object.entries(sizes || {}).map(([t, v]) => [t, Number(v) || 0]).filter(([, v]) => v > 0)
+    .sort((a, b) => Number(a[0]) - Number(b[0]));
   if (!disp.length) return "";
   const total = disp.reduce((a, [, v]) => a + v, 0);
   const pedir = Math.min(n, total);
   const out = {};
-  /* primero una repartija proporcional al stock, después se completa de la talla con más stock */
   let puestas = 0;
-  for (const [t, v] of disp) { const q = Math.min(v, Math.floor((pedir * v) / total)); if (q > 0) { out[t] = q; puestas += q; } }
-  const porStock = [...disp].sort((a, b) => b[1] - a[1]);
-  let i = 0;
-  while (puestas < pedir && i < porStock.length * 50) {
-    const [t, v] = porStock[i % porStock.length];
-    if ((out[t] || 0) < v) { out[t] = (out[t] || 0) + 1; puestas++; }
-    i++;
+  /* repartija pareja, subiendo de a una vuelta por talla hasta llegar a la cantidad o agotar el stock */
+  let vuelta = 0;
+  while (puestas < pedir && vuelta < 200) {
+    let algo = false;
+    for (const [t, v] of disp) {
+      if (puestas >= pedir) break;
+      if ((out[t] || 0) >= v) continue;
+      out[t] = (out[t] || 0) + 1; puestas++; algo = true;
+    }
+    if (!algo) break;
+    vuelta++;
   }
   return Object.entries(out).sort((a, b) => Number(a[0]) - Number(b[0])).map(([t, q]) => `${t}=${q}`).join(".");
 }
@@ -228,6 +235,7 @@ exports.handler = async (event) => {
 
   /* 4) Cole 40-43: las tallas tienen que tener stock real (también dentro de un link mixto).
      Si la curva venía como cantidad ("20"), se rehace según el stock de cada talla antes de validar. */
+  const recortes = [];
   if (hay4043) {
     const porCantidad = [...porCodigo.keys()].filter((c) => !c.startsWith("44") && cantidadPedida.has(c));
     if (porCantidad.length) {
@@ -241,8 +249,11 @@ exports.handler = async (event) => {
       for (const cod of porCantidad) {
         const sizes = sizesDe(cod);
         if (!sizes) continue;
-        const nueva = curvaSegunStock(sizes, cantidadPedida.get(cod));
+        const pedidas = cantidadPedida.get(cod);
+        const nueva = curvaSegunStock(sizes, pedidas);
         if (!nueva) return error(`${cod} no tiene stock para armar esa cantidad. Pide otro modelo o menos unidades.`);
+        const quedaron = unidades(specAObjeto(nueva));
+        if (quedaron < pedidas) recortes.push({ codigo: cod, pediste: pedidas, quedaron });
         porCodigo.set(cod, specAObjeto(nueva));
         items = items.map((it) => (it.split(":")[0] === cod ? `${cod}:${nueva}` : it));
       }
@@ -295,6 +306,7 @@ exports.handler = async (event) => {
     statusCode: 200, headers,
     body: JSON.stringify({
       ok: true, url,
+      ...(recortes.length ? { recortes, aviso_recorte: recortes.map((r) => `${r.codigo}: pediste ${r.pediste} y hay ${r.quedaron}`).join(" · ") + ". Dile al cliente la cantidad real antes de que envíe." } : {}),
       ...(sinPrecio.length ? { sin_precio: sinPrecio, aviso: `${sinPrecio.join(", ")} todavía no ${sinPrecio.length === 1 ? "tiene precio cargado" : "tienen precio cargado"}: avísale al cliente que ese valor se lo confirma un ejecutivo antes de facturar.` } : {}), pagina: mixto ? "Dolce Vita 44 + Cole 40-43 (un solo carrito)" : es44 ? "Dolce Vita · Cole 44" : "Cole 40-43", items, rut: rut || null, transporte: transporte || null,
       instruccion: soloFicha
         ? "Al abrir el link se abre la ficha del modelo con la curva cargada; el cliente la agrega al pedido y luego envía."
