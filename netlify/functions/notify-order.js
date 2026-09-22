@@ -31,6 +31,45 @@ async function fichaCliente(rut) {
 /* Nexor: si el cliente existe como lead (nunca se crea uno), le manda por Sofía la confirmación con la
    NOTA DE PEDIDO, deja la nota en el CRM y mueve el lead a "Compró (pedido enviado)".
    Solo actúa si el pedido existe en Supabase (el uuid no se puede adivinar) y el teléfono coincide con el del lead. */
+/* Guarda o completa la ficha del cliente con los datos que vinieron en el pedido. Nunca borra lo que ya
+   había: solo rellena lo que está vacío (y el transporte, que se actualiza al último que usó). */
+async function guardarFichaCliente(nota) {
+  if (!SUPABASE_URL || !SERVICE_KEY || !nota || !nota.ok) return null;
+  const digitos = String(nota.rut || "").replace(/[^0-9kK]/g, "").toUpperCase();
+  if (digitos.length < 8) return null;
+  const limpio = (v) => { const t = String(v == null ? "" : v).trim().replace(/\s+/g, " ").slice(0, 120); return t || null; };
+  const campos = {
+    razon_social: limpio(nota.cliente),
+    telefono: limpio(nota.telefono),
+    transporte: limpio(nota.transporte),
+    giro: limpio(nota.giro),
+    direccion: limpio(nota.direccion),
+    comuna: limpio(nota.comuna),
+    nombre_tienda: limpio(nota.nombre_tienda),
+  };
+  const h = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, "Content-Type": "application/json" };
+  try {
+    const norm = `${digitos.slice(0, -1)}-${digitos.slice(-1)}`;
+    const filtro = encodeURIComponent(`(rut_normalized.eq.${digitos},rut_normalized.eq.${norm})`);
+    const fila = (await fetch(`${SUPABASE_URL}/rest/v1/clients?or=${filtro}&select=*&limit=1`, { headers: h }).then((r) => (r.ok ? r.json() : [])))[0] || null;
+    if (fila) {
+      /* solo lo que falta; el transporte se pone al día con el del pedido */
+      const patch = {};
+      for (const [k, v] of Object.entries(campos)) {
+        if (!v) continue;
+        if (k === "transporte") { if (v !== fila.transporte) patch[k] = v; continue; }
+        if (!String(fila[k] || "").trim()) patch[k] = v;
+      }
+      if (!Object.keys(patch).length) return { actualizado: false };
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/clients?id=eq.${fila.id}`, { method: "PATCH", headers: h, body: JSON.stringify(patch) });
+      return { actualizado: r.ok, campos: Object.keys(patch) };
+    }
+    if (!campos.razon_social) return { creado: false, motivo: "sin razón social" };
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/clients`, { method: "POST", headers: h, body: JSON.stringify({ rut: nota.rut, rut_normalized: digitos, active: true, ...campos }) });
+    return { creado: r.ok };
+  } catch (e) { return { error: e.message }; }
+}
+
 async function avisarNexor(nota, telefono) {
   const API = (process.env.NEXOR_API_KEY || "").trim();
   if (!API) return { skip: "sin NEXOR_API_KEY" };
@@ -180,11 +219,16 @@ exports.handler = async function(event) {
     } catch (e) { telegram = `error: ${e.message}`; console.error("Telegram sendMessage falló:", e.message); }
   }
 
+  /* La ficha del cliente queda al día con los datos del pedido (antes solo quedaban en el pedido y
+     la próxima vez se le pedían de nuevo). No bloquea el aviso si falla. */
+  let fichaGuardada = null;
+  try { fichaGuardada = await guardarFichaCliente(nota); } catch (e) { fichaGuardada = { error: e.message }; }
+
   let nexor = null;
   try { nexor = await avisarNexor(nota, telefono === "—" ? "" : telefono); } catch (e) { nexor = { error: e.message }; }
   if (nexor && (nexor.error || nexor.msg1 >= 400 || nexor.estado >= 400)) console.error("Nexor:", JSON.stringify(nexor));
 
   const refFinal = nota.ok ? nota.referencia : ref;
   /* Al navegador solo se le confirma; el detalle (lead_id, estados) solo con la clave interna */
-  return { statusCode: 200, body: JSON.stringify(conClave ? { ok: true, ref: refFinal, telegram, nexor } : { ok: true, ref: refFinal }) };
+  return { statusCode: 200, body: JSON.stringify(conClave ? { ok: true, ref: refFinal, telegram, nexor, ficha: fichaGuardada } : { ok: true, ref: refFinal }) };
 };
