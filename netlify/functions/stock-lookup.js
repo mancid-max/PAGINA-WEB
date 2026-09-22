@@ -258,7 +258,7 @@ async function buscarPorAtributos({ corte, tiro, tipo, cole, desde, soloDisponib
     if (comoTiro) { qTiro = comoTiro; qCorte = null; }
   }
   /* Con solo la colección (ej. "qué tienes de la Cole 42") se listan sus modelos con stock */
-  if (!qCorte && !qTiro && !qTipo && !coleQ) return { ok: false, mensaje: "Indica corte (pitillo, flare, recto, palazzo, oxford, wide leg…), tiro (alto, medio, bajo) o colección (40 a 44)." };
+  if (!qCorte && !qTiro && !qTipo && !cole) return { ok: false, mensaje: "Indica corte (pitillo, flare, recto, palazzo, oxford, wide leg…), tiro (alto, medio, bajo) o colección (40 a 44)." };
   const atrs = await getJson("/atributos-modelos.json").then((a) => a.modelos || {}).catch(() => ({}));
   const coleQ = cole ? String(cole).replace(/\D/g, "") : "";
   const coles = coleQ ? [coleQ] : ["44", "43", "42", "41", "40"];
