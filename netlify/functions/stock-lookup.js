@@ -120,7 +120,7 @@ async function consultarCodigo(family) {
     ? "tallas S a XL"
     : [tiro ? `tiro ${tiro}` : null, corte ? `corte ${corte}` : null].filter(Boolean).join(" · ");
   const descripcion_corta = esChaqueta ? `${tipoTxt} · ${rasgos}` : (rasgos ? `${tipoTxt} ${rasgos}` : tipoTxt); // ej. "Jean tiro alto · corte flare"
-  const precioCorto = precio == null ? "precio a consultar" : es44 ? `${clp(precio)} c/u IVA incl.` : `${clp(precio)} sin IVA`;
+  const precioCorto = precio == null ? "precio a consultar" : `${clp(precio)} + IVA`; /* el precio de lista es neto en las dos colecciones */
   /* Ficha en varias lineas (se lee mejor en el celular); en Cole 40-43 cada talla va en su linea */
   const lineasStock = es44 ? [estado] : (total > 0 ? [`Stock: ${total} unidades`, ...conStock.map((s) => `  ${s}`)] : ["Agotado"]);
   const ficha_texto = [
@@ -154,7 +154,7 @@ async function consultarCodigo(family) {
     descripcion_corta,
     ficha_texto,
     precio,
-    precio_texto: precio == null ? "Precio a consultar" : es44 ? `${clp(precio)} por unidad, IVA incluido` : `${clp(precio)} precio mayorista sin IVA`,
+    precio_texto: precio == null ? "Precio a consultar" : `${clp(precio)} por unidad + IVA`,
     estado,
     disponible,
     /* Cole 44: solo disponible / en producción, sin cantidades (la disponibilidad se define a mano) */
@@ -288,7 +288,7 @@ async function buscarPorAtributos({ corte, tiro, tipo, cole }) {
         const desc = descDe(ok);
         /* orden: primero la Dolce Vita disponible (es la novedad), después colecciones anteriores por stock, al final la 44 en producción */
         /* ficha vertical, igual que la consulta por código (una cosa por línea) */
-        const ficha = [`${codigo} ${m.nombre} · Dolce Vita 44`, desc, m.precio == null ? "precio a consultar" : `${clp(m.precio)} c/u IVA incl.`, estado === "Disponible" ? "Disponible (despacho inmediato)" : "En producción (10 a 15 días, se puede reservar)"].join("\n");
+        const ficha = [`${codigo} ${m.nombre} · Dolce Vita 44`, desc, m.precio == null ? "precio a consultar" : `${clp(m.precio)} + IVA`, estado === "Disponible" ? "Disponible (despacho inmediato)" : "En producción (10 a 15 días, se puede reservar)"].join("\n");
         res.push({ codigo, nombre: m.nombre, coleccion: "Dolce Vita · Cole 44", tiro: ok.ti, corte: ok.co, precio: m.precio, estado, ficha_texto: ficha, _orden: total > 30 ? 3 : 1, _total: total });
       }
     } else {
@@ -307,7 +307,7 @@ async function buscarPorAtributos({ corte, tiro, tipo, cole }) {
         const tallas = Object.entries(st.sizes || {}).filter(([, n]) => Number(n) > 0).map(([t, n]) => `${t}: ${n}`);
         const precio = pit[codigo] ?? pit[codigo.slice(0, 4)] ?? null;
         const desc = descDe(ok);
-        const ficha = [`${codigo} · Cole ${c}`, desc, precio == null ? "precio a consultar" : `${clp(precio)} sin IVA`, `Stock: ${total} unidades`, ...tallas.map((t) => `  ${t}`)].join("\n");
+        const ficha = [`${codigo} · Cole ${c}`, desc, precio == null ? "precio a consultar" : `${clp(precio)} + IVA`, `Stock: ${total} unidades`, ...tallas.map((t) => `  ${t}`)].join("\n");
         res.push({ codigo, nombre: `Modelo ${codigo.slice(0, 4)}`, coleccion: `Cole ${c}`, tiro: ok.ti, corte: ok.co, precio, estado: "Disponible", stock_total: total, tallas_con_stock: tallas, ficha_texto: ficha, _orden: 2, _total: total });
       }
     }

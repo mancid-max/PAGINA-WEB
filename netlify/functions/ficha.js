@@ -39,7 +39,7 @@ async function info44(cod) {
     nombre: m[1],
     coleccion: "Dolce Vita · Cole 44",
     detalle: [SEC[m[4]] || m[4], m[3] === "chaqueta" ? "Chaqueta" : "Jean", estado].filter(Boolean).join(" · "),
-    precio_texto: precio == null ? "Precio a consultar" : `${clp(precio)} c/u IVA incluido`,
+    precio_texto: precio == null ? "Precio a consultar" : `${clp(precio)} c/u + IVA`,
   };
 }
 
@@ -66,7 +66,7 @@ async function info4043(cod, cole) {
     nombre: `Modelo ${cod}`,
     coleccion: `Cole ${cole}`,
     detalle: desc ? desc.charAt(0).toUpperCase() + desc.slice(1).toLowerCase() : "Jean de mujer",
-    precio_texto: p == null ? "Precio a consultar" : `${clp(p)} mayorista sin IVA`,
+    precio_texto: p == null ? "Precio a consultar" : `${clp(p)} mayorista + IVA`,
   };
 }
 
