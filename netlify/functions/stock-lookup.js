@@ -305,7 +305,8 @@ async function buscarPorAtributos({ corte, tiro, tipo, cole, desde }) {
         const ok = calza(bi, item.bota, item.tipo);
         if (!ok) continue;
         const tallas = Object.entries(st.sizes || {}).filter(([, n]) => Number(n) > 0).map(([t, n]) => `${t}: ${n}`);
-        const precio = pit[codigo] ?? pit[codigo.slice(0, 4)] ?? null;
+        /* mismos candidatos que la busqueda por codigo: exacto, 4 digitos y el -00 del modelo base */
+        const precio = pit[codigo] ?? pit[codigo.slice(0, 4)] ?? pit[`${codigo.slice(0, 4)}-00`] ?? null;
         const desc = descDe(ok);
         const ficha = [`${codigo} · Cole ${c}`, desc, precio == null ? "precio a consultar" : `${clp(precio)} + IVA`, `Stock: ${total} unidades`, ...tallas.map((t) => `  ${t}`)].join("\n");
         res.push({ codigo, nombre: `Modelo ${codigo.slice(0, 4)}`, coleccion: `Cole ${c}`, tiro: ok.ti, corte: ok.co, precio, estado: "Disponible", stock_total: total, tallas_con_stock: tallas, ficha_texto: ficha, _orden: 2, _total: total });
