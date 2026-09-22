@@ -122,7 +122,9 @@ async function consultarCodigo(family) {
   const descripcion_corta = esChaqueta ? `${tipoTxt} · ${rasgos}` : (rasgos ? `${tipoTxt} ${rasgos}` : tipoTxt); // ej. "Jean tiro alto · corte flare"
   const precioCorto = precio == null ? "precio a consultar" : `${clp(precio)} + IVA`; /* el precio de lista es neto en las dos colecciones */
   /* Ficha en varias lineas (se lee mejor en el celular); en Cole 40-43 cada talla va en su linea */
-  const lineasStock = es44 ? [estado] : (total > 0 ? [`Stock: ${total} unidades`, ...conStock.map((s) => `  ${s}`)] : ["Agotado"]);
+  /* La 44 no muestra cantidades: solo si sale al tiro o si hay que esperar la producción (mismo texto que la lista por estilo) */
+  const estado44 = disponible ? "Disponible (despacho inmediato)" : "En producción (10 a 15 días, se puede reservar)";
+  const lineasStock = es44 ? [estado44] : (total > 0 ? [`Stock: ${total} unidades`, ...conStock.map((s) => `  ${s}`)] : ["Agotado"]);
   const ficha_texto = [
     `${family}${es44 && nombre ? ` ${nombre}` : ""} · ${es44 ? "Dolce Vita 44" : `Cole ${cole}`}`,
     descripcion_corta,
