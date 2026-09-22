@@ -247,7 +247,7 @@ const SINONIMOS_CORTE = { skinny: "pitillo", skinnys: "pitillo", pitillos: "piti
 const SINONIMOS_TIRO = { cintura: "alto", alta: "alto", altos: "alto", "high waist": "alto", "highwaist": "alto", "cintura alta": "alto", "tiro alto": "alto", "talle alto": "alto", medios: "medio", media: "medio", "tiro medio": "medio", bajos: "bajo", baja: "bajo", cadera: "bajo", "cintura baja": "bajo", "tiro bajo": "bajo" };
 const normAttr = (v, dic) => { let s = normClave(v).replace(/^tiro\s+/, "").replace(/^corte\s+/, ""); if (!s) return null; return dic[s] || s; };
 
-async function buscarPorAtributos({ corte, tiro, tipo, cole }) {
+async function buscarPorAtributos({ corte, tiro, tipo, cole, desde }) {
   let qCorte = normAttr(corte, SINONIMOS_CORTE), qTiro = normAttr(tiro, SINONIMOS_TIRO);
   const qTipo = normAttr(tipo, {});
   /* "cintura alta" suele venir en corte: si es un tiro, se mueve al campo que corresponde */
@@ -313,13 +313,17 @@ async function buscarPorAtributos({ corte, tiro, tipo, cole }) {
     }
   }
   res.sort((a, b) => b._orden - a._orden || b._total - a._total);
-  const resultados = res.slice(0, 8).map(({ _orden, _total, ...r }) => r);
+  /* de a 5 modelos por tanda: 'desde' es el índice donde sigue la lista si el cliente pide ver más */
+  const inicio = Math.max(0, Math.min(Number(desde) || 0, Math.max(0, res.length - 1)));
+  const tanda = res.slice(inicio, inicio + 5);
+  const resultados = tanda.map(({ _orden, _total, ...r }) => r);
   const que = [qTipo, qTiro ? `tiro ${qTiro}` : null, qCorte ? `corte ${qCorte}` : null].filter(Boolean).join(" ");
   if (!resultados.length) return { ok: false, mensaje: `No tengo modelos con stock que calcen con "${que}"${coleQ ? ` en la Cole ${coleQ}` : ""}. Ofrece un corte o tiro parecido.` };
-  /* lista_texto: los primeros 5 con su ficha completa, listos para mandar tal cual en un mensaje */
-  const lista = resultados.slice(0, 5).map((r) => r.ficha_texto).join("\n\n") + (res.length > 5 ? `\n\n… y ${res.length - 5} más. ¿Quieres verlos?` : "");
+  const quedan = Math.max(0, res.length - (inicio + tanda.length));
+  /* lista_texto: hasta 5 modelos con su ficha completa, listos para mandar tal cual en un mensaje */
+  const lista = resultados.map((r) => r.ficha_texto).join("\n\n") + (quedan ? `\n\n… y ${quedan} más. ¿Quieres verlos?` : "");
   /* lista_texto va antes que resultados: es lo que Sofía manda tal cual (un modelo por bloque, una línea por dato) */
-  return { ok: true, busqueda: que, total_encontrados: res.length, lista_texto: lista, nota: res.length > 5 ? `Hay ${res.length} que calzan. Manda lista_texto TAL CUAL (trae los 5 primeros con su ficha) y ofrece ver los demás.` : "Manda lista_texto TAL CUAL, sin resumir.", resultados };
+  return { ok: true, busqueda: que, total_encontrados: res.length, desde: inicio, siguiente_desde: quedan ? inicio + tanda.length : null, lista_texto: lista, nota: quedan ? `Hay ${res.length} que calzan y te mandé ${tanda.length}. Manda lista_texto TAL CUAL. Si el cliente quiere ver los demás, vuelve a llamarme con desde=${inicio + tanda.length}.` : "Manda lista_texto TAL CUAL, sin resumir.", resultados };
 }
 
 exports.handler = async function (event) {
@@ -334,7 +338,7 @@ exports.handler = async function (event) {
 
     let out;
     if (!codigoRaw && (corte || tiro || tipo)) {
-      out = await buscarPorAtributos({ corte, tiro, tipo, cole });
+      out = await buscarPorAtributos({ corte, tiro, tipo, cole, desde: qs.desde || body.desde || 0 });
     } else if (codigoRaw) {
       const family = normalizarCodigo(codigoRaw);
       out = family ? await consultarCodigoConVariantes(family) : { ok: false, mensaje: `Código inválido: ${codigoRaw}. Usa 4 dígitos (ej. 4401) o 4401-00.` };
