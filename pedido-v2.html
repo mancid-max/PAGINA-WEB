@@ -348,7 +348,7 @@ footer.pie{text-align:center;color:var(--gris);font-size:.8rem;padding:2rem 1rem
   <footer>
     <div class="linea"><span>Total prendas</span><b id="c-prendas">0</b></div>
     <div class="linea total"><span>Total estimado</span><b id="c-total">$0</b></div>
-    <p style="font-size:.66rem;color:var(--gris)">Precios con IVA incluido.</p>
+    <p style="font-size:.66rem;color:var(--gris)">Precios netos, + IVA.</p>
     <div class="form-caja" id="form-checkout">
       <label>Nombre o razón social *</label>
       <input id="f-nombre" type="text" placeholder="Ej: Comercial Andes SpA">
@@ -536,7 +536,7 @@ function crearCard(p){
     <div class="cuerpo">
       <h3>Modelo ${p.family}</h3>
       <p class="codigo">Código: <b>${p.family}</b></p>
-      <p class="precio">${fmtPrecio(p.price)}<small>Precio lista c/IVA</small></p>
+      <p class="precio">${fmtPrecio(p.price)}<small>Precio lista + IVA</small></p>
       <div class="botones">
         <button class="btn btn-borde" onclick="abrirModal('${p.family}')">Ver tallas</button>
         <button class="btn btn-rojo" onclick="agregarRapido('${p.family}')">+ Agregar</button>
@@ -577,7 +577,7 @@ function abrirModal(family){
   const p = productoActual;
   document.getElementById('m-nombre').textContent = 'Modelo ' + p.family;
   document.getElementById('m-codigo').textContent = 'Código: ' + p.family;
-  document.getElementById('m-precio').innerHTML = fmtPrecio(p.price) + '<small>Precio lista con IVA incluido</small>';
+  document.getElementById('m-precio').innerHTML = fmtPrecio(p.price) + '<small>Precio lista + IVA</small>';
   const info = DESC[p.family] || {};
   const tags = [
     info.corte  ? `<span class="m-tag m-tag-corte">${info.corte}</span>`  : '',

@@ -50,10 +50,14 @@ async function buscadorPrecios() {
   let m;
   while ((m = re.exec(app44))) m44[m[2].toUpperCase()] = { nombre: m[1], precio: m[3] === "null" ? null : Number(m[3]) };
   const it43 = p43.items || p43, it = p.items || p;
-  return (sku) => {
+  /* Hasta el 2026-09-21 la Dolce Vita 44 se vendió con el precio "IVA incluido"; desde el 22 todo es neto.
+     Un pedido viejo se muestra tal como se cobró ese día, no con el criterio nuevo. */
+  const CAMBIO_IVA = new Date("2026-09-22T03:00:00Z"); /* 00:00 de Chile */
+  return (sku, creadoEn) => {
     const s = String(sku || "").toUpperCase();
     const base4 = s.slice(0, 4);
-    if (s.startsWith("44")) return { precio: (m44[s] || m44[`${base4}-00`] || {}).precio ?? null, nombre: (m44[s] || {}).nombre || "", ivaIncluido: false /* todos los precios son netos desde 2026-09-22 */ };
+    const antiguo = !!creadoEn && new Date(creadoEn) < CAMBIO_IVA;
+    if (s.startsWith("44")) return { precio: (m44[s] || m44[`${base4}-00`] || {}).precio ?? null, nombre: (m44[s] || {}).nombre || "", ivaIncluido: antiguo };
     const src = s.startsWith("43") ? it43 : it;
     const v = src[s] ?? src[base4] ?? null;
     return { precio: v == null ? null : Number(v), nombre: "", ivaIncluido: false };
@@ -134,17 +138,18 @@ async function construirNota({ id, ids, rut } = {}) {
 
   /* Todos los precios de lista son netos (+ IVA), en las dos colecciones: cada modelo aporta su neto y su IVA. */
   const modelos = Object.values(porSku).sort((a, b) => a.codigo.localeCompare(b.codigo)).map((g) => {
-    const p = precioDe(g.codigo);
+    const p = precioDe(g.codigo, quote.created_at);
     const lineasTallas = Object.entries(g.tallas).sort((a, b) => ordenTalla(a[0]) - ordenTalla(b[0])).map(([t, n]) => `${t}: ${n}`);
     const subtotal = p.precio == null ? null : p.precio * g.unidades;
-    const netoM = subtotal == null ? 0 : subtotal;
-    const ivaM = subtotal == null ? 0 : Math.round(subtotal * 0.19);
+    const netoM = subtotal == null ? 0 : (p.ivaIncluido ? Math.round(subtotal / 1.19) : subtotal);
+    const ivaM = subtotal == null ? 0 : (p.ivaIncluido ? subtotal - netoM : 0); /* pedidos nuevos: el IVA se calcula abajo, una sola vez */
     return { codigo: g.codigo, nombre: p.nombre || "", coleccion: g.codigo.startsWith("44") ? "Dolce Vita 44" : `Cole ${g.codigo.slice(0, 2)}`, unidades: g.unidades, precio_unitario: p.precio, iva_incluido: !!p.ivaIncluido, subtotal, neto: netoM, iva: ivaM, tallas: lineasTallas };
   });
   const totalUnidades = modelos.reduce((s, m) => s + m.unidades, 0);
   const sinPrecio = modelos.filter((m) => m.subtotal == null).map((m) => m.codigo);
   const neto = modelos.reduce((s, m) => s + m.neto, 0);
-  const iva = modelos.reduce((s, m) => s + m.iva, 0);
+  const ivaViejo = modelos.reduce((s, m) => s + m.iva, 0); /* solo pedidos 44 de antes del 22-09 */
+  const iva = ivaViejo || Math.round(neto * 0.19); /* como una factura: 19% una sola vez sobre el neto */
   const total = neto + iva;
 
   const ficha = (await fichaCliente(quote.client_rut || quote.client_rut_normalized)) || {};

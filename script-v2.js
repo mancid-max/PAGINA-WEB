@@ -17,7 +17,7 @@ const precioConIva = (valor) => {
   const n = Number(valor);
   return Number.isFinite(n) && n > 0 ? Math.round(n * (1 + IVA_RATE)) : null;
 };
-const muestraPrecioSinIva = () => CATALOG_SOURCE !== "catalogo-44";
+const muestraPrecioSinIva = () => true; /* desde 2026-09-22 el precio publicado es neto en las dos colecciones */
 let quotesAccessToken = sessionStorage.getItem("quotes_access_token") || "";
 let quotesUserEmail = sessionStorage.getItem("quotes_user_email") || "";
 let quotesAdminCache = { quotes: [], itemsByQuote: new Map() };
@@ -3029,7 +3029,7 @@ function actualizarEstadoCotizacionProducto(producto, sku) {
     if (charList) renderizarInfoProductoCatalogo43(charList, producto, detallePrecioFallback);
   } else if (descriptionEl && detallePrecioFallback) {
     const textoBase = normalizarTextoVisible(producto?.description || "");
-    descriptionEl.innerText = `${textoBase}${textoBase ? " · " : ""}Precio mayor s/iva: ${formatearPrecioCLP(detallePrecioFallback.final)}`;
+    descriptionEl.innerText = `${textoBase}${textoBase ? " · " : ""}Precio mayorista + IVA: ${formatearPrecioCLP(detallePrecioFallback.final)}`;
   }
   const mostrarOverlay = agotado && CATALOG_SOURCE !== "catalogo-44";
   if (imageViewerEl) {
