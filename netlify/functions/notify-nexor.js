@@ -67,12 +67,13 @@ exports.handler = async (event) => {
 
   const TOKEN = process.env.TELEGRAM_TOKEN;
   if (!TOKEN) return { statusCode: 500, body: "TELEGRAM_TOKEN no configurado" };
-  /* Un grupo de Telegram por tipo de aviso (2026-09-16): desconocidos, ayuda humana; el resto al grupo general */
+  /* Un grupo de Telegram por tipo de aviso: desconocidos, ayuda humana y llamadas (2026-09-22, decisión de Manu:
+     las llamadas de Sofía quedan activas pero cada una avisa al grupo Ayuda); el resto al grupo general */
   const tipo = String(body.tipo || "aviso");
-  const CHAT = tipo === "nexor_ayuda" ? (process.env.TELEGRAM_CHAT_AYUDA || process.env.TELEGRAM_CHAT_ID || "-5261495560")
+  const CHAT = (tipo === "nexor_ayuda" || tipo === "nexor_llamada") ? (process.env.TELEGRAM_CHAT_AYUDA || process.env.TELEGRAM_CHAT_ID || "-5261495560")
     : tipo === "nexor_desconocido" ? (process.env.TELEGRAM_CHAT_DESCONOCIDOS || process.env.TELEGRAM_CHAT_ID || "-5261495560")
     : (process.env.TELEGRAM_CHAT_ID || "-5261495560");
-  const titulo = tipo === "nexor_ayuda" ? "Cliente necesita ayuda (Sofía)" : tipo === "nexor_desconocido" ? "Número desconocido" : `Nexor · ${tipo}`;
+  const titulo = tipo === "nexor_ayuda" ? "Cliente necesita ayuda (Sofía)" : tipo === "nexor_desconocido" ? "Número desconocido" : tipo === "nexor_llamada" ? "Llamada de Sofía" : `Nexor · ${tipo}`;
 
   const lead = String(body.lead_id || "").trim();
   const payload = { chat_id: CHAT, text: `[${titulo}]\n${texto}`.slice(0, 4000), disable_web_page_preview: true };
@@ -81,7 +82,7 @@ exports.handler = async (event) => {
       { text: "✅ Aceptar como mayorista", url: linkAccion(lead, "aceptar") },
       { text: "✖ Rechazar", url: linkAccion(lead, "rechazar") },
     ]] };
-  } else if (tipo === "nexor_ayuda") {
+  } else if (tipo === "nexor_ayuda" || tipo === "nexor_llamada") {
     const fila = [{ text: "Abrir Sofía en Nexor", url: "https://app.getnexor.ai/agents/a914d7c0-fccc-4eb1-947a-ac5f875111d1" }];
     /* Mientras el lead esté en "Necesita ayuda (humano)" Sofía no le responde: este botón se lo devuelve cuando ya lo atendieron */
     if (/^[0-9a-f-]{36}$/i.test(lead) && SECRET) fila.unshift({ text: "↩ Devolver a Sofía", url: linkAccion(lead, "devolver") });
