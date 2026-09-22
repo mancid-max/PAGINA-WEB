@@ -2558,6 +2558,8 @@ function toast(msg) {
 
   if (itemsQ) {
     let agregados = 0, saltados = [];
+    const antes = Object.keys(carrito);
+    const delLink = [];
     itemsQ.split(",").forEach(par => {
       const [cod, ...rest] = par.split(":");
       const m = buscar(normCod(cod.trim()));
@@ -2567,11 +2569,17 @@ function toast(msg) {
       if (tot <= 0) { saltados.push(m.codigo + (m.es4043 ? " (sin stock)" : "")); return; }
       if (tot < MIN_POR_MODELO && !m.es4043) { saltados.push(m.codigo + " (min " + MIN_POR_MODELO + ")"); return; }
       carrito[m.codigo] = { t: cv, nombre: m.nombre };
+      delLink.push(m.codigo);
       agregados++;
     });
+    /* El link es el pedido completo: se sacan los modelos que traía el carrito de antes (de otro link o de
+       una visita anterior), para que no se mezclen dos pedidos y el cliente envíe de más. */
+    const quitados = antes.filter((c) => !delLink.includes(c));
+    if (agregados && quitados.length) quitados.forEach((c) => { delete carrito[c]; });
     guardar(); pintarCarrito();
     if (agregados) { abrirCajon(true); pintarCarrito(); toast(agregados + " modelo(s) cargados ✔ Revisa y envía tu pedido"); }
-    if (saltados.length) setTimeout(() => toast("No se cargó: " + saltados.join(", ")), 3000);
+    if (agregados && quitados.length) setTimeout(() => toast("Este link reemplazó tu pedido anterior (" + quitados.length + " modelo(s) que tenías guardados)"), 3000);
+    if (saltados.length) setTimeout(() => toast("No se cargó: " + saltados.join(", ")), quitados.length ? 6000 : 3000);
   } else if (modeloQ) {
     const m = buscar(normCod(modeloQ));
     if (m) {

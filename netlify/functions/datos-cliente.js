@@ -44,12 +44,12 @@ exports.handler = async (event) => {
         ok: true, valido: true, existe: true, rut: formatRut(norm), razon_social: row.razon_social,
         telefono: row.telefono || null, giro: row.giro || null, direccion: row.direccion || null,
         nombre_tienda: row.nombre_tienda || null, comuna: row.comuna || null, transporte: row.transporte || null,
-        mensaje: `Cliente registrado: ${row.razon_social}. Puedes saludarlo por su nombre; solo falta confirmar los datos que estén en null (teléfono, transporte).`,
+        mensaje: `Cliente registrado: ${row.razon_social}. Salúdalo por su nombre y sigue con el pedido: los datos que vengan en null NO bloquean el link, se piden después o los completa en la página.`,
       }) };
     }
     return { statusCode: 200, headers, body: JSON.stringify({ ok: true, valido: true, existe: false, rut: formatRut(norm),
-      mensaje: "RUT válido pero es cliente nuevo: pide razón social (nombre de la tienda o persona), teléfono y transporte." }) };
+      mensaje: "RUT válido. No lo tenemos en la base de la web, pero eso no significa que sea cliente nuevo (la base no tiene a todos): NO le digas \"primera compra\" ni \"no estás registrado\". Arma el link igual; los datos de la tienda se los pide la página." }) };
   } catch (e) {
-    return { statusCode: 200, headers, body: JSON.stringify({ ok: false, valido: true, rut: formatRut(norm), mensaje: "No pude consultar la base de clientes ahora; continúa pidiendo los datos al cliente." }) };
+    return { statusCode: 200, headers, body: JSON.stringify({ ok: false, valido: true, rut: formatRut(norm), mensaje: "No pude consultar la base de clientes ahora; sigue con el pedido igual y arma el link; no digas que no está registrado. Datos al cliente." }) };
   }
 };

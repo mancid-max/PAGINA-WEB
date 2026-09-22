@@ -38,11 +38,34 @@ function specCurva(spec, cod) {
   return s;
 }
 
+/* Cole 40-43, curva por cantidad ("20"): reparte esas unidades entre las tallas QUE TIENEN STOCK,
+   de la más surtida a la menos, sin pasarse de lo disponible. Antes repartía parejo y el propio
+   validador de stock rechazaba el link. Devuelve "" si no alcanza el stock para nada. */
+function curvaSegunStock(sizes, n) {
+  const disp = Object.entries(sizes || {}).map(([t, v]) => [t, Number(v) || 0]).filter(([, v]) => v > 0);
+  if (!disp.length) return "";
+  const total = disp.reduce((a, [, v]) => a + v, 0);
+  const pedir = Math.min(n, total);
+  const out = {};
+  /* primero una repartija proporcional al stock, después se completa de la talla con más stock */
+  let puestas = 0;
+  for (const [t, v] of disp) { const q = Math.min(v, Math.floor((pedir * v) / total)); if (q > 0) { out[t] = q; puestas += q; } }
+  const porStock = [...disp].sort((a, b) => b[1] - a[1]);
+  let i = 0;
+  while (puestas < pedir && i < porStock.length * 50) {
+    const [t, v] = porStock[i % porStock.length];
+    if ((out[t] || 0) < v) { out[t] = (out[t] || 0) + 1; puestas++; }
+    i++;
+  }
+  return Object.entries(out).sort((a, b) => Number(a[0]) - Number(b[0])).map(([t, q]) => `${t}=${q}`).join(".");
+}
+
 /* Mínimos del pedido (los mismos que aplica la página al enviar) */
 const MIN_TOTAL = 24;       /* unidades del pedido completo */
 const MIN_POR_MODELO_44 = 12; /* Cole 44: por modelo */
 const TALLAS_CHAQUETA = ["S", "M", "L", "XL"];
-const TALLAS_JEAN = ["36", "38", "40", "42", "44", "46", "48", "50", "52"];
+const TALLAS_JEAN = ["36", "38", "40", "42", "44", "46", "48", "50", "52"]; /* Cole 40-43 */
+const TALLAS_JEAN_44 = ["36", "38", "40", "42", "44", "46"]; /* la Dolce Vita 44 no se fabrica sobre la 46 */
 
 const leerJson = async (ruta) => {
   const t = await fetch(`${BASE}${ruta}`, { headers: { "Cache-Control": "no-cache" } }).then((r) => (r.ok ? r.text() : ""));
@@ -144,8 +167,10 @@ exports.handler = async (event) => {
   const crudos = itemsRaw
     ? itemsRaw.split(",").map((par) => { const [c, ...r] = par.split(":"); return { cod: normCod(c), spec: r.join(":") }; })
     : (modelo ? [{ cod: modelo, spec: curva }] : []);
+  const cantidadPedida = new Map(); /* códigos cuya curva vino como cantidad suelta ("20"): se rehará según stock */
   for (const { cod, spec } of crudos) {
     if (!cod) continue;
+    if (/^\d+$/.test(String(spec || "").trim()) && !cod.startsWith("44")) cantidadPedida.set(cod, Number(String(spec).trim()));
     const cv = specAObjeto(specCurva(spec, cod));
     const acum = porCodigo.get(cod) || {};
     for (const [t, n] of Object.entries(cv)) acum[t] = (acum[t] || 0) + n;
@@ -153,7 +178,7 @@ exports.handler = async (event) => {
   }
   if (!porCodigo.size) return error("Indica items (ej. 4448-00:12) o modelo.");
 
-  const items = [...porCodigo].map(([cod, cv]) => `${cod}:${objetoASpec(cv)}`);
+  let items = [...porCodigo].map(([cod, cv]) => `${cod}:${objetoASpec(cv)}`);
   const fuera = [...porCodigo.keys()].filter((c) => !/^4[0-4]$/.test(c.slice(0, 2)));
   if (fuera.length) return error(`${fuera.join(", ")} no pertenece a las colecciones vigentes (Cole 40 a 44). Confirma el código con consultar_stock.`, { codigos_desconocidos: fuera });
   const coles = new Set(items.map((i) => i.slice(0, 2)));
@@ -188,7 +213,7 @@ exports.handler = async (event) => {
     const problemas = [];
     for (const [cod, cv] of porCodigo) {
       const esChaqueta = cod.startsWith("44") && cat44 && cat44[cod] ? cat44[cod].tipo === "chaqueta" : CHAQUETAS.test(cod);
-      const permitidas = esChaqueta ? TALLAS_CHAQUETA : TALLAS_JEAN;
+      const permitidas = esChaqueta ? TALLAS_CHAQUETA : (cod.startsWith("44") ? TALLAS_JEAN_44 : TALLAS_JEAN);
       const malas = Object.keys(cv).filter((t) => !permitidas.includes(t));
       if (malas.length) problemas.push(`${cod}: ${malas.join(", ")} no ${malas.length === 1 ? "es una talla" : "son tallas"} de este modelo (usa ${permitidas.join(", ")}).`);
       if (cod.startsWith("44") && unidades(cv) < MIN_POR_MODELO_44) problemas.push(`${cod}: ${unidades(cv)} unidades; en la Dolce Vita 44 el mínimo es ${MIN_POR_MODELO_44} por modelo.`);
@@ -201,8 +226,27 @@ exports.handler = async (event) => {
     }
   }
 
-  /* 4) Cole 40-43: las tallas tienen que tener stock real (también dentro de un link mixto) */
+  /* 4) Cole 40-43: las tallas tienen que tener stock real (también dentro de un link mixto).
+     Si la curva venía como cantidad ("20"), se rehace según el stock de cada talla antes de validar. */
   if (hay4043) {
+    const porCantidad = [...porCodigo.keys()].filter((c) => !c.startsWith("44") && cantidadPedida.has(c));
+    if (porCantidad.length) {
+      const inv = await leerJson("/stock-data-catalogo-43.json").catch(() => null);
+      const sizesDe = (cod) => {
+        const it = inv && inv.items;
+        if (!it) return null;
+        const reg = Array.isArray(it) ? it.find((x) => String(x.sku || x.article).toUpperCase() === cod) : it[cod];
+        return reg && reg.sizes;
+      };
+      for (const cod of porCantidad) {
+        const sizes = sizesDe(cod);
+        if (!sizes) continue;
+        const nueva = curvaSegunStock(sizes, cantidadPedida.get(cod));
+        if (!nueva) return error(`${cod} no tiene stock para armar esa cantidad. Pide otro modelo o menos unidades.`);
+        porCodigo.set(cod, specAObjeto(nueva));
+        items = items.map((it) => (it.split(":")[0] === cod ? `${cod}:${nueva}` : it));
+      }
+    }
     const errores = await validarStock4043(items.filter((i) => !i.startsWith("44")));
     if (errores.length) {
       return error(`No se armó el link porque hay tallas sin stock. Corrige usando solo estas tallas y vuelve a llamar:\n${errores.join("\n")}`, { errores });
@@ -223,10 +267,28 @@ exports.handler = async (event) => {
   if (tel) params.set("tel", tel);
 
   const url = `${base}?${params.toString()}`;
+  /* modelos sin precio cargado: el link sirve igual, pero Sofía tiene que avisarlo */
+  const sinPrecio = [];
+  try {
+    const [p44, p43, p40] = await Promise.all([
+      es44 ? catalogo44().catch(() => null) : Promise.resolve(null),
+      hay4043 ? leerJson("/price-data-catalogo-43.json").catch(() => null) : Promise.resolve(null),
+      hay4043 ? leerJson("/price-data.json").catch(() => null) : Promise.resolve(null),
+    ]);
+    for (const cod of porCodigo.keys()) {
+      if (cod.startsWith("44")) { if (p44 && p44[cod] && p44[cod].precio == null) sinPrecio.push(cod); continue; }
+      const it43 = (p43 && (p43.items || p43)) || {}, it40 = (p40 && (p40.items || p40)) || {};
+      const base4 = cod.slice(0, 4);
+      const v = it43[cod] ?? it43[base4] ?? it40[cod] ?? it40[base4] ?? null;
+      if (v == null) sinPrecio.push(cod);
+    }
+  } catch (_) {}
+
   return {
     statusCode: 200, headers,
     body: JSON.stringify({
-      ok: true, url, pagina: mixto ? "Dolce Vita 44 + Cole 40-43 (un solo carrito)" : es44 ? "Dolce Vita · Cole 44" : "Cole 40-43", items, rut: rut || null, transporte: transporte || null,
+      ok: true, url,
+      ...(sinPrecio.length ? { sin_precio: sinPrecio, aviso: `${sinPrecio.join(", ")} todavía no ${sinPrecio.length === 1 ? "tiene precio cargado" : "tienen precio cargado"}: avísale al cliente que ese valor se lo confirma un ejecutivo antes de facturar.` } : {}), pagina: mixto ? "Dolce Vita 44 + Cole 40-43 (un solo carrito)" : es44 ? "Dolce Vita · Cole 44" : "Cole 40-43", items, rut: rut || null, transporte: transporte || null,
       instruccion: soloFicha
         ? "Al abrir el link se abre la ficha del modelo con la curva cargada; el cliente la agrega al pedido y luego envía."
         : "Al abrir el link, los modelos quedan cargados en 'Tu pedido' con la curva indicada, el RUT verificado y el transporte; el cliente solo revisa y presiona Enviar pedido.",
