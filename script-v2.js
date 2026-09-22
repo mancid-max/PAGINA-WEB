@@ -4081,6 +4081,10 @@ window.addEventListener("load", () => {
   (async () => {
     if (itemsQ) {
       await esperarStock();
+      /* El link es el pedido completo que se acordó por WhatsApp: se parte de cero para no sumarlo al
+         que hubiera guardado (otro link, o una visita anterior) ni duplicarlo si lo abre dos veces. */
+      const habia = pedido.length;
+      pedido.length = 0;
       let agregados = 0; const saltados = [], recortes = [];
       for (const par of itemsQ.split(",")) {
         const [cod, ...rest] = par.split(":");
@@ -4094,7 +4098,7 @@ window.addEventListener("load", () => {
       if (agregados) {
         actualizarCarrito();
         document.getElementById("cartSidebar")?.classList.add("open");
-        if (typeof mostrarToastExito === "function") mostrarToastExito("Pedido cargado", `${agregados} modelo(s) en tu pedido. Revisa las tallas y envíalo.`);
+        if (typeof mostrarToastExito === "function") mostrarToastExito("Pedido cargado", `${agregados} modelo(s) en tu pedido. Revisa las tallas y envíalo.${habia ? " Reemplazó el pedido que tenías guardado." : ""}`);
       }
       if (recortes.length && typeof mostrarToastError === "function") setTimeout(() => mostrarToastError("Ajustado al stock", recortes.join(" · ")), 1200);
       if (saltados.length && typeof mostrarToastError === "function") setTimeout(() => mostrarToastError("No se cargó", saltados.join(", ")), 2600);

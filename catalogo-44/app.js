@@ -719,18 +719,21 @@ function setCampoVisible(id, visible) {
 }
 
 function mostrarCampos(modo) {
-  // modo: false = ocultar todo | "existente" = solo nota | "nuevo" = todo
+  /* modo: false = ocultar todo | "existente" = solo lo que falta | "nuevo" = todo.
+     Al cliente conocido se le piden únicamente los datos que no tenemos; el transporte va siempre,
+     porque se elige por pedido (antes quedaba oculto y el pedido salía sin despacho). */
   const mostrar = !!modo;
   elCampos().style.display = mostrar ? "flex" : "none";
   if (!mostrar) return;
   const esNuevo = modo === "nuevo";
+  const vacio = (id) => { const e = document.getElementById(id); return !e || !String(e.value || "").trim(); };
   setCampoVisible("f-nombre",    esNuevo);
-  setCampoVisible("f-fono",      esNuevo);
-  setCampoVisible("f-giro",      esNuevo);
-  setCampoVisible("f-dir",       esNuevo);
-  setCampoVisible("f-tienda",    esNuevo);
-  setCampoVisible("f-comuna",    esNuevo);
-  setCampoVisible("f-transporte",esNuevo);
+  setCampoVisible("f-fono",      esNuevo || vacio("f-fono"));
+  setCampoVisible("f-giro",      esNuevo || vacio("f-giro"));
+  setCampoVisible("f-dir",       esNuevo || vacio("f-dir"));
+  setCampoVisible("f-tienda",    esNuevo || vacio("f-tienda"));
+  setCampoVisible("f-comuna",    esNuevo || vacio("f-comuna"));
+  setCampoVisible("f-transporte", true);
   setCampoVisible("f-nota",      true);
 }
 
