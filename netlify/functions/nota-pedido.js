@@ -53,7 +53,7 @@ async function buscadorPrecios() {
   return (sku) => {
     const s = String(sku || "").toUpperCase();
     const base4 = s.slice(0, 4);
-    if (s.startsWith("44")) return { precio: (m44[s] || m44[`${base4}-00`] || {}).precio ?? null, nombre: (m44[s] || {}).nombre || "", ivaIncluido: true };
+    if (s.startsWith("44")) return { precio: (m44[s] || m44[`${base4}-00`] || {}).precio ?? null, nombre: (m44[s] || {}).nombre || "", ivaIncluido: false /* todos los precios son netos desde 2026-09-22 */ };
     const src = s.startsWith("43") ? it43 : it;
     const v = src[s] ?? src[base4] ?? null;
     return { precio: v == null ? null : Number(v), nombre: "", ivaIncluido: false };

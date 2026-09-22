@@ -136,7 +136,7 @@ exports.handler = async function(event) {
   const tienda     = dato(nota.ok && nota.nombre_tienda, ficha && ficha.nombre_tienda);
 
   const lineasModelos = nota.ok
-    ? nota.modelos.map((m) => `  - ${m.codigo}${m.nombre ? " (" + m.nombre + ")" : ""}${nota.mixto ? " · " + m.coleccion : ""}: ${m.unidades} u  [${m.tallas.map((t) => t.replace(": ", ":")).join(" ")}]${m.subtotal != null ? "  " + clp(m.subtotal) + (nota.mixto && !m.iva_incluido ? " + IVA" : "") : ""}`)
+    ? nota.modelos.map((m) => `  - ${m.codigo}${m.nombre ? " (" + m.nombre + ")" : ""}${nota.mixto ? " · " + m.coleccion : ""}: ${m.unidades} u  [${m.tallas.map((t) => t.replace(": ", ":")).join(" ")}]${m.subtotal != null ? "  " + clp(m.subtotal) + " + IVA" : ""}`)
     : (order.items || []).map((it) => `  - ${it.codigo}${it.nombre ? " (" + it.nombre + ")" : ""}: ${it.totalUnidades} u`);
   const armar = (ls) => [
     titulo + "  [" + (nota.ok ? nota.referencia : ref) + "]",

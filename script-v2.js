@@ -11,8 +11,8 @@ let draftTallasPorSku = {}; // legacy (borradores desactivados)
 const TALLAS_DISPONIBLES = ["36", "38", "40", "42", "44", "46"];
 const IVA_RATE = 0.19;
 const IVA_PERCENT = Math.round(IVA_RATE * 100);
-/* Cole 40-43 publica precio mayorista SIN IVA. Mostramos al lado el total con IVA
-   para que el cliente entienda lo que va a pagar. Cole 44 ya publica con IVA incluido. */
+/* Todos los precios de lista son NETOS (sin IVA), en las dos colecciones. Como en cualquier factura
+   chilena: se suma el neto de todas las lineas y al final se agrega el 19% una sola vez. */
 const precioConIva = (valor) => {
   const n = Number(valor);
   return Number.isFinite(n) && n > 0 ? Math.round(n * (1 + IVA_RATE)) : null;
