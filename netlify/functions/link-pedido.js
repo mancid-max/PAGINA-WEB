@@ -79,7 +79,7 @@ async function catalogo44() {
   const map = {};
   const re = /\{nombre:"([^"]+)",\s*codigo:"([^"]+)",\s*precio:(null|\d+),[^}]*?tipo:"([^"]+)"/g;
   let m;
-  while ((m = re.exec(src))) map[m[2].toUpperCase()] = { nombre: m[1], tipo: m[4] };
+  while ((m = re.exec(src))) map[m[2].toUpperCase()] = { nombre: m[1], precio: m[3] === "null" ? null : Number(m[3]), tipo: m[4] };
   return map;
 }
 async function codigos4043() {
@@ -245,6 +245,13 @@ exports.handler = async (event) => {
         if (!nueva) return error(`${cod} no tiene stock para armar esa cantidad. Pide otro modelo o menos unidades.`);
         porCodigo.set(cod, specAObjeto(nueva));
         items = items.map((it) => (it.split(":")[0] === cod ? `${cod}:${nueva}` : it));
+      }
+    }
+    if (porCantidad.length && !soloFicha) {
+      /* al ajustar al stock real el pedido pudo quedar bajo el mínimo */
+      const totalReal = [...porCodigo.values()].reduce((a, cv) => a + unidades(cv), 0);
+      if (totalReal < MIN_TOTAL) {
+        return error(`Con el stock real esos modelos suman ${totalReal} unidades y el mínimo es ${MIN_TOTAL}. Dile al cliente cuánto hay de cada uno y completa con otro modelo.`, { total_unidades: totalReal, items });
       }
     }
     const errores = await validarStock4043(items.filter((i) => !i.startsWith("44")));
