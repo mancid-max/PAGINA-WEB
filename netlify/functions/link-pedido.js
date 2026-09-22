@@ -180,7 +180,7 @@ exports.handler = async (event) => {
 
   /* 2) RUT: si viene, tiene que ser válido (la página lo rechaza y el pedido no se puede enviar) */
   if (rut && !rutValido(rut)) {
-    return error(`El RUT "${qs.rut || body.rut}" no es válido (dígito verificador). Pídeselo de nuevo al cliente, con el formato 12.345.678-9.`);
+    return error(`El RUT "${qs.rut || body.rut}" no es válido (dígito verificador). Pídeselo una vez más; si no sale, arma el link SIN rut y el cliente lo escribe en la página.`);
   }
 
   /* 3) tallas y mínimos (los mismos que exige la página al apretar Enviar) */

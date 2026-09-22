@@ -29,7 +29,7 @@ exports.handler = async (event) => {
   const raw = qs.rut || body.rut || "";
   const norm = normalizarRut(raw);
   if (!norm) return { statusCode: 200, headers, body: JSON.stringify({ ok: false, valido: false, mensaje: "Falta el RUT." }) };
-  if (!rutValido(norm)) return { statusCode: 200, headers, body: JSON.stringify({ ok: false, valido: false, rut: raw, mensaje: `El RUT "${raw}" no es válido (dígito verificador). Pide al cliente que lo repita, ej. 12.345.678-9.` }) };
+  if (!rutValido(norm)) return { statusCode: 200, headers, body: JSON.stringify({ ok: false, valido: false, rut: raw, mensaje: `El RUT "${raw}" no es válido (dígito verificador). Pídeselo una vez más (ej. 12.345.678-9); si no sale, sigue con el pedido y arma el link sin rut.` }) };
 
   try {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/lookup_client_by_rut`, {
