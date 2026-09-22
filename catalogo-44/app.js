@@ -199,7 +199,7 @@ function modelo4043(codigo) {
 }
 const etiquetaCole = m => m && m.es4043 ? `Cole ${m.cole}` : "Dolce Vita 44";
 /* precio unitario y subtotal netos (sin IVA), para sumar parejo las dos colecciones */
-const netoUnit = m => m.es4043 ? m.precioNeto : (m.precio ? Math.round(m.precio / 1.19) : null);
+const netoUnit = m => m.es4043 ? m.precioNeto : (m.precio || null);
 
 const tallasDe  = m => m.es4043 ? (Object.keys(m.stock).length ? TALLAS_4043.filter(t => m.stock[t] > 0) : TALLAS_4043) : (m.tipo === "chaqueta" ? TALLAS_CHAQ : TALLAS_JEANS);
 const curvaDe   = m => m.es4043 ? curvaStock4043(m, 12) : (m.tipo === "chaqueta" ? CURVA_CHAQ    : CURVA_JEANS);
@@ -356,7 +356,7 @@ function cardHTML(m) {
         <h3>${m.nombre}</h3>
         <p class="codigo">Código <b>${m.codigo}</b> · ${nombreSec(m.sec)}</p>
         ${dispHTML}
-        <p class="precio">${m.precio ? CLP(m.precio) : "A consultar"}<small>${m.precio ? "por unidad · IVA incluido" : "precio mayorista · consultar"}</small></p>
+        <p class="precio">${m.precio ? CLP(m.precio) : "A consultar"}<small>${m.precio ? "por unidad + IVA" : "precio mayorista · consultar"}</small></p>
         <div class="botones">
           <div class="fila">
             ${disp
@@ -407,10 +407,10 @@ window.abrirModal = function(codigo) {
   $("#m-nombre").textContent = m.nombre;
   if (m.es4043) {
     $("#m-codigo").textContent = "Código " + m.codigo + " · Cole " + m.cole + (m.desc ? " · " + m.desc : "");
-    $("#m-precio").innerHTML = m.precioNeto ? CLP(m.precioNeto) + "<small>por unidad · sin IVA</small>" : "Precio a consultar<small>se cotiza por WhatsApp</small>";
+    $("#m-precio").innerHTML = m.precioNeto ? CLP(m.precioNeto) + "<small>por unidad + IVA</small>" : "Precio a consultar<small>se cotiza por WhatsApp</small>";
   } else {
     $("#m-codigo").textContent = "Código " + m.codigo + " · " + nombreSec(m.sec) + " · Dolce Vita 44";
-    $("#m-precio").innerHTML = m.precio ? CLP(m.precio) + "<small>por unidad · IVA incluido</small>" : "Precio a consultar<small>se cotiza por WhatsApp</small>";
+    $("#m-precio").innerHTML = m.precio ? CLP(m.precio) + "<small>por unidad + IVA</small>" : "Precio a consultar<small>se cotiza por WhatsApp</small>";
   }
   /* Botón de video dentro del modal (en mobile las cards no muestran botones) */
   const vbtn = $("#m-video-btn");
@@ -556,20 +556,20 @@ window.cerrarVideo = function() {
 };
 
 /* ---- CARRITO --------------------------------------------- */
-/* Totales de un carrito (el actual o un snapshot). Dolce Vita 44 viene con IVA incluido; Cole 40-43 en neto.
-   Se suma todo en neto, se agrega el IVA y se entrega el total con IVA, sin perder los pesos exactos de la 44. */
+/* Totales de un carrito (el actual o un snapshot). Todos los precios de lista son NETOS (sin IVA), en las dos
+   colecciones: se suma el neto y al final se agrega el 19% una sola vez. */
 function calcularTotales(c) {
-  let prendas = 0, total44 = 0, neto43 = 0, consultar = false, hay44 = false, hay43 = false;
+  let prendas = 0, neto44 = 0, neto43 = 0, consultar = false, hay44 = false, hay43 = false;
   Object.entries(c || carrito).forEach(([cod, v]) => {
     const m = buscar(cod); if (!m) return;
     const n = Object.values(v.t).reduce((a, b) => a + b, 0);
     prendas += n;
     if (m.es4043) { hay43 = true; if (m.precioNeto) neto43 += n * m.precioNeto; else consultar = true; }
-    else { hay44 = true; if (m.precio) total44 += n * m.precio; else consultar = true; }
+    else { hay44 = true; if (m.precio) neto44 += n * m.precio; else consultar = true; }
   });
-  const neto44 = Math.round(total44 / 1.19);
-  const iva43 = Math.round(neto43 * 0.19);
-  const neto = neto44 + neto43, iva = (total44 - neto44) + iva43, total = total44 + neto43 + iva43;
+  const neto = neto44 + neto43;
+  const iva = Math.round(neto * 0.19);
+  const total = neto + iva;
   return { prendas, total, neto, iva, consultar, hay44, hay43, mixto: hay44 && hay43, curvas: Math.round((prendas / MIN_POR_MODELO) * 10) / 10 };
 }
 function datosCarrito() { return calcularTotales(carrito); }
@@ -583,9 +583,10 @@ function pintarCarrito() {
     cont.innerHTML = codigos.map(c => {
       const m = buscar(c); const v = carrito[c]; if (!m) return "";
       const n = Object.values(v.t).reduce((a,b) => a+b, 0);
-      /* 44: precio y subtotal con IVA incluido (como en el catálogo); 40-43: neto + IVA. Abajo se suma todo parejo. */
-      const sub = m.es4043 ? (m.precioNeto ? CLP(n * m.precioNeto) + " + IVA" : "A consultar") : (m.precio ? CLP(n * m.precio) : "A consultar");
-      const precioTxt = m.es4043 ? (m.precioNeto ? CLP(m.precioNeto) + " c/u + IVA" : "precio a consultar") : (m.precio ? CLP(m.precio) + " c/u IVA incl." : "precio a consultar");
+      /* Todos los precios son netos: el IVA se suma una sola vez en el total. */
+      const unitNeto = netoUnit(m);
+      const sub = unitNeto ? CLP(n * unitNeto) + " + IVA" : "A consultar";
+      const precioTxt = unitNeto ? CLP(unitNeto) + " c/u + IVA" : "precio a consultar";
       const bajo = (!m.es4043 && n < MIN_POR_MODELO) ? `<p class="falta">⚠ Faltan ${MIN_POR_MODELO-n} u. para el mínimo</p>` : "";
       const foto = m.es4043 ? m.imgSrc : `img/${m.img}_0.webp`;
       return `<div class="item-c" data-sku="${c}">
@@ -1083,7 +1084,8 @@ function textoPedido(cliente, payload) {
     const m = buscar(c); const v = carrito[c]; if (!m) return "";
     const n = Object.values(v.t).reduce((a,b)=>a+b,0);
     const det = Object.entries(v.t).map(([t,q])=>`${t}×${q}`).join(" ");
-    const sub = m.es4043 ? (m.precioNeto ? ` — ${CLP(n*m.precioNeto)} + IVA` : " — a consultar") : (m.precio ? ` — ${CLP(n*m.precio)}` : " — a consultar");
+    const unitNeto = netoUnit(m);
+    const sub = unitNeto ? ` — ${CLP(n*unitNeto)} + IVA` : " — a consultar";
     return `• *${m.nombre} ${m.codigo}* (${etiquetaCole(m)}): ${n} u. (${det})${sub}`;
   }).filter(Boolean);
   const titulo = d.mixto ? "DOLCE VITA 44 + COLE 40-43" : (d.hay43 ? "COLE 40-43" : "DOLCE VITA 44");
@@ -1115,9 +1117,9 @@ async function generarExcel(cliente, payload, carritoRef) {
   const modelos = Object.keys(c).map((cod) => {
     const m = buscar(cod); const v = c[cod]; if (!m) return null;
     const n = Object.values(v.t).reduce((a, b) => a + b, 0);
-    /* precio unitario y subtotal tal como los ve el cliente en cada catálogo: 44 con IVA, 40-43 neto */
-    const unit = m.es4043 ? m.precioNeto : m.precio;
-    return { m, v, n, unit, sub: unit ? n * unit : null, etiquetaPrecio: m.es4043 ? " + IVA" : "" };
+    /* precio unitario neto en las dos colecciones; el IVA se suma al final */
+    const unit = netoUnit(m);
+    return { m, v, n, unit, sub: unit ? n * unit : null, etiquetaPrecio: " + IVA" };
   }).filter(Boolean).map((x, i) => ({ ...x, i }));
 
   const tot = modelos.reduce((a, x) => a + x.n, 0);
@@ -1246,7 +1248,7 @@ async function generarExcel(cliente, payload, carritoRef) {
 
   const noteRow = sp + 6;
   sh.range(`A${noteRow}:${L}${noteRow}`).merged(true)
-    .value(totales.hay43 ? "Dolce Vita 44: precios con IVA incluido. Cole 40-43: precios netos (+ IVA). El total ya incluye el IVA de todo. Los modelos 'Consultar' se cotizan por separado." : "Los precios incluyen IVA. Los modelos 'Consultar' se cotizan por separado.")
+    .value("Todos los precios son netos (+ IVA). El total ya incluye el IVA. Los modelos 'Consultar' se cotizan por separado.")
     .style({ fontSize:7, italic:true, fontColor:"AAAAAA" });
 
   // Anchos de columna

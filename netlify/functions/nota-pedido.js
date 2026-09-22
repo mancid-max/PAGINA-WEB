@@ -37,7 +37,7 @@ async function getRemote(path) {
   return path.endsWith(".js") ? t : JSON.parse(t);
 }
 
-/* Precios: Cole 44 desde catalogo-44/app.js (IVA incluido); Cole 43 desde price-data-catalogo-43.json;
+/* Precios: Cole 44 desde catalogo-44/app.js (neto); Cole 43 desde price-data-catalogo-43.json;
    Cole 40-42 desde price-data.json (netos). Igual que la página y que consultar_stock. */
 async function buscadorPrecios() {
   const [app44, p43, p] = await Promise.all([
@@ -132,13 +132,13 @@ async function construirNota({ id, ids, rut } = {}) {
   const es44 = hay44 && !hay43;
   const coleccion = hay44 && hay43 ? "Dolce Vita 44 + Cole 40-43" : (hay44 ? "Dolce Vita · Cole 44" : "Cole 40-43");
 
-  /* Dolce Vita 44: precio con IVA incluido; Cole 40-43: neto. Cada modelo aporta su neto y su IVA. */
+  /* Todos los precios de lista son netos (+ IVA), en las dos colecciones: cada modelo aporta su neto y su IVA. */
   const modelos = Object.values(porSku).sort((a, b) => a.codigo.localeCompare(b.codigo)).map((g) => {
     const p = precioDe(g.codigo);
     const lineasTallas = Object.entries(g.tallas).sort((a, b) => ordenTalla(a[0]) - ordenTalla(b[0])).map(([t, n]) => `${t}: ${n}`);
     const subtotal = p.precio == null ? null : p.precio * g.unidades;
-    const netoM = subtotal == null ? 0 : (p.ivaIncluido ? Math.round(subtotal / 1.19) : subtotal);
-    const ivaM = subtotal == null ? 0 : (p.ivaIncluido ? subtotal - netoM : Math.round(subtotal * 0.19));
+    const netoM = subtotal == null ? 0 : subtotal;
+    const ivaM = subtotal == null ? 0 : Math.round(subtotal * 0.19);
     return { codigo: g.codigo, nombre: p.nombre || "", coleccion: g.codigo.startsWith("44") ? "Dolce Vita 44" : `Cole ${g.codigo.slice(0, 2)}`, unidades: g.unidades, precio_unitario: p.precio, iva_incluido: !!p.ivaIncluido, subtotal, neto: netoM, iva: ivaM, tallas: lineasTallas };
   });
   const totalUnidades = modelos.reduce((s, m) => s + m.unidades, 0);
@@ -171,10 +171,10 @@ async function construirNota({ id, ids, rut } = {}) {
   ];
   for (const m of modelos) {
     const etiqueta = hay44 && hay43 ? ` · ${m.coleccion}` : "";
-    const cu = m.precio_unitario == null ? "" : ` · ${clp(m.precio_unitario)} c/u${hay44 && hay43 ? (m.iva_incluido ? " IVA incl." : " + IVA") : ""}`;
+    const cu = m.precio_unitario == null ? "" : ` · ${clp(m.precio_unitario)} c/u + IVA`;
     lineas.push(`${m.codigo}${m.nombre ? ` ${m.nombre}` : ""}${etiqueta} (${m.unidades} u${cu})`);
     lineas.push(...m.tallas);
-    lineas.push(m.subtotal != null ? `Subtotal: ${clp(m.subtotal)}${hay44 && hay43 && !m.iva_incluido ? " + IVA" : ""}` : "Subtotal: precio a confirmar");
+    lineas.push(m.subtotal != null ? `Subtotal: ${clp(m.subtotal)} + IVA` : "Subtotal: precio a confirmar");
     lineas.push("");
   }
   lineas.push(`Total prendas: ${totalUnidades}`);
