@@ -810,7 +810,7 @@ async function buscarClientePorRut() {
       elNombre().readOnly = false;
       const transpGuardado = localStorage.getItem("dv44_transp_" + norm) || "";
       setTranspValue(transpGuardado);
-      setRutEstado("nuevo", "Cliente nuevo — completa los datos");
+      setRutEstado("nuevo", "Completa tus datos para el despacho");
       mostrarCampos("nuevo");
     }
     actualizarBotonRut();
@@ -838,7 +838,7 @@ function actualizarBotonRut() {
   const t = document.getElementById("rut-btn-titulo");
   const s = document.getElementById("rut-btn-sub");
   if (t) t.textContent = clienteBuscado.is_new
-    ? "Cliente nuevo — completa los datos"
+    ? "Completa tus datos para el despacho"
     : "✔ " + (clienteBuscado.razon_social || clienteBuscado.rut);
   if (s) s.textContent = clienteBuscado.rut + " · Toca para cambiar";
 }
@@ -2316,7 +2316,7 @@ window.abrirDetalleCRM = async function(rut) {
     bodyHtml = `
       <div class="crm-det-info">${infoHtml}</div>
       <p style="font-size:.78rem;color:var(--gris);background:#f5f3ff;border-radius:8px;padding:.6rem .85rem;margin:.5rem 0 1rem">
-        Cliente nuevo — realizó su primer pedido Cole 44 directamente desde el catálogo.
+        Sin ficha previa en la web — hizo su pedido directamente desde el catálogo (puede ser cliente antiguo).
       </p>
       <button class="btn btn-rojo" style="justify-content:center;width:100%;margin-bottom:.5rem" onclick="descargarExcelCRM('${crmActual.rut}')">⬇ Descargar Excel del pedido</button>
     `;

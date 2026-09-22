@@ -5378,7 +5378,7 @@ async function validarRutClienteEnUI({ silencioso = false } = {}) {
       const clienteNuevo = construirClienteNuevoDesdeInput(rutNormalizado);
       setClientLookupUI({
         tipo: "new",
-        texto: "Cliente nuevo detectado.",
+        texto: "Completa los datos del despacho.",
       });
     renderClientNewHelper(true, "Completa los datos para enviar tu pedido.");
     toggleClientNameField(true, { value: clienteNuevo.razon_social, readonly: false });
@@ -5444,13 +5444,13 @@ function configurarLookupCliente() {
     const nombre = String(nameInput.value || "").trim();
     const telefono = normalizarTelefonoCliente(phoneInput?.value || "");
     renderClientNewHelper(true, nombre && telefono
-      ? "Cliente nuevo listo. Ya puedes enviar el pedido."
-      : "Completa nombre y teléfono del cliente nuevo para enviar el pedido.");
+      ? "Datos listos. Ya puedes enviar el pedido."
+      : "Completa nombre y teléfono para enviar el pedido.");
     setClientLookupUI({
       tipo: "new",
       texto: nombre && telefono
-        ? "Cliente nuevo listo. Ya puedes enviar el pedido."
-        : "Cliente nuevo. Agrega nombre y teléfono para enviar el pedido.",
+        ? "Datos listos. Ya puedes enviar el pedido."
+        : "Agrega nombre y teléfono para enviar el pedido.",
     });
     guardarCotizacionPersistida();
   });
@@ -5463,13 +5463,13 @@ function configurarLookupCliente() {
     const nombre = String(nameInput?.value || "").trim();
     const telefono = normalizarTelefonoCliente(phoneInput.value || "");
     renderClientNewHelper(true, nombre && telefono
-      ? "Cliente nuevo listo. Ya puedes enviar el pedido."
-      : "Completa nombre y teléfono del cliente nuevo para enviar el pedido.");
+      ? "Datos listos. Ya puedes enviar el pedido."
+      : "Completa nombre y teléfono para enviar el pedido.");
     setClientLookupUI({
       tipo: "new",
       texto: nombre && telefono
-        ? "Cliente nuevo listo. Ya puedes enviar el pedido."
-        : "Cliente nuevo. Agrega nombre y teléfono para enviar el pedido.",
+        ? "Datos listos. Ya puedes enviar el pedido."
+        : "Agrega nombre y teléfono para enviar el pedido.",
     });
     guardarCotizacionPersistida();
   });
