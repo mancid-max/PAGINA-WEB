@@ -1,0 +1,176 @@
+{
+  "_que_es": "Nombre de cada codigo de color de las colecciones 40 a 43. El codigo de color son los dos digitos del final: 4440-01 -> color 01. El ERP no guarda el nombre, se escribe aca a mano una sola vez. Mientras nombre este vacio, la pagina y Sofia muestran solo el codigo y nunca lo inventan.",
+  "_ojo_cole_44": "En la Dolce Vita 44 el sufijo NO es el color: cada color tiene su propio codigo de 4 digitos (Garda 4472-00, Garda Blu 4419-00). Ahi el color va en el nombre del modelo.",
+  "generado": "2026-09-22T16:48",
+  "colores": [
+    {
+      "codigo": "00",
+      "nombre": "",
+      "articulos_en_erp": 254,
+      "modelos_con_stock_hoy": 125,
+      "modelos": "4001 4002 4003 4004 4005 4006 4007 4008 4009 4010 4011 4012 4013 4015 4016 4017 4018 4019 4020 4021 4023 4024 4025 4027 4028 4029 4034 4035 4036 4041 4042 4044 4047 4051 4052 4053 4054 4056 4057 4058 4059 4060 4061 4062 4063 4064 4065 4066 4067 4070 4071 4072 4073 4074 4075 4076 4080 4101 4104 4105 4106 4108 4109 4110 4113 4114 4115 4116 4119 4120 4121 4122 4123 4124 4125 4128 4130 4132 4135 4136 4137 4140 4142 4147 4148 4149 4150 4151 4153 4155 4157 4158 4165 4166 4168 4169 4170 4171 4172 4173 4174 4176 4177 4179 4180 4183 4185 4186 4188 4189 4192 4195 4201 4202 4203 4204 4205 4206 4207 4208 4209 4210 4211 4212 4213 4214 4217 4218 4219 4220 4221 4222 4223 4224 4225 4226 4227 4228 4229 4230 4232 4234 4235 4236 4238 4239 4240 4242 4243 4244 4245 4246 4247 4248 4249 4252 4255 4256 4301 4303 4309 4310 4311 4312 4313 4314 4318 4319 4321 4322 4323 4325 4329 4333 4335 4336 4337 4339 4340 4341 4347 4348 4353 4355 4356 4363 4365 4370 4371 4377 4378 4379 4380 4383 4402 4406 4412 4413 4414 4415 4416 4417 4418 4419 4421 4422 4426 4430 4431 4432 4434 4435 4436 4438 4440 4441 4442 4443 4444 4448 4453 4454 4455 4456 4458 4459 4462 4468 4469 4471 4472 4473 4474 4475 4476 4477 4478 4479 4480 4481 4482 4484 4485 4486 4487 4488 4489 4492 4493 4494 4495 4496 4497 4499",
+      "de_donde_salio": "es el color base del modelo, no un color fijo: en la 44 hay blancos, negros y azules todos con -00. PROBABLEMENTE NO SE DEBE NOMBRAR."
+    },
+    {
+      "codigo": "01",
+      "nombre": "",
+      "articulos_en_erp": 90,
+      "modelos_con_stock_hoy": 46,
+      "modelos": "4001 4002 4004 4007 4010 4011 4012 4013 4015 4016 4017 4018 4023 4024 4025 4027 4029 4036 4044 4052 4056 4057 4059 4064 4066 4071 4072 4109 4113 4122 4124 4135 4136 4142 4155 4157 4158 4166 4169 4170 4176 4189 4201 4202 4203 4204 4205 4208 4210 4211 4213 4214 4218 4219 4220 4221 4224 4225 4226 4227 4235 4236 4247 4248 4322 4323 4325 4339 4348 4356 4370 4371 4378 4380 4414 4419 4426 4430 4431 4432 4434 4454 4472 4474 4475 4479 4482 4486 4492 4493",
+      "de_donde_salio": "OJO: no es consistente. En 4004, 4007 y 4012 las fotos son azul claro, pero las carpetas de 4356-01 dicen gris, gris oscuro y negro. Confirmar con Manu."
+    },
+    {
+      "codigo": "02",
+      "nombre": "",
+      "articulos_en_erp": 18,
+      "modelos_con_stock_hoy": 8,
+      "modelos": "4121 4155 4157 4189 4204 4205 4208 4213 4214 4218 4219 4227 4322 4370 4380 4434 4474 4486",
+      "de_donde_salio": "sin evidencia: lo tiene que decir Manu"
+    },
+    {
+      "codigo": "04",
+      "nombre": "cafe",
+      "articulos_en_erp": 12,
+      "modelos_con_stock_hoy": 6,
+      "modelos": "4148 4177 4233 4234 4257 4361 4362 4366 4370 4457 4493 4494",
+      "de_donde_salio": "carpetas '4361 04 CAFE' y '4362 04 CAFE'"
+    },
+    {
+      "codigo": "05",
+      "nombre": "",
+      "articulos_en_erp": 1,
+      "modelos_con_stock_hoy": 0,
+      "modelos": "4494",
+      "de_donde_salio": "sin evidencia: lo tiene que decir Manu"
+    },
+    {
+      "codigo": "06",
+      "nombre": "beige",
+      "articulos_en_erp": 16,
+      "modelos_con_stock_hoy": 4,
+      "modelos": "4060 4061 4062 4065 4070 4147 4148 4171 4185 4192 4361 4362 4366 4421 4457 4494",
+      "de_donde_salio": "carpeta '4070 06 beige'"
+    },
+    {
+      "codigo": "07",
+      "nombre": "",
+      "articulos_en_erp": 2,
+      "modelos_con_stock_hoy": 0,
+      "modelos": "4147 4177",
+      "de_donde_salio": "sin evidencia: lo tiene que decir Manu"
+    },
+    {
+      "codigo": "08",
+      "nombre": "ocre",
+      "articulos_en_erp": 7,
+      "modelos_con_stock_hoy": 3,
+      "modelos": "4147 4177 4233 4234 4257 4361 4362",
+      "de_donde_salio": "carpetas '4361 08 OCRE' y '4362 08 OCRE'"
+    },
+    {
+      "codigo": "09",
+      "nombre": "",
+      "articulos_en_erp": 6,
+      "modelos_con_stock_hoy": 2,
+      "modelos": "4178 4233 4234 4257 4493 4495",
+      "de_donde_salio": "sin evidencia: lo tiene que decir Manu"
+    },
+    {
+      "codigo": "16",
+      "nombre": "verde oliva",
+      "articulos_en_erp": 5,
+      "modelos_con_stock_hoy": 3,
+      "modelos": "4233 4234 4257 4361 4362",
+      "de_donde_salio": "carpetas '4361 16 VERDE OLIVA' y '4362 16 VERDE OLIVA'"
+    },
+    {
+      "codigo": "24",
+      "nombre": "",
+      "articulos_en_erp": 1,
+      "modelos_con_stock_hoy": 0,
+      "modelos": "4495",
+      "de_donde_salio": "sin evidencia: lo tiene que decir Manu"
+    },
+    {
+      "codigo": "38",
+      "nombre": "ostra",
+      "articulos_en_erp": 9,
+      "modelos_con_stock_hoy": 3,
+      "modelos": "4060 4061 4062 4065 4070 4148 4421 4457 4494",
+      "de_donde_salio": "carpeta '4070 38 ostra'"
+    },
+    {
+      "codigo": "48",
+      "nombre": "burdeo",
+      "articulos_en_erp": 6,
+      "modelos_con_stock_hoy": 4,
+      "modelos": "4233 4234 4257 4361 4362 4366",
+      "de_donde_salio": "carpeta '4362 48 BURDEO'"
+    },
+    {
+      "codigo": "60",
+      "nombre": "",
+      "articulos_en_erp": 24,
+      "modelos_con_stock_hoy": 10,
+      "modelos": "4062 4065 4066 4067 4070 4135 4142 4147 4148 4149 4168 4180 4188 4195 4201 4214 4249 4251 4301 4322 4348 4440 4456 4487",
+      "de_donde_salio": "sin evidencia: lo tiene que decir Manu"
+    },
+    {
+      "codigo": "61",
+      "nombre": "",
+      "articulos_en_erp": 4,
+      "modelos_con_stock_hoy": 2,
+      "modelos": "4135 4142 4322 4348",
+      "de_donde_salio": "sin evidencia: lo tiene que decir Manu"
+    },
+    {
+      "codigo": "66",
+      "nombre": "",
+      "articulos_en_erp": 1,
+      "modelos_con_stock_hoy": 1,
+      "modelos": "4147",
+      "de_donde_salio": "sin evidencia: lo tiene que decir Manu"
+    },
+    {
+      "codigo": "67",
+      "nombre": "",
+      "articulos_en_erp": 4,
+      "modelos_con_stock_hoy": 1,
+      "modelos": "4361 4366 4486 4494",
+      "de_donde_salio": "sin evidencia: lo tiene que decir Manu"
+    },
+    {
+      "codigo": "78",
+      "nombre": "",
+      "articulos_en_erp": 3,
+      "modelos_con_stock_hoy": 0,
+      "modelos": "4402 4413 4434",
+      "de_donde_salio": "sin evidencia: lo tiene que decir Manu"
+    },
+    {
+      "codigo": "79",
+      "nombre": "",
+      "articulos_en_erp": 2,
+      "modelos_con_stock_hoy": 0,
+      "modelos": "4477 4486",
+      "de_donde_salio": "sin evidencia: lo tiene que decir Manu"
+    },
+    {
+      "codigo": "80",
+      "nombre": "",
+      "articulos_en_erp": 21,
+      "modelos_con_stock_hoy": 0,
+      "modelos": "4016 4029 4109 4122 4137 4157 4222 4227 4402 4413 4414 4416 4431 4434 4435 4441 4453 4459 4477 4479 4486",
+      "de_donde_salio": "sin evidencia: lo tiene que decir Manu"
+    },
+    {
+      "codigo": "90",
+      "nombre": "",
+      "articulos_en_erp": 17,
+      "modelos_con_stock_hoy": 7,
+      "modelos": "4007 4010 4015 4021 4023 4029 4036 4110 4113 4158 4167 4169 4188 4198 4221 4475 4492",
+      "de_donde_salio": "sin evidencia: lo tiene que decir Manu"
+    }
+  ],
+  "_ojo_no_inventar": "Los nombres con de_donde_salio apuntando a una carpeta salen de como los escribio el fotografo. Los que dicen 'sin evidencia' van vacios hasta que Manu los dicte."
+}

@@ -54,6 +54,17 @@ const sinTildes = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, ""
 const normTexto = (s) => sinTildes(s).toLowerCase().trim();
 const normClave = (s) => normTexto(s).replace(/[\s_-]+/g, " ").trim();
 
+/* Nombre del color a partir de los dos dígitos finales del código (4440-01 → color 01).
+   El ERP no guarda el nombre: se escribe a mano en colores.json. Sin nombre, devuelve null. */
+async function nombreColor(family) {
+  const cod = String(family || "").slice(5, 7);
+  if (!/^[0-9]{2}$/.test(cod)) return null;
+  const tabla = await getJson("/colores.json").then((c) => c.colores).catch(() => null);
+  const fila = Array.isArray(tabla) ? tabla.find((x) => String(x.codigo) === cod) : (tabla || {})[cod];
+  const n = fila && String(fila.nombre || "").trim();
+  return n || null;
+}
+
 /* Todos los códigos de un mismo modelo base: 4234 → ["4234-04","4234-08",…] */
 async function variantesDe(base4, cole) {
   const es44 = cole === "44";
@@ -116,6 +127,8 @@ async function consultarCodigo(family) {
   const tiro = esChaqueta ? null : (bi.tiro || webTiro || null);
   const corte = esChaqueta ? null : (bi.corte || webCorte || null);
   const tipoTxt = tipo ? tipo.charAt(0).toUpperCase() + tipo.slice(1) : "Modelo";
+  const colorCodigo = family.slice(5, 7);
+  const colorNombre = await nombreColor(family);
   const rasgos = esChaqueta
     ? "tallas S a XL"
     : [tiro ? `tiro ${tiro}` : null, corte ? `corte ${corte}` : null].filter(Boolean).join(" · ");
@@ -127,10 +140,11 @@ async function consultarCodigo(family) {
   const lineasStock = es44 ? [estado44] : (total > 0 ? [`Stock: ${total} unidades`, ...conStock.map((s) => `  ${s}`)] : ["Agotado"]);
   const ficha_texto = [
     `${family}${es44 && nombre ? ` ${nombre}` : ""} · ${es44 ? "Dolce Vita 44" : `Cole ${cole}`}`,
+    colorNombre ? `Color: ${colorNombre}` : null,
     descripcion_corta,
     precioCorto,
     ...lineasStock,
-  ].join("\n");
+  ].filter(Boolean).join("\n");
 
   /* Cole 44 en producción: plazo aproximado de despacho (editable en /produccion-eta-44.json) */
   let notaProduccion;
@@ -155,6 +169,10 @@ async function consultarCodigo(family) {
     corte: corte || undefined,
     descripcion_corta,
     ficha_texto,
+    color: colorNombre || undefined,
+    color_codigo: colorCodigo,
+    /* Si el color no tiene nombre escrito en colores.json, Sofía no debe inventarlo: manda la foto. */
+    nota_color: colorNombre ? undefined : "De este color no tenemos el nombre escrito: no lo inventes, mándale el link del modelo para que vea la foto.",
     precio,
     precio_texto: precio == null ? "Precio a consultar" : `${clp(precio)} por unidad + IVA`,
     estado,
@@ -183,7 +201,7 @@ async function fichasDeVariantes(base4, cole, { soloConStock = false } = {}) {
   }
   return fichas.sort((a, b) => (Number(b.stock_total) || 0) - (Number(a.stock_total) || 0));
 }
-const resumenVariante = (r) => ({ codigo: r.codigo, nombre: r.nombre, coleccion: r.coleccion, precio: r.precio, estado: r.estado, stock_total: r.stock_total, tallas_con_stock: r.tallas_con_stock, ficha_texto: r.ficha_texto });
+const resumenVariante = (r) => ({ codigo: r.codigo, nombre: r.nombre, color: r.color, color_codigo: r.color_codigo, coleccion: r.coleccion, precio: r.precio, estado: r.estado, stock_total: r.stock_total, tallas_con_stock: r.tallas_con_stock, ficha_texto: r.ficha_texto });
 
 /* El cliente casi siempre dice los 4 dígitos ("el 4234"). Si ese modelo no tiene variante -00, o el -00
    está agotado pero otra variante del mismo modelo sí tiene stock, se le muestran las variantes. */

@@ -103,9 +103,17 @@ exports.handler = async (event) => {
 <meta property="og:title" content="${esc(titulo)}">
 <meta property="og:description" content="${esc(descripcion)}">
 <meta property="og:url" content="${esc(url)}">
-<!-- Sin og:image a propósito (2026-09-16, pedido de Manu): la miniatura chica que WhatsApp arma con el link se ve mal.
-     Así el link muestra solo título y descripción; las fotos grandes las manda Sofía aparte o se ven en la página. -->
-<meta name="twitter:card" content="summary">
+<!-- La foto volvió al link (2026-09-22, pedido de Manu). En septiembre se sacó porque WhatsApp armaba una
+     miniatura chica al costado; el problema era el formato, no la foto. Ahora og/<codigo>.jpg es cuadrada de
+     1200x1200 y se declara el tamaño, así WhatsApp muestra la tarjeta grande con la foto arriba. -->
+<meta property="og:image" content="${esc(imagen)}">
+<meta property="og:image:secure_url" content="${esc(imagen)}">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="1200">
+<meta property="og:image:alt" content="${esc(titulo)}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="${esc(imagen)}">
 <meta name="twitter:title" content="${esc(titulo)}">
 <meta name="twitter:description" content="${esc(descripcion)}">
 <meta http-equiv="refresh" content="0;url=${esc(destino)}">

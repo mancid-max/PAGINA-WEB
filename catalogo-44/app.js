@@ -871,12 +871,12 @@ function validarCamposForm() {
   /* Al cliente conocido no se le vuelve a pedir lo que ya está en su ficha, pero sí lo que falta:
      el transporte se pide SIEMPRE (se elige por pedido) y antes se podía enviar sin él. */
   const visible = (el) => !!el && el.offsetParent !== null;
+  /* Giro y Nombre Tienda quedan opcionales: son datos de facturación, no de despacho, y estaban
+     frenando pedidos que tenían todo lo demás. Si van vacíos, el Excel mantiene su VLOOKUP. */
   const todos = [
     { el: elNombre(),  label: "Razón Social" },
     { el: elFono(),    label: "Teléfono" },
-    { el: elGiro(),    label: "Giro" },
     { el: elDir(),     label: "Dirección" },
-    { el: elTienda(),  label: "Nombre Tienda" },
     { el: elComuna(),  label: "Comuna" },
     { el: elTransp(),  label: "Transporte" },
   ];

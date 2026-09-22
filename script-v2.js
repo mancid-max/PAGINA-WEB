@@ -5536,9 +5536,9 @@ async function obtenerClienteParaCotizacion() {
     phoneEl?.focus();
     throw new Error("Agrega el teléfono del cliente nuevo para enviar el pedido");
   }
+  /* Giro y Nombre de la tienda quedan opcionales: sirven para la factura, no para despachar, y estaban
+     frenando pedidos completos. Si vienen vacíos, el Excel mantiene su VLOOKUP contra la base oficial. */
   const extraCampos = [
-    { id: "clientNombreTienda", label: "Nombre de la tienda" },
-    { id: "clientGiro",        label: "Giro" },
     { id: "clientDireccion",   label: "Dirección" },
     { id: "clientComuna",      label: "Comuna" },
     { id: "clientTransporte",  label: "Transporte" },
