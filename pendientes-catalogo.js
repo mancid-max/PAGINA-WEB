@@ -174,6 +174,68 @@ ${notasHtml}
 fs.writeFileSync(path.join(RAIZ, "pendientes-catalogo.html"), html, "utf8");
 console.log(`pendientes: sin foto ${informe.resumen.sin_foto_total} (otro color ${sinFoto.otroColor.length}, crudas ${sinFoto.crudas.length}, sin carpeta ${sinFoto.sinCarpeta.length}) · sin precio 40-43 ${sinPrecio.length} · sin precio 44 ${sinPrecio44.length} · notas ${informe.resumen.notas}`);
 
+/* --- Nota para Obsidian: se reescribe en cada corrida para que el mapa siempre tenga los numeros de hoy.
+       La boveda es C:\Users\Lenovo\Documents\Mohicano; si no existe, no pasa nada. --- */
+(function escribirNotaObsidian() {
+  const BOVEDA = path.join(process.env.USERPROFILE || process.env.HOME, "Documents", "Mohicano");
+  if (!fs.existsSync(BOVEDA)) return;
+  const r = informe.resumen;
+  const clp = (n) => Number(n || 0).toLocaleString("es-CL");
+  const ahora = new Date().toLocaleString("es-CL", { timeZone: "America/Santiago", dateStyle: "short", timeStyle: "short" });
+
+  const todos = [...sinFoto.sinCarpeta, ...sinFoto.otroColor, ...sinFoto.crudas]
+    .sort((a, b) => Number(b.unidades) - Number(a.unidades));
+  const porCole = {};
+  for (const m of todos) {
+    const k = "Cole " + String(m.codigo).slice(0, 2);
+    porCole[k] = porCole[k] || { n: 0, u: 0 };
+    porCole[k].n++; porCole[k].u += Number(m.unidades) || 0;
+  }
+  const filas = Object.keys(porCole).sort().map((k) => `| ${k} | ${porCole[k].n} | ${clp(porCole[k].u)} |`).join("\n");
+  const top = todos.slice(0, 8).map((m) => `- **${m.codigo}** — ${clp(m.unidades)} unidades`).join("\n");
+  const unidades = todos.reduce((t, m) => t + (Number(m.unidades) || 0), 0);
+
+  const nota = [
+    "# Pendientes",
+    "",
+    "> [!info] Esta nota se actualiza sola",
+    "> La reescribe el sync de stock cuatro veces al día. No la edites a mano: los cambios se pierden.",
+    `> Ultima revision: **${ahora}**`,
+    "",
+    "## Modelos sin foto",
+    "",
+    `**${r.sin_foto_total} modelos con stock** que nadie puede ofrecer — ni la [[Página web]] ni [[Sofía]].`,
+    `Son **${clp(unidades)} unidades** detenidas.`,
+    "",
+    "| Colección | Modelos | Unidades |",
+    "|---|---|---|",
+    filas,
+    "",
+    "### Los que más pesan",
+    "",
+    top,
+    "",
+    "La lista completa está en `sin-foto.txt` del proyecto.",
+    "",
+    "## Modelos sin precio",
+    "",
+    `**${r.sin_precio_4043 + r.sin_precio_44}** en total: ${r.sin_precio_4043} de la Cole 40-43 y ${r.sin_precio_44} de la Dolce Vita 44.`,
+    "[[Sofía]] los ofrece como \"precio a consultar\".",
+    "",
+    r.solicitudes ? `## Clientes esperando\n\n**${r.solicitudes}** ${r.solicitudes === 1 ? "solicitud que Sofia no pudo resolver" : "solicitudes que Sofia no pudo resolver"}.\n` : "",
+    r.notas ? `## Notas por resolver\n\n**${r.notas}** pendientes.\n` : "",
+    "## Cómo se revisa",
+    "",
+    "El resumen llega por [[Avisos de Telegram]] a las 8 y a las 17, ordenado por unidades detenidas.",
+    "Para verlo sin mandarlo al grupo: `node pendientes-catalogo.js --ver`",
+  ].filter((l) => l !== "").join("\n") + "\n";
+
+  try {
+    fs.writeFileSync(path.join(BOVEDA, "Pendientes.md"), nota);
+    console.log("nota de Obsidian actualizada: Pendientes.md");
+  } catch (e) { console.log("no se pudo escribir la nota de Obsidian:", e.message); }
+})();
+
 /* --- Aviso por Telegram (archivo + resumen), solo con --avisar --- */
 /* --ver muestra el mensaje en pantalla sin mandarlo, para revisar el formato sin molestar al grupo */
 if (process.argv.includes("--avisar") || process.argv.includes("--ver")) {
