@@ -138,13 +138,15 @@ async function consultarCodigo(family) {
   /* La 44 no muestra cantidades: solo si sale al tiro o si hay que esperar la producción (mismo texto que la lista por estilo) */
   const estado44 = disponible ? "Disponible (despacho inmediato)" : "En producción (10 a 15 días, se puede reservar)";
   const lineasStock = es44 ? [estado44] : (total > 0 ? [`Stock: ${total} unidades`, ...conStock.map((s) => `  ${s}`)] : ["Agotado"]);
+  /* La ficha que acompana a la foto NO lleva stock: el cliente esta mirando, no comprando (regla de
+     Manu, 23-09). El stock va aparte en stock_texto y solo se manda si lo pide. */
   const ficha_texto = [
     `${family}${es44 && nombre ? ` ${nombre}` : ""} · ${es44 ? "Dolce Vita 44" : `Cole ${cole}`}`,
     colorNombre ? `Color: ${colorNombre}` : null,
     descripcion_corta,
     precioCorto,
-    ...lineasStock,
   ].filter(Boolean).join("\n");
+  const stock_texto = [`${family} · ${es44 ? "Dolce Vita 44" : `Cole ${cole}`}`, ...lineasStock].join("\n");
 
   /* Cole 44 en producción: plazo aproximado de despacho (editable en /produccion-eta-44.json) */
   let notaProduccion;
@@ -169,6 +171,7 @@ async function consultarCodigo(family) {
     corte: corte || undefined,
     descripcion_corta,
     ficha_texto,
+    stock_texto,
     color: colorNombre || undefined,
     color_codigo: colorCodigo,
     /* handle de la imagen en la biblioteca de Nexor: se manda TAL CUAL */
