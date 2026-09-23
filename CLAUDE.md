@@ -111,6 +111,32 @@ RLS activo — el `anon key` NO puede leer `quotes` (retorna array vacío, no 40
 
 ---
 
+# Documentación del sistema (bóveda de Obsidian)
+
+El mapa completo de cómo funciona todo está en `C:\Users\Lenovo\Documents\Mohicano` — 13 notas enlazadas que Manu abre con Obsidian. **Leerlas antes de tocar algo que no conozcas**, y **actualizarlas cuando algo cambie**, sin que lo pida.
+
+| Nota | Qué responde |
+|---|---|
+| `00 - Mapa` | Cómo se conecta todo. Empezar por acá |
+| `Sofía` | Qué sabe hacer el agente y qué no |
+| `Stock desde BI` | De dónde salen las unidades y cada cuánto |
+| `Página web` | Las páginas y las funciones de Netlify |
+| `Supabase` | Pedidos y fichas de clientes |
+| `Nexor` | La plataforma, sus límites y sus trampas |
+| `Biblioteca de imágenes` | Los handles de las fotos |
+| `Pedidos` | El flujo completo de un pedido |
+| `Clientes` | Las tres bases y por qué están desconectadas |
+| `Avisos de Telegram` | Qué llega a qué grupo |
+| `Colores` | Los códigos de color |
+| `Pendientes` | **Se reescribe sola** en cada sync de stock |
+| `Decisiones` | Resumen de las reglas de abajo |
+
+Los enlaces entre notas van con `[[Nombre exacto]]`, **con tilde**: `[[Sofía]]`, `[[Página web]]`.
+
+La bitácora de cambios del agente está aparte, en `NEXOR IA/CAMBIOS-SOFIA.md`.
+
+---
+
 # Decisiones de Manu (reglas fijas)
 
 Esto NO se vuelve a preguntar. Si una regla acá contradice lo que vas a hacer, gana la regla.
