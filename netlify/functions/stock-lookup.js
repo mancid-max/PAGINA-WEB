@@ -347,7 +347,9 @@ async function buscarPorAtributos({ corte, tiro, tipo, cole, desde, soloDisponib
   res.sort((a, b) => b._orden - a._orden || b._total - a._total);
   /* de a 5 modelos por tanda: 'desde' es el índice donde sigue la lista si el cliente pide ver más */
   const inicio = Math.max(0, Math.min(Number(desde) || 0, Math.max(0, res.length - 1)));
-  const tanda = res.slice(inicio, inicio + 5);
+  /* 3 y no 5: cada modelo son dos mensajes (la foto y su linea de codigo y precio), y con 5 la agente
+     se quedaba sin turno y mandaba el resto en texto. Mejor 3 completos que 5 a medias. */
+  const tanda = res.slice(inicio, inicio + 3);
   const resultados = tanda.map(({ _orden, _total, ...r }) => r);
   const que = [qTipo, qTiro ? `tiro ${qTiro}` : null, qCorte ? `corte ${qCorte}` : null].filter(Boolean).join(" ");
   if (!resultados.length) return { ok: false, mensaje: `No tengo modelos con stock que calcen con "${que}"${coleQ ? ` en la Cole ${coleQ}` : ""}. Ofrece un corte o tiro parecido.` };
@@ -361,7 +363,7 @@ async function buscarPorAtributos({ corte, tiro, tipo, cole, desde, soloDisponib
   /* El handle de la imagen en la biblioteca de Nexor es arroba + codigo exacto (@4222-00). Se lo entrego
      hecho para que no tenga que deducirlo: cuando lo deducia decia "no tengo foto" y mandaba texto. */
   const fotos = resultados.map((r) => r.imagen_handle).filter(Boolean);
-  const comoMandar = `Manda UNA FOTO POR MODELO. En "fotos" te van los handles de las imagenes en el orden de los modelos (${fotos.join(", ")}): envia cada uno TAL CUAL como imagen adjunta, con el codigo y el precio en el pie de la misma foto. Son ${fotos.length} mensajes, uno tras otro, sin preguntar entre medio. Cierra preguntando cual le gusto. NO mandes links. NO mandes stock ni tallas: solo si lo piden. Si una imagen no existe, manda solo el codigo y el precio de ese modelo en una linea y sigue.`;
+  const comoMandar = `Por cada modelo mandas DOS mensajes seguidos y en este orden: primero la imagen (handle exacto, de "fotos"), y enseguida un mensaje con su codigo y precio. La foto va sin texto adentro: el texto SIEMPRE es el mensaje siguiente, y tiene que ser del MISMO modelo que la foto que acabas de mandar. Asi con los ${fotos.length}: ${fotos.map((f, k) => `${k + 1}) foto ${f} y despues su texto`).join(", ")}. Son ${fotos.length * 2} mensajes, sin preguntar entre medio, y cierras con una frase preguntando cual le gusto. NUNCA mandes el texto de un modelo cuya foto no mandaste. NO mandes links, ni stock ni tallas.`;
   return { ok: true, busqueda: que, total_encontrados: res.length, desde: inicio, siguiente_desde: quedan ? inicio + tanda.length : null, fotos, links, lista_texto: lista, nota: quedan ? `Hay ${res.length} que calzan y te mandé ${tanda.length}. ${comoMandar} Si quiere ver los demás, vuelve a llamarme con desde=${inicio + tanda.length}.` : comoMandar, resultados };
 }
 
