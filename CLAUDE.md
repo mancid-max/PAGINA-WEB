@@ -158,6 +158,15 @@ Antes de tocar el guion de Sofía, la página o el catálogo, leer esta sección
 - **Giro y nombre de tienda son opcionales.** Obligatorios para despachar: razón social, teléfono, dirección, comuna y transporte.
 - La meta es que el mayorista **no escriba ningún dato**: solo apretar Enviar.
 
+## Imágenes en Nexor (biblioteca de medios)
+- La biblioteca **no tiene API**: se carga y se lista solo desde la interfaz (Brain → Conocimiento).
+- El handle real de cada modelo está en `handles-nexor.json`. **No se deduce del código.**
+- **Convención de nombres, respetarla siempre**: Cole 40-43 → `@4222-00` (código pelado). Cole 44 → `@4448-00-venezia` (código + nombre en minúsculas, con guiones). Subir un archivo con el nombre equivocado crea un handle duplicado para el mismo modelo.
+- Los archivos de `Escritorio/fotos-nexor` están nombrados para calzar con esa convención: subirlos tal cual, sin renombrar.
+- **Nunca resubir una imagen que ya está**: se duplica. Antes de subir, comparar con `handles-nexor.json`.
+- Al subir imágenes nuevas: copiar la lista de handles desde Nexor y regenerar `handles-nexor.json`.
+- Solo hay **una foto por modelo** en Nexor. Para más ángulos o video, el link de la ficha.
+
 ## Códigos de color
 - Los dos dígitos finales son el color (`4440-01` → color `01`), pero **NO es una tabla global**: el `00` y el `01` varían por modelo.
 - Nombres confirmados desde las carpetas de fotos: `04` café, `06` beige, `08` ocre, `16` verde oliva, `38` ostra, `48` burdeo.
