@@ -103,17 +103,10 @@ exports.handler = async (event) => {
 <meta property="og:title" content="${esc(titulo)}">
 <meta property="og:description" content="${esc(descripcion)}">
 <meta property="og:url" content="${esc(url)}">
-<!-- La foto volvió al link (2026-09-22, pedido de Manu). En septiembre se sacó porque WhatsApp armaba una
-     miniatura chica al costado; el problema era el formato, no la foto. Ahora og/<codigo>.jpg es cuadrada de
-     1200x1200 y se declara el tamaño, así WhatsApp muestra la tarjeta grande con la foto arriba. -->
-<meta property="og:image" content="${esc(imagen)}">
-<meta property="og:image:secure_url" content="${esc(imagen)}">
-<meta property="og:image:type" content="image/jpeg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="1200">
-<meta property="og:image:alt" content="${esc(titulo)}">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="${esc(imagen)}">
+<!-- Sin og:image (2026-09-23, Manu de nuevo): la miniatura que arma WhatsApp se ve mal y ademas ya no
+     usamos links para mostrar modelos, Sofia manda la imagen de la biblioteca de Nexor. El link queda
+     solo para cuando el cliente lo pide expresamente, y ahi basta el titulo y la descripcion. -->
+<meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="${esc(titulo)}">
 <meta name="twitter:description" content="${esc(descripcion)}">
 <meta http-equiv="refresh" content="0;url=${esc(destino)}">
