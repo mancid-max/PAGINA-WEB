@@ -54,6 +54,15 @@ const sinTildes = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, ""
 const normTexto = (s) => sinTildes(s).toLowerCase().trim();
 const normClave = (s) => normTexto(s).replace(/[\s_-]+/g, " ").trim();
 
+/* Handle real de la imagen en la biblioteca de Nexor. NO se puede deducir del código: los de la Cole 44
+   llevan el nombre (@4448-00-venezia) y los de la 40-43 no (@4222-00). Sale de handles-nexor.json, que se
+   copia a mano desde la interfaz porque la biblioteca no tiene API. Si el modelo no está, devuelve null
+   y Sofía sabe que de ese no tiene foto. */
+async function handleImagen(family) {
+  const tabla = await getJson("/handles-nexor.json").then((h) => h.handles || {}).catch(() => ({}));
+  return tabla[String(family).toUpperCase()] || null;
+}
+
 /* Nombre del color a partir de los dos dígitos finales del código (4440-01 → color 01).
    El ERP no guarda el nombre: se escribe a mano en colores.json. Sin nombre, devuelve null. */
 async function nombreColor(family) {
@@ -179,7 +188,7 @@ async function consultarCodigo(family) {
     color: colorNombre || undefined,
     color_codigo: colorCodigo,
     /* handle de la imagen en la biblioteca de Nexor: se manda TAL CUAL */
-    imagen_handle: `@${family}`,
+    imagen_handle: await handleImagen(family),
     /* Si el color no tiene nombre escrito en colores.json, Sofía no debe inventarlo: manda la foto. */
     nota_color: colorNombre ? undefined : "De este color no tenemos el nombre escrito: no lo inventes, mándale el link del modelo para que vea la foto.",
     precio,
@@ -287,6 +296,7 @@ async function buscarPorAtributos({ corte, tiro, tipo, cole, desde, soloDisponib
   /* Con solo la colección (ej. "qué tienes de la Cole 42") se listan sus modelos con stock */
   if (!qCorte && !qTiro && !qTipo && !cole) return { ok: false, mensaje: "Indica corte (pitillo, flare, recto, palazzo, oxford, wide leg…), tiro (alto, medio, bajo) o colección (40 a 44)." };
   const atrs = await getJson("/atributos-modelos.json").then((a) => a.modelos || {}).catch(() => ({}));
+  const handles = await getJson("/handles-nexor.json").then((h) => h.handles || {}).catch(() => ({}));
   const coleQ = cole ? String(cole).replace(/\D/g, "") : "";
   const coles = coleQ ? [coleQ] : ["44", "43", "42", "41", "40"];
   const calza = (bi, fallbackCorte, fallbackTipo) => {
@@ -321,7 +331,7 @@ async function buscarPorAtributos({ corte, tiro, tipo, cole, desde, soloDisponib
         /* En la lista por estilo el cliente esta MIRANDO modelos, no comprando: va nombre, corte y precio.
            El stock se lo decimos despues, solo si pregunta por uno (decision de Manu, 23-09). */
         const ficha = [`${codigo} ${m.nombre} · Dolce Vita 44`, desc, m.precio == null ? "precio a consultar" : `${clp(m.precio)} + IVA`].join("\n");
-        res.push({ codigo, nombre: m.nombre, coleccion: "Dolce Vita · Cole 44", tiro: ok.ti, corte: ok.co, precio: m.precio, estado, pie_foto: `${codigo} ${m.nombre} · ${m.precio == null ? "precio a consultar" : `${clp(m.precio)} + IVA`}`, ficha_texto: ficha, imagen_handle: `@${codigo}`, link_modelo: `${BASE}/m/${codigo}`, _orden: total > 30 ? 3 : 1, _total: total });
+        res.push({ codigo, nombre: m.nombre, coleccion: "Dolce Vita · Cole 44", tiro: ok.ti, corte: ok.co, precio: m.precio, estado, imagen_handle: handles[codigo] || null, pie_foto: `${codigo} ${m.nombre} · ${m.precio == null ? "precio a consultar" : `${clp(m.precio)} + IVA`}`, ficha_texto: ficha, imagen_handle: `@${codigo}`, link_modelo: `${BASE}/m/${codigo}`, _orden: total > 30 ? 3 : 1, _total: total });
       }
     } else {
       const cat = await getJson(`/data-catalogo-${c}.json`).catch(() => []);
@@ -341,7 +351,7 @@ async function buscarPorAtributos({ corte, tiro, tipo, cole, desde, soloDisponib
         const precio = pit[codigo] ?? pit[codigo.slice(0, 4)] ?? pit[`${codigo.slice(0, 4)}-00`] ?? null;
         const desc = descDe(ok);
         const ficha = [`${codigo} · Cole ${c}`, desc, precio == null ? "precio a consultar" : `${clp(precio)} + IVA`].join("\n"); /* sin stock: el cliente esta mirando, no comprando */
-        res.push({ codigo, nombre: `Modelo ${codigo.slice(0, 4)}`, coleccion: `Cole ${c}`, tiro: ok.ti, corte: ok.co, precio, estado: "Disponible", stock_total: total, tallas_con_stock: tallas, pie_foto: `${codigo} · ${precio == null ? "precio a consultar" : `${clp(precio)} + IVA`}`, ficha_texto: ficha, imagen_handle: `@${codigo}`, link_modelo: `${BASE}/m/${codigo}`, _orden: 2, _total: total });
+        res.push({ codigo, nombre: `Modelo ${codigo.slice(0, 4)}`, coleccion: `Cole ${c}`, tiro: ok.ti, corte: ok.co, precio, estado: "Disponible", stock_total: total, tallas_con_stock: tallas, imagen_handle: handles[codigo] || null, pie_foto: `${codigo} · ${precio == null ? "precio a consultar" : `${clp(precio)} + IVA`}`, ficha_texto: ficha, imagen_handle: `@${codigo}`, link_modelo: `${BASE}/m/${codigo}`, _orden: 2, _total: total });
       }
     }
   }
