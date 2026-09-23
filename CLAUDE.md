@@ -108,3 +108,57 @@ RLS activo — el `anon key` NO puede leer `quotes` (retorna array vacío, no 40
 ## Deploy
 - `git push origin main` → Netlify despliega automáticamente
 - Terminar siempre los mensajes de push con `main@<hash>`
+
+---
+
+# Decisiones de Manu (reglas fijas)
+
+Esto NO se vuelve a preguntar. Si una regla acá contradice lo que vas a hacer, gana la regla.
+Antes de tocar el guion de Sofía, la página o el catálogo, leer esta sección completa.
+
+## Cómo trabajar
+- **Todo en local primero.** Push solo cuando Manu dice "sube". Aprobar un push no aprueba el siguiente.
+- Terminar cada mensaje de push con `main@<hash>`.
+- Responder en **español chileno con tuteo**. Nunca voseo argentino, nunca inglés.
+- **Respuestas cortas**: lo justo y necesario.
+- **Nada de Nexor se sube al repo** (`NEXOR IA/` está excluido). El repo es PÚBLICO: nunca commitear RUT, teléfonos, correos ni nombres de clientes.
+- **Nunca** guardar claves en el repo ni pegarlas en el chat.
+- `Z:\BI` y el servidor del ERP son **solo lectura**.
+- El reporte de pendientes es **privado**: no va a la web.
+- Revisar las conversaciones de Sofía **por iniciativa propia** y proponer mejoras. Lo que un cliente pide y ella no puede hacer, ESO es el backlog.
+
+## Precios
+- Todos los precios de lista son **netos**. El IVA (19%) se suma **una sola vez sobre el neto total**, nunca por unidad ni por modelo.
+- En los textos va "+ IVA", nunca "c/u + IVA".
+
+## Cómo muestra Sofía los modelos
+- **Manda IMÁGENES, no links.** El handle de la biblioteca de Nexor es **arroba + código exacto**: `@4222-00`, `@4234-04`.
+- El link `/m/CODIGO` **solo** si el cliente lo pide con todas sus letras, o si ese modelo no tiene imagen.
+- Al mostrar modelos va **código y precio**, nada más. **Sin stock, sin tallas, sin disponibilidad.** El stock se entrega DESPUÉS, solo si el cliente pregunta por uno.
+- El pie de foto de Nexor **no se puede usar** (la imagen sale con el contenido vacío): el código y el precio van en el mensaje siguiente, pegado, y tiene que corresponder a esa foto.
+- Varios modelos = varias fotos, **una tras otra, sin preguntar entre medio**.
+- **Si un modelo tiene foto en la página, debe tener su imagen en Nexor.** Hoy no se puede verificar: la biblioteca no tiene API (pendiente con Nexor).
+
+## Cómo vende
+- **Ningún link va solo.** Siempre con una frase que diga qué es y qué hacer con él. Un link pelado deja al cliente sin saber para qué sirve.
+- **Preguntar por el stock es interés**: se entrega el stock Y enseguida se ofrecen las dos formas, nombrando el modelo.
+- Después de mandar una foto y su línea de código y precio, **no se manda nada más**: ni link, ni ficha, ni stock. El cliente pide si quiere más.
+- Apenas el cliente muestre **interés** en un modelo (no hace falta que diga "lo quiero"), ofrecerle las dos formas nombrando el modelo: *"¿te mando el link con el 4222 ya cargado, o lo armamos juntos?"*.
+- **Saludar y responder en el mismo turno.** Prohibido gastar un turno solo en saludar.
+- **Nunca inventar.** Color sin nombre en `colores.json` → no se nombra. No decir que mandó fotos que no mandó.
+- Mínimo 24 unidades por pedido; 12 por modelo solo en la Dolce Vita 44.
+
+## Llamadas (separado de WhatsApp)
+- Voz Catalina (chilena). Por teléfono **no se muestra nada**: se describe de oído y se manda por WhatsApp al colgar.
+- Prohibido decir "te muestro" o dictar un link por teléfono.
+- **Nunca prometer devolver la llamada.**
+- SMS **apagado** en el número: rompía los links.
+
+## Formulario de pedido
+- **Giro y nombre de tienda son opcionales.** Obligatorios para despachar: razón social, teléfono, dirección, comuna y transporte.
+- La meta es que el mayorista **no escriba ningún dato**: solo apretar Enviar.
+
+## Códigos de color
+- Los dos dígitos finales son el color (`4440-01` → color `01`), pero **NO es una tabla global**: el `00` y el `01` varían por modelo.
+- Nombres confirmados desde las carpetas de fotos: `04` café, `06` beige, `08` ocre, `16` verde oliva, `38` ostra, `48` burdeo.
+- El resto los dicta Manu. Mientras no tengan nombre, se muestra el código y **no se inventa**.
