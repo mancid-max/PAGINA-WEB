@@ -146,6 +146,7 @@ async function consultarCodigo(family) {
     descripcion_corta,
     precioCorto,
   ].filter(Boolean).join("\n");
+  const pie_foto = `${family}${es44 && nombre ? ` ${nombre}` : ""} · ${precioCorto}`;
   const stock_texto = [`${family} · ${es44 ? "Dolce Vita 44" : `Cole ${cole}`}`, ...lineasStock].join("\n");
 
   /* Cole 44 en producción: plazo aproximado de despacho (editable en /produccion-eta-44.json) */
@@ -170,6 +171,9 @@ async function consultarCodigo(family) {
     tiro: tiro || undefined,
     corte: corte || undefined,
     descripcion_corta,
+    /* pie_foto es lo unico que va debajo de la imagen: codigo y precio. ficha_texto queda para cuando
+       el cliente pide el detalle del modelo, y stock_texto solo si pregunta por stock o tallas. */
+    pie_foto,
     ficha_texto,
     stock_texto,
     color: colorNombre || undefined,
@@ -317,7 +321,7 @@ async function buscarPorAtributos({ corte, tiro, tipo, cole, desde, soloDisponib
         /* En la lista por estilo el cliente esta MIRANDO modelos, no comprando: va nombre, corte y precio.
            El stock se lo decimos despues, solo si pregunta por uno (decision de Manu, 23-09). */
         const ficha = [`${codigo} ${m.nombre} · Dolce Vita 44`, desc, m.precio == null ? "precio a consultar" : `${clp(m.precio)} + IVA`].join("\n");
-        res.push({ codigo, nombre: m.nombre, coleccion: "Dolce Vita · Cole 44", tiro: ok.ti, corte: ok.co, precio: m.precio, estado, ficha_texto: ficha, imagen_handle: `@${codigo}`, link_modelo: `${BASE}/m/${codigo}`, _orden: total > 30 ? 3 : 1, _total: total });
+        res.push({ codigo, nombre: m.nombre, coleccion: "Dolce Vita · Cole 44", tiro: ok.ti, corte: ok.co, precio: m.precio, estado, pie_foto: `${codigo} ${m.nombre} · ${m.precio == null ? "precio a consultar" : `${clp(m.precio)} + IVA`}`, ficha_texto: ficha, imagen_handle: `@${codigo}`, link_modelo: `${BASE}/m/${codigo}`, _orden: total > 30 ? 3 : 1, _total: total });
       }
     } else {
       const cat = await getJson(`/data-catalogo-${c}.json`).catch(() => []);
@@ -337,7 +341,7 @@ async function buscarPorAtributos({ corte, tiro, tipo, cole, desde, soloDisponib
         const precio = pit[codigo] ?? pit[codigo.slice(0, 4)] ?? pit[`${codigo.slice(0, 4)}-00`] ?? null;
         const desc = descDe(ok);
         const ficha = [`${codigo} · Cole ${c}`, desc, precio == null ? "precio a consultar" : `${clp(precio)} + IVA`].join("\n"); /* sin stock: el cliente esta mirando, no comprando */
-        res.push({ codigo, nombre: `Modelo ${codigo.slice(0, 4)}`, coleccion: `Cole ${c}`, tiro: ok.ti, corte: ok.co, precio, estado: "Disponible", stock_total: total, tallas_con_stock: tallas, ficha_texto: ficha, imagen_handle: `@${codigo}`, link_modelo: `${BASE}/m/${codigo}`, _orden: 2, _total: total });
+        res.push({ codigo, nombre: `Modelo ${codigo.slice(0, 4)}`, coleccion: `Cole ${c}`, tiro: ok.ti, corte: ok.co, precio, estado: "Disponible", stock_total: total, tallas_con_stock: tallas, pie_foto: `${codigo} · ${precio == null ? "precio a consultar" : `${clp(precio)} + IVA`}`, ficha_texto: ficha, imagen_handle: `@${codigo}`, link_modelo: `${BASE}/m/${codigo}`, _orden: 2, _total: total });
       }
     }
   }
@@ -366,8 +370,9 @@ async function buscarPorAtributos({ corte, tiro, tipo, cole, desde, soloDisponib
   /* El handle de la imagen en la biblioteca de Nexor es arroba + codigo exacto (@4222-00). Se lo entrego
      hecho para que no tenga que deducirlo: cuando lo deducia decia "no tengo foto" y mandaba texto. */
   const fotos = resultados.map((r) => r.imagen_handle).filter(Boolean);
-  const comoMandar = `Por cada modelo mandas DOS mensajes seguidos y en este orden: primero la imagen (handle exacto, de "fotos"), y enseguida un mensaje con su codigo y precio. La foto va sin texto adentro: el texto SIEMPRE es el mensaje siguiente, y tiene que ser del MISMO modelo que la foto que acabas de mandar. Asi con los ${fotos.length}: ${fotos.map((f, k) => `${k + 1}) foto ${f} y despues su texto`).join(", ")}. Son ${fotos.length * 2} mensajes, sin preguntar entre medio, y cierras con una frase preguntando cual le gusto. NUNCA mandes el texto de un modelo cuya foto no mandaste. NO mandes links, ni stock ni tallas.`;
-  return { ok: true, busqueda: que, total_encontrados: res.length, desde: inicio, siguiente_desde: quedan ? inicio + tanda.length : null, fotos, links, lista_texto: lista, nota: quedan ? `Hay ${res.length} que calzan y te mandé ${tanda.length}. ${comoMandar} Si quiere ver los demás, vuelve a llamarme con desde=${inicio + tanda.length}.` : comoMandar, resultados };
+  const pies = resultados.map((r) => r.pie_foto).filter(Boolean);
+  const comoMandar = `Por cada modelo: la imagen (handle de "fotos") y debajo, en otro mensaje, SOLO su linea de "pies", tal cual, que trae el codigo y el precio. Nada mas: ni corte, ni tiro, ni stock, ni links. Van emparejados por posicion: ${fotos.map((f, k) => `${k + 1}) ${f} con "${(pies[k] || "")}"`).join(", ")}. Son ${fotos.length * 2} mensajes seguidos, sin preguntar entre medio, y cierras con una frase corta preguntando cual le gusto.`;
+  return { ok: true, busqueda: que, total_encontrados: res.length, desde: inicio, siguiente_desde: quedan ? inicio + tanda.length : null, fotos, pies, links, lista_texto: lista, nota: quedan ? `Hay ${res.length} que calzan y te mandé ${tanda.length}. ${comoMandar} Si quiere ver los demás, vuelve a llamarme con desde=${inicio + tanda.length}.` : comoMandar, resultados };
 }
 
 exports.handler = async function (event) {
