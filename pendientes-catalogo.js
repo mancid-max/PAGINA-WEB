@@ -175,7 +175,8 @@ fs.writeFileSync(path.join(RAIZ, "pendientes-catalogo.html"), html, "utf8");
 console.log(`pendientes: sin foto ${informe.resumen.sin_foto_total} (otro color ${sinFoto.otroColor.length}, crudas ${sinFoto.crudas.length}, sin carpeta ${sinFoto.sinCarpeta.length}) · sin precio 40-43 ${sinPrecio.length} · sin precio 44 ${sinPrecio44.length} · notas ${informe.resumen.notas}`);
 
 /* --- Aviso por Telegram (archivo + resumen), solo con --avisar --- */
-if (process.argv.includes("--avisar")) {
+/* --ver muestra el mensaje en pantalla sin mandarlo, para revisar el formato sin molestar al grupo */
+if (process.argv.includes("--avisar") || process.argv.includes("--ver")) {
   (async () => {
     let tg = null;
     try { tg = JSON.parse(fs.readFileSync(path.join(process.env.USERPROFILE || process.env.HOME, ".mohicano", "telegram.json"), "utf8")); } catch (_) {}
@@ -183,19 +184,47 @@ if (process.argv.includes("--avisar")) {
     const r = informe.resumen;
     const total = r.sin_foto_total + r.sin_precio_4043 + r.sin_precio_44 + r.notas + r.solicitudes;
     if (!total) { console.log("aviso: sin pendientes, no se manda"); return; }
-    const top = (arr, n) => arr.slice(0, n).map((m) => `${m.codigo} (${m.unidades} u)`).join(", ");
     const tx = (t) => String(t).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
-    const caption = [
-      `📋 <b>Pendientes del catálogo</b> · ${total} cosas por resolver`,
-      `📷 Con stock y sin foto: <b>${r.sin_foto_total}</b> (${r.sin_foto_unidades.toLocaleString("es-CL")} u)`,
-      r.sin_foto_otro_color ? `   · ${r.sin_foto_otro_color} con fotos de otro color: ${tx(top(sinFoto.otroColor, 3))}…` : null,
-      r.sin_foto_crudas ? `   · ${r.sin_foto_crudas} con fotos crudas sin seleccionar` : null,
-      r.sin_foto_sin_carpeta ? `   · ${r.sin_foto_sin_carpeta} sin ninguna foto: ${tx(top(sinFoto.sinCarpeta, 3))}…` : null,
-      `💲 Sin precio: <b>${r.sin_precio_4043}</b> de la 40-43${r.sin_precio_4043 ? ` (${tx(top(sinPrecio, 3))}…)` : ""} y <b>${r.sin_precio_44}</b> de la Dolce Vita 44`,
-      r.notas ? `📝 Notas por resolver: <b>${r.notas}</b>` : null,
-      r.solicitudes ? `🙋 Solicitudes de clientes sin resolver: <b>${r.solicitudes}</b>` : null,
-      `El detalle va en el archivo adjunto (ábrelo en el navegador).`,
-    ].filter((l) => l !== null).join("\n");
+    const clp = (n) => Number(n || 0).toLocaleString("es-CL");
+    const ahora = new Date().toLocaleString("es-CL", { timeZone: "America/Santiago", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+
+    /* Prioridad por unidades atrapadas: lo que mas plata tiene detenida se resuelve primero.
+       ALTA >= 50 unidades, MEDIA 15 a 49, BAJA el resto. Asi el aviso dice que hacer, no solo que pasa. */
+    const todosSinFoto = [...sinFoto.sinCarpeta, ...sinFoto.otroColor, ...sinFoto.crudas]
+      .sort((a, b) => Number(b.unidades) - Number(a.unidades));
+    const alta = todosSinFoto.filter((m) => Number(m.unidades) >= 50);
+    const media = todosSinFoto.filter((m) => Number(m.unidades) >= 15 && Number(m.unidades) < 50);
+    const baja = todosSinFoto.filter((m) => Number(m.unidades) < 15);
+    const suma = (arr) => arr.reduce((t, m) => t + Number(m.unidades || 0), 0);
+    const lineas = (arr, n) => arr.slice(0, n).map((m) => `   <code>${tx(m.codigo)}</code>  ${clp(m.unidades)} u`).join("\n");
+
+    const bloques = [`📋 <b>Pendientes del catálogo</b>\n${total} cosas por resolver · ${ahora}`];
+
+    if (alta.length) bloques.push([
+      `🔴 <b>PRIMERO</b> — ${alta.length} modelos sin foto, ${clp(suma(alta))} unidades detenidas`,
+      lineas(alta, 5),
+      alta.length > 5 ? `   …y ${alta.length - 5} más` : null,
+    ].filter(Boolean).join("\n"));
+
+    if (media.length) bloques.push(`🟡 <b>DESPUÉS</b> — ${media.length} modelos sin foto, ${clp(suma(media))} unidades\n${lineas(media, 3)}`);
+    if (baja.length) bloques.push(`⚪ <b>CUANDO SE PUEDA</b> — ${baja.length} modelos sin foto, ${clp(suma(baja))} unidades`);
+
+    if (r.sin_precio_4043 + r.sin_precio_44) bloques.push([
+      `💲 <b>SIN PRECIO</b> — ${r.sin_precio_4043 + r.sin_precio_44} modelos: Sofía los ofrece como "precio a consultar"`,
+      [r.sin_precio_4043 ? `${r.sin_precio_4043} de la Cole 40-43` : null, r.sin_precio_44 ? `${r.sin_precio_44} de la Dolce Vita 44` : null].filter(Boolean).join(" · "),
+      lineas(sinPrecio, 3),
+    ].filter(Boolean).join("\n"));
+
+    if (r.solicitudes) bloques.push(`🙋 <b>CLIENTES</b> — ${r.solicitudes} ${r.solicitudes === 1 ? "solicitud" : "solicitudes"} que Sofía no pudo resolver`);
+    if (r.notas) bloques.push(`📝 <b>NOTAS</b> — ${r.notas} por resolver`);
+
+    bloques.push("El detalle completo va en el archivo adjunto.");
+    const caption = bloques.join("\n\n");
+    if (process.argv.includes("--ver")) {
+      console.log("\n--- asi se veria en Telegram (" + caption.length + " de 1000 caracteres) ---\n");
+      console.log(caption.replace(/<\/?(b|code|i|u)>/g, ""));
+      return;
+    }
     const fd = new FormData();
     fd.append("chat_id", String(tg.chat));
     fd.append("caption", caption.slice(0, 1000));

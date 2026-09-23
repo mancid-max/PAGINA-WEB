@@ -309,8 +309,10 @@ async function buscarPorAtributos({ corte, tiro, tipo, cole, desde, soloDisponib
         const desc = descDe(ok);
         /* orden: primero la Dolce Vita disponible (es la novedad), después colecciones anteriores por stock, al final la 44 en producción */
         /* ficha vertical, igual que la consulta por código (una cosa por línea) */
-        const ficha = [`${codigo} ${m.nombre} · Dolce Vita 44`, desc, m.precio == null ? "precio a consultar" : `${clp(m.precio)} + IVA`, estado === "Disponible" ? "Disponible (despacho inmediato)" : "En producción (10 a 15 días, se puede reservar)"].join("\n");
-        res.push({ codigo, nombre: m.nombre, coleccion: "Dolce Vita · Cole 44", tiro: ok.ti, corte: ok.co, precio: m.precio, estado, ficha_texto: ficha, _orden: total > 30 ? 3 : 1, _total: total });
+        /* En la lista por estilo el cliente esta MIRANDO modelos, no comprando: va nombre, corte y precio.
+           El stock se lo decimos despues, solo si pregunta por uno (decision de Manu, 23-09). */
+        const ficha = [`${codigo} ${m.nombre} · Dolce Vita 44`, desc, m.precio == null ? "precio a consultar" : `${clp(m.precio)} + IVA`].join("\n");
+        res.push({ codigo, nombre: m.nombre, coleccion: "Dolce Vita · Cole 44", tiro: ok.ti, corte: ok.co, precio: m.precio, estado, ficha_texto: ficha, link_modelo: `${BASE}/m/${codigo}`, _orden: total > 30 ? 3 : 1, _total: total });
       }
     } else {
       const cat = await getJson(`/data-catalogo-${c}.json`).catch(() => []);
@@ -329,8 +331,8 @@ async function buscarPorAtributos({ corte, tiro, tipo, cole, desde, soloDisponib
         /* mismos candidatos que la busqueda por codigo: exacto, 4 digitos y el -00 del modelo base */
         const precio = pit[codigo] ?? pit[codigo.slice(0, 4)] ?? pit[`${codigo.slice(0, 4)}-00`] ?? null;
         const desc = descDe(ok);
-        const ficha = [`${codigo} · Cole ${c}`, desc, precio == null ? "precio a consultar" : `${clp(precio)} + IVA`, `Stock: ${total} unidades (${tallas.length} tallas)`].join("\n"); /* en la lista va solo el total: el detalle por talla se pide por código */
-        res.push({ codigo, nombre: `Modelo ${codigo.slice(0, 4)}`, coleccion: `Cole ${c}`, tiro: ok.ti, corte: ok.co, precio, estado: "Disponible", stock_total: total, tallas_con_stock: tallas, ficha_texto: ficha, _orden: 2, _total: total });
+        const ficha = [`${codigo} · Cole ${c}`, desc, precio == null ? "precio a consultar" : `${clp(precio)} + IVA`].join("\n"); /* sin stock: el cliente esta mirando, no comprando */
+        res.push({ codigo, nombre: `Modelo ${codigo.slice(0, 4)}`, coleccion: `Cole ${c}`, tiro: ok.ti, corte: ok.co, precio, estado: "Disponible", stock_total: total, tallas_con_stock: tallas, ficha_texto: ficha, link_modelo: `${BASE}/m/${codigo}`, _orden: 2, _total: total });
       }
     }
   }
@@ -351,7 +353,11 @@ async function buscarPorAtributos({ corte, tiro, tipo, cole, desde, soloDisponib
   /* lista_texto: hasta 5 modelos con su ficha completa, listos para mandar tal cual en un mensaje */
   const lista = resultados.map((r) => r.ficha_texto).join("\n\n") + (quedan ? `\n\n… y ${quedan} más. ¿Quieres verlos?` : "");
   /* lista_texto va antes que resultados: es lo que Sofía manda tal cual (un modelo por bloque, una línea por dato) */
-  return { ok: true, busqueda: que, total_encontrados: res.length, desde: inicio, siguiente_desde: quedan ? inicio + tanda.length : null, lista_texto: lista, nota: quedan ? `Hay ${res.length} que calzan y te mandé ${tanda.length}. Manda lista_texto TAL CUAL (va el stock total de cada uno; si quiere las tallas de uno, consúltalo por código). Si quiere ver los demás, vuelve a llamarme con desde=${inicio + tanda.length}.` : "Manda lista_texto TAL CUAL, sin resumir.", resultados };
+  /* links: uno por modelo, para mandarlos de a uno. Cada link muestra en WhatsApp la foto grande del
+     modelo con su nombre y precio, así el cliente VE los modelos en vez de leer una lista. */
+  const links = resultados.map((r) => r.link_modelo).filter(Boolean);
+  const comoMandar = `Manda UN MENSAJE POR MODELO, cada uno con su link de la lista "links" y nada más: al abrirse en WhatsApp se ve la foto del modelo con su nombre y precio. Son ${links.length} mensajes, uno tras otro, sin preguntar entre medio. Después cierra con una frase preguntando cuál le gustó. Si el cliente prefiere leerlos en texto, entonces manda lista_texto TAL CUAL.`;
+  return { ok: true, busqueda: que, total_encontrados: res.length, desde: inicio, siguiente_desde: quedan ? inicio + tanda.length : null, links, lista_texto: lista, nota: quedan ? `Hay ${res.length} que calzan y te mandé ${tanda.length}. ${comoMandar} Si quiere ver los demás, vuelve a llamarme con desde=${inicio + tanda.length}.` : comoMandar, resultados };
 }
 
 exports.handler = async function (event) {
