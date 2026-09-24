@@ -18,6 +18,17 @@ const SOURCE_PEDIDO  = "dolce-vita-44";
 /* ---- CLIENTES RECONOCIDOS LOCALMENTE ----------------------- */
 /* Clave: RUT solo dígitos/K. Se consulta antes de Supabase (misma forma que devuelve el RPC). */
 const CLIENTES_LOCALES = {
+  /* Manu: es el equipo, no un cliente. Ficha con datos de la empresa para que su RUT no pida nada. */
+  "197200855": {
+    rut: "19.720.085-5",
+    razon_social: "MANUEL CID ERICES",
+    telefono: "949592709",
+    giro: "VENTA AL POR MAYOR DE PRENDAS DE VESTIR",
+    direccion: "AVDA KENNEDY 5600",
+    nombre_tienda: "MOHICANO JEANS",
+    comuna: "VITACURA",
+    transporte: "Starken",
+  },
   "163883341": {
     rut: "16.388.334-1",
     razon_social: "XIMENA ANDREA DUHART DUHART",

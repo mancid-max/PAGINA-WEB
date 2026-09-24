@@ -302,6 +302,19 @@ const LOCAL_CLIENT_OVERRIDES = [
      la promesa del sistema. En catalogo-44 ya estaba asi; acá quedaba a medias y el cliente igual tenía
      que escribir dirección y comuna. Deja de hacer falta cuando se carguen los clientes del ERP. */
   {
+    /* Manu: es el equipo, no un cliente. No esta en el ERP, asi que la ficha va con datos de la empresa
+       para que al poner su RUT no tenga que escribir nada: solo elige transporte y aprieta Enviar. */
+    rut: "19.720.085-5",
+    rut_normalized: "197200855",
+    razon_social: "MANUEL CID ERICES",
+    telefono: "949592709",
+    giro: "VENTA AL POR MAYOR DE PRENDAS DE VESTIR",
+    direccion: "AVDA KENNEDY 5600",
+    nombre_tienda: "MOHICANO JEANS",
+    comuna: "VITACURA",
+    transporte: "Starken",
+  },
+  {
     rut: "16.388.334-1",
     rut_normalized: "163883341",
     razon_social: "XIMENA ANDREA DUHART DUHART",
