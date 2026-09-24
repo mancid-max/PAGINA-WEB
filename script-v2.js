@@ -298,7 +298,19 @@ const HANTAN_BY_SKU = {
 };
 /* Clientes reconocidos localmente (antes de consultar Supabase). rut_normalized: solo dígitos/K. */
 const LOCAL_CLIENT_OVERRIDES = [
-  { rut: "16.388.334-1", rut_normalized: "163883341", razon_social: "XIMENA ANDREA DUHART DUHART" },
+  /* Con la ficha completa el formulario no le pide nada: solo elige transporte y aprieta Enviar, que es
+     la promesa del sistema. En catalogo-44 ya estaba asi; acá quedaba a medias y el cliente igual tenía
+     que escribir dirección y comuna. Deja de hacer falta cuando se carguen los clientes del ERP. */
+  {
+    rut: "16.388.334-1",
+    rut_normalized: "163883341",
+    razon_social: "XIMENA ANDREA DUHART DUHART",
+    telefono: "950096525",
+    giro: "GRANDES TIENDAS DE VESTIR Y CALZADO",
+    direccion: "LAGO LYNCH #45",
+    nombre_tienda: "TIENDA ANTONELLA",
+    comuna: "PORVENIR",
+  },
 ];
 
 function inferirCatalogoDesdeSku(value) {
