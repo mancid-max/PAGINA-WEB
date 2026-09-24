@@ -15,6 +15,10 @@ const fs = require("fs");
 const path = require("path");
 
 const ORIGEN = "Z:/BI/CLIENTE.Txt";
+const PEDIDOS = "Z:/BI/PEDIDOS.CSV";
+/* Regla de Manu (2026-09-24): solo los clientes que pidieron en Cole 40 en adelante. Los que se
+   quedaron en colecciones viejas son material para un agente de recuperacion, no para cargar ahora. */
+const COLECCIONES = ["40", "41", "42", "43", "44"];
 const API = "https://mohicanojeans.netlify.app/.netlify/functions/guardar-cliente";
 const APLICAR = process.argv.includes("--apply");
 
@@ -44,6 +48,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   try { clave = String(JSON.parse(fs.readFileSync(path.join(process.env.USERPROFILE || process.env.HOME, ".mohicano", "api.json"), "utf8")).order_key || "").trim(); } catch (_) {}
   if (!clave) { console.error("Falta la clave en %USERPROFILE%\\.mohicano\\api.json"); process.exit(1); }
 
+  /* Primero: quienes compraron en las colecciones que nos interesan */
+  const compradores = new Set();
+  for (const linea of fs.readFileSync(PEDIDOS, "latin1").split(/\r?\n/).filter(Boolean).slice(1)) {
+    const c = linea.split(";");
+    if (COLECCIONES.includes(String(c[13] || "").trim())) compradores.add(digitos(c[4]));
+  }
+
   const filas = fs.readFileSync(ORIGEN, "latin1").split(/\r?\n/).filter(Boolean).slice(1).map((l) => l.split(";"));
   const porRut = new Map();
   for (const c of filas) {
@@ -51,6 +62,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     if (!rutValido(d)) continue;
     const razon = limpio(c[0]);
     if (!razon || /^CLIENTES VARIOS$/i.test(razon)) continue;
+    if (!compradores.has(d)) continue; /* nunca pidio en Cole 40-44 */
     porRut.set(d, {
       rut: formatRut(d),
       razon_social: razon,
@@ -61,7 +73,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     });
   }
   const lista = [...porRut.values()];
-  console.log(`ERP: ${filas.length} filas · clientes con RUT válido: ${lista.length}`);
+  console.log(`ERP: ${filas.length} filas · compradores de Cole 40 en adelante con ficha: ${lista.length}`);
   const con = (k) => lista.filter((x) => x[k]).length;
   console.log(`traen giro ${con("giro")} · dirección ${con("direccion")} · comuna ${con("comuna")} · teléfono ${con("telefono")}`);
   console.log("(el transporte no está en el ERP: se guarda solo cuando el cliente hace su primer pedido)");
