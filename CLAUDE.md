@@ -85,6 +85,12 @@ Solo escribe si `value != null && value !== ""`. Si Supabase no tiene el dato (p
 
 Filas de datos: 4–400 (los VLOOKUP de L1–L7/E7 usan `$A$4:$AC$400`; hasta 2026-09-04 era 166 y estaba lleno). El script agrega el cliente en la primera fila con A vacía si no existe (para que VLOOKUP funcione en futuras descargas).
 
+## Ojo: hay DOS plantillas de tarjeta de producto
+- `renderCatalogCardHtml()` en `script-v2.js` → la usan **Cole 43 y 44**.
+- Otra escrita a mano dentro de `cole-43.html` (los `#cole-4X-carousel`) → la usan **Cole 40, 41 y 42**.
+- **Un cambio en la tarjeta hay que aplicarlo en las dos.** El 24-09 el código del modelo no salía en las colecciones 40-42 porque en septiembre se agregó solo a la principal.
+- En esos carruseles hay además una regla que esconde todo lo que no sea `.card-title` ni `.card-price`. Lo que se agregue a la tarjeta tiene que ir **dentro del título**, no como subtítulo, o desaparece.
+
 ## Supabase
 
 ### Tabla `quotes`
