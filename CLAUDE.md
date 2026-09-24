@@ -158,7 +158,10 @@ Antes de tocar el guion de Sofía, la página o el catálogo, leer esta sección
 - En los textos va "+ IVA", nunca "c/u + IVA".
 
 ## Cómo muestra Sofía los modelos
-- **Manda IMÁGENES, no links.** El handle de la biblioteca de Nexor es **arroba + código exacto**: `@4222-00`, `@4234-04`.
+- **Manda IMÁGENES, no links.**
+- **El handle de la imagen NUNCA se deduce del código.** Sofía usa exactamente el que `consultar_stock` le entrega. Unos son `@4222-00` y otros `@4448-00-venezia`.
+- **Un handle inventado deja al agente mudo**: Nexor descarta la respuesta COMPLETA, texto incluido, y el cliente queda en visto. Pasó el 24-09 con el 4413.
+- **Si un modelo no tiene foto cargada**, lo dice y ofrece el link: *"del 4249 no tengo la foto acá, si quieres te paso el link para verlo en la página"*. Nunca lo pasa por alto en silencio. El link va solo si el cliente dice que sí.
 - El link `/m/CODIGO` **solo** si el cliente lo pide con todas sus letras, o si ese modelo no tiene imagen.
 - Al mostrar modelos va **código y precio**, nada más. **Sin stock, sin tallas, sin disponibilidad.** El stock se entrega DESPUÉS, solo si el cliente pregunta por uno.
 - El pie de foto de Nexor **no se puede usar** (la imagen sale con el contenido vacío): el código y el precio van en el mensaje siguiente, pegado, y tiene que corresponder a esa foto.
