@@ -177,6 +177,11 @@ Antes de tocar el guion de Sofía, la página o el catálogo, leer esta sección
 - **Nunca inventar.** Color sin nombre en `colores.json` → no se nombra. No decir que mandó fotos que no mandó.
 - Mínimo 24 unidades por pedido; 12 por modelo solo en la Dolce Vita 44.
 
+## Velocidad de respuesta
+- El búfer de WhatsApp está en **5 segundos** (el mínimo de Nexor), decisión de Manu el 24-09. Venía en 15 y la respuesta se sentía lenta.
+- Ese búfer es la espera antes de contestar, para agrupar mensajes seguidos del cliente. Total percibido: 8-12 segundos, contando lo que tarda en pensar.
+- Se cambia con `set_whatsapp_response_timing`. No subirlo sin que Manu lo pida.
+
 ## Llamadas (separado de WhatsApp)
 - Voz Catalina (chilena). Por teléfono **no se muestra nada**: se describe de oído y se manda por WhatsApp al colgar.
 - Prohibido decir "te muestro" o dictar un link por teléfono.
