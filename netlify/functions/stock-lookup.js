@@ -8,10 +8,16 @@ const BASE = (process.env.URL || "https://mohicanojeans.netlify.app").replace(/\
 const TTL_MS = 5 * 60 * 1000;
 const cache = new Map();
 
+/* El commit va en la direccion del archivo: el CDN de Netlify le seguia entregando a esta funcion la
+   version anterior de los JSON aunque ya estuvieran publicados, y "Cache-Control: no-cache" no bastaba.
+   Con el commit adentro, cada deploy estrena direccion y no hay copia vieja que servir. */
+const VERSION = (process.env.COMMIT_REF || "dev").slice(0, 7);
+
 async function getJson(path) {
   const hit = cache.get(path);
   if (hit && Date.now() - hit.t < TTL_MS) return hit.v;
-  const r = await fetch(`${BASE}${path}`, { headers: { "Cache-Control": "no-cache" } });
+  const sep = path.includes("?") ? "&" : "?";
+  const r = await fetch(`${BASE}${path}${sep}v=${VERSION}`, { headers: { "Cache-Control": "no-cache" } });
   if (!r.ok) throw new Error(`HTTP ${r.status} en ${path}`);
   const v = path.endsWith(".js") ? await r.text() : await r.json();
   cache.set(path, { t: Date.now(), v });
