@@ -240,10 +240,12 @@
     line-height: 1.3 !important;
     font-weight: 600 !important;
     color: #374151 !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+    /* Sin nowrap: el codigo del modelo va dentro del titulo y con puntos suspensivos se cortaba */
+    white-space: normal !important;
   }
+  #cole-40-carousel .card-title-code,
+  #cole-41-carousel .card-title-code,
+  #cole-42-carousel .card-title-code { color: #94a3b8 !important; font-weight: 600 !important; }
   #cole-40-carousel .card-price,
   #cole-41-carousel .card-price,
   #cole-42-carousel .card-price {
@@ -2573,8 +2575,7 @@ src="https://www.facebook.com/tr?id=2136280953641446&ev=PageView&noscript=1"
           '<img data-image-src="' + p._safeCardImage + '" alt="' + titulo + '">' +
           '</div>' +
           '<div class="card-title-row"><div class="card-title-block">' +
-          '<div class="card-title">' + titulo + '</div>' +
-          '<div class="card-subtitle" style="font-size:0.65rem;color:#9ca3af;margin-top:1px">Cole ' + cole + ' · ' + p.family + '</div>' +
+          '<div class="card-title">' + titulo + ' <span class="card-title-code">' + p.family + '</span></div>' +
           (p._precio ? '<div class="card-price"><span class="card-price-current">' + fmtPrecio(p._precio) + '</span><span class="card-price-badge">+ IVA</span></div>' : '') +
           '</div></div>' +
           '</div>';
@@ -2628,8 +2629,7 @@ src="https://www.facebook.com/tr?id=2136280953641446&ev=PageView&noscript=1"
               var titulo = bota||('Mod. '+p.family);
               return '<div class="card" data-family="'+p.family+'" data-collection="'+cole+'" onclick="verProductoDesdeCard(\''+p._baseFamily+'\',\''+p.family+'\')">' +
                 '<div class="card-image-wrap"><img data-image-src="'+p._safeCardImage+'" alt="'+titulo+'"></div>' +
-                '<div class="card-title-row"><div class="card-title-block"><div class="card-title">'+titulo+'</div>' +
-                '<div style="font-size:0.65rem;color:#9ca3af;margin-top:1px">Cole '+cole+' · '+p.family+'</div>' +
+                '<div class="card-title-row"><div class="card-title-block"><div class="card-title">'+titulo+' <span class="card-title-code">'+p.family+'</span></div>' +
                 (p._precio?'<div class="card-price"><span class="card-price-current">'+fmtP(p._precio)+'</span></div>':'') +
                 '</div></div></div>';
             }).join('');
