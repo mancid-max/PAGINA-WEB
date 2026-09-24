@@ -188,6 +188,12 @@ Antes de tocar el guion de Sofía, la página o el catálogo, leer esta sección
 - **Nunca prometer devolver la llamada.**
 - SMS **apagado** en el número: rompía los links.
 
+## Clientes: solo los que compraron de la Cole 40 en adelante
+- **Regla de Manu (24-09)**: al cargar clientes desde el ERP, solo los que **pidieron en Cole 40, 41, 42, 43 o 44**. Los que se quedaron en colecciones viejas no entran.
+- Son **144** los que compraron 40+; de ésos **118 tienen ficha** en `CLIENTE.Txt` y son los que se cargan. Los otros 26 compraron pero no tienen ficha, así que no hay dato que cargar.
+- Las 235 fichas restantes del ERP quedan fuera: son clientes dormidos, y esos son material para un agente de recuperación, no para cargar ahora.
+- `cargar-clientes-erp.js` aplica este filtro.
+
 ## Formulario de pedido
 - **Giro y nombre de tienda son opcionales.** Obligatorios para despachar: razón social, teléfono, dirección, comuna y transporte.
 - La meta es que el mayorista **no escriba ningún dato**: solo apretar Enviar.
