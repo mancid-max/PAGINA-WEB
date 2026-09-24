@@ -331,7 +331,7 @@ async function buscarPorAtributos({ corte, tiro, tipo, cole, desde, soloDisponib
         /* En la lista por estilo el cliente esta MIRANDO modelos, no comprando: va nombre, corte y precio.
            El stock se lo decimos despues, solo si pregunta por uno (decision de Manu, 23-09). */
         const ficha = [`${codigo} ${m.nombre} · Dolce Vita 44`, desc, m.precio == null ? "precio a consultar" : `${clp(m.precio)} + IVA`].join("\n");
-        res.push({ codigo, nombre: m.nombre, coleccion: "Dolce Vita · Cole 44", tiro: ok.ti, corte: ok.co, precio: m.precio, estado, imagen_handle: handles[codigo] || null, pie_foto: `${codigo} ${m.nombre} · ${m.precio == null ? "precio a consultar" : `${clp(m.precio)} + IVA`}`, ficha_texto: ficha, imagen_handle: `@${codigo}`, link_modelo: `${BASE}/m/${codigo}`, _orden: total > 30 ? 3 : 1, _total: total });
+        res.push({ codigo, nombre: m.nombre, coleccion: "Dolce Vita · Cole 44", tiro: ok.ti, corte: ok.co, precio: m.precio, estado, imagen_handle: handles[codigo] || null, pie_foto: `${codigo} ${m.nombre} · ${m.precio == null ? "precio a consultar" : `${clp(m.precio)} + IVA`}`, ficha_texto: ficha, link_modelo: `${BASE}/m/${codigo}`, _orden: total > 30 ? 3 : 1, _total: total });
       }
     } else {
       const cat = await getJson(`/data-catalogo-${c}.json`).catch(() => []);
@@ -351,7 +351,7 @@ async function buscarPorAtributos({ corte, tiro, tipo, cole, desde, soloDisponib
         const precio = pit[codigo] ?? pit[codigo.slice(0, 4)] ?? pit[`${codigo.slice(0, 4)}-00`] ?? null;
         const desc = descDe(ok);
         const ficha = [`${codigo} · Cole ${c}`, desc, precio == null ? "precio a consultar" : `${clp(precio)} + IVA`].join("\n"); /* sin stock: el cliente esta mirando, no comprando */
-        res.push({ codigo, nombre: `Modelo ${codigo.slice(0, 4)}`, coleccion: `Cole ${c}`, tiro: ok.ti, corte: ok.co, precio, estado: "Disponible", stock_total: total, tallas_con_stock: tallas, imagen_handle: handles[codigo] || null, pie_foto: `${codigo} · ${precio == null ? "precio a consultar" : `${clp(precio)} + IVA`}`, ficha_texto: ficha, imagen_handle: `@${codigo}`, link_modelo: `${BASE}/m/${codigo}`, _orden: 2, _total: total });
+        res.push({ codigo, nombre: `Modelo ${codigo.slice(0, 4)}`, coleccion: `Cole ${c}`, tiro: ok.ti, corte: ok.co, precio, estado: "Disponible", stock_total: total, tallas_con_stock: tallas, imagen_handle: handles[codigo] || null, pie_foto: `${codigo} · ${precio == null ? "precio a consultar" : `${clp(precio)} + IVA`}`, ficha_texto: ficha, link_modelo: `${BASE}/m/${codigo}`, _orden: 2, _total: total });
       }
     }
   }
