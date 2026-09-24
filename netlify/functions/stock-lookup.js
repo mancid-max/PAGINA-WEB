@@ -377,12 +377,14 @@ async function buscarPorAtributos({ corte, tiro, tipo, cole, desde, soloDisponib
   /* links: uno por modelo, para mandarlos de a uno. Cada link muestra en WhatsApp la foto grande del
      modelo con su nombre y precio, así el cliente VE los modelos en vez de leer una lista. */
   const links = resultados.map((r) => r.link_modelo).filter(Boolean);
+  /* Un objeto por modelo con su foto y su pie JUNTOS. Antes iban en dos arreglos paralelos y, cuando un
+     modelo no tenia imagen, quedaban descalzados: la foto de uno con el texto de otro. */
+  const modelos = resultados.map((r) => ({ codigo: r.codigo, foto: r.imagen_handle || null, pie: r.pie_foto }));
   /* El handle de la imagen en la biblioteca de Nexor es arroba + codigo exacto (@4222-00). Se lo entrego
      hecho para que no tenga que deducirlo: cuando lo deducia decia "no tengo foto" y mandaba texto. */
   const fotos = resultados.map((r) => r.imagen_handle).filter(Boolean);
-  const pies = resultados.map((r) => r.pie_foto).filter(Boolean);
-  const comoMandar = `Por cada modelo: la imagen (handle de "fotos") y debajo, en otro mensaje, SOLO su linea de "pies", tal cual, que trae el codigo y el precio. Nada mas: ni corte, ni tiro, ni stock, ni links. Van emparejados por posicion: ${fotos.map((f, k) => `${k + 1}) ${f} con "${(pies[k] || "")}"`).join(", ")}. Son ${fotos.length * 2} mensajes seguidos, sin preguntar entre medio, y cierras con una frase corta preguntando cual le gusto.`;
-  return { ok: true, busqueda: que, total_encontrados: res.length, desde: inicio, siguiente_desde: quedan ? inicio + tanda.length : null, fotos, pies, links, lista_texto: lista, nota: quedan ? `Hay ${res.length} que calzan y te mandé ${tanda.length}. ${comoMandar} Si quiere ver los demás, vuelve a llamarme con desde=${inicio + tanda.length}.` : comoMandar, resultados };
+  const comoMandar = `En "modelos" va un objeto por modelo, con su foto y su texto YA EMPAREJADOS. Por cada uno mandas DOS mensajes seguidos: primero la imagen usando su "foto" TAL CUAL como handle, y enseguida un mensaje con su "pie" TAL CUAL. Nunca mezcles la foto de un modelo con el pie de otro: van en el mismo objeto. Si "foto" viene en null, ese modelo no tiene imagen cargada: mandas solo su "pie" y sigues con el siguiente, sin decir que no tienes foto y sin mandar links. Son ${modelos.length} modelos, uno tras otro sin preguntar entre medio, y cierras con una frase corta preguntando cual le gusto. NO mandes stock ni tallas: solo si lo piden.`;
+  return { ok: true, busqueda: que, total_encontrados: res.length, desde: inicio, siguiente_desde: quedan ? inicio + tanda.length : null, modelos, fotos, links, lista_texto: lista, nota: quedan ? `Hay ${res.length} que calzan y te mandé ${tanda.length}. ${comoMandar} Si quiere ver los demás, vuelve a llamarme con desde=${inicio + tanda.length}.` : comoMandar, resultados };
 }
 
 exports.handler = async function (event) {
