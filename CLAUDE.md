@@ -85,10 +85,18 @@ Solo escribe si `value != null && value !== ""`. Si Supabase no tiene el dato (p
 
 Filas de datos: 4–400 (los VLOOKUP de L1–L7/E7 usan `$A$4:$AC$400`; hasta 2026-09-04 era 166 y estaba lleno). El script agrega el cliente en la primera fila con A vacía si no existe (para que VLOOKUP funcione en futuras descargas).
 
-## Ojo: hay DOS plantillas de tarjeta de producto
+## Sofía y la página muestran SIEMPRE lo mismo
+- **Regla de Manu (24-09)**: lo que el agente dice tiene que coincidir con lo que el cliente ve en la web. Precio, nombre, código, corte.
+- Si la página muestra un modelo, Sofía tiene que conocerlo. Si ella ofrece uno, tiene que estar en la página.
+- Se verifica con `node probar-sofia.js` y cruzando `data-catalogo-4X.json` contra `stock-lookup`.
+- **Si un modelo tiene foto en la página, debe tener su imagen en Nexor.** Es el mismo principio aplicado a las fotos.
+- Al 24-09 calzan los 176 modelos salvo `4963-00`, cuyo código no corresponde a ninguna colección vigente.
+
+## Ojo: hay TRES copias de la tarjeta de producto
 - `renderCatalogCardHtml()` en `script-v2.js` → la usan **Cole 43 y 44**.
-- Otra escrita a mano dentro de `cole-43.html` (los `#cole-4X-carousel`) → la usan **Cole 40, 41 y 42**.
-- **Un cambio en la tarjeta hay que aplicarlo en las dos.** El 24-09 el código del modelo no salía en las colecciones 40-42 porque en septiembre se agregó solo a la principal.
+- Una copia dentro de **`cole-43.html`** (los `#cole-4X-carousel`) → si se entra por `/cole-43.html`.
+- Otra copia dentro de **`index.html`** → **es la que sirve la raíz del sitio**, o sea la que ve todo el mundo.
+- **Un cambio en la tarjeta hay que aplicarlo en las tres**, y probarlo en `mohicanojeans.netlify.app` a secas, no en `/cole-43.html`. El 24-09 el código del modelo se arregló dos veces antes de dar con la copia que se veía.
 - En esos carruseles hay además una regla que esconde todo lo que no sea `.card-title` ni `.card-price`. Lo que se agregue a la tarjeta tiene que ir **dentro del título**, no como subtítulo, o desaparece.
 
 ## Supabase
@@ -172,7 +180,6 @@ Antes de tocar el guion de Sofía, la página o el catálogo, leer esta sección
 - Al mostrar modelos va **código y precio**, nada más. **Sin stock, sin tallas, sin disponibilidad.** El stock se entrega DESPUÉS, solo si el cliente pregunta por uno.
 - El pie de foto de Nexor **no se puede usar** (la imagen sale con el contenido vacío): el código y el precio van en el mensaje siguiente, pegado, y tiene que corresponder a esa foto.
 - Varios modelos = varias fotos, **una tras otra, sin preguntar entre medio**.
-- **Si un modelo tiene foto en la página, debe tener su imagen en Nexor.** Hoy no se puede verificar: la biblioteca no tiene API (pendiente con Nexor).
 
 ## Cómo vende
 - **Ningún link va solo.** Siempre con una frase que diga qué es y qué hacer con él. Un link pelado deja al cliente sin saber para qué sirve.
